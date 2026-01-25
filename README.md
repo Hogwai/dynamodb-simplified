@@ -1,72 +1,369 @@
-# DynamoDB Lightweight "Exists" Patterns (Java SDK v2)
+# DynamoDB Simplified Client
 
-This repository demonstrates efficient patterns for checking item existence in Amazon DynamoDB without retrieving full item payloads. It focuses on emulating SQL-like `EXISTS` behavior using the **AWS SDK for Java v2**.
+A fluent wrapper for AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
 
-## 📦 Prerequisites
+---
 
-* Java 17+
-* Spring Boot / Micronaut / Quarkus (Dependency Injection)
-* AWS SDK for Java v2 (`software.amazon.awssdk:dynamodb`)
-* Lombok
+## 🎯 Purpose
 
-## 🎯 The Goal
+The AWS DynamoDB SDK is powerful but notoriously verbose. Simple operations require dozens of lines of code with complex builder patterns, expression attribute names, and expression attribute values.
 
-In SQL, checking for existence is cheap (`SELECT 1 FROM table WHERE id = ?`). In DynamoDB, `GetItem` retrieves the entire item by default. If your items are large (e.g., storing HTML bodies, JSON blobs), this wastes **Network Bandwidth** and increases latency.
+**DynamoDB Simplified Client** provides a fluent, intuitive API that lets you focus on *what* you want to do, not *how* to do it.
 
-This project explores strategies to:
+---
 
-1. Minimize **Network Overhead** (Payload size).
-2. Understand **Read Capacity Unit (RCU)** consumption.
-3. Handle **Batch Operations** correctly.
+## 📊 Before & After
 
-## 🛠️ Strategies Implemented
+### ❌ Vanilla AWS SDK
 
-### 1. `existsByProjection`
+```java
+Map<String, String> expressionNames = new HashMap<>();
+expressionNames.put("#status", "status");
+expressionNames.put("#createdUtc", "createdUtc");
+expressionNames.put("#keywords", "keywords");
 
-* **Method:** `GetItem` with `ProjectionExpression`.
-* **How it works:** Asks DynamoDB to return only the specific key attribute instead of the whole item.
-* **Pros:** Significantly reduces network bandwidth and deserialization CPU cost.
-* **Cons:** **Does not reduce RCU costs.** DynamoDB still reads the full item size from disk to process the projection.
+Map<String, AttributeValue> expressionValues = new HashMap<>();
+expressionValues.put(":statusVal", AttributeValue.builder().s("ACTIVE").build());
+expressionValues.put(":dateVal", AttributeValue.builder().n("1700000000").build());
+expressionValues.put(":sizeVal", AttributeValue.builder().n("3").build());
 
-### 2. `batchExists`
+QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+    .queryConditional(QueryConditional.keyEqualTo(
+        Key.builder().partitionValue("java").build()))
+    .filterExpression(Expression.builder()
+        .expression("#status = :statusVal AND #createdUtc > :dateVal AND size(#keywords) > :sizeVal")
+        .expressionNames(expressionNames)
+        .expressionValues(expressionValues)
+        .build())
+    .scanIndexForward(false)
+    .limit(10)
+    .build();
 
-* **Method:** `BatchGetItem` with key mapping.
-* **How it works:** Checks up to 100 items in a single HTTP request.
+List<Post> posts = table.query(request)
+    .stream()
+    .flatMap(page -> page.items().stream())
+    .collect(Collectors.toList());
+```
 
-* **Key Logic:**
-  * DynamoDB only returns items that *exist*. The code maps the response back to the requested list to determine `true`/`false`.
-  * **Pro Tip:** Production implementations must handle `UnprocessedKeys` (throttling) via a retry loop.
+### ✅ With DynamoDB Simplified Client
 
-### 3. `hasKeywordsByGetItem`
+```java
+List<Post> posts = table.query()
+    .partitionKey("java")
+    .filter(f -> f
+        .eq("status", "ACTIVE")
+        .and()
+        .gt("createdUtc", 1700000000L)
+        .and()
+        .sizeGt("keywords", 3))
+    .descending()
+    .limit(10)
+    .execute();
+```
 
-* **Method:** `GetItem` checking a specific attribute (e.g., a list or boolean).
-* **How it works:** Retrieves only the `keywords` attribute to check if it contains data.
-* **Use Case:** Faster than client-side filtering if the item is large. Note that `FilterExpression` on a `Query` still consumes RCU for the full item read.
+**→ 80% less code. 100% more readable.**
 
-### 4. `hasPostsForSubreddit`
+---
 
-* **Method:** `Query` with `Limit(1)`.
-* **Use Case:** Efficiently checks if *any* item exists in a partition (collection) without reading the whole list.
+## ✨ Features
 
-## 💡 Performance Cheatsheet
+| Feature | Description |
+|---------|-------------|
+| **Fluent API** | Chain methods naturally with IntelliSense support |
+| **Filter Expressions** | Simple methods for all DynamoDB operators |
+| **Server-side `size()`** | Filter by collection/string size without fetching data |
+| **Projections** | Select only the attributes you need |
+| **Pagination** | Built-in cursor-based pagination support |
+| **Conditional Writes** | Put, Update, Delete with conditions |
+| **Type Safety** | Leverages DynamoDB Enhanced Client's bean mapping |
 
-| Technique | Saves Bandwidth? | Saves RCU ($$$)? | Best For |
-| :--- | :---: | :---: | :--- |
-| **ProjectionExpression** | ✅ Yes | ❌ No | Large items, reducing network latency. |
-| **Eventual Consistency** | ❌ No | ✅ **Yes** | `exists` checks where delay is acceptable. |
-| **Keys-Only GSI** | ✅ Yes | ✅ **Yes** | Heavy `exists` checks on very large items. |
+---
 
-## 🚀 Best Practices
+## 🚀 Quick Start
 
-1. **Use Eventual Consistency:**
-    For existence checks, you rarely need Strong Consistency. Set `.consistentRead(false)` to halve your RCU bill.
+### 1. Define your entity
 
-    ```java
-    GetItemRequest.builder().consistentRead(false)...
-    ```
+```java
+@DynamoDbBean
+public class Post {
+    private String id;
+    private String subreddit;
+    private Long createdUtc;
+    private String author;
+    private String title;
+    private Set<String> keywords;
 
-2. **Handle Batch Throttling:**
-    `BatchGetItem` may return partial results. Always check `response.unprocessedKeys()` and retry those specific keys.
+    @DynamoDbPartitionKey
+    public String getSubreddit() { return subreddit; }
 
-3. **Global Secondary Indexes (GSI):**
-    If your items are massive (e.g., >4KB), create a **KEYS_ONLY GSI**. Reading from the index is much cheaper than reading from the main table with a projection.
+    @DynamoDbSortKey
+    public String getId() { return id; }
+    
+    // getters and setters...
+}
+```
+
+### 2. Create the client
+
+```java
+// Default client
+DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
+
+// With custom DynamoDbClient
+DynamoSimplifiedClient client = DynamoSimplifiedClient.create(dynamoDbClient);
+
+// Get table operations
+TableOperations<Post> posts = client.table("posts", Post.class);
+```
+
+### 3. Start querying
+
+```java
+// Simple query
+List<Post> results = posts.query()
+    .partitionKey("java")
+    .execute();
+
+// With filters
+List<Post> filtered = posts.query()
+    .partitionKey("java")
+    .filter(f -> f.eq("author", "john"))
+    .execute();
+```
+
+---
+
+## 📖 API Reference
+
+### Query Operations
+
+```java
+// Partition key only
+posts.query().partitionKey("java")
+
+// Partition key + sort key equals
+posts.query().partitionKeyAndSortKeyEquals("java", "post-123")
+
+// Sort key begins with
+posts.query().partitionKeyAndSortKeyBeginsWith("java", "2024-")
+
+// Sort key between
+posts.query().partitionKeyAndSortKeyBetween("java", "2024-01", "2024-12")
+
+// Sort key comparisons
+posts.query().partitionKeyAndSortKeyGreaterThan("java", "2024-01-01")
+posts.query().partitionKeyAndSortKeyLessThanOrEqual("java", "2024-12-31")
+```
+
+### Filter Expressions
+
+```java
+.filter(f -> f
+    // Comparisons
+    .eq("status", "ACTIVE")           // =
+    .ne("status", "DELETED")          // <>
+    .gt("score", 100)                 // >
+    .ge("score", 100)                 // >=
+    .lt("score", 100)                 // <
+    .le("score", 100)                 // <=
+    
+    // Range
+    .between("score", 10, 100)
+    
+    // List membership
+    .in("status", "PENDING", "ACTIVE", "REVIEW")
+    
+    // String operations
+    .beginsWith("title", "How to")
+    .contains("title", "Java")
+    
+    // Collection contains
+    .contains("keywords", "programming")
+    
+    // Attribute existence
+    .exists("metadata")
+    .notExists("deletedAt")
+    
+    // Size operations (server-side)
+    .sizeEq("keywords", 5)
+    .sizeGt("keywords", 3)
+    .sizeLt("keywords", 10)
+    .sizeGe("keywords", 1)
+    .sizeLe("keywords", 20)
+    .sizeBetween("keywords", 1, 10)
+    
+    // Logical operators
+    .and()
+    .or()
+    
+    // Grouping (parentheses)
+    .group(FilterExpression.builder()
+        .eq("status", "A")
+        .or()
+        .eq("status", "B"))
+)
+```
+
+### Projections
+
+```java
+// Select specific attributes
+posts.query()
+    .partitionKey("java")
+    .project("id", "title", "author")
+    .execute();
+```
+
+### Sorting & Limiting
+
+```java
+posts.query()
+    .partitionKey("java")
+    .descending()              // or .ascending()
+    .limit(20)
+    .execute();
+```
+
+### Pagination
+
+```java
+// Get first page
+PagedResult<Post> page1 = posts.query()
+    .partitionKey("java")
+    .limit(20)
+    .executeWithPagination();
+
+// Get next page
+PagedResult<Post> page2 = posts.query()
+    .partitionKey("java")
+    .limit(20)
+    .startFrom(page1.getLastEvaluatedKey())
+    .executeWithPagination();
+
+// Check for more pages
+if (page2.hasMorePages()) {
+    // continue...
+}
+```
+
+### Scan Operations
+
+```java
+// Scan with filter
+List<Post> allByAuthor = posts.scan()
+    .filter(f -> f.eq("author", "john"))
+    .execute();
+
+// Parallel scan
+List<Post> segment = posts.scan()
+    .filter(f -> f.gt("createdUtc", timestamp))
+    .parallelScan(4, 0)  // 4 segments, this is segment 0
+    .execute();
+```
+
+### CRUD Operations
+
+```java
+// Get
+Optional<Post> post = posts.get("java", "post-123");
+
+// Put
+posts.putItem(post);
+
+// Put if not exists
+posts.put(post)
+    .onlyIfNotExists("id")
+    .execute();
+
+// Put with condition
+posts.put(post)
+    .condition(c -> c
+        .notExists("id")
+        .or()
+        .lt("createdUtc", oldTimestamp))
+    .execute();
+
+// Update
+Post updated = posts.updateItem(post);
+
+// Update with condition
+Post updated = posts.update(post)
+    .condition(c -> c.eq("author", expectedAuthor))
+    .execute();
+
+// Delete
+posts.deleteItem("java", "post-123");
+
+// Delete with condition
+posts.delete("java", "post-123")
+    .condition(c -> c.eq("author", requestingUser))
+    .execute();
+```
+---
+
+## 🔧 Usage with Dependency Injection
+
+### Micronaut
+
+```java
+@Factory
+public class DynamoConfig {
+    
+    @Singleton
+    public DynamoSimplifiedClient dynamoSimplifiedClient(DynamoDbClient dynamoDbClient) {
+        return DynamoSimplifiedClient.create(dynamoDbClient);
+    }
+}
+
+@Singleton
+public class PostRepository {
+    
+    private final TableOperations<Post> table;
+    
+    public PostRepository(DynamoSimplifiedClient client) {
+        this.table = client.table("posts", Post.class);
+    }
+}
+```
+
+### Spring Boot
+
+```java
+@Configuration
+public class DynamoConfig {
+    
+    @Bean
+    public DynamoSimplifiedClient dynamoSimplifiedClient(DynamoDbClient dynamoDbClient) {
+        return DynamoSimplifiedClient.create(dynamoDbClient);
+    }
+}
+
+@Repository
+public class PostRepository {
+    
+    private final TableOperations<Post> table;
+    
+    public PostRepository(DynamoSimplifiedClient client) {
+        this.table = client.table("posts", Post.class);
+    }
+}
+```
+
+---
+
+## 📋 Requirements
+
+- Java 17+
+- AWS SDK v2 (2.20.0+)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+Built on top of the excellent [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2).
