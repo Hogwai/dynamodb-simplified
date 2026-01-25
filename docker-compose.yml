@@ -1,0 +1,23 @@
+services:
+  dynamodb-simplified-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-simplified-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+
+  dynamodb-admin:
+    image: "aaronshaf/dynamodb-admin"
+    container_name: dynamodb-admin-2
+    ports:
+      - "8001:8001"
+    environment:
+      AWS_ACCESS_KEY_ID: 'DUMMYKEY'
+      AWS_SECRET_ACCESS_KEY: 'DUMMYSECRET'
+      AWS_DEFAULT_REGION: 'eu-west-3'
+      DYNAMO_ENDPOINT: 'http://dynamodb-simplified-local:8000'
+    depends_on:
+      - dynamodb-simplified-local
