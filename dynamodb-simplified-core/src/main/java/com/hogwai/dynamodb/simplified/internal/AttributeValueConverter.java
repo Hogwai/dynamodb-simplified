@@ -16,7 +16,8 @@ import java.util.*;
  */
 public final class AttributeValueConverter {
 
-    private AttributeValueConverter() {}
+    private AttributeValueConverter() {
+    }
 
     /**
      * Converts any supported Java type to an AttributeValue.

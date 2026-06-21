@@ -33,7 +33,8 @@ public class UpdateExpression {
 
     private static final String SPACE_SEPARATED = "%s %s";
 
-    private UpdateExpression() {}
+    private UpdateExpression() {
+    }
 
     /**
      * Creates a new {@link UpdateExpression} builder.

@@ -30,7 +30,8 @@ public class FilterExpression {
     private final AtomicInteger nameCounter = new AtomicInteger(0);
     private final AtomicInteger valueCounter = new AtomicInteger(0);
 
-    private FilterExpression() {}
+    private FilterExpression() {
+    }
 
     /**
      * Creates a new {@link FilterExpression} builder.

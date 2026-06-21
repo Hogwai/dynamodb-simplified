@@ -35,9 +35,10 @@ class QueryBuilderTest {
     static class TestItem {
         public String id;
 
-        public TestItem() {}
+        TestItem() {
+        }
 
-        public TestItem(String id) {
+        TestItem(String id) {
             this.id = id;
         }
     }
@@ -512,7 +513,7 @@ class QueryBuilderTest {
                 .execute();
 
         assertEquals(1, result.size());
-        assertEquals("idx1", result.get(0).id);
+        assertEquals("idx1", result.getFirst().id);
 
         verify(table, never()).query(any(QueryEnhancedRequest.class));
         verify(table).index("gsi1");

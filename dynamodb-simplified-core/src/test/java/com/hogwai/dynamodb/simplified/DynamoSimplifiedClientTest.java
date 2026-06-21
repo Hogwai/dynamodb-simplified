@@ -49,6 +49,7 @@ class DynamoSimplifiedClientTest {
         private String id;
         private String name;
 
+        @SuppressWarnings("checkstyle:RedundantModifier")
         public TestItem() {
             // Test constructor
         }
