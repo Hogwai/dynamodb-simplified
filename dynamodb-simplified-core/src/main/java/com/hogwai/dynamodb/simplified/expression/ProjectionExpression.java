@@ -26,7 +26,8 @@ public class ProjectionExpression {
     private final Map<String, String> expressionNames = new HashMap<>();
     private final AtomicInteger nameCounter = new AtomicInteger(0);
 
-    private ProjectionExpression() {}
+    private ProjectionExpression() {
+    }
 
     /**
      * Creates a new {@link ProjectionExpression} builder.

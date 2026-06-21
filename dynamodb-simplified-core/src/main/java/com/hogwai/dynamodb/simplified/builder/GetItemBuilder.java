@@ -114,7 +114,9 @@ public class GetItemBuilder<T> {
                                                            .queryConditional(QueryConditional.keyEqualTo(key))
                                                            .consistentRead(consistentRead)
                                                            .limit(1)
-                                                           .attributesToProject(projectionExpression.getExpressionNames().values().toArray(new String[0]))
+                                                                    .attributesToProject(
+                                                                     projectionExpression.getExpressionNames().values()
+                                                                                         .toArray(new String[0]))
                                                            .build();
 
         return table.query(request)

@@ -42,7 +42,9 @@ class TableTest {
     static class TestItem {
         private String id;
 
-        public TestItem() { /* Required for instantiation */ }
+        TestItem() {
+            /* Required for instantiation */
+        }
 
         public String getId() {
             return id;

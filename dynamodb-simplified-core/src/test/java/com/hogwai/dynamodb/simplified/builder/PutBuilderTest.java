@@ -31,7 +31,7 @@ class PutBuilderTest {
     static class TestItem {
         public String id;
 
-        public TestItem(String id) {
+        TestItem(String id) {
             this.id = id;
         }
     }

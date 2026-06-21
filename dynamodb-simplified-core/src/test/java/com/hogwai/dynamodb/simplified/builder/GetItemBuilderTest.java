@@ -32,7 +32,7 @@ class GetItemBuilderTest {
         public String id;
         public String name;
 
-        public TestItem(String id, String name) {
+        TestItem(String id, String name) {
             this.id = id;
             this.name = name;
         }
