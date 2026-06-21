@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<ruleset name="DynamoDB Simplified Rules"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        PMD rules for DynamoDB Simplified library
+    </description>
+
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="AvoidPrintStackTrace"/>
+        <exclude name="AvoidStringBufferField"/>
+        <exclude name="GuardLogStatement"/>
+        <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
+        <exclude name="UnitTestContainsTooManyAsserts"/>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="AtLeastOneConstructor"/>
+        <exclude name="BooleanGetMethodName"/>
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
+        <exclude name="LambdaCanBeMethodReference"/>
+        <exclude name="LinguisticNaming"/>
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <exclude name="LongVariable"/>
+        <exclude name="MethodArgumentCouldBeFinal"/>
+        <exclude name="MethodNamingConventions"/>
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="ShortClassName"/>
+        <exclude name="ShortMethodName"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="TooManyStaticImports"/>
+        <exclude name="UnnecessaryAnnotationValueElement"/>
+        <exclude name="UnnecessaryBoxing"/>
+        <exclude name="UnnecessaryConstructor"/>
+        <exclude name="UseExplicitTypes"/>
+        <exclude name="UseUnderscoresInNumericLiterals"/>
+    </rule>
+
+    <rule ref="category/java/design.xml">
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal"/>
+        <exclude name="CouplingBetweenObjects"/>
+        <exclude name="DataClass"/>
+        <exclude name="GodClass"/>
+        <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling"/>
+        <exclude name="PublicMemberInNonPublicType"/>
+        <exclude name="TooManyMethods"/>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidAccessibilityAlteration"/>
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="AvoidDuplicateLiterals"/>
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="AvoidFieldNameMatchingTypeName"/>
+        <exclude name="TestClassWithoutTestCases"/>
+    </rule>
+
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+        <exclude name="InsufficientStringBufferDeclaration"/>
+        <exclude name="RedundantFieldInitializer"/>
+    </rule>
+</ruleset>
