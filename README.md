@@ -1,20 +1,20 @@
-# DynamoDB Simplified Client
+# DynamoDB Simplified
 
 A fluent wrapper for AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
 
 ---
 
-## 🎯 Purpose
+## Purpose
 
 The AWS DynamoDB SDK is powerful but notoriously verbose. Simple operations require dozens of lines of code with complex builder patterns, expression attribute names, and expression attribute values.
 
-**DynamoDB Simplified Client** provides a fluent, intuitive API that lets you focus on *what* you want to do, not *how* to do it.
+**DynamoDB Simplified** provides a fluent, intuitive API that lets you focus on *what* you want to do, not *how* to do it.
 
 ---
 
-## 📊 Before & After
+## Before & After
 
-### ❌ Vanilla AWS SDK
+### Vanilla AWS SDK
 
 ```java
 Map<String, String> expressionNames = new HashMap<>();
@@ -45,7 +45,7 @@ List<Post> posts = table.query(request)
     .collect(Collectors.toList());
 ```
 
-### ✅ With DynamoDB Simplified Client
+### With DynamoDB Simplified
 
 ```java
 List<Post> posts = table.query()
@@ -61,27 +61,47 @@ List<Post> posts = table.query()
     .execute();
 ```
 
-**→ 80% less code. 100% more readable.**
+**80% less code. 100% more readable.**
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
 | **Fluent API** | Chain methods naturally with IntelliSense support |
 | **Filter Expressions** | Simple methods for all DynamoDB operators |
+| **Update Expressions** | SET, REMOVE, ADD, DELETE operations with a fluent API |
 | **Server-side `size()`** | Filter by collection/string size without fetching data |
 | **Projections** | Select only the attributes you need |
 | **Pagination** | Built-in cursor-based pagination support |
 | **Conditional Writes** | Put, Update, Delete with conditions |
 | **Type Safety** | Leverages DynamoDB Enhanced Client's bean mapping |
+| **Zero framework deps** | Pure Java, no Spring/Micronaut dependency in the core |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Define your entity
+### 1. Add the dependency
+
+```kotlin
+// Gradle
+dependencies {
+    implementation("com.hogwai:dynamodb-simplified-core:0.1")
+}
+```
+
+```xml
+<!-- Maven -->
+<dependency>
+    <groupId>com.hogwai</groupId>
+    <artifactId>dynamodb-simplified-core</artifactId>
+    <version>0.1</version>
+</dependency>
+```
+
+### 2. Define your entity
 
 ```java
 @DynamoDbBean
@@ -98,25 +118,25 @@ public class Post {
 
     @DynamoDbSortKey
     public String getId() { return id; }
-    
+
     // getters and setters...
 }
 ```
 
-### 2. Create the client
+### 3. Create the client
 
 ```java
-// Default client
+// Default client (uses default credentials chain)
 DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
 
-// With custom DynamoDbClient
+// With a custom DynamoDbClient (for DynamoDB Local, specific config, etc.)
 DynamoSimplifiedClient client = DynamoSimplifiedClient.create(dynamoDbClient);
 
 // Get table operations
-TableOperations<Post> posts = client.table("posts", Post.class);
+Table<Post> posts = client.table("posts", Post.class);
 ```
 
-### 3. Start querying
+### 4. Start querying
 
 ```java
 // Simple query
@@ -129,36 +149,45 @@ List<Post> filtered = posts.query()
     .partitionKey("java")
     .filter(f -> f.eq("author", "john"))
     .execute();
+
+// Count matching items (iterates pages, sums server-side counts)
+long count = posts.query()
+    .partitionKey("java")
+    .filter(f -> f.sizeGt("keywords", 3))
+    .count();
 ```
 
 ---
 
-## 📖 API Reference
+## API Reference
 
 ### Query Operations
 
 ```java
 // Partition key only
-posts.query().partitionKey("java")
+table.query().partitionKey("java")
 
 // Partition key + sort key equals
-posts.query().partitionKeyAndSortKeyEquals("java", "post-123")
+table.query().partitionKeyAndSortKeyEquals("java", "post-123")
 
 // Sort key begins with
-posts.query().partitionKeyAndSortKeyBeginsWith("java", "2024-")
+table.query().partitionKeyAndSortKeyBeginsWith("java", "2024-")
 
 // Sort key between
-posts.query().partitionKeyAndSortKeyBetween("java", "2024-01", "2024-12")
+table.query().partitionKeyAndSortKeyBetween("java", "2024-01", "2024-12")
 
 // Sort key comparisons
-posts.query().partitionKeyAndSortKeyGreaterThan("java", "2024-01-01")
-posts.query().partitionKeyAndSortKeyLessThanOrEqual("java", "2024-12-31")
+table.query().partitionKeyAndSortKeyGreaterThan("java", "2024-01-01")
+table.query().partitionKeyAndSortKeyLessThanOrEqual("java", "2024-12-31")
+
+// Scan index
+table.query().useIndex("AuthorIndex")
 ```
 
 ### Filter Expressions
 
 ```java
-.filter(f -> f
+table.query().partitionKey("java").filter(f -> f
     // Comparisons
     .eq("status", "ACTIVE")           // =
     .ne("status", "DELETED")          // <>
@@ -166,24 +195,24 @@ posts.query().partitionKeyAndSortKeyLessThanOrEqual("java", "2024-12-31")
     .ge("score", 100)                 // >=
     .lt("score", 100)                 // <
     .le("score", 100)                 // <=
-    
+
     // Range
     .between("score", 10, 100)
-    
+
     // List membership
     .in("status", "PENDING", "ACTIVE", "REVIEW")
-    
+
     // String operations
     .beginsWith("title", "How to")
     .contains("title", "Java")
-    
+
     // Collection contains
     .contains("keywords", "programming")
-    
+
     // Attribute existence
     .exists("metadata")
     .notExists("deletedAt")
-    
+
     // Size operations (server-side)
     .sizeEq("keywords", 5)
     .sizeGt("keywords", 3)
@@ -191,11 +220,11 @@ posts.query().partitionKeyAndSortKeyLessThanOrEqual("java", "2024-12-31")
     .sizeGe("keywords", 1)
     .sizeLe("keywords", 20)
     .sizeBetween("keywords", 1, 10)
-    
+
     // Logical operators
     .and()
     .or()
-    
+
     // Grouping (parentheses)
     .group(FilterExpression.builder()
         .eq("status", "A")
@@ -204,11 +233,26 @@ posts.query().partitionKeyAndSortKeyLessThanOrEqual("java", "2024-12-31")
 )
 ```
 
+### Update Expressions
+
+```java
+table.update(item)
+    .update(u -> u
+        .set("title", "New Title")
+        .set("score", 42)
+        .increment("views", 1)
+        .appendToList("tags", List.of("java", "dynamodb"))
+        .remove("temporaryField")
+        .addToSet("categories", Set.of("tech"))
+    )
+    .condition(c -> c.eq("author", "john"))
+    .execute();
+```
+
 ### Projections
 
 ```java
-// Select specific attributes
-posts.query()
+table.query()
     .partitionKey("java")
     .project("id", "title", "author")
     .execute();
@@ -217,7 +261,7 @@ posts.query()
 ### Sorting & Limiting
 
 ```java
-posts.query()
+table.query()
     .partitionKey("java")
     .descending()              // or .ascending()
     .limit(20)
@@ -228,13 +272,13 @@ posts.query()
 
 ```java
 // Get first page
-PagedResult<Post> page1 = posts.query()
+PagedResult<Post> page1 = table.query()
     .partitionKey("java")
     .limit(20)
     .executeWithPagination();
 
 // Get next page
-PagedResult<Post> page2 = posts.query()
+PagedResult<Post> page2 = table.query()
     .partitionKey("java")
     .limit(20)
     .startFrom(page1.getLastEvaluatedKey())
@@ -250,65 +294,77 @@ if (page2.hasMorePages()) {
 
 ```java
 // Scan with filter
-List<Post> allByAuthor = posts.scan()
+List<Post> allByAuthor = table.scan()
     .filter(f -> f.eq("author", "john"))
     .execute();
 
 // Parallel scan
-List<Post> segment = posts.scan()
+List<Post> segment = table.scan()
     .filter(f -> f.gt("createdUtc", timestamp))
     .parallelScan(4, 0)  // 4 segments, this is segment 0
     .execute();
+
+// Scan with count
+long count = table.scan()
+    .filter(f -> f.exists("metadata"))
+    .count();
 ```
 
 ### CRUD Operations
 
 ```java
-// Get
-Optional<Post> post = posts.get("java", "post-123");
+// Get item directly (returns Optional<T>)
+Optional<Post> post = table.getItem("java", "post-123");
+
+// Get item with projection (uses GetItemBuilder)
+Optional<Post> post = table.get("java", "post-123")
+    .project("id", "title")
+    .execute();
 
 // Put
-posts.putItem(post);
+table.putItem(post);
 
 // Put if not exists
-posts.put(post)
+table.put(post)
     .onlyIfNotExists("id")
     .execute();
 
 // Put with condition
-posts.put(post)
+table.put(post)
     .condition(c -> c
         .notExists("id")
         .or()
         .lt("createdUtc", oldTimestamp))
     .execute();
 
-// Update
-Post updated = posts.updateItem(post);
+// Update (full item replacement)
+Post updated = table.updateItem(post);
 
-// Update with condition
-Post updated = posts.update(post)
+// Update with partial expression
+Post updated = table.update(post)
+    .update(u -> u.set("title", "New Title"))
     .condition(c -> c.eq("author", expectedAuthor))
     .execute();
 
-// Delete
-posts.deleteItem("java", "post-123");
+// Delete directly
+table.deleteItem("java", "post-123");
 
 // Delete with condition
-posts.delete("java", "post-123")
+table.delete("java", "post-123")
     .condition(c -> c.eq("author", requestingUser))
     .execute();
 ```
+
 ---
 
-## 🔧 Usage with Dependency Injection
+## Using with Dependency Injection
 
 ### Micronaut
 
 ```java
 @Factory
 public class DynamoConfig {
-    
+
     @Singleton
     public DynamoSimplifiedClient dynamoSimplifiedClient(DynamoDbClient dynamoDbClient) {
         return DynamoSimplifiedClient.create(dynamoDbClient);
@@ -317,9 +373,9 @@ public class DynamoConfig {
 
 @Singleton
 public class PostRepository {
-    
-    private final TableOperations<Post> table;
-    
+
+    private final Table<Post> table;
+
     public PostRepository(DynamoSimplifiedClient client) {
         this.table = client.table("posts", Post.class);
     }
@@ -331,7 +387,7 @@ public class PostRepository {
 ```java
 @Configuration
 public class DynamoConfig {
-    
+
     @Bean
     public DynamoSimplifiedClient dynamoSimplifiedClient(DynamoDbClient dynamoDbClient) {
         return DynamoSimplifiedClient.create(dynamoDbClient);
@@ -340,9 +396,9 @@ public class DynamoConfig {
 
 @Repository
 public class PostRepository {
-    
-    private final TableOperations<Post> table;
-    
+
+    private final Table<Post> table;
+
     public PostRepository(DynamoSimplifiedClient client) {
         this.table = client.table("posts", Post.class);
     }
@@ -351,19 +407,43 @@ public class PostRepository {
 
 ---
 
-## 📋 Requirements
+## Requirements
 
 - Java 17+
 - AWS SDK v2 (2.20.0+)
 
 ---
 
-## 📄 License
+## Project Structure
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```
+dynamodb-simplified/
+├── dynamodb-simplified-core/    # the library (pure Java, zero framework deps)
+│   ├── build.gradle.kts
+│   └── src/main/java/com/hogwai/dynamodb/simplified/
+│       ├── DynamoSimplifiedClient.java    # entry point, factory methods
+│       ├── Table.java                     # fluent table operations
+│       ├── builder/                       # QueryBuilder, PutBuilder, etc.
+│       ├── exception/                     # DynamoSimplifiedException, ConditionFailedException
+│       ├── expression/                    # FilterExpression, UpdateExpression, ProjectionExpression
+│       ├── internal/                      # AttributeValueConverter
+│       └── result/                        # PagedResult
+│
+├── dynamodb-simplified-demo/     # example Micronaut application
+│   └── build.gradle.kts
+│
+├── build.gradle.kts              # root project
+└── settings.gradle.kts
+```
 
 ---
 
-## 🙏 Acknowledgments
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
 
 Built on top of the excellent [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2).
