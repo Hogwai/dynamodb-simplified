@@ -82,6 +82,44 @@ class TableTest {
         assertNotNull(table.get("pk"));
     }
 
+    @Test
+    @DisplayName("get(pk, sk) returns a non-null GetItemBuilder")
+    void getWithPartitionAndSortKey() {
+        Table<TestItem> table = createTable();
+        assertNotNull(table.get("pk", "sk"));
+    }
+
+    @Test
+    @DisplayName("getItem(pk, sk) delegates to DynamoDbTable.getItem(Key) with sort key")
+    void getItemWithPartitionAndSortKey() {
+        Table<TestItem> table = createTable();
+        table.getItem("pk", "sk");
+        verify(dynamoDbTable).getItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("delete(pk, sk) returns a non-null DeleteBuilder")
+    void deleteWithPartitionAndSortKey() {
+        Table<TestItem> table = createTable();
+        assertNotNull(table.delete("pk", "sk"));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk) delegates to DynamoDbTable.deleteItem(Key)")
+    void deleteItemDelegates() {
+        Table<TestItem> table = createTable();
+        table.deleteItem("pk");
+        verify(dynamoDbTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbTable.deleteItem(Key) with sort key")
+    void deleteItemWithPartitionAndSortKey() {
+        Table<TestItem> table = createTable();
+        table.deleteItem("pk", "sk");
+        verify(dynamoDbTable).deleteItem(any(Key.class));
+    }
+
     // ============ Convenience Delegation Methods ============
 
     @Test

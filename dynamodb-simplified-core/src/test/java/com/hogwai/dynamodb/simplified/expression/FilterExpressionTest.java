@@ -325,7 +325,7 @@ class FilterExpressionTest {
     // ============ Group ============
 
     @Test
-    @DisplayName("group wraps a sub-expression in parentheses and merges its names and values (overwrites colliding keys)")
+    @DisplayName("group wraps a sub-expression in parentheses and merges its names and values with offset re-keying to avoid collisions")
     void group_expression() {
         FilterExpression inner = FilterExpression.builder()
                 .eq("role", "admin")
@@ -337,11 +337,12 @@ class FilterExpressionTest {
                 .and()
                 .group(inner);
 
-        // group() uses putAll so inner keys (#n0, :v0) overwrite outer keys
-        assertEquals("#n0 = :v0 AND (#n0 = :v0 OR #n1 = :v1)", fe.getExpression());
-        assertEquals(Map.of("#n0", "role", "#n1", "role"), fe.getExpressionNames());
-        assertEquals(AttributeValue.builder().s("admin").build(), fe.getExpressionValues().get(":v0"));
-        assertEquals(AttributeValue.builder().s("moderator").build(), fe.getExpressionValues().get(":v1"));
+        // group() re-keys nested placeholders so outer keys are preserved
+        assertEquals("#n0 = :v0 AND (#n1 = :v1 OR #n2 = :v2)", fe.getExpression());
+        assertEquals(Map.of("#n0", "status", "#n1", "role", "#n2", "role"), fe.getExpressionNames());
+        assertEquals(AttributeValue.builder().s("active").build(), fe.getExpressionValues().get(":v0"));
+        assertEquals(AttributeValue.builder().s("admin").build(), fe.getExpressionValues().get(":v1"));
+        assertEquals(AttributeValue.builder().s("moderator").build(), fe.getExpressionValues().get(":v2"));
     }
 
     @Test
@@ -368,8 +369,8 @@ class FilterExpressionTest {
                 .and()
                 .group(inner);
 
-        // group() putAll overwrites outer #n0 and :v0 with inner entries
-        assertEquals("#n0 > :v0 AND (#n0 = :v0 OR #n1 = :v1)", outer.getExpression());
+        // group() re-keys inner placeholders to avoid collision with outer
+        assertEquals("#n0 > :v0 AND (#n1 = :v1 OR #n2 = :v2)", outer.getExpression());
     }
 
     // ============ Nested Attribute Access ============
@@ -502,11 +503,12 @@ class FilterExpressionTest {
                 .not()
                 .group(inner);
 
-        // group() putAll overwrites outer #n0 and :v0 with inner's values
-        assertEquals("#n0 = :v0 AND #n1 BETWEEN :v1 AND :v2 AND NOT (#n0 = :v0)", fe.getExpression());
-        assertEquals(AttributeValue.builder().s("admin").build(), fe.getExpressionValues().get(":v0"));
+        // group() re-keys inner placeholders so outer keys are preserved
+        assertEquals("#n0 = :v0 AND #n1 BETWEEN :v1 AND :v2 AND NOT (#n2 = :v3)", fe.getExpression());
+        assertEquals(AttributeValue.builder().s("book").build(), fe.getExpressionValues().get(":v0"));
         assertEquals(AttributeValue.builder().n("10").build(), fe.getExpressionValues().get(":v1"));
         assertEquals(AttributeValue.builder().n("50").build(), fe.getExpressionValues().get(":v2"));
+        assertEquals(AttributeValue.builder().s("admin").build(), fe.getExpressionValues().get(":v3"));
     }
 
     @Test
@@ -561,8 +563,35 @@ class FilterExpressionTest {
                 .and()
                 .eq("y", 2);
 
-        // After group(inner), name/value maps contain inner's entries and
-        // counters are still at 0, so eq("y",2) reuses #n0/:v0.
-        assertEquals("(#n0 = :v0) AND #n0 = :v0", outer.getExpression());
+        // After group(inner), inner's entries are merged with offset,
+        // counters are incremented, so eq("y",2) uses #n1/:v1.
+        assertEquals("(#n0 = :v0) AND #n1 = :v1", outer.getExpression());
+    }
+
+    @Test
+    @DisplayName("group with 10+ placeholders correctly re-keys without substring collisions (e.g. #n1 inside #n10)")
+    void groupWithManyPlaceholders() {
+        // Build an inner expression with 10 equality conditions = 10 names + 10 values
+        FilterExpression inner = FilterExpression.builder();
+        for (int i = 0; i < 10; i++) {
+            inner = inner.eq("attr" + i, i);
+        }
+
+        // Outer already has one condition, so nameOffset=1 and valueOffset=1
+        // Inner's #n0..#n9 → #n1..#n10 and :v0..:v9 → :v1..:v10
+        FilterExpression outer = FilterExpression.builder()
+                .eq("outer", true)
+                .and()
+                .group(inner);
+
+        String expr = outer.getExpression();
+        // Verify the 10th grouped placeholder is present (would be corrupted by substring replace)
+        assertTrue(expr.contains("#n10"), "expression should contain #n10");
+        assertTrue(expr.contains(":v10"), "expression should contain :v10");
+
+        // Verify no placeholder key is a prefix of another (corruption indicator)
+        // Count all unique name keys — should be 11 (outer + inner 10)
+        assertEquals(11, outer.getExpressionNames().size());
+        assertEquals(11, outer.getExpressionValues().size());
     }
 }

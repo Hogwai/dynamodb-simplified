@@ -1,11 +1,13 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -97,7 +99,11 @@ public class DeleteBuilder<T> {
             );
         }
 
-        return table.deleteItem(requestBuilder.build());
+        try {
+            return table.deleteItem(requestBuilder.build());
+        } catch (ConditionalCheckFailedException e) {
+            throw ConditionFailedException.fromSdk(e);
+        }
     }
 
     private static AttributeValue toAttributeValue(Object value) {

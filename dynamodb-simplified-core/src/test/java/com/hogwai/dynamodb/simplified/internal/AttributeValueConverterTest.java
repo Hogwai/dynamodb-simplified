@@ -186,6 +186,22 @@ class AttributeValueConverterTest {
     }
 
     // ---------------------------------------------------------------
+    // toAttributeValue – Set with unsupported element type
+    // ---------------------------------------------------------------
+
+    @Test
+    @DisplayName("toAttributeValue(Set with unsupported element type) should throw IllegalArgumentException")
+    void shouldThrowWhenSetContainsUnsupportedType() {
+        Set<Object> badSet = new LinkedHashSet<>();
+        badSet.add(LocalDate.of(2025, 1, 1));
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> AttributeValueConverter.toAttributeValue(badSet)
+        );
+        assertTrue(ex.getMessage().contains("LocalDate"));
+    }
+
+    // ---------------------------------------------------------------
     // toAttributeValue – Map<String, Object>
     // ---------------------------------------------------------------
 

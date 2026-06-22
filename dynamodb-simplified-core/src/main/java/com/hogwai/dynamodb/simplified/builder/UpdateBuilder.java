@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -9,6 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
@@ -131,7 +133,11 @@ public class UpdateBuilder<T> {
             );
         }
 
-        return table.updateItem(requestBuilder.build());
+        try {
+            return table.updateItem(requestBuilder.build());
+        } catch (ConditionalCheckFailedException e) {
+            throw ConditionFailedException.fromSdk(e);
+        }
     }
 
     // ---- Partial update via low-level client ----
@@ -159,8 +165,12 @@ public class UpdateBuilder<T> {
                     .expressionAttributeValues(allValues);
         }
 
-        Map<String, AttributeValue> result =
-                dynamoDbClient.updateItem(requestBuilder.build()).attributes();
+        Map<String, AttributeValue> result;
+        try {
+            result = dynamoDbClient.updateItem(requestBuilder.build()).attributes();
+        } catch (ConditionalCheckFailedException e) {
+            throw ConditionFailedException.fromSdk(e);
+        }
 
         return table.tableSchema().mapToItem(result);
     }

@@ -1,9 +1,11 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -87,6 +89,10 @@ public class PutBuilder<T> {
             );
         }
 
-        table.putItem(requestBuilder.build());
+        try {
+            table.putItem(requestBuilder.build());
+        } catch (ConditionalCheckFailedException e) {
+            throw ConditionFailedException.fromSdk(e);
+        }
     }
 }

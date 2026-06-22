@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.hogwai"
-version = "0.1"
+version = "0.1.0"
 
 subprojects {
     group = rootProject.group

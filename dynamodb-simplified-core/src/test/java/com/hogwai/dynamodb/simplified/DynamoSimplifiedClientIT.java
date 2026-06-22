@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified;
 
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.GenericContainer;
@@ -182,7 +183,7 @@ class DynamoSimplifiedClientIT {
 
         // Try again — should throw ConditionalCheckFailedException when item already exists
         var product2 = new Product("p6", "Second", 2.0, true, null, 8000L);
-        assertThrows(software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException.class,
+        assertThrows(ConditionFailedException.class,
                 () -> table.put(product2).onlyIfNotExists("id").execute());
 
         // Original item should still be there (condition prevented overwrite)
@@ -222,7 +223,7 @@ class DynamoSimplifiedClientIT {
     void conditionalUpdateWithNonMatchingCondition() {
         table.putItem(new Product("p9", "KeepMe", 1.0, true, null, 13000L));
 
-        assertThrows(Exception.class, () ->
+        assertThrows(ConditionFailedException.class, () ->
                 table.update(new Product("p9", "ShouldNotApply", 2.0, true, null, 14000L))
                         .condition(c -> c.eq("name", "NonExistent"))
                         .execute()
@@ -249,7 +250,7 @@ class DynamoSimplifiedClientIT {
     void conditionalDeleteWithNonMatchingCondition() {
         table.putItem(new Product("p11", "KeepMeAlive", 1.0, true, null, 16000L));
 
-        assertThrows(Exception.class, () ->
+        assertThrows(ConditionFailedException.class, () ->
                 table.delete("p11").condition(c -> c.eq("name", "NonExistent")).execute()
         );
 
@@ -418,6 +419,17 @@ class DynamoSimplifiedClientIT {
 
         assertEquals(2, results.size());
         assertEquals("TransactGet1", ((Product) Objects.requireNonNull(results.get(0))).getName());
+    }
+
+    @Test
+    void transactGetNonExistentItemReturnsNull() {
+        // Request an item that does not exist — should return null, not NPE
+        var results = client.transactGet()
+                .addGetItem(table, "nonexistent-transact")
+                .execute();
+
+        assertEquals(1, results.size());
+        assertNull(results.get(0));
     }
 
     // ============ Projection via GetItemBuilder ============
