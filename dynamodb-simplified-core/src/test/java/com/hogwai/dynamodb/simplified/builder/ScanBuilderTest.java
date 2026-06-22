@@ -159,6 +159,22 @@ class ScanBuilderTest {
     }
 
     @Test
+    @DisplayName("project(Consumer) builds projection from consumer and sets attributesToProject")
+    void projectWithConsumer() {
+        stubScanReturns(pageIterable());
+
+        new ScanBuilder<>(table)
+                .project(pb -> pb.include("attrFromConsumer"))
+                .execute();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+
+        assertEquals(List.of("attrFromConsumer"), request.attributesToProject());
+    }
+
+    @Test
     @DisplayName("limit(100) sets limit in request")
     void limit() {
         stubScanReturns(pageIterable());

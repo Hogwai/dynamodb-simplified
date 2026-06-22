@@ -138,4 +138,57 @@ class DynamoSimplifiedClientTest {
 
         assertSame(enhancedClient, client.getEnhancedClient());
     }
+
+    @Test
+    @DisplayName("transactGet() returns a non-null TransactGetBuilder")
+    void transactGetReturnsBuilder() {
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+
+        assertNotNull(client.transactGet());
+    }
+
+    @Test
+    @DisplayName("transactWrite() returns a non-null TransactWriteBuilder")
+    void transactWriteReturnsBuilder() {
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+
+        assertNotNull(client.transactWrite());
+    }
+
+    @Test
+    @DisplayName("table(String, TableSchema) returns a typed Table instance")
+    void tableWithTableSchemaReturnsTypedTable() {
+        when(enhancedClient.table(eq("test-table"), any(TableSchema.class))).thenReturn(dynamoDbTable);
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        TableSchema<TestItem> schema = TableSchema.fromBean(TestItem.class);
+        Table<TestItem> table = client.table("test-table", schema);
+        assertNotNull(table);
+    }
+
+    @Test
+    @DisplayName("create() no-arg returns a non-null instance")
+    void createNoArg() {
+        // Set AWS SDK system properties so DynamoDbClient.create() succeeds
+        // (default provider chain reads these). Restore originals in finally.
+        String origRegion = System.setProperty("aws.region", "us-east-1");
+        String origKey = System.setProperty("aws.accessKeyId", "test-key");
+        String origSecret = System.setProperty("aws.secretKey", "test-secret");
+        try {
+            DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
+            assertNotNull(client);
+            assertNotNull(client.getEnhancedClient());
+        } finally {
+            restoreProperty("aws.region", origRegion);
+            restoreProperty("aws.accessKeyId", origKey);
+            restoreProperty("aws.secretKey", origSecret);
+        }
+    }
+
+    private static void restoreProperty(String key, String origValue) {
+        if (origValue != null) {
+            System.setProperty(key, origValue);
+        } else {
+            System.clearProperty(key);
+        }
+    }
 }

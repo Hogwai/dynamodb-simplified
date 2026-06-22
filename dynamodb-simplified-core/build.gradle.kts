@@ -25,7 +25,7 @@ dependencies {
     api("software.amazon.awssdk:dynamodb")
     api("software.amazon.awssdk:dynamodb-enhanced")
 
-    compileOnly("org.jspecify:jspecify:${project.findProperty("versionJspecify")}")
+    api("org.jspecify:jspecify:${project.findProperty("versionJspecify")}")
 
     // Static analysis: Error Prone
     errorprone("com.google.errorprone:error_prone_core:${project.findProperty("versionErrorProneCore")}")
@@ -102,6 +102,7 @@ jacoco {
 
 tasks.jacocoTestReport {
     dependsOn("test", integrationTest)
+    executionData.setFrom(fileTree(buildDir) { include("jacoco/*.exec") })
     reports {
         xml.required = true
         html.required = true
@@ -110,6 +111,7 @@ tasks.jacocoTestReport {
 
 tasks.jacocoTestCoverageVerification {
     dependsOn("test", integrationTest)
+    executionData.setFrom(fileTree(buildDir) { include("jacoco/*.exec") })
     violationRules {
         rule {
             limit {
@@ -166,5 +168,9 @@ publishing {
 }
 
 signing {
+    useInMemoryPgpKeys(
+        System.getenv("SIGNING_KEY") ?: "",
+        System.getenv("SIGNING_PASSWORD") ?: ""
+    )
     sign(publishing.publications["mavenJava"])
 }

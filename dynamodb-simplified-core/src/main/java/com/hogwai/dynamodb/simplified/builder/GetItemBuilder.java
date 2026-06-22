@@ -1,17 +1,18 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -27,6 +28,7 @@ public class GetItemBuilder<T> {
     private final Object sortKey;
     private ProjectionExpression projectionExpression;
     private boolean consistentRead = false;
+    private final DynamoDbClient dynamoDbClient;
 
     /**
      * Constructs a new {@code GetItemBuilder} for the given table and key.
@@ -35,10 +37,12 @@ public class GetItemBuilder<T> {
      * @param partitionKey the partition key value
      * @param sortKey      the sort key value (may be {@code null} if the table has no sort key)
      */
-    public GetItemBuilder(@NonNull DynamoDbTable<T> table, @NonNull Object partitionKey, @Nullable Object sortKey) {
+    public GetItemBuilder(@NonNull DynamoDbTable<T> table, @NonNull Object partitionKey,
+                          @Nullable Object sortKey, @NonNull DynamoDbClient dynamoDbClient) {
         this.table = table;
         this.partitionKey = partitionKey;
         this.sortKey = sortKey;
+        this.dynamoDbClient = dynamoDbClient;
     }
 
     /**
@@ -104,25 +108,26 @@ public class GetItemBuilder<T> {
     }
 
     private Optional<T> executeWithProjection() {
-        Key.Builder keyBuilder = Key.builder().partitionValue(toAttributeValue(partitionKey));
-        if (sortKey != null) {
-            keyBuilder.sortValue(toAttributeValue(sortKey));
+        String pkName = table.tableSchema().tableMetadata().primaryPartitionKey();
+        String skName = table.tableSchema().tableMetadata().primarySortKey().orElse(null);
+
+        Map<String, AttributeValue> keyMap = new HashMap<>();
+        keyMap.put(pkName, toAttributeValue(partitionKey));
+        if (skName != null && sortKey != null) {
+            keyMap.put(skName, toAttributeValue(sortKey));
         }
-        Key key = keyBuilder.build();
 
-        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
-                                                           .queryConditional(QueryConditional.keyEqualTo(key))
-                                                           .consistentRead(consistentRead)
-                                                           .limit(1)
-                                                                    .attributesToProject(
-                                                                     projectionExpression.getExpressionNames().values()
-                                                                                         .toArray(new String[0]))
-                                                           .build();
+        GetItemRequest request = GetItemRequest.builder()
+                .tableName(table.tableName())
+                .key(keyMap)
+                .projectionExpression(projectionExpression.getExpression())
+                .expressionAttributeNames(projectionExpression.getExpressionNames())
+                .consistentRead(consistentRead)
+                .build();
 
-        return table.query(request)
-                    .items()
-                    .stream()
-                    .findFirst();
+        var response = dynamoDbClient.getItem(request);
+        T item = response.hasItem() ? table.tableSchema().mapToItem(response.item()) : null;
+        return Optional.ofNullable(item);
     }
 
     private static AttributeValue toAttributeValue(Object value) {

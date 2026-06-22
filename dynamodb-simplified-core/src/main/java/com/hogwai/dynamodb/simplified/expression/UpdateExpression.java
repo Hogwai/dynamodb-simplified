@@ -6,7 +6,6 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import org.jspecify.annotations.NonNull;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Fluent builder for constructing DynamoDB update expressions as part of the
@@ -28,8 +27,8 @@ public class UpdateExpression {
 
     private final Map<String, String> expressionNames = new HashMap<>();
     private final Map<String, AttributeValue> expressionValues = new HashMap<>();
-    private final AtomicInteger nameCounter = new AtomicInteger(0);
-    private final AtomicInteger valueCounter = new AtomicInteger(0);
+    private int nameCounter = 0;
+    private int valueCounter = 0;
 
     private static final String SPACE_SEPARATED = "%s %s";
 
@@ -57,7 +56,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression set(String attribute, Object value) {
+    public UpdateExpression set(@NonNull String attribute, @NonNull Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s = %s".formatted(nameKey, valueKey));
@@ -74,7 +73,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression setIfNotExists(String attribute, Object value) {
+    public UpdateExpression setIfNotExists(@NonNull String attribute, @NonNull Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s = if_not_exists(%s, %s)".formatted(nameKey, nameKey, valueKey));
@@ -91,7 +90,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression increment(String attribute, Number delta) {
+    public UpdateExpression increment(@NonNull String attribute, @NonNull Number delta) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().n(delta.toString()).build());
         setActions.add("%s = %s + %s".formatted(nameKey, nameKey, valueKey));
@@ -108,7 +107,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression decrement(String attribute, Number delta) {
+    public UpdateExpression decrement(@NonNull String attribute, @NonNull Number delta) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().n(delta.toString()).build());
         setActions.add("%s = %s - %s".formatted(nameKey, nameKey, valueKey));
@@ -125,7 +124,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression appendToList(String attribute, List<?> values) {
+    public UpdateExpression appendToList(@NonNull String attribute, @NonNull List<?> values) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         String emptyListKey = addValue(AttributeValue.builder().l(Collections.emptyList()).build());
@@ -143,7 +142,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression prependToList(String attribute, List<?> values) {
+    public UpdateExpression prependToList(@NonNull String attribute, @NonNull List<?> values) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         String emptyListKey = addValue(AttributeValue.builder().l(Collections.emptyList()).build());
@@ -162,7 +161,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression setListElement(String attribute, int index, Object value) {
+    public UpdateExpression setListElement(@NonNull String attribute, int index, @NonNull Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s[%d] = %s".formatted(nameKey, index, valueKey));
@@ -179,7 +178,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression setNested(String path, Object value) {
+    public UpdateExpression setNested(@NonNull String path, @NonNull Object value) {
         String nameKey = addNestedName(path);
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s = %s".formatted(nameKey, valueKey));
@@ -196,7 +195,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression remove(String... attributes) {
+    public UpdateExpression remove(@NonNull String... attributes) {
         for (String attr : attributes) {
             removeActions.add(addName(attr));
         }
@@ -212,7 +211,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression removeListElement(String attribute, int index) {
+    public UpdateExpression removeListElement(@NonNull String attribute, int index) {
         String nameKey = addName(attribute);
         removeActions.add("%s[%d]".formatted(nameKey, index));
         return this;
@@ -230,7 +229,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression addToSet(String attribute, Set<?> values) {
+    public UpdateExpression addToSet(@NonNull String attribute, @NonNull Set<?> values) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         addActions.add(SPACE_SEPARATED.formatted(nameKey, valueKey));
@@ -249,7 +248,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression addNumber(String attribute, Number value) {
+    public UpdateExpression addNumber(@NonNull String attribute, @NonNull Number value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().n(value.toString()).build());
         addActions.add(SPACE_SEPARATED.formatted(nameKey, valueKey));
@@ -267,7 +266,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression deleteFromSet(String attribute, Set<?> values) {
+    public UpdateExpression deleteFromSet(@NonNull String attribute, @NonNull Set<?> values) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         deleteActions.add(SPACE_SEPARATED.formatted(nameKey, valueKey));
@@ -276,13 +275,14 @@ public class UpdateExpression {
 
     // ============ Helper methods ============
 
-    private String addName(String attribute) {
-        String key = "#u" + nameCounter.getAndIncrement();
+    private String addName(@NonNull String attribute) {
+        String key = "#u" + nameCounter;
+        nameCounter++;
         expressionNames.put(key, attribute);
         return key;
     }
 
-    private String addNestedName(String path) {
+    private String addNestedName(@NonNull String path) {
         String[] parts = path.split("\\.");
         StringJoiner joiner = new StringJoiner(".");
         for (String part : parts) {
@@ -297,13 +297,14 @@ public class UpdateExpression {
         return joiner.toString();
     }
 
-    private String addValue(AttributeValue value) {
-        String key = ":u" + valueCounter.getAndIncrement();
+    private String addValue(@NonNull AttributeValue value) {
+        String key = ":u" + valueCounter;
+        valueCounter++;
         expressionValues.put(key, value);
         return key;
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
+    private static AttributeValue toAttributeValue(@NonNull Object value) {
         return AttributeValueConverter.toAttributeValue(value);
     }
 

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import org.jspecify.annotations.NonNull;
 
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * Fluent builder for constructing DynamoDB projection expressions as part of
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ProjectionExpression {
     private final List<String> projections = new ArrayList<>();
     private final Map<String, String> expressionNames = new HashMap<>();
-    private final AtomicInteger nameCounter = new AtomicInteger(0);
+    private int nameCounter = 0;
 
     private ProjectionExpression() {
     }
@@ -48,7 +48,7 @@ public class ProjectionExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public ProjectionExpression include(String... attributes) {
+    public ProjectionExpression include(@NonNull String... attributes) {
         for (String attr : attributes) {
             String key = addName(attr);
             projections.add(key);
@@ -66,7 +66,7 @@ public class ProjectionExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public ProjectionExpression includeNested(String path) {
+    public ProjectionExpression includeNested(@NonNull String path) {
         String nameKey = addNestedName(path);
         projections.add(nameKey);
         return this;
@@ -81,19 +81,20 @@ public class ProjectionExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public ProjectionExpression includeListElement(String attribute, int index) {
+    public ProjectionExpression includeListElement(@NonNull String attribute, int index) {
         String nameKey = addName(attribute);
         projections.add(nameKey + "[" + index + "]");
         return this;
     }
 
-    private String addName(String attribute) {
-        String key = "#p" + nameCounter.getAndIncrement();
+    private String addName(@NonNull String attribute) {
+        String key = "#p" + nameCounter;
+        nameCounter++;
         expressionNames.put(key, attribute);
         return key;
     }
 
-    private String addNestedName(String path) {
+    private String addNestedName(@NonNull String path) {
         String[] parts = path.split("\\.");
         StringJoiner joiner = new StringJoiner(".");
         for (String part : parts) {

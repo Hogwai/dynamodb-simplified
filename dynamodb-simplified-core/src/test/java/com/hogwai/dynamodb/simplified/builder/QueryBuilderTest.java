@@ -553,4 +553,19 @@ class QueryBuilderTest {
 
         assertFalse(request.consistentRead());
     }
+
+    @Test
+    @DisplayName("executeWithPagination() when iterable yields no pages returns empty PagedResult with null key")
+    void executeWithPagination_emptyIterable() {
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+
+        PagedResult<TestItem> result = new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .executeWithPagination();
+
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.size());
+        assertNull(result.getLastEvaluatedKey());
+        assertFalse(result.hasMorePages());
+    }
 }

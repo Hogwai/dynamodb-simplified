@@ -6,7 +6,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import org.jspecify.annotations.NonNull;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 /**
  * Fluent builder for constructing DynamoDB filter expressions used in
@@ -27,8 +27,8 @@ public class FilterExpression {
     private final StringBuilder expression = new StringBuilder();
     private final Map<String, String> expressionNames = new HashMap<>();
     private final Map<String, AttributeValue> expressionValues = new HashMap<>();
-    private final AtomicInteger nameCounter = new AtomicInteger(0);
-    private final AtomicInteger valueCounter = new AtomicInteger(0);
+    private int nameCounter = 0;
+    private int valueCounter = 0;
 
     private FilterExpression() {
     }
@@ -53,7 +53,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression eq(String attribute, Object value) {
+    public FilterExpression eq(@NonNull String attribute, @NonNull Object value) {
         return addCondition(attribute, "=", value);
     }
 
@@ -65,7 +65,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression ne(String attribute, Object value) {
+    public FilterExpression ne(@NonNull String attribute, @NonNull Object value) {
         return addCondition(attribute, "<>", value);
     }
 
@@ -77,7 +77,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression lt(String attribute, Object value) {
+    public FilterExpression lt(@NonNull String attribute, @NonNull Object value) {
         return addCondition(attribute, "<", value);
     }
 
@@ -89,7 +89,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression le(String attribute, Object value) {
+    public FilterExpression le(@NonNull String attribute, @NonNull Object value) {
         return addCondition(attribute, "<=", value);
     }
 
@@ -101,7 +101,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression gt(String attribute, Object value) {
+    public FilterExpression gt(@NonNull String attribute, @NonNull Object value) {
         return addCondition(attribute, ">", value);
     }
 
@@ -113,7 +113,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression ge(String attribute, Object value) {
+    public FilterExpression ge(@NonNull String attribute, @NonNull Object value) {
         return addCondition(attribute, ">=", value);
     }
 
@@ -128,7 +128,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression beginsWith(String attribute, String prefix) {
+    public FilterExpression beginsWith(@NonNull String attribute, @NonNull String prefix) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().s(prefix).build());
         appendToExpression("begins_with(%s, %s)".formatted(nameKey, valueKey));
@@ -145,7 +145,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression contains(String attribute, Object value) {
+    public FilterExpression contains(@NonNull String attribute, @NonNull Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         appendToExpression("contains(%s, %s)".formatted(nameKey, valueKey));
@@ -247,7 +247,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression exists(String attribute) {
+    public FilterExpression exists(@NonNull String attribute) {
         String nameKey = addName(attribute);
         appendToExpression("attribute_exists(%s)".formatted(nameKey));
         return this;
@@ -261,7 +261,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression notExists(String attribute) {
+    public FilterExpression notExists(@NonNull String attribute) {
         String nameKey = addName(attribute);
         appendToExpression("attribute_not_exists(%s)".formatted(nameKey));
         return this;
@@ -278,7 +278,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression attributeType(String attribute, AttributeType type) {
+    public FilterExpression attributeType(@NonNull String attribute, @NonNull AttributeType type) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().s(type.getCode()).build());
         appendToExpression("attribute_type(%s, %s)".formatted(nameKey, valueKey));
@@ -297,7 +297,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression between(String attribute, Object low, Object high) {
+    public FilterExpression between(@NonNull String attribute, @NonNull Object low, @NonNull Object high) {
         String nameKey = addName(attribute);
         String lowKey = addValue(toAttributeValue(low));
         String highKey = addValue(toAttributeValue(high));
@@ -316,7 +316,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression in(String attribute, Object... values) {
+    public FilterExpression in(@NonNull String attribute, @NonNull Object... values) {
         String nameKey = addName(attribute);
         StringJoiner joiner = new StringJoiner(", ");
         for (Object value : values) {
@@ -370,10 +370,35 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression group(FilterExpression nested) {
-        this.expressionNames.putAll(nested.expressionNames);
-        this.expressionValues.putAll(nested.expressionValues);
-        appendToExpression("(" + nested.expression + ")");
+    public FilterExpression group(@NonNull FilterExpression nested) {
+        // Re-key nested placeholders to avoid collision
+        int nameOffset = nameCounter;
+        int valueOffset = valueCounter;
+        Map<String, String> rekeyedNames = new HashMap<>();
+        Map<String, AttributeValue> rekeyedValues = new HashMap<>();
+        nested.expressionNames.forEach((k, v) -> {
+            int idx = Integer.parseInt(k.substring(2));
+            String newKey = "#n" + (nameOffset + idx);
+            rekeyedNames.put(newKey, v);
+            nameCounter++;
+        });
+        nested.expressionValues.forEach((k, v) -> {
+            int idx = Integer.parseInt(k.substring(2));
+            String newKey = ":v" + (valueOffset + idx);
+            rekeyedValues.put(newKey, v);
+            valueCounter++;
+        });
+        // Rebuild nested expression string with new keys
+        // Use regex to safely handle multi-digit indices (e.g., #n10 contains #n1)
+        String rekeyedExpr = Pattern.compile("#n(\\d+)")
+                .matcher(nested.expression.toString())
+                .replaceAll(mr -> "#n" + (nameOffset + Integer.parseInt(mr.group(1))));
+        rekeyedExpr = Pattern.compile(":v(\\d+)")
+                .matcher(rekeyedExpr)
+                .replaceAll(mr -> ":v" + (valueOffset + Integer.parseInt(mr.group(1))));
+        this.expressionNames.putAll(rekeyedNames);
+        this.expressionValues.putAll(rekeyedValues);
+        appendToExpression("(" + rekeyedExpr + ")");
         return this;
     }
 
@@ -390,7 +415,7 @@ public class FilterExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public FilterExpression nestedEq(String path, Object value) {
+    public FilterExpression nestedEq(@NonNull String path, @NonNull Object value) {
         String nameKey = addNestedName(path);
         String valueKey = addValue(toAttributeValue(value));
         appendToExpression("%s = %s".formatted(nameKey, valueKey));
@@ -399,27 +424,28 @@ public class FilterExpression {
 
     // ============ Utility Methods ============
 
-    private FilterExpression addCondition(String attribute, String operator, Object value) {
+    private FilterExpression addCondition(@NonNull String attribute, @NonNull String operator, @NonNull Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         appendToExpression("%s %s %s".formatted(nameKey, operator, valueKey));
         return this;
     }
 
-    private FilterExpression addSizeCondition(String attribute, String operator, int size) {
+    private FilterExpression addSizeCondition(@NonNull String attribute, @NonNull String operator, int size) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().n(String.valueOf(size)).build());
         appendToExpression("size(%s) %s %s".formatted(nameKey, operator, valueKey));
         return this;
     }
 
-    private String addName(String attribute) {
-        String key = "#n" + nameCounter.getAndIncrement();
+    private String addName(@NonNull String attribute) {
+        String key = "#n" + nameCounter;
+        nameCounter++;
         expressionNames.put(key, attribute);
         return key;
     }
 
-    private String addNestedName(String path) {
+    private String addNestedName(@NonNull String path) {
         String[] parts = path.split("\\.");
         StringJoiner joiner = new StringJoiner(".");
         for (String part : parts) {
@@ -435,17 +461,18 @@ public class FilterExpression {
         return joiner.toString();
     }
 
-    private String addValue(AttributeValue value) {
-        String key = ":v" + valueCounter.getAndIncrement();
+    private String addValue(@NonNull AttributeValue value) {
+        String key = ":v" + valueCounter;
+        valueCounter++;
         expressionValues.put(key, value);
         return key;
     }
 
-    private void appendToExpression(String part) {
+    private void appendToExpression(@NonNull String part) {
         expression.append(part);
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
+    private static AttributeValue toAttributeValue(@NonNull Object value) {
         return AttributeValueConverter.toAttributeValue(value);
     }
 

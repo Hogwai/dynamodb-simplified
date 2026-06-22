@@ -16,8 +16,11 @@ import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
+
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 
 import java.util.Map;
 
@@ -214,4 +217,18 @@ class UpdateBuilderTest {
         verify(table, never()).updateItem(any(UpdateItemEnhancedRequest.class));
     }
 
+    @Test
+    @DisplayName("execute() with update expression wraps ConditionalCheckFailedException")
+    void partialUpdate_withConditionFailure() {
+        when(table.tableName()).thenReturn("test-table");
+        when(table.keyFrom(any())).thenReturn(key);
+        when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
+        when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
+
+        assertThrows(ConditionFailedException.class, () ->
+                new UpdateBuilder<>(table, item, dynamoDbClient)
+                        .update(u -> u.set("name", "new"))
+                        .execute());
+    }
 }

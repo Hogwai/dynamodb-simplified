@@ -76,7 +76,7 @@ public class Table<T> {
      */
     @NonNull
     public GetItemBuilder<T> get(@NonNull Object partitionKey) {
-        return new GetItemBuilder<>(dynamoDbTable, partitionKey, null);
+        return new GetItemBuilder<>(dynamoDbTable, partitionKey, null, dynamoDbClient);
     }
 
     /**
@@ -91,7 +91,7 @@ public class Table<T> {
      */
     @NonNull
     public GetItemBuilder<T> get(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return new GetItemBuilder<>(dynamoDbTable, partitionKey, sortKey);
+        return new GetItemBuilder<>(dynamoDbTable, partitionKey, sortKey, dynamoDbClient);
     }
 
     /**
