@@ -1,8 +1,6 @@
 package com.hogwai.dynamodb.simplified.expression;
 
-import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import org.jspecify.annotations.NonNull;
@@ -11,13 +9,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Fluent builder for constructing DynamoDB filter and condition expressions.
- * <p>
- * Used as a <b>filter expression</b> (post-read filtering) in {@code Scan} and
- * {@code Query} operations, and as a <b>condition expression</b> (pre-write
- * gating) in {@code PutItem}, {@code UpdateItem}, and {@code DeleteItem}
- * operations. DynamoDB distinguishes these two semantics, see the DynamoDB
- * Developer Guide for details on the difference.
+ * Fluent builder for constructing DynamoDB filter expressions used in
+ * {@code Scan}, {@code Query}, and other DynamoDB operations as part of the
+ * DynamoDB Simplified library.
  * <p>
  * Provides a chainable API for building complex filter conditions including
  * comparisons ({@code =}, {@code <>}, {@code <}, {@code <=}, {@code >}, {@code >=}),
@@ -47,21 +41,6 @@ public class FilterExpression {
     @NonNull
     public static FilterExpression builder() {
         return new FilterExpression();
-    }
-
-    /**
-     * Converts this filter expression into an AWS SDK {@link Expression} for use
-     * with enhanced client request builders.
-     *
-     * @return the SDK expression
-     */
-    @NonNull
-    public Expression toSdkExpression() {
-        return Expression.builder()
-                .expression(getExpression())
-                .expressionNames(getExpressionNames())
-                .expressionValues(getExpressionValues())
-                .build();
     }
 
     // ============ Basic Comparisons ============
@@ -167,11 +146,6 @@ public class FilterExpression {
      */
     @NonNull
     public FilterExpression contains(@NonNull String attribute, @NonNull Object value) {
-        if (value instanceof List || value instanceof Map || value instanceof Set) {
-            throw new IllegalArgumentException(
-                    "DynamoDB contains() does not support " + value.getClass().getSimpleName()
-                    + " values. Pass a scalar (String, Number, or byte[]) instead.");
-        }
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         appendToExpression("contains(%s, %s)".formatted(nameKey, valueKey));
@@ -472,7 +446,19 @@ public class FilterExpression {
     }
 
     private String addNestedName(@NonNull String path) {
-        return AttributePathParser.rebuildNestedPath(path, this::addName);
+        String[] parts = path.split("\\.");
+        StringJoiner joiner = new StringJoiner(".");
+        for (String part : parts) {
+            // Handle list indices (e.g., items[0])
+            if (part.contains("[")) {
+                String attrName = part.substring(0, part.indexOf('['));
+                String index = part.substring(part.indexOf('['));
+                joiner.add(addName(attrName) + index);
+            } else {
+                joiner.add(addName(part));
+            }
+        }
+        return joiner.toString();
     }
 
     private String addValue(@NonNull AttributeValue value) {

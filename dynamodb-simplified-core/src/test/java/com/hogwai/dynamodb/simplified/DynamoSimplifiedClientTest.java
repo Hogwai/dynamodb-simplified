@@ -14,12 +14,8 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
-import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
-import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
 import java.lang.reflect.Constructor;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -194,51 +190,5 @@ class DynamoSimplifiedClientTest {
         } else {
             System.clearProperty(key);
         }
-    }
-
-    @Test
-    @DisplayName("listTables() delegates to DynamoDbClient.listTables()")
-    void listTables() {
-        when(dynamoDbClient.listTables()).thenReturn(ListTablesResponse.builder().tableNames("table1", "table2").build());
-        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
-        List<String> tables = client.listTables();
-        assertEquals(List.of("table1", "table2"), tables);
-    }
-
-    @Test
-    @DisplayName("table(String, Class, Consumer) returns a Table and configures schema builder")
-    void tableWithStaticTableSchemaConsumerReturnsTypedTable() {
-        when(enhancedClient.table(eq("test-table"), any(TableSchema.class))).thenReturn(dynamoDbTable);
-
-        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
-        Table<TestItem> table =
-                client.table("test-table", TestItem.class, b -> b.newItemSupplier(TestItem::new));
-
-        assertNotNull(table);
-        verify(enhancedClient).table(eq("test-table"), any(TableSchema.class));
-    }
-
-    @Test
-    @DisplayName("executeStatement() delegates to DynamoDbClient.executeStatement()")
-    void executeStatementDelegates() {
-        ExecuteStatementRequest request = ExecuteStatementRequest.builder()
-                .statement("SELECT * FROM \"test-table\"")
-                .build();
-        ExecuteStatementResponse expected = ExecuteStatementResponse.builder().build();
-        when(dynamoDbClient.executeStatement(request)).thenReturn(expected);
-
-        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
-        ExecuteStatementResponse response = client.executeStatement(request);
-
-        assertSame(expected, response);
-        verify(dynamoDbClient).executeStatement(request);
-    }
-
-    @Test
-    @DisplayName("table(String, Class, null) throws NullPointerException")
-    void tableWithNullConsumerThrows() {
-        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
-        assertThrows(NullPointerException.class,
-                () -> client.table("test-table", TestItem.class, null));
     }
 }

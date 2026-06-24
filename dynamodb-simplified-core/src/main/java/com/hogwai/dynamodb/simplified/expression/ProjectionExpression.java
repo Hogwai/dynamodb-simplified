@@ -1,10 +1,10 @@
 package com.hogwai.dynamodb.simplified.expression;
 
-import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import org.jspecify.annotations.NonNull;
 
 
@@ -23,7 +23,6 @@ import org.jspecify.annotations.NonNull;
  */
 public class ProjectionExpression {
     private final List<String> projections = new ArrayList<>();
-    private final List<String> rawProjections = new ArrayList<>();
     private final Map<String, String> expressionNames = new HashMap<>();
     private int nameCounter = 0;
 
@@ -53,24 +52,38 @@ public class ProjectionExpression {
         for (String attr : attributes) {
             String key = addName(attr);
             projections.add(key);
-            rawProjections.add(attr);
         }
         return this;
     }
 
+    /**
+     * Includes a nested attribute path (dot-separated) in the projection.
+     * Each segment of the path is individually mapped to an expression
+     * attribute name placeholder. List indices (e.g., {@code items[0]}) are
+     * supported within path segments.
+     *
+     * @param path the nested attribute path (e.g., {@code "address.city"})
+     * @return this builder for chaining
+     */
     @NonNull
     public ProjectionExpression includeNested(@NonNull String path) {
         String nameKey = addNestedName(path);
         projections.add(nameKey);
-        rawProjections.add(path);
         return this;
     }
 
+    /**
+     * Includes a specific list element in the projection using bracket
+     * notation (e.g., {@code myList[0]}).
+     *
+     * @param attribute the list attribute name
+     * @param index     the zero-based index of the element to include
+     * @return this builder for chaining
+     */
     @NonNull
     public ProjectionExpression includeListElement(@NonNull String attribute, int index) {
         String nameKey = addName(attribute);
         projections.add(nameKey + "[" + index + "]");
-        rawProjections.add(attribute + "[" + index + "]");
         return this;
     }
 
@@ -82,11 +95,22 @@ public class ProjectionExpression {
     }
 
     private String addNestedName(@NonNull String path) {
-        return AttributePathParser.rebuildNestedPath(path, this::addName);
+        String[] parts = path.split("\\.");
+        StringJoiner joiner = new StringJoiner(".");
+        for (String part : parts) {
+            if (part.contains("[")) {
+                String attrName = part.substring(0, part.indexOf('['));
+                String index = part.substring(part.indexOf('['));
+                joiner.add(addName(attrName) + index);
+            } else {
+                joiner.add(addName(part));
+            }
+        }
+        return joiner.toString();
     }
 
     /**
-     * Returns the built projection expression string, a comma-separated list
+     * Returns the built projection expression string — a comma-separated list
      * of attribute references (e.g., {@code "#p0, #p1, #p2[0]"}).
      *
      * @return the projection expression string
@@ -115,20 +139,5 @@ public class ProjectionExpression {
      */
     public boolean isEmpty() {
         return projections.isEmpty();
-    }
-
-    /**
-     * Returns the raw attribute paths as they were added by the user.
-     * <p>
-     * These are the original attribute names and paths (e.g.,
-     * {@code "address.city"}) rather than the expression placeholder forms
-     * (e.g., {@code "#p0.#p1"}). Use this when passing projection attributes
-     * directly to the DynamoDB SDK's {@code attributesToProject} method.
-     *
-     * @return list of raw attribute paths
-     */
-    @NonNull
-    public List<String> getProjectedAttributes() {
-        return List.copyOf(rawProjections);
     }
 }

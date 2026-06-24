@@ -7,13 +7,7 @@ import com.hogwai.dynamodb.simplified.builder.TransactWriteBuilder;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
-import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Entry point for the DynamoDB Simplified library.
@@ -40,20 +34,9 @@ public class DynamoSimplifiedClient {
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient dynamoDbClient;
 
-    DynamoSimplifiedClient(DynamoDbEnhancedClient enhancedClient, DynamoDbClient dynamoDbClient) {
+    private DynamoSimplifiedClient(DynamoDbEnhancedClient enhancedClient, DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;
         this.dynamoDbClient = dynamoDbClient;
-    }
-
-    /**
-     * Returns a new {@link DynamoSimplifiedClientBuilder} for building a client with
-     * a custom DynamoDB client and/or enhanced client extensions.
-     *
-     * @return a new builder instance
-     */
-    @NonNull
-    public static DynamoSimplifiedClientBuilder builder() {
-        return new DynamoSimplifiedClientBuilder();
     }
 
     /**
@@ -117,40 +100,6 @@ public class DynamoSimplifiedClient {
         return new Table<>(enhancedClient, table, dynamoDbClient);
     }
 
-    /**
-     * Returns a typed {@link Table} for the given table name and item class,
-     * using a {@link StaticTableSchema} configured by the provided consumer.
-     * <p>
-     * This is useful when you want to define the table schema programmatically
-     * rather than using annotations. Example:
-     * <pre>{@code
-     * Table<Item> table = client.table("items", Item.class, b -> b
-     *     .newItemSupplier(Item::new)
-     *     .addAttribute(String.class, a -> a.name("pk")
-     *         .getter(Item::getPk)
-     *         .setter(Item::setPk)
-     *         .tags(StaticAttributeTags.primaryPartitionKey()))
-     *     .addAttribute(String.class, a -> a.name("sk")
-     *         .getter(Item::getSk)
-     *         .setter(Item::setSk)
-     *         .tags(StaticAttributeTags.primarySortKey())));
-     * }</pre>
-     *
-     * @param tableName    the name of the DynamoDB table
-     * @param itemClass    the class of items stored in the table
-     * @param configurator a consumer to configure the {@link StaticTableSchema.Builder}
-     * @param <T>          the item type
-     * @return a {@code Table<T>} for the specified table
-     */
-    @NonNull
-    public <T> Table<T> table(@NonNull String tableName, @NonNull Class<T> itemClass,
-                              @NonNull Consumer<StaticTableSchema.Builder<T>> configurator) {
-        StaticTableSchema.Builder<T> builder = StaticTableSchema.builder(itemClass);
-        configurator.accept(builder);
-        TableSchema<T> schema = builder.build();
-        return table(tableName, schema);
-    }
-
     // ============ Transaction Operations ============
 
     /**
@@ -174,7 +123,7 @@ public class DynamoSimplifiedClient {
      */
     @NonNull
     public TransactWriteBuilder transactWrite() {
-        return new TransactWriteBuilder(enhancedClient, dynamoDbClient);
+        return new TransactWriteBuilder(enhancedClient);
     }
 
     /**
@@ -185,43 +134,5 @@ public class DynamoSimplifiedClient {
     @NonNull
     public DynamoDbEnhancedClient getEnhancedClient() {
         return enhancedClient;
-    }
-
-    /**
-     * Returns the underlying {@link DynamoDbClient} for advanced operations.
-     *
-     * @return the DynamoDB client
-     */
-    @NonNull
-    public DynamoDbClient getDynamoDbClient() {
-        return dynamoDbClient;
-    }
-
-    /**
-     * Lists all DynamoDB tables available to this client.
-     * <p>
-     * Returns a list of table names accessible with the configured AWS credentials.
-     *
-     * @return a list of DynamoDB table names
-     */
-    @NonNull
-    public List<String> listTables() {
-        return dynamoDbClient.listTables().tableNames();
-    }
-
-    /**
-     * Executes a PartiQL statement against DynamoDB.
-     * <p>
-     * This is a passthrough to the underlying low-level
-     * {@link DynamoDbClient#executeStatement(ExecuteStatementRequest)}. No fluent
-     * builder is provided because PartiQL is schemaless and the SDK request is
-     * already simple.
-     *
-     * @param request the PartiQL request to execute
-     * @return the response from DynamoDB
-     */
-    @NonNull
-    public ExecuteStatementResponse executeStatement(@NonNull ExecuteStatementRequest request) {
-        return dynamoDbClient.executeStatement(request);
     }
 }

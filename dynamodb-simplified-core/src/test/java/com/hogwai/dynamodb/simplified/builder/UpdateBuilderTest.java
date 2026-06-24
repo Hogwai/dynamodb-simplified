@@ -1,6 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
-import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -113,13 +113,13 @@ class UpdateBuilderTest {
     }
 
     @Test
-    @DisplayName("condition(ConditionExpression) overload accepts a pre-built condition expression")
-    void conditionWithConditionExpression() {
+    @DisplayName("condition(FilterExpression) overload accepts a pre-built filter expression")
+    void conditionWithFilterExpression() {
         when(table.updateItem(any(UpdateItemEnhancedRequest.class))).thenReturn(resultItem);
 
-        ConditionExpression conditionExpr = ConditionExpression.builder().eq("age", 18).build();
+        FilterExpression filterExpr = FilterExpression.builder().eq("age", 18);
         new UpdateBuilder<>(table, item, dynamoDbClient)
-                .condition(conditionExpr)
+                .condition(filterExpr)
                 .execute();
 
         verify(table).updateItem(enhancedRequestCaptor.capture());
@@ -136,7 +136,7 @@ class UpdateBuilderTest {
     void fullUpdateWithCondition() {
         when(table.updateItem(any(UpdateItemEnhancedRequest.class))).thenReturn(resultItem);
 
-        ConditionExpression condition = ConditionExpression.builder().eq("active", true).build();
+        FilterExpression condition = FilterExpression.builder().eq("active", true);
         new UpdateBuilder<>(table, item, dynamoDbClient)
                 .condition(condition)
                 .ignoreNulls(false)
@@ -226,18 +226,9 @@ class UpdateBuilderTest {
         when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
                 .thenThrow(ConditionalCheckFailedException.class);
 
-        var updateBuilder = new UpdateBuilder<>(table, item, dynamoDbClient)
-                .update(u -> u.set("name", "new"));
-        assertThrows(ConditionFailedException.class, updateBuilder::execute);
-    }
-
-    @Test
-    @DisplayName("ignoreNulls(false) with update(Consumer) throws IllegalStateException")
-    void ignoreNullsFalseWithPartialUpdateThrowsException() {
-        var builder = new UpdateBuilder<>(table, item, dynamoDbClient);
-        var updateBuilder = builder.update(u -> u.set("name", "updated"))
-                                   .ignoreNulls(false);
-
-        assertThrows(IllegalStateException.class, updateBuilder::execute);
+        assertThrows(ConditionFailedException.class, () ->
+                new UpdateBuilder<>(table, item, dynamoDbClient)
+                        .update(u -> u.set("name", "new"))
+                        .execute());
     }
 }

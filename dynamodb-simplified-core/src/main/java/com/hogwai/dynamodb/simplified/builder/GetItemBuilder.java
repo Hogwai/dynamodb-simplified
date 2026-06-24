@@ -95,12 +95,11 @@ public class GetItemBuilder<T> {
     }
 
     private Optional<T> executeSimple() {
-        AttributeValue partitionAttrValue = AttributeValueConverter.toKeyAttributeValue(partitionKey);
         GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
                                                                  .key(k -> {
-                                                                     k.partitionValue(partitionAttrValue);
+                                                                     k.partitionValue(toAttributeValue(partitionKey));
                                                                      if (sortKey != null) {
-                                                                         k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
+                                                                         k.sortValue(toAttributeValue(sortKey));
                                                                      }
                                                                  })
                                                                 .consistentRead(consistentRead)
@@ -113,9 +112,9 @@ public class GetItemBuilder<T> {
         String skName = table.tableSchema().tableMetadata().primarySortKey().orElse(null);
 
         Map<String, AttributeValue> keyMap = new HashMap<>();
-        keyMap.put(pkName, AttributeValueConverter.toKeyAttributeValue(partitionKey));
+        keyMap.put(pkName, toAttributeValue(partitionKey));
         if (skName != null && sortKey != null) {
-            keyMap.put(skName, AttributeValueConverter.toKeyAttributeValue(sortKey));
+            keyMap.put(skName, toAttributeValue(sortKey));
         }
 
         GetItemRequest request = GetItemRequest.builder()
@@ -131,5 +130,7 @@ public class GetItemBuilder<T> {
         return Optional.ofNullable(item);
     }
 
-
+    private static AttributeValue toAttributeValue(Object value) {
+        return AttributeValueConverter.toKeyAttributeValue(value);
+    }
 }

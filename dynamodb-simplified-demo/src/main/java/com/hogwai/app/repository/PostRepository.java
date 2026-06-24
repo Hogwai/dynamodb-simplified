@@ -59,7 +59,7 @@ public class PostRepository {
     public List<SocialMediaPost> findBySubreddit(String subreddit) {
         return table.query()
                     .partitionKey(subreddit)
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findBySubreddit(String subreddit, int limit) {
@@ -67,7 +67,7 @@ public class PostRepository {
                     .partitionKey(subreddit)
                     .descending()
                     .limit(limit)
-                    .executeAll();
+                    .execute();
     }
 
     public PagedResult<SocialMediaPost> findBySubredditPaginated(String subreddit,
@@ -90,13 +90,13 @@ public class PostRepository {
     public List<SocialMediaPost> findByIdPrefix(String subreddit, String idPrefix) {
         return table.query()
                     .partitionKeyAndSortKeyBeginsWith(subreddit, idPrefix)
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findByIdBetween(String subreddit, String startId, String endId) {
         return table.query()
                     .partitionKeyAndSortKeyBetween(subreddit, startId, endId)
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Queries par auteur ============
@@ -105,14 +105,14 @@ public class PostRepository {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.eq(AUTHOR, author))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findByAuthors(String subreddit, List<String> authors) {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.in(AUTHOR, authors.toArray()))
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Queries temporelles ============
@@ -122,7 +122,7 @@ public class PostRepository {
                     .partitionKey(subreddit)
                     .filter(f -> f.gt(CREATED_UTC, timestampUtc))
                     .descending()
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findCreatedBefore(String subreddit, long timestampUtc) {
@@ -130,7 +130,7 @@ public class PostRepository {
                     .partitionKey(subreddit)
                     .filter(f -> f.lt(CREATED_UTC, timestampUtc))
                     .descending()
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findCreatedBetween(String subreddit, long startUtc, long endUtc) {
@@ -138,7 +138,7 @@ public class PostRepository {
                     .partitionKey(subreddit)
                     .filter(f -> f.between(CREATED_UTC, startUtc, endUtc))
                     .descending()
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Queries par keywords ============
@@ -147,21 +147,21 @@ public class PostRepository {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.contains(KEYWORDS, keyword))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findWithMinKeywords(String subreddit, int minCount) {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.sizeGe(KEYWORDS, minCount))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findWithKeywordCount(String subreddit, int min, int max) {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.sizeBetween(KEYWORDS, min, max))
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Recherche textuelle ============
@@ -170,14 +170,14 @@ public class PostRepository {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.contains(TITLE, text))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> searchByTitlePrefix(String subreddit, String prefix) {
         return table.query()
                     .partitionKey(subreddit)
                     .filter(f -> f.beginsWith(TITLE, prefix))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findWithContent(String subreddit) {
@@ -187,7 +187,7 @@ public class PostRepository {
                             .exists("selfText")
                             .and()
                             .sizeGt("selfText", 0))
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Combined Queries ============
@@ -200,7 +200,7 @@ public class PostRepository {
                             .and()
                             .gt(CREATED_UTC, sinceUtc))
                     .descending()
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findRecentWithKeyword(String subreddit, String keyword, long sinceUtc, int limit) {
@@ -212,7 +212,7 @@ public class PostRepository {
                             .gt(CREATED_UTC, sinceUtc))
                     .descending()
                     .limit(limit)
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findByAuthorWithKeywords(String subreddit, String author, int minKeywords) {
@@ -222,7 +222,7 @@ public class PostRepository {
                             .eq(AUTHOR, author)
                             .and()
                             .sizeGe(KEYWORDS, minKeywords))
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Queries avec OR ============
@@ -234,7 +234,7 @@ public class PostRepository {
                             .eq(AUTHOR, author1)
                             .or()
                             .eq(AUTHOR, author2))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findByAuthorOrKeyword(String subreddit, String author, String keyword) {
@@ -246,7 +246,7 @@ public class PostRepository {
                             .or()
                             .group(FilterExpression.builder()
                                                    .contains(KEYWORDS, keyword)))
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Projections ============
@@ -257,14 +257,14 @@ public class PostRepository {
                     .project("id", TITLE, AUTHOR, CREATED_UTC)
                     .descending()
                     .limit(limit)
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findTitlesOnly(String subreddit) {
         return table.query()
                     .partitionKey(subreddit)
                     .project("id", TITLE)
-                    .executeAll();
+                    .execute();
     }
 
     // ============ Scans (cross-subreddit) ============
@@ -272,19 +272,19 @@ public class PostRepository {
     public List<SocialMediaPost> findAllByAuthor(String author) {
         return table.scan()
                     .filter(f -> f.eq(AUTHOR, author))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findAllWithKeyword(String keyword) {
         return table.scan()
                     .filter(f -> f.contains(KEYWORDS, keyword))
-                    .executeAll();
+                    .execute();
     }
 
     public List<SocialMediaPost> findAllCreatedAfter(long timestampUtc) {
         return table.scan()
                     .filter(f -> f.gt(CREATED_UTC, timestampUtc))
-                    .executeAll();
+                    .execute();
     }
 
     public PagedResult<SocialMediaPost> scanAllPaginated(int pageSize, Map<String, AttributeValue> lastKey) {
@@ -355,51 +355,47 @@ public class PostRepository {
             query.startFrom(criteria.getLastKey());
         }
 
-        return query.executeAll();
+        return query.execute();
+    }
+
+    private static boolean andIfNeeded(FilterExpression f, boolean first) {
+        if (!first) f.and();
+        return false;
     }
 
     private FilterExpression buildFilter(FilterExpression f, PostSearchCriteria criteria) {
-        boolean hasPrevious = false;
+        boolean first = true;
 
         if (criteria.getAuthor() != null) {
             f.eq(AUTHOR, criteria.getAuthor());
-            hasPrevious = true;
+            first = andIfNeeded(f, first);
         }
 
-        hasPrevious = addGtFilter(hasPrevious, f, criteria.getSinceUtc(), CREATED_UTC);
-        hasPrevious = addLtFilter(hasPrevious, f, criteria.getUntilUtc(), CREATED_UTC);
-        hasPrevious = addContainsFilter(hasPrevious, f, criteria.getKeyword(), KEYWORDS);
-        hasPrevious = addSizeGeFilter(hasPrevious, f, criteria.getMinKeywords(), KEYWORDS);
-        hasPrevious = addContainsFilter(hasPrevious, f, criteria.getTitleContains(), TITLE);
+        if (criteria.getSinceUtc() != null) {
+            f.gt(CREATED_UTC, criteria.getSinceUtc());
+            first = andIfNeeded(f, first);
+        }
+
+        if (criteria.getUntilUtc() != null) {
+            f.lt(CREATED_UTC, criteria.getUntilUtc());
+            first = andIfNeeded(f, first);
+        }
+
+        if (criteria.getKeyword() != null) {
+            f.contains(KEYWORDS, criteria.getKeyword());
+            first = andIfNeeded(f, first);
+        }
+
+        if (criteria.getMinKeywords() != null) {
+            f.sizeGe(KEYWORDS, criteria.getMinKeywords());
+            first = andIfNeeded(f, first);
+        }
+
+        if (criteria.getTitleContains() != null) {
+            f.contains(TITLE, criteria.getTitleContains());
+            first = andIfNeeded(f, first);
+        }
 
         return f;
-    }
-
-    private static boolean addGtFilter(boolean hasPrevious, FilterExpression f, Long value, String attr) {
-        if (value == null) return hasPrevious;
-        if (hasPrevious) f.and();
-        f.gt(attr, value);
-        return true;
-    }
-
-    private static boolean addLtFilter(boolean hasPrevious, FilterExpression f, Long value, String attr) {
-        if (value == null) return hasPrevious;
-        if (hasPrevious) f.and();
-        f.lt(attr, value);
-        return true;
-    }
-
-    private static boolean addContainsFilter(boolean hasPrevious, FilterExpression f, String value, String attr) {
-        if (value == null) return hasPrevious;
-        if (hasPrevious) f.and();
-        f.contains(attr, value);
-        return true;
-    }
-
-    private static boolean addSizeGeFilter(boolean hasPrevious, FilterExpression f, Integer value, String attr) {
-        if (value == null) return hasPrevious;
-        if (hasPrevious) f.and();
-        f.sizeGe(attr, value);
-        return true;
     }
 }

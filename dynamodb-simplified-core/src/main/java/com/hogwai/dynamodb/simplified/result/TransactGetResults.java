@@ -3,7 +3,7 @@ package com.hogwai.dynamodb.simplified.result;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.Document;
-import software.amazon.awssdk.enhanced.dynamodb.MappedTableResource;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import java.util.List;
 
@@ -14,10 +14,10 @@ import java.util.List;
  * as they were added to the builder. A position may yield {@code null} if the item
  * does not exist in DynamoDB.
  */
-public class TransactGetResults<T extends MappedTableResource<?>> {
+public class TransactGetResults {
 
     private final List<Document> documents;
-    private final List<T> tables;
+    private final List<DynamoDbTable<?>> tables;
 
     /**
      * Constructs a results wrapper.
@@ -25,7 +25,7 @@ public class TransactGetResults<T extends MappedTableResource<?>> {
      * @param documents the result documents from the transaction
      * @param tables    the table references (in builder order) for type-safe item extraction
      */
-    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<T> tables) {
+    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<DynamoDbTable<?>> tables) {
         this.documents = List.copyOf(documents);
         this.tables = List.copyOf(tables);
     }
@@ -34,16 +34,16 @@ public class TransactGetResults<T extends MappedTableResource<?>> {
      * Returns the item at the given position in the original builder order.
      *
      * @param index the position (0-based) matching the {@code addGetItem} call order
-     * @param <R>   the expected item type
+     * @param <T>   the expected item type
      * @return the item, or {@code null} if the item does not exist
      */
     @SuppressWarnings("unchecked")
-    public @Nullable <R> R get(int index) {
+    public @Nullable <T> T get(int index) {
         if (index >= documents.size()) {
             return null;
         }
         Document doc = documents.get(index);
-        MappedTableResource<R> table = (MappedTableResource<R>) tables.get(index);
+        DynamoDbTable<T> table = (DynamoDbTable<T>) tables.get(index);
         return doc.getItem(table);
     }
 

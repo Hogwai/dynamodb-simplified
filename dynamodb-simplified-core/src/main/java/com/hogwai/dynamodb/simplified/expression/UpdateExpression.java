@@ -1,6 +1,5 @@
 package com.hogwai.dynamodb.simplified.expression;
 
-import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -12,8 +11,8 @@ import java.util.*;
  * Fluent builder for constructing DynamoDB update expressions as part of the
  * DynamoDB Simplified library.
  * <p>
- * Supports all four update expression clauses, {@code SET}, {@code REMOVE},
- * {@code ADD}, and {@code DELETE}, with a chainable API. The builder
+ * Supports all four update expression clauses — {@code SET}, {@code REMOVE},
+ * {@code ADD}, and {@code DELETE} — with a chainable API. The builder
  * automatically manages expression attribute name placeholders ({@code #u0},
  * {@code #u1}, ...) and expression attribute value placeholders ({@code :u0},
  * {@code :u1}, ...) to avoid reserved word conflicts. Common update patterns
@@ -284,7 +283,18 @@ public class UpdateExpression {
     }
 
     private String addNestedName(@NonNull String path) {
-        return AttributePathParser.rebuildNestedPath(path, this::addName);
+        String[] parts = path.split("\\.");
+        StringJoiner joiner = new StringJoiner(".");
+        for (String part : parts) {
+            if (part.contains("[")) {
+                String attrName = part.substring(0, part.indexOf('['));
+                String index = part.substring(part.indexOf('['));
+                joiner.add(addName(attrName) + index);
+            } else {
+                joiner.add(addName(part));
+            }
+        }
+        return joiner.toString();
     }
 
     private String addValue(@NonNull AttributeValue value) {

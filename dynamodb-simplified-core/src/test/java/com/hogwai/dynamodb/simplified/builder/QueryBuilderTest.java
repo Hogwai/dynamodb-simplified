@@ -15,14 +15,12 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.Collections;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -108,7 +106,7 @@ class QueryBuilderTest {
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
-                .executeAll();
+                .execute();
 
         assertEquals(2, result.size());
         assertEquals("1", result.get(0).id);
@@ -127,7 +125,7 @@ class QueryBuilderTest {
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyEquals("pk", "sk")
-                .executeAll();
+                .execute();
 
         assertEquals(1, result.size());
 
@@ -144,7 +142,7 @@ class QueryBuilderTest {
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyBeginsWith("pk", "prefix")
-                .executeAll();
+                .execute();
 
         assertEquals(1, result.size());
 
@@ -161,7 +159,7 @@ class QueryBuilderTest {
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyBetween("pk", 10, 20)
-                .executeAll();
+                .execute();
 
         assertEquals(1, result.size());
 
@@ -178,7 +176,7 @@ class QueryBuilderTest {
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThan("pk", 5)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -193,7 +191,7 @@ class QueryBuilderTest {
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThanOrEqual("pk", 5)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -208,7 +206,7 @@ class QueryBuilderTest {
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyLessThan("pk", 5)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -223,7 +221,7 @@ class QueryBuilderTest {
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyLessThanOrEqual("pk", 5)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -231,6 +229,21 @@ class QueryBuilderTest {
     }
 
     // ============ Execution Tests ============
+
+    @Test
+    @DisplayName("execute() returns all items from single page (flattened)")
+    void execute() {
+        Page<TestItem> page = mockPageItems(List.of(new TestItem("1"), new TestItem("2")));
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+
+        List<TestItem> result = new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .execute();
+
+        assertEquals(2, result.size());
+        assertEquals("1", result.get(0).id);
+        assertEquals("2", result.get(1).id);
+    }
 
     @Test
     @DisplayName("executeWithPagination() returns first page items + lastEvaluatedKey")
@@ -330,7 +343,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .descending()
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -347,7 +360,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .ascending()
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -364,7 +377,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .limit(10)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -381,7 +394,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .filter(c -> c.eq("a", "b"))
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -404,7 +417,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .filter(fe)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -425,7 +438,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .filter((FilterExpression) null)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -442,7 +455,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .project("a", "b")
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -459,7 +472,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .project(p -> p.include("x", "y"))
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -478,7 +491,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .startFrom(startKey)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -488,17 +501,22 @@ class QueryBuilderTest {
     }
 
     @Test
-    @DisplayName("QueryBuilder(DynamoDbIndex) routes query through index.query()")
-    void constructWithIndex() {
+    @DisplayName("useIndex(\"gsi1\") routes query through table.index().query()")
+    void useIndex() {
+        when(table.index("gsi1")).thenReturn(index);
         Page<TestItem> page = mockPageItems(List.of(new TestItem("idx1")));
         when(index.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
 
-        List<TestItem> result = new QueryBuilder<>(index)
+        List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
-                .executeAll();
+                .useIndex("gsi1")
+                .execute();
 
         assertEquals(1, result.size());
+        assertEquals("idx1", result.getFirst().id);
 
+        verify(table, never()).query(any(QueryEnhancedRequest.class));
+        verify(table).index("gsi1");
         verify(index).query(any(QueryEnhancedRequest.class));
     }
 
@@ -510,7 +528,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .consistentRead(true)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -527,7 +545,7 @@ class QueryBuilderTest {
         new QueryBuilder<>(table)
                 .partitionKey("pk")
                 .consistentRead(false)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
@@ -549,56 +567,5 @@ class QueryBuilderTest {
         assertEquals(0, result.size());
         assertNull(result.getLastEvaluatedKey());
         assertFalse(result.hasMorePages());
-    }
-
-    // ============ ReturnConsumedCapacity / executeAll / executeStream Tests ============
-
-    @Test
-    @DisplayName("returnConsumedCapacity(TOTAL) sets returnConsumedCapacity in request")
-    void returnConsumedCapacity_setsOnRequest() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
-
-        new QueryBuilder<>(table)
-                .partitionKey("pk")
-                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
-                .executeAll();
-
-        ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
-        verify(table).query(captor.capture());
-        QueryEnhancedRequest request = captor.getValue();
-
-        assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
-    }
-
-    @Test
-    @DisplayName("executeAll() returns all items aggregated from pages")
-    void executeAll_returnsAllItems() {
-        Page<TestItem> page = mockPageItems(List.of(new TestItem("1"), new TestItem("2")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
-
-        List<TestItem> result = new QueryBuilder<>(table)
-                .partitionKey("pk")
-                .executeAll();
-
-        assertEquals(2, result.size());
-        assertEquals("1", result.get(0).id);
-        assertEquals("2", result.get(1).id);
-    }
-
-    @Test
-    @DisplayName("executeStream() returns a lazy stream of items")
-    void executeStream_returnsLazyStream() {
-        Page<TestItem> page = mockPageItems(List.of(new TestItem("a"), new TestItem("b")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
-
-        Stream<TestItem> stream = new QueryBuilder<>(table)
-                .partitionKey("pk")
-                .executeStream();
-
-        assertNotNull(stream);
-        List<TestItem> result = stream.toList();
-        assertEquals(2, result.size());
-        assertEquals("a", result.get(0).id);
-        assertEquals("b", result.get(1).id);
     }
 }

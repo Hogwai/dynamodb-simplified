@@ -1,9 +1,10 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
-import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
@@ -32,7 +33,7 @@ public class UpdateBuilder<T> {
     private final T item;
     private final DynamoDbClient dynamoDbClient;
     private UpdateExpression updateExpression;
-    private ConditionExpression conditionExpression;
+    private FilterExpression conditionExpression;
     private boolean ignoreNulls = true;
 
     /**
@@ -63,29 +64,26 @@ public class UpdateBuilder<T> {
     }
 
     /**
-     * Configures a condition expression that gates the update operation.
-     * DynamoDB evaluates this condition <b>before</b> updating the item
-     * (unlike a filter expression which applies after reading).
+     * Configures a condition expression using a {@link FilterExpression} consumer.
+     * The update will only succeed if the condition evaluates to true.
      *
-     * @param configurator a consumer to build the condition expression
+     * @param conditionBuilder a consumer that configures the {@link FilterExpression}
      * @return this builder for chaining
      */
-    public @NonNull UpdateBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
-        var builder = ConditionExpression.builder();
-        configurator.accept(builder);
-        this.conditionExpression = builder.build();
+    public @NonNull UpdateBuilder<T> condition(@NonNull Consumer<FilterExpression> conditionBuilder) {
+        this.conditionExpression = FilterExpression.builder();
+        conditionBuilder.accept(this.conditionExpression);
         return this;
     }
 
     /**
-     * Configures a condition expression that gates the update operation.
-     * DynamoDB evaluates this condition <b>before</b> updating the item
-     * (unlike a filter expression which applies after reading).
+     * Configures a condition expression from a pre-built {@link FilterExpression}.
+     * The update will only succeed if the condition evaluates to true.
      *
      * @param condition the condition expression
      * @return this builder for chaining
      */
-    public @NonNull UpdateBuilder<T> condition(@Nullable ConditionExpression condition) {
+    public @NonNull UpdateBuilder<T> condition(@Nullable FilterExpression condition) {
         this.conditionExpression = condition;
         return this;
     }
@@ -111,11 +109,6 @@ public class UpdateBuilder<T> {
      * @return the updated item
      */
     public @NonNull T execute() {
-        if (!ignoreNulls && updateExpression != null && !updateExpression.isEmpty()) {
-            throw new IllegalStateException(
-                "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
-                + "Remove the ignoreNulls() call or use a full-item update instead.");
-        }
         if (updateExpression != null && !updateExpression.isEmpty()) {
             return executeWithExpression();
         }
@@ -132,7 +125,11 @@ public class UpdateBuilder<T> {
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    conditionExpression.toSdkExpression()
+                    Expression.builder()
+                              .expression(conditionExpression.getExpression())
+                              .expressionNames(conditionExpression.getExpressionNames())
+                              .expressionValues(conditionExpression.getExpressionValues())
+                              .build()
             );
         }
 

@@ -75,7 +75,7 @@ class DynamoSimplifiedClientIT {
     @AfterEach
     void cleanItems() {
         // Remove all items between tests for isolation
-        table.scan().executeAll().forEach(p -> table.deleteItem(p.getId()));
+        table.scan().execute().forEach(p -> table.deleteItem(p.getId()));
     }
 
     // ============ Factory & Table creation ============
@@ -181,11 +181,10 @@ class DynamoSimplifiedClientIT {
         // Verify it was created
         assertTrue(table.getItem("p6").isPresent());
 
-        // Try again, should throw ConditionalCheckFailedException when item already exists
+        // Try again — should throw ConditionalCheckFailedException when item already exists
         var product2 = new Product("p6", "Second", 2.0, true, null, 8000L);
-        var putBuilder = table.put(product2).onlyIfNotExists("id");
         assertThrows(ConditionFailedException.class,
-                putBuilder::execute);
+                () -> table.put(product2).onlyIfNotExists("id").execute());
 
         // Original item should still be there (condition prevented overwrite)
         Optional<Product> found = table.getItem("p6");
@@ -224,9 +223,10 @@ class DynamoSimplifiedClientIT {
     void conditionalUpdateWithNonMatchingCondition() {
         table.putItem(new Product("p9", "KeepMe", 1.0, true, null, 13000L));
 
-        var updateBuilder = table.update(new Product("p9", "ShouldNotApply", 2.0, true, null, 14000L))
-                .condition(c -> c.eq("name", "NonExistent"));
-        assertThrows(ConditionFailedException.class, updateBuilder::execute
+        assertThrows(ConditionFailedException.class, () ->
+                table.update(new Product("p9", "ShouldNotApply", 2.0, true, null, 14000L))
+                        .condition(c -> c.eq("name", "NonExistent"))
+                        .execute()
         );
 
         // Verify item was NOT changed
@@ -250,8 +250,9 @@ class DynamoSimplifiedClientIT {
     void conditionalDeleteWithNonMatchingCondition() {
         table.putItem(new Product("p11", "KeepMeAlive", 1.0, true, null, 16000L));
 
-        var deleteBuilder = table.delete("p11").condition(c -> c.eq("name", "NonExistent"));
-        assertThrows(ConditionFailedException.class, deleteBuilder::execute);
+        assertThrows(ConditionFailedException.class, () ->
+                table.delete("p11").condition(c -> c.eq("name", "NonExistent")).execute()
+        );
 
         assertTrue(table.getItem("p11").isPresent());
     }
@@ -263,14 +264,14 @@ class DynamoSimplifiedClientIT {
         table.putItem(new Product("q1", "Query1", 1.0, true, null, 20000L));
         table.putItem(new Product("q2", "Query2", 2.0, true, null, 21000L));
 
-        List<Product> results = table.query().partitionKey("q1").executeAll();
+        List<Product> results = table.query().partitionKey("q1").execute();
         assertEquals(1, results.size());
         assertEquals("Query1", results.getFirst().getName());
     }
 
     @Test
     void queryReturnsEmptyForNonExistentKey() {
-        List<Product> results = table.query().partitionKey("nonexistent").executeAll();
+        List<Product> results = table.query().partitionKey("nonexistent").execute();
         assertTrue(results.isEmpty());
     }
 
@@ -281,7 +282,7 @@ class DynamoSimplifiedClientIT {
         table.putItem(new Product("s1", "Scan1", 1.0, true, null, 30000L));
         table.putItem(new Product("s2", "Scan2", 2.0, false, null, 31000L));
 
-        List<Product> results = table.scan().executeAll();
+        List<Product> results = table.scan().execute();
         assertEquals(2, results.size());
     }
 
@@ -292,7 +293,7 @@ class DynamoSimplifiedClientIT {
 
         List<Product> results = table.scan()
                 .filter(f -> f.eq("inStock", false))
-                .executeAll();
+                .execute();
 
         assertEquals(1, results.size());
         assertEquals("FilterB", results.getFirst().getName());
@@ -304,7 +305,7 @@ class DynamoSimplifiedClientIT {
 
         List<Product> results = table.scan()
                 .project("id", "name")
-                .executeAll();
+                .execute();
 
         assertEquals(1, results.size());
         assertEquals("Projected", results.getFirst().getName());
@@ -422,7 +423,7 @@ class DynamoSimplifiedClientIT {
 
     @Test
     void transactGetNonExistentItemReturnsNull() {
-        // Request an item that does not exist, should return null, not NPE
+        // Request an item that does not exist — should return null, not NPE
         var results = client.transactGet()
                 .addGetItem(table, "nonexistent-transact")
                 .execute();
@@ -444,42 +445,5 @@ class DynamoSimplifiedClientIT {
         assertTrue(result.isPresent());
         assertEquals("ProjectedGet", result.get().getName());
         assertNull(result.get().getPrice()); // not projected
-    }
-
-    // ============ DDL tests ============
-
-    @Test
-    void tableExistsReturnsTrue() {
-        assertTrue(table.exists());
-    }
-
-    @Test
-    void tableDescribeReturnsInfo() {
-        var desc = table.describe();
-        assertNotNull(desc);
-        assertEquals(TABLE_NAME, desc.table().tableName());
-    }
-
-    @Test
-    void tableListTablesContainsProductTable() {
-        var tables = client.listTables();
-        assertTrue(tables.contains(TABLE_NAME));
-    }
-
-    @Test
-    void tableExistsAfterTableDeletion() {
-        var tempTableName = TABLE_NAME + "_temp_" + System.currentTimeMillis();
-        var tempEnhanced = client.getEnhancedClient().table(tempTableName, TableSchema.fromBean(Product.class));
-        tempEnhanced.createTable();
-        try (var waiter = lowLevelClient.waiter()) {
-            waiter.waitUntilTableExists(b -> b.tableName(tempTableName));
-        }
-        var tempTable = client.table(tempTableName, Product.class);
-        assertTrue(tempTable.exists());
-        tempTable.delete();
-        try (var waiter = lowLevelClient.waiter()) {
-            waiter.waitUntilTableNotExists(b -> b.tableName(tempTableName));
-        }
-        assertFalse(tempTable.exists());
     }
 }

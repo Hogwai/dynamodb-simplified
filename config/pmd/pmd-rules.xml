@@ -51,19 +51,6 @@
         <exclude name="TooManyMethods"/>
     </rule>
 
-    <rule ref="category/java/design.xml/CyclomaticComplexity">
-        <properties>
-            <property name="classReportLevel" value="80"/>
-            <property name="methodReportLevel" value="15"/>
-        </properties>
-    </rule>
-
-    <rule ref="category/java/design.xml/NPathComplexity">
-        <properties>
-            <property name="reportLevel" value="300"/>
-        </properties>
-    </rule>
-
     <rule ref="category/java/errorprone.xml">
         <exclude name="AvoidAccessibilityAlteration"/>
         <exclude name="AvoidCatchingGenericException"/>
@@ -77,6 +64,5 @@
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
         <exclude name="InsufficientStringBufferDeclaration"/>
         <exclude name="RedundantFieldInitializer"/>
-        <exclude name="UseArraysAsList"/>
     </rule>
 </ruleset>

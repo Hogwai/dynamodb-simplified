@@ -7,12 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-
-import com.hogwai.dynamodb.simplified.builder.Index;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,9 +35,6 @@ class TableTest {
 
     @Mock
     DynamoDbClient dynamoDbClient;
-
-    @Mock
-    DynamoDbIndex<TestItem> dynamoDbIndex;
 
     /**
      * A simple POJO used as the item type in tests.
@@ -204,20 +198,6 @@ class TableTest {
         Table<TestItem> table = createTable();
 
         assertNotNull(table.batchWrite());
-    }
-
-    // ============ Secondary Index ============
-
-    @Test
-    @DisplayName("index(name) returns a non-null Index and delegates to DynamoDbTable.index()")
-    void index() {
-        when(dynamoDbTable.index(anyString())).thenReturn(dynamoDbIndex);
-
-        Table<TestItem> table = createTable();
-        Index<TestItem> idx = table.index("my-index");
-
-        assertNotNull(idx);
-        verify(dynamoDbTable).index("my-index");
     }
 
     // ============ Raw Access ============

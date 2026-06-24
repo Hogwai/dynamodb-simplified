@@ -8,20 +8,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,9 +37,6 @@ class ScanBuilderTest {
 
     @Mock
     DynamoDbTable<TestItem> table;
-
-    @Mock
-    DynamoDbIndex<TestItem> index;
 
     // ============ Helpers ============
 
@@ -84,30 +77,9 @@ class ScanBuilderTest {
         Page<TestItem> page2 = mockPage(2, 2, null);
         stubScanReturns(pageIterable(page1, page2));
 
-        List<TestItem> result = new ScanBuilder<>(table).executeAll();
+        List<TestItem> result = new ScanBuilder<>(table).execute();
 
         assertEquals(3, result.size());
-    }
-
-    @Test
-    @DisplayName("executeAndGetFirst() returns first item from results")
-    void executeAndGetFirst() {
-        Page<TestItem> page1 = mockPage(1, 1, null);
-        stubScanReturns(pageIterable(page1));
-
-        Optional<TestItem> result = new ScanBuilder<>(table).executeAndGetFirst();
-
-        assertTrue(result.isPresent());
-    }
-
-    @Test
-    @DisplayName("executeAndGetFirst() returns empty when no results")
-    void executeAndGetFirst_empty() {
-        stubScanReturns(pageIterable());
-
-        Optional<TestItem> result = new ScanBuilder<>(table).executeAndGetFirst();
-
-        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -157,7 +129,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .filter(c -> c.eq("status", "active"))
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -177,7 +149,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .project("a", "b")
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -193,7 +165,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .project(pb -> pb.include("attrFromConsumer"))
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -209,7 +181,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .limit(100)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -225,7 +197,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .consistentRead(true)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -241,7 +213,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .parallelScan(4, 0)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -260,7 +232,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .startFrom(startKey)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -276,7 +248,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .filter((FilterExpression) null)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -294,7 +266,7 @@ class ScanBuilderTest {
 
         new ScanBuilder<>(table)
                 .filter(fe)
-                .executeAll();
+                .execute();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -305,52 +277,5 @@ class ScanBuilderTest {
         assertEquals("#n0 = :v0", expr.expression());
         assertEquals(Map.of("#n0", "status"), expr.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("active").build()), expr.expressionValues());
-    }
-
-    // ============ Index Constructor ============
-
-    @Test
-    @DisplayName("constructWithIndex_executesViaIndexScan using DynamoDbIndex constructor")
-    void constructWithIndex() {
-        Page<TestItem> page = mockPage(2, 2, null);
-        when(index.scan(any(ScanEnhancedRequest.class))).thenReturn(PageIterable.create(() -> List.of(page).iterator()));
-
-        List<TestItem> result = new ScanBuilder<>(index).executeAll();
-
-        assertEquals(2, result.size());
-        verify(index).scan(any(ScanEnhancedRequest.class));
-    }
-
-    // ============ returnConsumedCapacity ============
-
-    @Test
-    @DisplayName("returnConsumedCapacity(setsOnRequest)")
-    void returnConsumedCapacity_setsOnRequest() {
-        stubScanReturns(pageIterable());
-
-        new ScanBuilder<>(table)
-                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
-                .executeAll();
-
-        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
-        verify(table).scan(captor.capture());
-        ScanEnhancedRequest request = captor.getValue();
-
-        assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
-    }
-
-    // ============ executeStream ============
-
-    @Test
-    @DisplayName("executeStream_returnsLazyStream()")
-    void executeStream_returnsLazyStream() {
-        Page<TestItem> page1 = mockPage(2, 2, null);
-        stubScanReturns(pageIterable(page1));
-
-        Stream<TestItem> stream = new ScanBuilder<>(table).executeStream();
-
-        assertNotNull(stream);
-        List<TestItem> result = stream.toList();
-        assertEquals(2, result.size());
     }
 }

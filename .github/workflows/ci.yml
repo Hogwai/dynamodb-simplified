@@ -23,7 +23,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          # Pre-installs this exact version, ./gradlew then skips downloading
+          # Pre-installs this exact version — ./gradlew then skips downloading
           gradle-version: "9.6.0"
           # Cache is written on push, read-only on PRs (standard security)
           cache-read-only: ${{ github.event_name == 'pull_request' }}
