@@ -75,7 +75,7 @@ class DynamoSimplifiedClientIT {
     @AfterEach
     void cleanItems() {
         // Remove all items between tests for isolation
-        table.scan().execute().forEach(p -> table.deleteItem(p.getId()));
+        table.scan().executeAll().forEach(p -> table.deleteItem(p.getId()));
     }
 
     // ============ Factory & Table creation ============
@@ -263,14 +263,14 @@ class DynamoSimplifiedClientIT {
         table.putItem(new Product("q1", "Query1", 1.0, true, null, 20000L));
         table.putItem(new Product("q2", "Query2", 2.0, true, null, 21000L));
 
-        List<Product> results = table.query().partitionKey("q1").execute();
+        List<Product> results = table.query().partitionKey("q1").executeAll();
         assertEquals(1, results.size());
         assertEquals("Query1", results.getFirst().getName());
     }
 
     @Test
     void queryReturnsEmptyForNonExistentKey() {
-        List<Product> results = table.query().partitionKey("nonexistent").execute();
+        List<Product> results = table.query().partitionKey("nonexistent").executeAll();
         assertTrue(results.isEmpty());
     }
 
@@ -281,7 +281,7 @@ class DynamoSimplifiedClientIT {
         table.putItem(new Product("s1", "Scan1", 1.0, true, null, 30000L));
         table.putItem(new Product("s2", "Scan2", 2.0, false, null, 31000L));
 
-        List<Product> results = table.scan().execute();
+        List<Product> results = table.scan().executeAll();
         assertEquals(2, results.size());
     }
 
@@ -292,7 +292,7 @@ class DynamoSimplifiedClientIT {
 
         List<Product> results = table.scan()
                 .filter(f -> f.eq("inStock", false))
-                .execute();
+                .executeAll();
 
         assertEquals(1, results.size());
         assertEquals("FilterB", results.getFirst().getName());
@@ -304,7 +304,7 @@ class DynamoSimplifiedClientIT {
 
         List<Product> results = table.scan()
                 .project("id", "name")
-                .execute();
+                .executeAll();
 
         assertEquals(1, results.size());
         assertEquals("Projected", results.getFirst().getName());
@@ -444,5 +444,42 @@ class DynamoSimplifiedClientIT {
         assertTrue(result.isPresent());
         assertEquals("ProjectedGet", result.get().getName());
         assertNull(result.get().getPrice()); // not projected
+    }
+
+    // ============ DDL tests ============
+
+    @Test
+    void tableExistsReturnsTrue() {
+        assertTrue(table.exists());
+    }
+
+    @Test
+    void tableDescribeReturnsInfo() {
+        var desc = table.describe();
+        assertNotNull(desc);
+        assertEquals(TABLE_NAME, desc.table().tableName());
+    }
+
+    @Test
+    void tableListTablesContainsProductTable() {
+        var tables = client.listTables();
+        assertTrue(tables.contains(TABLE_NAME));
+    }
+
+    @Test
+    void tableExistsAfterTableDeletion() {
+        var tempTableName = TABLE_NAME + "_temp_" + System.currentTimeMillis();
+        var tempEnhanced = client.getEnhancedClient().table(tempTableName, TableSchema.fromBean(Product.class));
+        tempEnhanced.createTable();
+        try (var waiter = lowLevelClient.waiter()) {
+            waiter.waitUntilTableExists(b -> b.tableName(tempTableName));
+        }
+        var tempTable = client.table(tempTableName, Product.class);
+        assertTrue(tempTable.exists());
+        tempTable.delete();
+        try (var waiter = lowLevelClient.waiter()) {
+            waiter.waitUntilTableNotExists(b -> b.tableName(tempTableName));
+        }
+        assertFalse(tempTable.exists());
     }
 }

@@ -16,6 +16,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.Collections;
 import java.util.List;
@@ -98,14 +99,14 @@ class AsyncQueryBuilderTest {
     // ============ Tests ============
 
     @Test
-    @DisplayName("partitionKey().execute() delegates to table.query() and returns items")
+    @DisplayName("partitionKey().executeAll() delegates to table.query() and returns items")
     void queryPartitionKeyExecute() {
         Page<TestItem> page = mockPageWithItems(List.of(new TestItem("1"), new TestItem("2")));
         when(table.query(any(QueryEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
 
         List<TestItem> result = new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
-                .execute()
+                .executeAll()
                 .join();
 
         assertEquals(2, result.size());
@@ -204,7 +205,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .filter(c -> c.eq("status", "active"))
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -228,7 +229,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .filter(fe)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -250,7 +251,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .filter((FilterExpression) null)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -268,7 +269,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .project("a", "b")
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -286,7 +287,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .project(p -> p.include("x", "y"))
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -304,7 +305,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .descending()
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -322,7 +323,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .ascending()
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -340,7 +341,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .limit(10)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -360,7 +361,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .startFrom(startKey)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -378,7 +379,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .consistentRead(true)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -396,7 +397,7 @@ class AsyncQueryBuilderTest {
         new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
                 .consistentRead(false)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -414,7 +415,7 @@ class AsyncQueryBuilderTest {
 
         List<TestItem> result = new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyEquals("pk", "sk")
-                .execute()
+                .executeAll()
                 .join();
 
         assertEquals(1, result.size());
@@ -431,7 +432,7 @@ class AsyncQueryBuilderTest {
 
         List<TestItem> result = new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyBeginsWith("pk", "prefix")
-                .execute()
+                .executeAll()
                 .join();
 
         assertEquals(1, result.size());
@@ -448,7 +449,7 @@ class AsyncQueryBuilderTest {
 
         List<TestItem> result = new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyBetween("pk", 10, 20)
-                .execute()
+                .executeAll()
                 .join();
 
         assertEquals(1, result.size());
@@ -465,7 +466,7 @@ class AsyncQueryBuilderTest {
 
         new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThan("pk", 5)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -481,7 +482,7 @@ class AsyncQueryBuilderTest {
 
         new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThanOrEqual("pk", 5)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -497,7 +498,7 @@ class AsyncQueryBuilderTest {
 
         new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyLessThan("pk", 5)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -513,7 +514,7 @@ class AsyncQueryBuilderTest {
 
         new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyLessThanOrEqual("pk", 5)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
@@ -530,11 +531,30 @@ class AsyncQueryBuilderTest {
 
         CompletableFuture<List<TestItem>> future = new AsyncQueryBuilder<>(index)
                 .partitionKey("pk")
-                .execute();
+                .executeAll();
 
         List<TestItem> result = future.join();
         assertEquals(1, result.size());
         assertEquals("idx1", result.getFirst().id);
         verify(index).query(any(QueryEnhancedRequest.class));
     }
+
+    @Test
+    @DisplayName("returnConsumedCapacity() sets returnConsumedCapacity in request")
+    void returnConsumedCapacity_setsOnRequest() {
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPublisher());
+
+        new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .executeAll()
+                .join();
+
+        ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
+        verify(table).query(captor.capture());
+        QueryEnhancedRequest request = captor.getValue();
+
+        assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
+    }
+
 }

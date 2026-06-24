@@ -9,8 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
+import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsResponse;
 
 import java.lang.reflect.Constructor;
 
@@ -50,6 +53,9 @@ class TransactWriteBuilderTest {
     @Mock
     private DynamoDbEnhancedClient enhancedClient;
 
+    @Mock
+    private DynamoDbClient dynamoDbClient;
+
     // ============ Helpers ============
 
     @SuppressWarnings("unchecked")
@@ -68,7 +74,7 @@ class TransactWriteBuilderTest {
     void put_addsPutItem() throws Exception {
         TestItem item = new TestItem("item-1");
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         builder.put(tableWrapper, item);
         builder.execute();
@@ -83,7 +89,7 @@ class TransactWriteBuilderTest {
     void update_returnsBuilder() throws Exception {
         TestItem item = new TestItem("item-1");
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         assertNotNull(builder.update(tableWrapper, item));
     }
@@ -94,7 +100,7 @@ class TransactWriteBuilderTest {
     @DisplayName("delete with partition key delegates to enhancedClient")
     void delete_withPartitionKey() throws Exception {
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         builder.delete(tableWrapper, "pk-value");
         builder.execute();
@@ -106,7 +112,7 @@ class TransactWriteBuilderTest {
     @DisplayName("delete with partition and sort key returns this builder")
     void delete_withPartitionAndSortKey() throws Exception {
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         assertNotNull(builder.delete(tableWrapper, "pk-value", "sk-value"));
     }
@@ -117,7 +123,7 @@ class TransactWriteBuilderTest {
     @DisplayName("conditionCheck with partition key delegates to enhancedClient")
     void conditionCheck_withPartitionKey() throws Exception {
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         builder.conditionCheck(tableWrapper, "pk-value", expr -> expr.eq("status", "active"));
         builder.execute();
@@ -129,7 +135,7 @@ class TransactWriteBuilderTest {
     @DisplayName("conditionCheck with partition and sort key returns this builder")
     void conditionCheck_withSortKey() throws Exception {
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         assertNotNull(builder.conditionCheck(tableWrapper, "pk-value", "sk-value",
                 expr -> expr.eq("status", "active")));
@@ -142,7 +148,7 @@ class TransactWriteBuilderTest {
     void execute_delegatesToEnhancedClient() throws Exception {
         TestItem item = new TestItem("item-1");
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         builder.put(tableWrapper, item);
         builder.execute();
@@ -157,7 +163,7 @@ class TransactWriteBuilderTest {
     void multipleOperations() throws Exception {
         TestItem item = new TestItem("item-1");
         Table<TestItem> tableWrapper = createTable(table);
-        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
         builder.put(tableWrapper, item)
                 .delete(tableWrapper, "pk-to-delete");
@@ -168,5 +174,49 @@ class TransactWriteBuilderTest {
         builder.execute();
 
         verify(enhancedClient, times(1)).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
+    }
+
+    // ============ Update with Expression ============
+
+    @Test
+    @DisplayName("updateWithExpression delegates to low-level dynamoDbClient")
+    void updateWithExpression_delegatesToLowLevel() throws Exception {
+        when(dynamoDbClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
+                .thenReturn(TransactWriteItemsResponse.builder().build());
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(mock(TableSchema.class));
+
+        TestItem item = new TestItem("item-1");
+        Table<TestItem> tableWrapper = createTable(table);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
+
+        builder.update(tableWrapper, item, expr -> {
+            expr.set("status", "active");
+        });
+        builder.execute();
+
+        verify(dynamoDbClient).transactWriteItems(any(TransactWriteItemsRequest.class));
+        verify(enhancedClient, never()).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("mixed enhanced and expression operations use low-level path")
+    void mixedEnhancedAndExpressionOperations() throws Exception {
+        when(dynamoDbClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
+                .thenReturn(TransactWriteItemsResponse.builder().build());
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(mock(TableSchema.class));
+
+        TestItem item1 = new TestItem("item-1");
+        TestItem item2 = new TestItem("item-2");
+        Table<TestItem> tableWrapper = createTable(table);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
+
+        builder.put(tableWrapper, item1);
+        builder.update(tableWrapper, item2, expr -> expr.remove("old-field"));
+        builder.execute();
+
+        verify(dynamoDbClient).transactWriteItems(any(TransactWriteItemsRequest.class));
+        verify(enhancedClient, never()).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 }

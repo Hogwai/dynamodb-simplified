@@ -16,6 +16,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.List;
 import java.util.Map;
@@ -103,7 +104,7 @@ class AsyncScanBuilderTest {
         // Note: this test validates the builder logic with a single page.
         // Multi-page scan behavior (multiple pages from one scan call) is
         // tested via the reactive subscriber collecting all pages.
-        List<TestItem> result = new AsyncScanBuilder<>(table).execute().join();
+        List<TestItem> result = new AsyncScanBuilder<>(table).executeAll().join();
 
         assertEquals(1, result.size());
         verify(table).scan(any(ScanEnhancedRequest.class));
@@ -115,7 +116,7 @@ class AsyncScanBuilderTest {
         Page<TestItem> page = mockPage(3, 3, null);
         when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
 
-        List<TestItem> result = new AsyncScanBuilder<>(table).execute().join();
+        List<TestItem> result = new AsyncScanBuilder<>(table).executeAll().join();
 
         assertEquals(3, result.size());
     }
@@ -165,7 +166,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .filter(c -> c.eq("status", "active"))
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -188,7 +189,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .filter(fe)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -209,7 +210,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .project("a", "b")
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -226,7 +227,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .project(pb -> pb.include("attrFromConsumer"))
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -243,7 +244,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .limit(100)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -260,7 +261,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .consistentRead(true)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -279,7 +280,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .startFrom(startKey)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -296,7 +297,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .filter((FilterExpression) null)
-                .execute()
+                .executeAll()
                 .join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
@@ -312,7 +313,7 @@ class AsyncScanBuilderTest {
         PagePublisher<TestItem> pagePublisher = publisherThatEmits(mockPage(1, 1, null));
         when(index.scan(any(ScanEnhancedRequest.class))).thenReturn(pagePublisher);
 
-        CompletableFuture<List<TestItem>> future = new AsyncScanBuilder<>(index).execute();
+        CompletableFuture<List<TestItem>> future = new AsyncScanBuilder<>(index).executeAll();
         List<TestItem> result = future.join();
         assertEquals(1, result.size());
         verify(index).scan(any(ScanEnhancedRequest.class));
@@ -327,7 +328,7 @@ class AsyncScanBuilderTest {
 
         new AsyncScanBuilder<>(table)
                 .parallelScan(4, 0)
-                .execute().join();
+                .executeAll().join();
 
         ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
         verify(table).scan(captor.capture());
@@ -335,4 +336,21 @@ class AsyncScanBuilderTest {
         assertEquals(0, request.segment());
         assertEquals(4, request.totalSegments());
     }
+
+    @Test
+    @DisplayName("returnConsumedCapacity sets value on SDK request")
+    void returnConsumedCapacity_setsOnRequest() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(emptyPublisher());
+
+        new AsyncScanBuilder<>(table)
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .executeAll()
+                .join();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+        assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
+    }
+
 }

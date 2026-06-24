@@ -9,6 +9,8 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -172,7 +174,7 @@ public class DynamoSimplifiedClient {
      */
     @NonNull
     public TransactWriteBuilder transactWrite() {
-        return new TransactWriteBuilder(enhancedClient);
+        return new TransactWriteBuilder(enhancedClient, dynamoDbClient);
     }
 
     /**
@@ -205,5 +207,21 @@ public class DynamoSimplifiedClient {
     @NonNull
     public List<String> listTables() {
         return dynamoDbClient.listTables().tableNames();
+    }
+
+    /**
+     * Executes a PartiQL statement against DynamoDB.
+     * <p>
+     * This is a passthrough to the underlying low-level
+     * {@link DynamoDbClient#executeStatement(ExecuteStatementRequest)}. No fluent
+     * builder is provided because PartiQL is schemaless and the SDK request is
+     * already simple.
+     *
+     * @param request the PartiQL request to execute
+     * @return the response from DynamoDB
+     */
+    @NonNull
+    public ExecuteStatementResponse executeStatement(@NonNull ExecuteStatementRequest request) {
+        return dynamoDbClient.executeStatement(request);
     }
 }

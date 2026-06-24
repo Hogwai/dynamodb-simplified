@@ -53,12 +53,12 @@ class IndexTest {
     }
 
     @Test
-    @DisplayName("query().partitionKey().execute() delegates to DynamoDbIndex.query()")
+    @DisplayName("query().partitionKey().executeAll() delegates to DynamoDbIndex.query()")
     void queryExecutes() {
         when(dynamoDbIndex.query(any(QueryEnhancedRequest.class))).thenReturn(sdkIterableOf(page));
 
         Index<Object> idx = createIndex();
-        List<Object> results = idx.query().partitionKey("pk").execute();
+        List<Object> results = idx.query().partitionKey("pk").executeAll();
 
         verify(dynamoDbIndex).query(any(QueryEnhancedRequest.class));
         assertNotNull(results);
@@ -76,12 +76,12 @@ class IndexTest {
     }
 
     @Test
-    @DisplayName("scan().execute() delegates to DynamoDbIndex.scan()")
+    @DisplayName("scan().executeAll() delegates to DynamoDbIndex.scan()")
     void scanExecutes() {
         when(dynamoDbIndex.scan(any(ScanEnhancedRequest.class))).thenReturn(sdkIterableOf(page));
 
         Index<Object> idx = createIndex();
-        List<Object> results = idx.scan().execute();
+        List<Object> results = idx.scan().executeAll();
 
         verify(dynamoDbIndex).scan(any(ScanEnhancedRequest.class));
         assertNotNull(results);

@@ -76,6 +76,12 @@ List<Post> posts = table.query()
 | **Projections** | Select only the attributes you need |
 | **Pagination** | Built-in cursor-based pagination support |
 | **Conditional Writes** | Put, Update, Delete with conditions |
+| **Transactions** | TransactGet and TransactWrite with expression-based partial updates |
+| **Batch Operations** | BatchGet and BatchWrite across tables |
+| **Async API** | Complete async counterpart (CompletableFuture-based) |
+| **DDL Operations** | Create, delete, describe, and check existence of tables |
+| **PartiQL** | Passthrough PartiQL executeStatement for ad-hoc queries |
+| **GSI/LSI Support** | Query and scan through secondary indexes |
 | **Type Safety** | Leverages DynamoDB Enhanced Client's bean mapping |
 | **Zero framework deps** | Pure Java, no Spring/Micronaut dependency in the core |
 
@@ -131,6 +137,12 @@ DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
 
 // With a custom DynamoDbClient (for DynamoDB Local, specific config, etc.)
 DynamoSimplifiedClient client = DynamoSimplifiedClient.create(dynamoDbClient);
+
+// With a builder (for extensions, custom config)
+DynamoSimplifiedClient client = DynamoSimplifiedClient.builder()
+    .dynamoDbClient(myClient)
+    .extendWith(myEnhancedExtension)
+    .build();
 
 // Get table operations
 Table<Post> posts = client.table("posts", Post.class);
@@ -353,6 +365,153 @@ table.deleteItem("java", "post-123");
 table.delete("java", "post-123")
     .condition(c -> c.eq("author", requestingUser))
     .execute();
+
+// Delete and return the deleted item's attributes
+Post deleted = table.delete("java", "post-123")
+    .returnValues(ReturnValue.ALL_OLD)
+    .execute();
+```
+
+### Transactions
+
+```java
+// TransactGet
+TransactGetResults results = client.transactGet()
+    .addGetItem(postsTable, "java", "post-1")
+    .addGetItem(usersTable, "user-42")
+    .execute();
+
+Post post = results.get(0, Post.class);
+User user = results.get(1, User.class);
+
+// TransactWrite — put, update, delete, conditionCheck
+client.transactWrite()
+    .put(postsTable, newPost)
+    .update(usersTable, updatedUser)
+    .delete(postsTable, "java", "post-2")
+    .conditionCheck(postsTable, "java", c -> c.eq("status", "ACTIVE"))
+    .execute();
+
+// TransactWrite with expression-based partial update
+client.transactWrite()
+    .update(postsTable, existingPost, u -> u
+        .set("title", "Updated Title")
+        .increment("views", 1))
+    .conditionCheck(postsTable, "post-1", c -> c.eq("author", "john"))
+    .execute();
+```
+
+### Batch Operations
+
+```java
+// Batch get
+BatchGetResults results = table.batchGet()
+    .addKey("java", "post-1")
+    .addKey("java", "post-2")
+    .addKey("python", "post-3")
+    .execute();
+
+// Each result is a Map<DynamoDbTable<T>, List<T>>
+table.batchGet()
+    .addKey("java", "post-1")
+    .executeWithPagination(); // returns pages
+
+// Batch write
+table.batchWrite()
+    .put(newPost1)
+    .put(newPost2)
+    .delete("java", "post-to-remove")
+    .execute();
+```
+
+### DDL Operations
+
+```java
+// Create table (uses schema from @DynamoDbBean annotations)
+table.create();
+
+// Create with custom throughput
+table.create(b -> b
+    .provisionedThroughput(p -> p
+        .readCapacityUnits(10L)
+        .writeCapacityUnits(10L)));
+
+// Delete table
+table.delete();
+
+// Describe table
+DescribeTableEnhancedResponse desc = table.describe();
+
+// Check existence
+boolean exists = table.exists();
+```
+
+### Secondary Indexes (GSI/LSI)
+
+```java
+// Query a GSI
+table.index("AuthorIndex")
+    .query()
+    .partitionKey("john")
+    .filter(f -> f.gt("createdUtc", 1700000000L))
+    .execute();
+
+// Scan a GSI
+table.index("AuthorIndex")
+    .scan()
+    .filter(f -> f.eq("status", "ACTIVE"))
+    .execute();
+```
+
+### PartiQL
+
+```java
+// Execute a PartiQL statement
+ExecuteStatementResponse response = client.executeStatement(
+    ExecuteStatementRequest.builder()
+        .statement("SELECT * FROM \"posts\" WHERE subreddit = ?")
+        .parameters(AttributeValue.builder().s("java").build())
+        .build());
+```
+
+### Async API
+
+The library provides a complete async counterpart using `CompletableFuture`:
+
+```java
+// Create async client
+AsyncDynamoSimplifiedClient client = AsyncDynamoSimplifiedClient.create();
+AsyncTable<Post> posts = client.table("posts", Post.class);
+
+// Async query
+List<Post> results = posts.query()
+    .partitionKey("java")
+    .execute()
+    .get(); // or .join(), or chain with thenApply()
+
+// Async CRUD
+CompletableFuture<Optional<Post>> future = posts.getItem("java", "post-123");
+CompletableFuture<Void> putFuture = posts.putItem(newPost);
+CompletableFuture<Post> updateFuture = posts.update(post);
+CompletableFuture<Void> deleteFuture = posts.deleteItem("java", "post-123");
+
+// Async transactions
+client.transactWrite()
+    .put(posts, newPost)
+    .execute(); // returns CompletableFuture<Void>
+
+// Async DDL
+CompletableFuture<Void> created = posts.create();
+CompletableFuture<Void> deleted = posts.delete();
+CompletableFuture<DescribeTableEnhancedResponse> desc = posts.describe();
+CompletableFuture<Boolean> exists = posts.exists();
+
+// Async PartiQL
+CompletableFuture<ExecuteStatementResponse> response =
+    client.executeStatement(request);
+
+// Access raw SDK clients
+DynamoDbAsyncClient rawClient = client.getDynamoDbClient();
 ```
 
 ---
@@ -409,8 +568,8 @@ public class PostRepository {
 
 ## Requirements
 
-- Java 17+
-- AWS SDK v2 (2.20.0+)
+- Java 17+ (tested with Java 25)
+- AWS SDK v2 (2.29.52+)
 
 ---
 
@@ -423,11 +582,12 @@ dynamodb-simplified/
 │   └── src/main/java/com/hogwai/dynamodb/simplified/
 │       ├── DynamoSimplifiedClient.java    # entry point, factory methods
 │       ├── Table.java                     # fluent table operations
-│       ├── builder/                       # QueryBuilder, PutBuilder, etc.
+│       ├── async/                         # AsyncDynamoSimplifiedClient, AsyncTable, async builders
+│       ├── builder/                       # QueryBuilder, PutBuilder, TransactWriteBuilder, etc.
 │       ├── exception/                     # DynamoSimplifiedException, ConditionFailedException
 │       ├── expression/                    # FilterExpression, UpdateExpression, ProjectionExpression
 │       ├── internal/                      # AttributeValueConverter
-│       └── result/                        # PagedResult
+│       └── result/                        # PagedResult, TransactGetResults, BatchGetResults
 │
 ├── dynamodb-simplified-demo/     # example Micronaut application
 │   └── build.gradle.kts

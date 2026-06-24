@@ -9,16 +9,14 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * A fluent builder for scanning a DynamoDB table with optional filter, projection,
@@ -36,6 +34,7 @@ public class ScanBuilder<T> {
     private Integer totalSegments;
     private Integer segment;
     private Boolean consistentRead = false;
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code ScanBuilder} for the given table.
@@ -161,14 +160,30 @@ public class ScanBuilder<T> {
         return this;
     }
 
+    /**
+     * Configures the level of consumed capacity that should be returned by the scan.
+     *
+     * @param returnConsumedCapacity the {@link ReturnConsumedCapacity} value
+     * @return this builder for chaining
+     */
+    public @NonNull ScanBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
      * Executes the scan and returns all matching items aggregated from all pages.
+     * <p>
+     * <b>Warning:</b> This method loads all results into memory. For large result sets,
+     * consider using {@link #executeStream()} for lazy streaming or paginate manually
+     * with {@link #executeWithPagination()}.
      *
      * @return a list of matching items
      */
-    public @NonNull List<T> execute() {
+    @NonNull
+    public List<T> executeAll() {
         return executeAsPages().stream()
                                .flatMap(page -> page.items().stream())
                                .toList();
@@ -180,7 +195,20 @@ public class ScanBuilder<T> {
      * @return an {@link Optional} containing the first item, or empty if no items match
      */
     public @NonNull Optional<T> executeAndGetFirst() {
-        return execute().stream().findFirst();
+        return executeAll().stream().findFirst();
+    }
+
+    /**
+     * Executes the scan and returns a lazy {@link Stream} of all matching items.
+     * The stream is backed by the paginated scan results, so items are fetched
+     * on demand as the stream is consumed.
+     *
+     * @return a stream of matching items
+     */
+    @NonNull
+    public Stream<T> executeStream() {
+        return executeAsPages().stream()
+                               .flatMap(page -> page.items().stream());
     }
 
     /**
@@ -220,6 +248,7 @@ public class ScanBuilder<T> {
         if (index != null) {
             return index.scan(request);
         }
+        Objects.requireNonNull(table, "table must not be null");
         return table.scan(request);
     }
 
@@ -250,6 +279,10 @@ public class ScanBuilder<T> {
         if (totalSegments != null && segment != null) {
             requestBuilder.segment(segment);
             requestBuilder.totalSegments(totalSegments);
+        }
+
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
 
         return requestBuilder.build();

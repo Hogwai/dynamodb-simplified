@@ -17,6 +17,7 @@ import java.util.Objects;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * Typed async entry point for DynamoDB operations on a single table.
@@ -178,7 +179,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncDeleteBuilder<T> delete(@NonNull Object partitionKey) {
-        return new AsyncDeleteBuilder<>(dynamoDbAsyncTable, partitionKey, null);
+        return new AsyncDeleteBuilder<>(dynamoDbAsyncTable, partitionKey, null, dynamoDbAsyncClient);
     }
 
     /**
@@ -190,7 +191,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncDeleteBuilder<T> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return new AsyncDeleteBuilder<>(dynamoDbAsyncTable, partitionKey, sortKey);
+        return new AsyncDeleteBuilder<>(dynamoDbAsyncTable, partitionKey, sortKey, dynamoDbAsyncClient);
     }
 
     /**
@@ -371,13 +372,20 @@ public class AsyncTable<T> {
     @NonNull
     public CompletableFuture<Boolean> exists() {
         return dynamoDbAsyncTable.describeTable()
-                .handle((_, error) -> switch (error) {
-                    case null -> true;
-                    case ResourceNotFoundException _ -> false;
+                .handle((_, error) -> {
+                    // Unwrap CompletionException to find the actual cause
+                    Throwable actualError = error;
+                    while (actualError instanceof CompletionException ce) {
+                        actualError = ce.getCause();
+                    }
+                    return switch (actualError) {
+                        case null -> true;
+                        case ResourceNotFoundException _ -> false;
 
-                    // AWS SDK exceptions are RuntimeExceptions, re-throw as-is
-                    case RuntimeException re -> throw re;
-                    default -> throw new DynamoSimplifiedException(String.valueOf(error), error);
+                        // AWS SDK exceptions are RuntimeExceptions, re-throw as-is
+                        case RuntimeException re -> throw re;
+                        default -> throw new DynamoSimplifiedException(String.valueOf(actualError), actualError);
+                    };
                 });
     }
 

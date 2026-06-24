@@ -12,12 +12,14 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * A fluent builder for querying items in a DynamoDB table or index.
@@ -36,6 +38,7 @@ public class QueryBuilder<T> {
     private Integer limit;
     private Map<String, AttributeValue> exclusiveStartKey;
     private Boolean consistentRead = false;
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code QueryBuilder} for the given table.
@@ -311,17 +314,47 @@ public class QueryBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the return consumed capacity value for the query.
+     *
+     * @param returnConsumedCapacity the return consumed capacity value
+     * @return this builder for chaining
+     */
+    @NonNull
+    public QueryBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
      * Executes the query and returns all matching items aggregated from all pages.
+     * <p>
+     * <b>Memory warning:</b> all results are loaded into memory. For large result sets,
+     * consider using {@link #executeStream()} for lazy iteration or {@link #executeWithPagination()}
+     * for page-by-page processing.
      *
      * @return a list of matching items
      */
-    public @NonNull List<T> execute() {
+    @NonNull
+    public List<T> executeAll() {
         return executeAsPages().stream()
                                .flatMap(page -> page.items().stream())
                                .toList();
+    }
+
+    /**
+     * Executes the query and returns a lazy stream of all matching items.
+     * <p>
+     * The stream lazily fetches pages as needed, making it suitable for large result sets.
+     *
+     * @return a stream of matching items
+     */
+    @NonNull
+    public Stream<T> executeStream() {
+        return executeAsPages().stream()
+                               .flatMap(page -> page.items().stream());
     }
 
     /**
@@ -349,7 +382,7 @@ public class QueryBuilder<T> {
      * @return an {@link Optional} containing the first item, or empty if no items match
      */
     public @NonNull Optional<T> executeAndGetFirst() {
-        return execute().stream().findFirst();
+        return executeAll().stream().findFirst();
     }
 
     /**
@@ -395,6 +428,10 @@ public class QueryBuilder<T> {
 
         if (exclusiveStartKey != null) {
             requestBuilder.exclusiveStartKey(exclusiveStartKey);
+        }
+
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
 
         if (index != null) {

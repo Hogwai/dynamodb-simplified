@@ -193,7 +193,7 @@ public class Table<T> {
      */
     @NonNull
     public DeleteBuilder<T> delete(@NonNull Object partitionKey) {
-        return new DeleteBuilder<>(dynamoDbTable, partitionKey, null);
+        return new DeleteBuilder<>(dynamoDbTable, partitionKey, null, dynamoDbClient);
     }
 
     /**
@@ -208,7 +208,7 @@ public class Table<T> {
      */
     @NonNull
     public DeleteBuilder<T> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return new DeleteBuilder<>(dynamoDbTable, partitionKey, sortKey);
+        return new DeleteBuilder<>(dynamoDbTable, partitionKey, sortKey, dynamoDbClient);
     }
 
     /**

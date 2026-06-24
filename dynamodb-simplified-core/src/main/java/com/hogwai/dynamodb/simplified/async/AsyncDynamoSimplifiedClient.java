@@ -5,6 +5,8 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
 import java.util.List;
@@ -146,7 +148,7 @@ public class AsyncDynamoSimplifiedClient {
      */
     @NonNull
     public AsyncTransactWriteBuilder transactWrite() {
-        return new AsyncTransactWriteBuilder(enhancedAsyncClient);
+        return new AsyncTransactWriteBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
     }
 
     /**
@@ -178,5 +180,19 @@ public class AsyncDynamoSimplifiedClient {
     public CompletableFuture<List<String>> listTables() {
         return dynamoDbAsyncClient.listTables()
                 .thenApply(ListTablesResponse::tableNames);
+    }
+
+    /**
+     * Executes a PartiQL statement against DynamoDB asynchronously.
+     * <p>
+     * This is a passthrough to the underlying low-level
+     * {@link DynamoDbAsyncClient#executeStatement(ExecuteStatementRequest)}.
+     *
+     * @param request the PartiQL request to execute
+     * @return a {@link CompletableFuture} containing the response
+     */
+    @NonNull
+    public CompletableFuture<ExecuteStatementResponse> executeStatement(@NonNull ExecuteStatementRequest request) {
+        return dynamoDbAsyncClient.executeStatement(request);
     }
 }

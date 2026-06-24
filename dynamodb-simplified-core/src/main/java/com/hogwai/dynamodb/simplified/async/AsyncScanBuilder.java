@@ -11,11 +11,9 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -37,6 +35,7 @@ public class AsyncScanBuilder<T> {
     private Integer limit;
     private Map<String, AttributeValue> exclusiveStartKey;
     private Boolean consistentRead = false;
+    private ReturnConsumedCapacity returnConsumedCapacity;
     private Integer totalSegments;
     private Integer segment;
 
@@ -164,15 +163,34 @@ public class AsyncScanBuilder<T> {
         return this;
     }
 
+    // ============ Return Consumed Capacity ============
+
+    /**
+     * Configures whether to return the consumed capacity for the scan operation.
+     *
+     * @param returnConsumedCapacity the {@link ReturnConsumedCapacity} value
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncScanBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
      * Executes the scan asynchronously and returns all matching items
      * aggregated from all pages.
+     * <p>
+     * <b>Memory warning:</b> This method collects all pages into a single in-memory
+     * list before returning. For scans that may return a large number of items,
+     * consider using {@link #executeWithPagination()} or processing pages
+     * individually to avoid excessive memory usage.
      *
      * @return a {@link CompletableFuture} containing a list of matching items
      */
-    public @NonNull CompletableFuture<List<T>> execute() {
+    public @NonNull CompletableFuture<List<T>> executeAll() {
         return executeAsPages()
                 .thenApply(pages -> pages.stream()
                         .flatMap(page -> page.items().stream())
@@ -228,6 +246,7 @@ public class AsyncScanBuilder<T> {
         if (index != null) {
             return PageCollector.collectPages(index.scan(request));
         }
+        Objects.requireNonNull(table, "table must not be null");
         return PageCollector.collectPages(table.scan(request));
     }
 
@@ -258,6 +277,10 @@ public class AsyncScanBuilder<T> {
         if (totalSegments != null && segment != null) {
             requestBuilder.totalSegments(totalSegments);
             requestBuilder.segment(segment);
+        }
+
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
 
         return requestBuilder.build();

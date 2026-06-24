@@ -14,6 +14,8 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
 import java.lang.reflect.Constructor;
@@ -214,6 +216,22 @@ class DynamoSimplifiedClientTest {
 
         assertNotNull(table);
         verify(enhancedClient).table(eq("test-table"), any(TableSchema.class));
+    }
+
+    @Test
+    @DisplayName("executeStatement() delegates to DynamoDbClient.executeStatement()")
+    void executeStatementDelegates() {
+        ExecuteStatementRequest request = ExecuteStatementRequest.builder()
+                .statement("SELECT * FROM \"test-table\"")
+                .build();
+        ExecuteStatementResponse expected = ExecuteStatementResponse.builder().build();
+        when(dynamoDbClient.executeStatement(request)).thenReturn(expected);
+
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        ExecuteStatementResponse response = client.executeStatement(request);
+
+        assertSame(expected, response);
+        verify(dynamoDbClient).executeStatement(request);
     }
 
     @Test

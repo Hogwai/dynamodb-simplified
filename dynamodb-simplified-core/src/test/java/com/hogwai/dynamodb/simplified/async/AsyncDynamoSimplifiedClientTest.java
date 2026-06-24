@@ -15,6 +15,8 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
 import java.lang.reflect.Constructor;
@@ -275,6 +277,39 @@ class AsyncDynamoSimplifiedClientTest {
 
         assertEquals(List.of("table1", "table2"), tables);
         verify(dynamoDbAsyncClient).listTables();
+    }
+
+    @Test
+    @DisplayName("executeStatement() delegates to DynamoDbAsyncClient.executeStatement()")
+    void executeStatementDelegates() {
+        ExecuteStatementRequest request = ExecuteStatementRequest.builder()
+                .statement("SELECT * FROM \"test-table\"")
+                .build();
+        ExecuteStatementResponse expected = ExecuteStatementResponse.builder().build();
+        when(dynamoDbAsyncClient.executeStatement(request))
+                .thenReturn(CompletableFuture.completedFuture(expected));
+
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        ExecuteStatementResponse response = client.executeStatement(request).join();
+
+        assertSame(expected, response);
+        verify(dynamoDbAsyncClient).executeStatement(request);
+    }
+
+    @Test
+    @DisplayName("executeStatement() propagates error from DynamoDbAsyncClient")
+    void executeStatementPropagatesError() {
+        ExecuteStatementRequest request = ExecuteStatementRequest.builder()
+                .statement("SELECT * FROM \"test-table\"")
+                .build();
+        RuntimeException expected = new RuntimeException("query failed");
+        when(dynamoDbAsyncClient.executeStatement(request))
+                .thenReturn(CompletableFuture.failedFuture(expected));
+
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        ExecutionException ex = assertThrows(ExecutionException.class,
+                () -> client.executeStatement(request).get());
+        assertSame(expected, ex.getCause());
     }
 
     @Test

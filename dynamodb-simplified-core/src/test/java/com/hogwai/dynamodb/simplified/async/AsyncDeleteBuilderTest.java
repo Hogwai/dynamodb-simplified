@@ -10,10 +10,17 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,9 +42,17 @@ class AsyncDeleteBuilderTest {
 
     @Mock
     private DynamoDbAsyncTable<TestItem> table;
+    @Mock
+    private DynamoDbAsyncClient dynamoDbAsyncClient;
+    @Mock
+    private TableSchema<TestItem> tableSchema;
+    @Mock
+    private TableMetadata tableMetadata;
 
     @Captor
     private ArgumentCaptor<DeleteItemEnhancedRequest> requestCaptor;
+    @Captor
+    private ArgumentCaptor<DeleteItemRequest> lowLevelRequestCaptor;
 
     @Test
     @DisplayName("execute with partition key only deletes by pk and returns deleted item")
@@ -44,7 +60,7 @@ class AsyncDeleteBuilderTest {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(new TestItem()));
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         TestItem result = builder.execute().join();
@@ -64,7 +80,7 @@ class AsyncDeleteBuilderTest {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(new TestItem()));
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", "sk");
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", "sk", null);
 
         // When
         TestItem result = builder.execute().join();
@@ -84,7 +100,7 @@ class AsyncDeleteBuilderTest {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(new TestItem()));
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         builder.condition(c -> c.eq("status", "archived"));
@@ -109,7 +125,7 @@ class AsyncDeleteBuilderTest {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(new TestItem()));
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         builder.onlyIfExists("id");
@@ -131,7 +147,7 @@ class AsyncDeleteBuilderTest {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(new TestItem()));
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         builder.condition(c -> c.eq("color", "blue"));
@@ -162,7 +178,7 @@ class AsyncDeleteBuilderTest {
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(sdkEx));
 
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         CompletableFuture<TestItem> future = builder.execute();
@@ -181,7 +197,7 @@ class AsyncDeleteBuilderTest {
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(runtimeEx));
 
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         CompletableFuture<TestItem> future = builder.execute();
@@ -200,7 +216,7 @@ class AsyncDeleteBuilderTest {
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(nonRuntimeEx));
 
-        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
         CompletableFuture<TestItem> future = builder.execute();
@@ -209,5 +225,168 @@ class AsyncDeleteBuilderTest {
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
         assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
         assertSame(nonRuntimeEx, ex.getCause().getCause());
+    }
+
+    // ============ Return values ============
+
+    @Test
+    @DisplayName("returnValues with ALL_OLD uses low-level deleteItem and maps response")
+    void returnValues_setsOnRequest() {
+        // Given
+        TestItem deletedItem = new TestItem();
+        Map<String, AttributeValue> itemMap = Map.of("id", AttributeValue.builder().s("pk").build());
+        DeleteItemResponse response = DeleteItemResponse.builder().attributes(itemMap).build();
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        when(tableSchema.mapToItem(itemMap)).thenReturn(deletedItem);
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, dynamoDbAsyncClient);
+
+        // When
+        builder.returnValues(ReturnValue.ALL_OLD);
+        TestItem result = builder.execute().join();
+
+        // Then
+        assertSame(deletedItem, result);
+        verify(dynamoDbAsyncClient).deleteItem(lowLevelRequestCaptor.capture());
+        DeleteItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals("test-table", request.tableName());
+        assertEquals(ReturnValue.ALL_OLD, request.returnValues());
+        assertEquals(Map.of("pk", AttributeValue.builder().s("pk").build()), request.key());
+    }
+
+    @Test
+    @DisplayName("returnValues not set uses enhanced client path")
+    void returnValues_none_usesEnhancedPath() {
+        // Given
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(new TestItem()));
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, dynamoDbAsyncClient);
+
+        // When
+        TestItem result = builder.execute().join();
+
+        // Then
+        assertNotNull(result);
+        verify(table).deleteItem(any(DeleteItemEnhancedRequest.class));
+        verifyNoInteractions(dynamoDbAsyncClient);
+    }
+
+    @Test
+    @DisplayName("returnValues with condition expression includes both in low-level request")
+    void returnValues_withCondition() {
+        // Given
+        TestItem deletedItem = new TestItem();
+        Map<String, AttributeValue> itemMap = Map.of("id", AttributeValue.builder().s("pk").build());
+        DeleteItemResponse response = DeleteItemResponse.builder().attributes(itemMap).build();
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        when(tableSchema.mapToItem(itemMap)).thenReturn(deletedItem);
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, dynamoDbAsyncClient);
+
+        // When
+        builder.returnValues(ReturnValue.ALL_OLD);
+        builder.condition(c -> c.eq("status", "archived"));
+        builder.execute().join();
+
+        // Then
+        verify(dynamoDbAsyncClient).deleteItem(lowLevelRequestCaptor.capture());
+        DeleteItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals(ReturnValue.ALL_OLD, request.returnValues());
+        assertNotNull(request.conditionExpression());
+        assertEquals("#n0 = :v0", request.conditionExpression());
+        assertEquals(Map.of("#n0", "status"), request.expressionAttributeNames());
+        assertEquals(
+                Map.of(":v0", AttributeValue.builder().s("archived").build()),
+                request.expressionAttributeValues()
+        );
+    }
+
+    @Test
+    @DisplayName("returnValues(NONE) returns null when response has no attributes")
+    void returnValues_none_returnsNull() {
+        // Given
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(DeleteItemResponse.builder().build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, dynamoDbAsyncClient);
+
+        // When
+        builder.returnValues(ReturnValue.NONE);
+        TestItem result = builder.execute().join();
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    @DisplayName("returnValues with ALL_OLD wraps ConditionalCheckFailedException")
+    void returnValues_wrapsConditionalCheckFailedException() {
+        // Given
+        ConditionalCheckFailedException sdkEx = ConditionalCheckFailedException.builder()
+                .message("The conditional request failed")
+                .build();
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(sdkEx));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, dynamoDbAsyncClient);
+
+        // When
+        builder.returnValues(ReturnValue.ALL_OLD);
+        builder.condition(c -> c.eq("status", "active"));
+        CompletableFuture<TestItem> future = builder.execute();
+
+        // Then
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(ConditionFailedException.class, ex.getCause());
+        assertTrue(ex.getCause().getMessage().startsWith("Conditional check failed:"));
+    }
+
+    @Test
+    @DisplayName("returnValues with ALL_OLD and sort key builds key with both pk and sk")
+    void returnValues_withSortKey() {
+        // Given
+        Map<String, AttributeValue> itemMap = Map.of(
+                "pk", AttributeValue.builder().s("pk-val").build(),
+                "sk", AttributeValue.builder().s("sk-val").build()
+        );
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(DeleteItemResponse.builder().attributes(itemMap).build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        when(tableMetadata.primarySortKey()).thenReturn(java.util.Optional.of("sk"));
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk-val", "sk-val", dynamoDbAsyncClient);
+
+        // When
+        builder.returnValues(ReturnValue.ALL_OLD);
+        builder.execute().join();
+
+        // Then
+        verify(dynamoDbAsyncClient).deleteItem(lowLevelRequestCaptor.capture());
+        DeleteItemRequest request = lowLevelRequestCaptor.getValue();
+        Map<String, AttributeValue> expectedKey = new HashMap<>();
+        expectedKey.put("pk", AttributeValue.builder().s("pk-val").build());
+        expectedKey.put("sk", AttributeValue.builder().s("sk-val").build());
+        assertEquals(expectedKey, request.key());
     }
 }

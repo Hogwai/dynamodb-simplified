@@ -15,6 +15,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -47,6 +48,7 @@ public class AsyncQueryBuilder<T> {
     private Integer limit;
     private Map<String, AttributeValue> exclusiveStartKey;
     private Boolean consistentRead = false;
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncQueryBuilder} for the given async table.
@@ -323,15 +325,32 @@ public class AsyncQueryBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the return consumed capacity option for the query.
+     *
+     * @param returnConsumedCapacity the return consumed capacity value
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncQueryBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
      * Executes the query asynchronously and returns all matching items
      * aggregated from all pages.
+     * <p>
+     * <b>Memory warning:</b> This method eagerly loads <em>all</em> matching
+     * items into memory. If the result set may be large, consider using
+     * {@link #executeAsPages()} or paginated methods such as
+     * {@link #executeWithPagination()} to process items incrementally.
      *
      * @return a {@link CompletableFuture} containing a list of matching items
      */
-    public @NonNull CompletableFuture<List<T>> execute() {
+    @NonNull
+    public CompletableFuture<List<T>> executeAll() {
         return executeAsPages()
                 .thenApply(pages -> pages.stream()
                         .flatMap(page -> page.items().stream())
@@ -366,7 +385,7 @@ public class AsyncQueryBuilder<T> {
      *         with the first item, or empty if no items match
      */
     public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
-        return execute().thenApply(items -> items.stream().findFirst());
+        return executeAll().thenApply(items -> items.stream().findFirst());
     }
 
     /**
@@ -417,6 +436,10 @@ public class AsyncQueryBuilder<T> {
 
         if (exclusiveStartKey != null) {
             requestBuilder.exclusiveStartKey(exclusiveStartKey);
+        }
+
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
 
         if (index != null) {
