@@ -118,7 +118,8 @@ public class AsyncQueryBuilder<T> {
      * @param skHigh  the upper bound of the sort key range (inclusive)
      * @return this builder for chaining
      */
-    public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyBetween(@NonNull Object pkValue, @NonNull Object skLow, @NonNull Object skHigh) {
+    public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyBetween(
+            @NonNull Object pkValue, @NonNull Object skLow, @NonNull Object skHigh) {
         this.keyCondition = QueryConditional.sortBetween(
                 Key.builder()
                    .partitionValue(toAttributeValue(pkValue))

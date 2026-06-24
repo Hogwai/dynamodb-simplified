@@ -38,6 +38,7 @@ class AsyncQueryBuilderTest {
         public String id;
 
         TestItem() {
+            // test
         }
 
         TestItem(String id) {
@@ -459,6 +460,22 @@ class AsyncQueryBuilderTest {
 
         new AsyncQueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThan("pk", 5)
+                .execute()
+                .join();
+
+        ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
+        verify(table).query(captor.capture());
+        assertNotNull(captor.getValue().queryConditional());
+    }
+
+    @Test
+    @DisplayName("partitionKeyAndSortKeyGreaterThanOrEqual sets sortGreaterThanOrEqualTo condition")
+    void partitionKeyAndSortKeyGreaterThanOrEqual() {
+        Page<TestItem> page = mockPageWithItems(List.of(new TestItem("1")));
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        new AsyncQueryBuilder<>(table)
+                .partitionKeyAndSortKeyGreaterThanOrEqual("pk", 5)
                 .execute()
                 .join();
 

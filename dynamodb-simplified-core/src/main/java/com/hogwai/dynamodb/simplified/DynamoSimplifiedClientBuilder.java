@@ -26,7 +26,8 @@ public class DynamoSimplifiedClientBuilder {
     private DynamoDbEnhancedClientExtension[] extensions;
 
     /** Package-private constructor — called only from {@link DynamoSimplifiedClient#builder()}. */
-    DynamoSimplifiedClientBuilder() {}
+    DynamoSimplifiedClientBuilder() {
+    }
 
     /**
      * Sets a custom DynamoDB client.
