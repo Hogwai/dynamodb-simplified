@@ -95,9 +95,10 @@ public class GetItemBuilder<T> {
     }
 
     private Optional<T> executeSimple() {
+        AttributeValue partitionAttrValue = AttributeValueConverter.toKeyAttributeValue(partitionKey);
         GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
                                                                  .key(k -> {
-                                                                     k.partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
+                                                                     k.partitionValue(partitionAttrValue);
                                                                      if (sortKey != null) {
                                                                          k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
                                                                      }

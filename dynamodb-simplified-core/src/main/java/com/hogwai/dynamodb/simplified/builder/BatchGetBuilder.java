@@ -25,6 +25,7 @@ public class BatchGetBuilder<T> {
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<T> table;
     private final List<Key> keys = new ArrayList<>();
+    private boolean consistentRead;
 
     public BatchGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbTable<T> table) {
         this.enhancedClient = enhancedClient;
@@ -69,6 +70,19 @@ public class BatchGetBuilder<T> {
     }
 
     /**
+     * Enables or disables strongly consistent reads for this batch get.
+     * <p>
+     * If not set, the default (eventually consistent) is used by the DynamoDB API.
+     *
+     * @param consistentRead {@code true} for strongly consistent reads
+     * @return this builder
+     */
+    public @NonNull BatchGetBuilder<T> consistentRead(boolean consistentRead) {
+        this.consistentRead = consistentRead;
+        return this;
+    }
+
+    /**
      * Executes the batch get operation and returns all matching items.
      *
      * @return the list of retrieved items (order may not match the requested keys)
@@ -82,7 +96,11 @@ public class BatchGetBuilder<T> {
         ReadBatch.Builder<T> batchBuilder = ReadBatch.builder(itemClass)
                 .mappedTableResource(table);
         for (Key key : keys) {
-            batchBuilder.addGetItem(key);
+            if (consistentRead) {
+                batchBuilder.addGetItem(b -> b.key(key).consistentRead(true));
+            } else {
+                batchBuilder.addGetItem(key);
+            }
         }
 
         BatchGetItemEnhancedRequest request = BatchGetItemEnhancedRequest.builder()

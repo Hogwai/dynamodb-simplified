@@ -1,6 +1,5 @@
 package com.hogwai.dynamodb.simplified.builder;
 
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,15 +99,14 @@ class PutBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with direct FilterExpression overload includes condition expression")
-    void executeWithDirectFilterExpression() {
+    @DisplayName("execute with condition consumer includes condition expression")
+    void executeWithConditionConsumerDirect() {
         // Given
         TestItem item = new TestItem("item-1");
         PutBuilder<TestItem> builder = new PutBuilder<>(table, item);
-        FilterExpression fe = FilterExpression.builder().eq("color", "blue");
 
         // When
-        builder.condition(fe);
+        builder.condition(c -> c.eq("color", "blue"));
         builder.execute();
 
         // Then

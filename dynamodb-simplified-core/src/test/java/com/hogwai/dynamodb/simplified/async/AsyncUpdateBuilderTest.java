@@ -1,7 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -120,14 +120,14 @@ class AsyncUpdateBuilderTest {
     }
 
     @Test
-    @DisplayName("condition(FilterExpression) overload accepts a pre-built filter expression")
-    void conditionWithFilterExpression() {
+    @DisplayName("condition(ConditionExpression) overload accepts a pre-built condition expression")
+    void conditionWithConditionExpression() {
         when(table.updateItem(any(UpdateItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(resultItem));
 
-        FilterExpression filterExpr = FilterExpression.builder().eq("age", 18);
+        ConditionExpression conditionExpr = ConditionExpression.builder().eq("age", 18).build();
         new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
-                .condition(filterExpr)
+                .condition(conditionExpr)
                 .execute()
                 .join();
 
@@ -146,7 +146,7 @@ class AsyncUpdateBuilderTest {
         when(table.updateItem(any(UpdateItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(resultItem));
 
-        FilterExpression condition = FilterExpression.builder().eq("active", true);
+        ConditionExpression condition = ConditionExpression.builder().eq("active", true).build();
         new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
                 .condition(condition)
                 .ignoreNulls(false)
@@ -263,5 +263,19 @@ class AsyncUpdateBuilderTest {
 
         CompletionException ex = assertThrows(CompletionException.class, result::join);
         assertInstanceOf(ConditionFailedException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("ignoreNulls(false) with update(Consumer) throws IllegalStateException")
+    void ignoreNullsFalseWithPartialUpdateThrowsException() {
+        var builder = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient);
+
+        CompletableFuture<TestItem> future = builder
+                .update(u -> u.set("name", "updated"))
+                .ignoreNulls(false)
+                .execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 }

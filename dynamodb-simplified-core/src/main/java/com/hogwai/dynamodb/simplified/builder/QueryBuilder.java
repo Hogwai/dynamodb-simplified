@@ -35,7 +35,6 @@ public class QueryBuilder<T> {
     private Boolean scanIndexForward = true;
     private Integer limit;
     private Map<String, AttributeValue> exclusiveStartKey;
-    private String indexName;
     private Boolean consistentRead = false;
 
     /**
@@ -301,22 +300,6 @@ public class QueryBuilder<T> {
     }
 
     /**
-     * Specifies a global secondary index to query against instead of the table.
-     * <p>
-     * <b>Deprecated:</b> Use {@code table.index("name").query()} instead,
-     * which returns a cleaner per-index builder.
-     *
-     * @param indexName the name of the global secondary index
-     * @return this builder for chaining
-     * @deprecated since 1.0, for removal — use {@link com.hogwai.dynamodb.simplified.builder.Index#query()}
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public @NonNull QueryBuilder<T> useIndex(@NonNull String indexName) {
-        this.indexName = indexName;
-        return this;
-    }
-
-    /**
      * Enables or disables strongly consistent reads.
      *
      * @param consistentRead {@code true} for a strongly consistent read,
@@ -402,7 +385,7 @@ public class QueryBuilder<T> {
 
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
             requestBuilder.attributesToProject(
-                    projectionExpression.getExpressionNames().values().toArray(new String[0])
+                    projectionExpression.getProjectedAttributes().toArray(new String[0])
             );
         }
 
@@ -416,10 +399,6 @@ public class QueryBuilder<T> {
 
         if (index != null) {
             return index.query(requestBuilder.build());
-        }
-
-        if (indexName != null) {
-            return table.index(indexName).query(requestBuilder.build());
         }
 
         return table.query(requestBuilder.build());

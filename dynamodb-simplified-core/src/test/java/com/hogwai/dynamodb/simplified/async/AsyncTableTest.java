@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
@@ -225,5 +226,153 @@ class AsyncTableTest {
     void createNullConsumerThrows() {
         AsyncTable<TestItem> table = createTable();
         assertThrows(NullPointerException.class, () -> table.create((Consumer) null));
+    }
+
+    // ========== CRUD convenience methods ==========
+
+    @Test
+    @DisplayName("getItem(pk, sk) delegates to DynamoDbAsyncTable.getItem(Key) and returns Optional")
+    void getItemWithSortKeyDelegates() {
+        TestItem item = new TestItem();
+        when(dynamoDbAsyncTable.getItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(item));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<java.util.Optional<TestItem>> result = table.getItem("pk", "sk");
+
+        assertNotNull(result);
+        assertEquals(item, result.join().orElse(null));
+        verify(dynamoDbAsyncTable).getItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbAsyncTable.deleteItem(Key)")
+    void deleteItemWithSortKeyDelegates() {
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(null));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<Void> result = table.deleteItem("pk", "sk");
+
+        assertNotNull(result);
+        result.join();
+        verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
+    }
+
+    // ========== Builder return methods ==========
+
+    @Test
+    @DisplayName("get(pk) returns a non-null AsyncGetItemBuilder")
+    void getWithPartitionKeyReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.get("pk"));
+    }
+
+    @Test
+    @DisplayName("get(pk, sk) returns a non-null AsyncGetItemBuilder")
+    void getWithSortKeyReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.get("pk", "sk"));
+    }
+
+    @Test
+    @DisplayName("put(item) returns a non-null AsyncPutBuilder")
+    void putReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.put(new TestItem()));
+    }
+
+    @Test
+    @DisplayName("update(item) returns a non-null AsyncUpdateBuilder")
+    void updateReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.update(new TestItem()));
+    }
+
+    @Test
+    @DisplayName("updateItem(item) delegates to DynamoDbAsyncTable.updateItem(item) and returns item")
+    void updateItemDelegates() {
+        TestItem item = new TestItem();
+        when(dynamoDbAsyncTable.updateItem(any(TestItem.class))).thenReturn(CompletableFuture.completedFuture(item));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<TestItem> result = table.updateItem(item);
+
+        assertNotNull(result);
+        assertSame(item, result.join());
+        verify(dynamoDbAsyncTable).updateItem(item);
+    }
+
+    @Test
+    @DisplayName("delete(pk) returns a non-null AsyncDeleteBuilder")
+    void deleteWithPartitionKeyReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.delete("pk"));
+    }
+
+    @Test
+    @DisplayName("delete(pk, sk) returns a non-null AsyncDeleteBuilder")
+    void deleteWithSortKeyReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.delete("pk", "sk"));
+    }
+
+    @Test
+    @DisplayName("batchGet() returns a non-null AsyncBatchGetBuilder")
+    void batchGetReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.batchGet());
+    }
+
+    @Test
+    @DisplayName("batchWrite() returns a non-null AsyncBatchWriteBuilder")
+    void batchWriteReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.batchWrite());
+    }
+
+    @Test
+    @DisplayName("query() returns a non-null AsyncQueryBuilder")
+    void queryReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.query());
+    }
+
+    @Test
+    @DisplayName("scan() returns a non-null AsyncScanBuilder")
+    void scanReturnsBuilder() {
+        AsyncTable<TestItem> table = createTable();
+        assertNotNull(table.scan());
+    }
+
+    // ========== Accessor methods ==========
+
+    @Test
+    @DisplayName("getEnhancedClient() returns the underlying DynamoDbEnhancedAsyncClient")
+    void getEnhancedClientReturnsClient() {
+        AsyncTable<TestItem> table = createTable();
+        assertSame(enhancedAsyncClient, table.getEnhancedClient());
+    }
+
+    @Test
+    @DisplayName("getDynamoDbClient() returns the underlying DynamoDbAsyncClient")
+    void getDynamoDbClientReturnsClient() {
+        AsyncTable<TestItem> table = createTable();
+        assertSame(dynamoDbAsyncClient, table.getDynamoDbClient());
+    }
+
+    // ========== DDL ==========
+
+    @Test
+    @DisplayName("create(CreateTableEnhancedRequest) delegates to DynamoDbAsyncTable.createTable(CreateTableEnhancedRequest)")
+    void createWithRequestDelegates() {
+        when(dynamoDbAsyncTable.createTable(any(CreateTableEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        AsyncTable<TestItem> table = createTable();
+        CreateTableEnhancedRequest request = CreateTableEnhancedRequest.builder().build();
+        CompletableFuture<Void> result = table.create(request);
+
+        assertNotNull(result);
+        result.join();
+        verify(dynamoDbAsyncTable).createTable(request);
     }
 }

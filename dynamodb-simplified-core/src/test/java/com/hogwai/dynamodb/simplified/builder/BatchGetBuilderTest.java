@@ -3,6 +3,7 @@ package com.hogwai.dynamodb.simplified.builder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
@@ -14,9 +15,12 @@ import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,7 +93,7 @@ class BatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute — empty keys ============
+    // ============ execute, empty keys ============
 
     @Test
     @DisplayName("execute with empty keys returns empty list and does not call batchGetItem")
@@ -102,7 +106,53 @@ class BatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ execute — with keys ============
+    // ============ execute, with keys ============
+
+    // ============ consistentRead ============
+
+    @Test
+    @DisplayName("consistentRead(true) configures per-item strong consistency")
+    @SuppressWarnings("unchecked")
+    void consistentRead_true_usesConsistentRead() {
+        // Mock table schema chain: table.tableSchema().itemType().rawClass()
+        EnhancedType<TestItem> enhancedType = mock(EnhancedType.class);
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemType()).thenReturn(enhancedType);
+        when(enhancedType.rawClass()).thenReturn(TestItem.class);
+
+        // Mock the batch get result
+        BatchGetResultPageIterable resultPageIterable = mock(BatchGetResultPageIterable.class);
+        SdkIterable<TestItem> sdkIterable = mock(SdkIterable.class);
+        when(sdkIterable.stream()).thenReturn(Stream.of());
+        when(resultPageIterable.resultsForTable(table)).thenReturn(sdkIterable);
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(resultPageIterable);
+
+        // Intercept ReadBatch.builder() to capture the consumer passed to addGetItem
+        try (var _ = mockStatic(ReadBatch.class)) {
+            ReadBatch.Builder<TestItem> batchBuilder = mock(ReadBatch.Builder.class);
+            ReadBatch readBatch = mock(ReadBatch.class);
+
+            when(ReadBatch.builder(TestItem.class)).thenReturn(batchBuilder);
+            when(batchBuilder.mappedTableResource(table)).thenReturn(batchBuilder);
+            when(batchBuilder.build()).thenReturn(readBatch);
+
+            BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+            builder.consistentRead(true);
+            builder.addKey("pk");
+            builder.execute();
+
+            // Capture the consumer and verify it sets consistentRead
+            ArgumentCaptor<Consumer<GetItemEnhancedRequest.Builder>> consumerCaptor =
+                    ArgumentCaptor.forClass(Consumer.class);
+            verify(batchBuilder).addGetItem(consumerCaptor.capture());
+
+            GetItemEnhancedRequest.Builder getItemBuilder = GetItemEnhancedRequest.builder();
+            consumerCaptor.getValue().accept(getItemBuilder);
+            assertTrue(getItemBuilder.build().consistentRead());
+        }
+    }
+
+    // ============ execute, with keys ============
 
     @Test
     @DisplayName("execute with keys returns results from enhanced client")

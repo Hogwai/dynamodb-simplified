@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -174,6 +175,15 @@ public class ScanBuilder<T> {
     }
 
     /**
+     * Executes the scan and returns the first matching item, if any.
+     *
+     * @return an {@link Optional} containing the first item, or empty if no items match
+     */
+    public @NonNull Optional<T> executeAndGetFirst() {
+        return execute().stream().findFirst();
+    }
+
+    /**
      * Executes the scan and returns only the first page of results along with
      * the last evaluated key for pagination.
      *
@@ -225,7 +235,7 @@ public class ScanBuilder<T> {
 
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
             requestBuilder.attributesToProject(
-                    projectionExpression.getExpressionNames().values().toArray(new String[0])
+                    projectionExpression.getProjectedAttributes().toArray(new String[0])
             );
         }
 

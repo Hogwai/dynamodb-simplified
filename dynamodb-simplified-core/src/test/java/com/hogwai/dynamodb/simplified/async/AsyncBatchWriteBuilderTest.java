@@ -104,7 +104,7 @@ class AsyncBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute — empty queues ============
+    // ============ execute, empty queues ============
 
     @Test
     @DisplayName("execute with empty queues returns completed future and does not call batchWriteItem")
@@ -116,7 +116,7 @@ class AsyncBatchWriteBuilderTest {
         verify(enhancedClient, never()).batchWriteItem(any(BatchWriteItemEnhancedRequest.class));
     }
 
-    // ============ execute — with put ============
+    // ============ execute, with put ============
 
     @Test
     @DisplayName("execute with put delegates to enhanced client")
@@ -135,7 +135,7 @@ class AsyncBatchWriteBuilderTest {
         verify(enhancedClient).batchWriteItem(any(BatchWriteItemEnhancedRequest.class));
     }
 
-    // ============ execute — with delete ============
+    // ============ execute, with delete ============
 
     @Test
     @DisplayName("execute with delete delegates to enhanced client")
@@ -153,7 +153,7 @@ class AsyncBatchWriteBuilderTest {
         verify(enhancedClient).batchWriteItem(any(BatchWriteItemEnhancedRequest.class));
     }
 
-    // ============ execute — propagation of error ============
+    // ============ execute, propagation of error ============
 
     @Test
     @DisplayName("execute propagates error from enhanced client")

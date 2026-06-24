@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -84,6 +85,27 @@ class ScanBuilderTest {
         List<TestItem> result = new ScanBuilder<>(table).execute();
 
         assertEquals(3, result.size());
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() returns first item from results")
+    void executeAndGetFirst() {
+        Page<TestItem> page1 = mockPage(1, 1, null);
+        stubScanReturns(pageIterable(page1));
+
+        Optional<TestItem> result = new ScanBuilder<>(table).executeAndGetFirst();
+
+        assertTrue(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() returns empty when no results")
+    void executeAndGetFirst_empty() {
+        stubScanReturns(pageIterable());
+
+        Optional<TestItem> result = new ScanBuilder<>(table).executeAndGetFirst();
+
+        assertTrue(result.isEmpty());
     }
 
     @Test

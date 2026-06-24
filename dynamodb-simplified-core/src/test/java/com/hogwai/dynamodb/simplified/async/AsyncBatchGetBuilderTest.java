@@ -131,7 +131,7 @@ class AsyncBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute — empty keys ============
+    // ============ execute, empty keys ============
 
     @Test
     @DisplayName("execute with empty keys returns empty list and does not call batchGetItem")
@@ -144,7 +144,7 @@ class AsyncBatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ execute — with keys ============
+    // ============ execute, with keys ============
 
     @Test
     @DisplayName("execute with keys returns results from enhanced client")
@@ -252,5 +252,27 @@ class AsyncBatchGetBuilderTest {
         assertEquals(2, result.size());
         assertNull(result.getLastEvaluatedKey());
         assertFalse(result.hasMorePages());
+    }
+
+    @Test
+    @DisplayName("executeWithPagination completes exceptionally when publisher errors")
+    void executeWithPagination_whenPublisherErrors() {
+        stubTableSchema();
+
+        RuntimeException error = new RuntimeException("batch get failed");
+        BatchGetResultPagePublisher errorPublisher = subscriber -> {
+            subscriber.onSubscribe(mock(Subscription.class));
+            subscriber.onError(error);
+        };
+
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class)))
+                .thenReturn(errorPublisher);
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+        builder.addKey("pk");
+
+        CompletableFuture<PagedResult<TestItem>> future = builder.executeWithPagination();
+
+        assertThrows(RuntimeException.class, future::join);
     }
 }

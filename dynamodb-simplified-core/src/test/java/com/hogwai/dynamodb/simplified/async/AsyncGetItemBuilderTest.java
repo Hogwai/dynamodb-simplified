@@ -87,7 +87,7 @@ class AsyncGetItemBuilderTest {
                 .thenReturn(CompletableFuture.completedFuture(GetItemResponse.builder().build()));
     }
 
-    // ============ execute() — Simple GetItem ============
+    // ============ execute(), Simple GetItem ============
 
     @Test
     @DisplayName("execute() with only partition key calls getItem() with correct key")
@@ -146,7 +146,7 @@ class AsyncGetItemBuilderTest {
         verify(table).getItem(any(GetItemEnhancedRequest.class));
     }
 
-    // ============ execute() — With Projection ============
+    // ============ execute(), With Projection ============
 
     @Test
     @DisplayName("execute() with projection uses low-level client with projection expression")
@@ -191,6 +191,37 @@ class AsyncGetItemBuilderTest {
         assertTrue(result.isEmpty());
         verify(dynamoDbAsyncClient).getItem(any(GetItemRequest.class));
         verify(table, never()).getItem(any(GetItemEnhancedRequest.class));
+    }
+
+    // ============ project(Consumer) ============
+
+    @Test
+    @DisplayName("project(Consumer) applies projection expression via consumer")
+    void projectWithConsumer() {
+        TestItem expected = new TestItem("pk-value", "consumer-proj");
+        Map<String, AttributeValue> itemMap = Map.of(
+                "id", AttributeValue.builder().s("pk-value").build(),
+                "name", AttributeValue.builder().s("consumer-proj").build()
+        );
+        mockTableSchema("id", null);
+        mockGetItemReturns(itemMap, expected);
+
+        Optional<TestItem> result = pkOnlyBuilder
+                .project(p -> p.include("name"))
+                .execute()
+                .join();
+
+        assertTrue(result.isPresent());
+        assertSame(expected, result.get());
+
+        ArgumentCaptor<GetItemRequest> captor =
+                ArgumentCaptor.forClass(GetItemRequest.class);
+        verify(dynamoDbAsyncClient).getItem(captor.capture());
+        GetItemRequest request = captor.getValue();
+
+        assertEquals("#p0", request.projectionExpression());
+        assertNotNull(request.expressionAttributeNames());
+        assertEquals("name", request.expressionAttributeNames().get("#p0"));
     }
 
     // ============ consistentRead ============

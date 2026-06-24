@@ -2,6 +2,8 @@ package com.hogwai.dynamodb.simplified.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.function.UnaryOperator;
 
 /**
  * Parses nested attribute paths like {@code address.city} and {@code tags[0].name}.
@@ -38,5 +40,33 @@ public final class AttributePathParser {
             }
         }
         return segments;
+    }
+
+    /**
+     * Reconstructs a nested attribute path using a name resolver function.
+     * <p>
+     * Each path segment is resolved via the name resolver, and index suffixes
+     * (e.g., {@code [0]}) are appended when present. Segments are joined with
+     * dots.
+     * <p>
+     * Example: {@code "tags[0].name"} with resolver {@code s -> "#n0"} →
+     * {@code "#n0[0].\#p0"}
+     *
+     * @param path         the dotted attribute path
+     * @param nameResolver function that resolves a segment name to a placeholder
+     * @return the reconstructed path string with resolved placeholders
+     */
+    public static String rebuildNestedPath(String path, UnaryOperator<String> nameResolver) {
+        List<PathSegment> segments = parse(path);
+        StringJoiner joiner = new StringJoiner(".");
+        for (PathSegment segment : segments) {
+            String resolved = nameResolver.apply(segment.name());
+            if (segment.hasIndex()) {
+                joiner.add(resolved + segment.indexSuffix());
+            } else {
+                joiner.add(resolved);
+            }
+        }
+        return joiner.toString();
     }
 }

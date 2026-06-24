@@ -8,6 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link AsyncIndex}.
@@ -48,5 +50,25 @@ class AsyncIndexTest {
     void scanReturnsBuilder() {
         AsyncIndex<Object> idx = new AsyncIndex<>(dynamoDbAsyncIndex);
         assertNotNull(idx.scan());
+    }
+
+    @Test
+    @DisplayName("indexName() delegates to DynamoDbAsyncIndex.indexName()")
+    void indexName_delegatesToDynamoDbAsyncIndex() {
+        when(dynamoDbAsyncIndex.indexName()).thenReturn("my-index");
+
+        assertEquals("my-index", new AsyncIndex<>(dynamoDbAsyncIndex).indexName());
+
+        verify(dynamoDbAsyncIndex).indexName();
+    }
+
+    @Test
+    @DisplayName("tableName() delegates to DynamoDbAsyncIndex.tableName()")
+    void tableName_delegatesToDynamoDbAsyncIndex() {
+        when(dynamoDbAsyncIndex.tableName()).thenReturn("my-table");
+
+        assertEquals("my-table", new AsyncIndex<>(dynamoDbAsyncIndex).tableName());
+
+        verify(dynamoDbAsyncIndex).tableName();
     }
 }

@@ -407,7 +407,7 @@ public class AsyncQueryBuilder<T> {
 
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
             requestBuilder.attributesToProject(
-                    projectionExpression.getExpressionNames().values().toArray(new String[0])
+                    projectionExpression.getProjectedAttributes().toArray(new String[0])
             );
         }
 

@@ -2,7 +2,7 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public class AsyncPutBuilder<T> {
     private final DynamoDbAsyncTable<T> table;
     private final T item;
-    private FilterExpression conditionExpression;
+    private ConditionExpression conditionExpression;
 
     AsyncPutBuilder(@NonNull DynamoDbAsyncTable<T> table, @NonNull T item) {
         this.table = table;
@@ -29,28 +29,31 @@ public class AsyncPutBuilder<T> {
     }
 
     /**
-     * Configures a condition expression using a {@link FilterExpression} consumer.
-     * The put will only succeed if the condition evaluates to true.
+     * Configures a condition expression that gates the put operation.
+     * DynamoDB evaluates this condition <b>before</b> writing the item
+     * (unlike a filter expression which applies after reading).
      *
-     * @param conditionBuilder a consumer that configures the {@link FilterExpression}
+     * @param configurator a consumer to build the condition expression
      * @return this builder for chaining
      */
     @NonNull
-    public AsyncPutBuilder<T> condition(@NonNull Consumer<FilterExpression> conditionBuilder) {
-        this.conditionExpression = FilterExpression.builder();
-        conditionBuilder.accept(this.conditionExpression);
+    public AsyncPutBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
+        var builder = ConditionExpression.builder();
+        configurator.accept(builder);
+        this.conditionExpression = builder.build();
         return this;
     }
 
     /**
-     * Configures a condition expression from a pre-built {@link FilterExpression}.
-     * The put will only succeed if the condition evaluates to true.
+     * Configures a condition expression that gates the put operation.
+     * DynamoDB evaluates this condition <b>before</b> writing the item
+     * (unlike a filter expression which applies after reading).
      *
      * @param condition the condition expression
      * @return this builder for chaining
      */
     @NonNull
-    public AsyncPutBuilder<T> condition(@Nullable FilterExpression condition) {
+    public AsyncPutBuilder<T> condition(@Nullable ConditionExpression condition) {
         this.conditionExpression = condition;
         return this;
     }
@@ -64,7 +67,7 @@ public class AsyncPutBuilder<T> {
      */
     @NonNull
     public AsyncPutBuilder<T> onlyIfNotExists(@NonNull String attribute) {
-        this.conditionExpression = FilterExpression.builder().notExists(attribute);
+        this.conditionExpression = ConditionExpression.builder().notExists(attribute).build();
         return this;
     }
 

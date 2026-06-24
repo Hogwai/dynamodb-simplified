@@ -308,6 +308,18 @@ public class AsyncTable<T> {
     }
 
     /**
+     * Creates the DynamoDB table with the given request options.
+     *
+     * @param request the create table request options
+     * @return a {@link CompletableFuture} that completes when the table has been created
+     */
+    @NonNull
+    public CompletableFuture<Void> create(@NonNull CreateTableEnhancedRequest request) {
+        Objects.requireNonNull(request, "request must not be null");
+        return dynamoDbAsyncTable.createTable(request);
+    }
+
+    /**
      * Creates the DynamoDB table with options configured by a consumer.
      * <p>
      * Example usage:
@@ -363,7 +375,7 @@ public class AsyncTable<T> {
                     case null -> true;
                     case ResourceNotFoundException _ -> false;
 
-                    // AWS SDK exceptions are RuntimeExceptions — re-throw as-is
+                    // AWS SDK exceptions are RuntimeExceptions, re-throw as-is
                     case RuntimeException re -> throw re;
                     default -> throw new DynamoSimplifiedException(String.valueOf(error), error);
                 });

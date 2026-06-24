@@ -25,7 +25,7 @@ public class AsyncDynamoSimplifiedClientBuilder {
     private DynamoDbAsyncClient dynamoDbClient;
     private DynamoDbEnhancedClientExtension[] extensions;
 
-    /** Package-private constructor — called only from {@link AsyncDynamoSimplifiedClient#builder()}. */
+    /** Package-private constructor, called only from {@link AsyncDynamoSimplifiedClient#builder()}. */
     AsyncDynamoSimplifiedClientBuilder() {
     }
 

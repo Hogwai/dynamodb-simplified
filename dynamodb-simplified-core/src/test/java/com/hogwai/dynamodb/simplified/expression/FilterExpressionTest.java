@@ -4,7 +4,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -115,6 +117,33 @@ class FilterExpressionTest {
                 .contains("scores", 99);
         assertEquals("contains(#n0, :v0)", fe.getExpression());
         assertEquals(AttributeValue.builder().n("99").build(), fe.getExpressionValues().get(":v0"));
+    }
+
+    @Test
+    @DisplayName("contains rejects List value")
+    void containsRejectsListValue() {
+        var listValue = List.of("a");
+        var expr = FilterExpression.builder();
+        assertThrows(IllegalArgumentException.class,
+                () -> expr.contains("tags", listValue));
+    }
+
+    @Test
+    @DisplayName("contains rejects Map value")
+    void containsRejectsMapValue() {
+        var mapValue = Map.of("k", "v");
+        var expr = FilterExpression.builder();
+        assertThrows(IllegalArgumentException.class,
+                () -> expr.contains("tags", mapValue));
+    }
+
+    @Test
+    @DisplayName("contains rejects Set value")
+    void containsRejectsSetValue() {
+        var setValue = Set.of("x");
+        var expr = FilterExpression.builder();
+        assertThrows(IllegalArgumentException.class,
+                () -> expr.contains("tags", setValue));
     }
 
     // ============ Server-side SIZE Operations ============
@@ -590,7 +619,7 @@ class FilterExpressionTest {
         assertTrue(expr.contains(":v10"), "expression should contain :v10");
 
         // Verify no placeholder key is a prefix of another (corruption indicator)
-        // Count all unique name keys — should be 11 (outer + inner 10)
+        // Count all unique name keys, should be 11 (outer + inner 10)
         assertEquals(11, outer.getExpressionNames().size());
         assertEquals(11, outer.getExpressionValues().size());
     }

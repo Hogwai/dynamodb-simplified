@@ -29,7 +29,7 @@ public class AsyncDynamoSimplifiedClient {
     private final DynamoDbEnhancedAsyncClient enhancedAsyncClient;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    /** Package-private constructor — used by create() and builder() methods. */
+    /** Package-private constructor, used by create() and builder() methods. */
     AsyncDynamoSimplifiedClient(
             @NonNull DynamoDbEnhancedAsyncClient enhancedAsyncClient,
             @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {

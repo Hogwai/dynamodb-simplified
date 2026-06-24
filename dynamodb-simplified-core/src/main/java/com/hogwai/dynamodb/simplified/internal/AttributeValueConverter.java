@@ -71,7 +71,9 @@ public final class AttributeValueConverter {
 
     private static AttributeValue toSetAttributeValue(Set<?> set) {
         if (set.isEmpty()) {
-            return AttributeValue.builder().l(Collections.emptyList()).build();
+            throw new IllegalArgumentException("Cannot convert empty Set to DynamoDB attribute. "
+                    + "DynamoDB does not support empty sets (SS, NS, BS). "
+                    + "Use null or omit the attribute instead.");
         }
         Object first = set.iterator().next();
         if (first instanceof String) {

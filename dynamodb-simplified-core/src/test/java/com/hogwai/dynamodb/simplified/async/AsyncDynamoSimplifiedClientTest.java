@@ -182,6 +182,20 @@ class AsyncDynamoSimplifiedClientTest {
     }
 
     @Test
+    @DisplayName("transactGet() returns a non-null AsyncTransactGetBuilder")
+    void transactGet_returnsBuilder() {
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        assertNotNull(client.transactGet());
+    }
+
+    @Test
+    @DisplayName("transactWrite() returns a non-null AsyncTransactWriteBuilder")
+    void transactWrite_returnsBuilder() {
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        assertNotNull(client.transactWrite());
+    }
+
+    @Test
     @DisplayName("builder() returns a non-null builder")
     void builderReturnsBuilder() {
         assertNotNull(AsyncDynamoSimplifiedClient.builder());

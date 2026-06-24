@@ -2,7 +2,7 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -24,7 +24,7 @@ public class AsyncDeleteBuilder<T> {
     private final Object partitionKey;
     @Nullable
     private final Object sortKey;
-    private FilterExpression conditionExpression;
+    private ConditionExpression conditionExpression;
 
     AsyncDeleteBuilder(@NonNull DynamoDbAsyncTable<T> table, @NonNull Object partitionKey,
                        @Nullable Object sortKey) {
@@ -34,28 +34,31 @@ public class AsyncDeleteBuilder<T> {
     }
 
     /**
-     * Configures a condition expression using a {@link FilterExpression} consumer.
-     * The delete will only succeed if the condition evaluates to true.
+     * Configures a condition expression that gates the delete operation.
+     * DynamoDB evaluates this condition <b>before</b> deleting the item
+     * (unlike a filter expression which applies after reading).
      *
-     * @param conditionBuilder a consumer that configures the {@link FilterExpression}
+     * @param configurator a consumer to build the condition expression
      * @return this builder for chaining
      */
     @NonNull
-    public AsyncDeleteBuilder<T> condition(@NonNull Consumer<FilterExpression> conditionBuilder) {
-        this.conditionExpression = FilterExpression.builder();
-        conditionBuilder.accept(this.conditionExpression);
+    public AsyncDeleteBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
+        var builder = ConditionExpression.builder();
+        configurator.accept(builder);
+        this.conditionExpression = builder.build();
         return this;
     }
 
     /**
-     * Configures a condition expression from a pre-built {@link FilterExpression}.
-     * The delete will only succeed if the condition evaluates to true.
+     * Configures a condition expression that gates the delete operation.
+     * DynamoDB evaluates this condition <b>before</b> deleting the item
+     * (unlike a filter expression which applies after reading).
      *
      * @param condition the condition expression
      * @return this builder for chaining
      */
     @NonNull
-    public AsyncDeleteBuilder<T> condition(@Nullable FilterExpression condition) {
+    public AsyncDeleteBuilder<T> condition(@Nullable ConditionExpression condition) {
         this.conditionExpression = condition;
         return this;
     }
@@ -69,7 +72,7 @@ public class AsyncDeleteBuilder<T> {
      */
     @NonNull
     public AsyncDeleteBuilder<T> onlyIfExists(@NonNull String attribute) {
-        this.conditionExpression = FilterExpression.builder().exists(attribute);
+        this.conditionExpression = ConditionExpression.builder().exists(attribute).build();
         return this;
     }
 
@@ -95,7 +98,6 @@ public class AsyncDeleteBuilder<T> {
         }
 
         return table.deleteItem(requestBuilder.build())
-                .thenApply(deletedItem -> deletedItem)
                 .exceptionally(e -> {
                     if (e instanceof ConditionalCheckFailedException ccf) {
                         throw ConditionFailedException.fromSdk(ccf);

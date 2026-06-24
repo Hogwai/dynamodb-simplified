@@ -64,5 +64,6 @@
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
         <exclude name="InsufficientStringBufferDeclaration"/>
         <exclude name="RedundantFieldInitializer"/>
+        <exclude name="UseArraysAsList"/>
     </rule>
 </ruleset>

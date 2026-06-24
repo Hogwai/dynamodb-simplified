@@ -1,6 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,9 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -123,16 +126,15 @@ class AsyncDeleteBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with direct FilterExpression overload includes condition expression and returns deleted item")
-    void executeWithDirectFilterExpression() {
+    @DisplayName("execute with condition consumer includes condition expression and returns deleted item")
+    void executeWithConditionConsumerDirect() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(new TestItem()));
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
-        FilterExpression fe = FilterExpression.builder().eq("color", "blue");
 
         // When
-        builder.condition(fe);
+        builder.condition(c -> c.eq("color", "blue"));
         TestItem result = builder.execute().join();
 
         // Then
@@ -146,5 +148,66 @@ class AsyncDeleteBuilderTest {
                 Map.of(":v0", AttributeValue.builder().s("blue").build()),
                 request.conditionExpression().expressionValues()
         );
+    }
+
+    // ============ Error paths ============
+
+    @Test
+    @DisplayName("execute wraps ConditionalCheckFailedException into ConditionFailedException")
+    void execute_wrapsConditionalCheckFailedException() {
+        // Given
+        ConditionalCheckFailedException sdkEx = ConditionalCheckFailedException.builder()
+                .message("The conditional request failed")
+                .build();
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(sdkEx));
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+
+        // When
+        CompletableFuture<TestItem> future = builder.execute();
+
+        // Then
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(ConditionFailedException.class, ex.getCause());
+        assertTrue(ex.getCause().getMessage().startsWith("Conditional check failed:"));
+    }
+
+    @Test
+    @DisplayName("execute rethrows RuntimeException thrown by the SDK")
+    void execute_rethrowsRuntimeException() {
+        // Given
+        RuntimeException runtimeEx = new IllegalStateException("some runtime error");
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(runtimeEx));
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+
+        // When
+        CompletableFuture<TestItem> future = builder.execute();
+
+        // Then
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+        assertEquals("some runtime error", ex.getCause().getMessage());
+    }
+
+    @Test
+    @DisplayName("execute wraps non-RuntimeException in DynamoSimplifiedException")
+    void execute_wrapsNonRuntimeException() {
+        // Given
+        Exception nonRuntimeEx = new Exception("checked exception");
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(nonRuntimeEx));
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
+
+        // When
+        CompletableFuture<TestItem> future = builder.execute();
+
+        // Then
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
+        assertSame(nonRuntimeEx, ex.getCause().getCause());
     }
 }

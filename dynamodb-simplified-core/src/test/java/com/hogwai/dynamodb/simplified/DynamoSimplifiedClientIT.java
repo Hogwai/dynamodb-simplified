@@ -181,7 +181,7 @@ class DynamoSimplifiedClientIT {
         // Verify it was created
         assertTrue(table.getItem("p6").isPresent());
 
-        // Try again — should throw ConditionalCheckFailedException when item already exists
+        // Try again, should throw ConditionalCheckFailedException when item already exists
         var product2 = new Product("p6", "Second", 2.0, true, null, 8000L);
         var putBuilder = table.put(product2).onlyIfNotExists("id");
         assertThrows(ConditionFailedException.class,
@@ -422,7 +422,7 @@ class DynamoSimplifiedClientIT {
 
     @Test
     void transactGetNonExistentItemReturnsNull() {
-        // Request an item that does not exist — should return null, not NPE
+        // Request an item that does not exist, should return null, not NPE
         var results = client.transactGet()
                 .addGetItem(table, "nonexistent-transact")
                 .execute();

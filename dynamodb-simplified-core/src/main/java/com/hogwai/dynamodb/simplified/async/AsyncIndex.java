@@ -30,6 +30,26 @@ public class AsyncIndex<T> {
     }
 
     /**
+     * Returns the name of this index.
+     *
+     * @return the index name
+     */
+    @NonNull
+    public String indexName() {
+        return dynamoDbAsyncIndex.indexName();
+    }
+
+    /**
+     * Returns the name of the table this index belongs to.
+     *
+     * @return the table name
+     */
+    @NonNull
+    public String tableName() {
+        return dynamoDbAsyncIndex.tableName();
+    }
+
+    /**
      * Starts building an async query operation on this index.
      *
      * @return an {@link AsyncQueryBuilder} for configuring and executing the query

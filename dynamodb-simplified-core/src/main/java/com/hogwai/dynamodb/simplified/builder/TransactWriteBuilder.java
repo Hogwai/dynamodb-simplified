@@ -1,7 +1,7 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.Table;
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
@@ -103,7 +103,7 @@ public class TransactWriteBuilder {
      * @return this builder
      */
     public @NonNull <T> TransactWriteBuilder conditionCheck(@NonNull Table<T> table, @NonNull Object partitionKey,
-                                                            @NonNull Consumer<FilterExpression> condition) {
+                                                            @NonNull Consumer<ConditionExpression.Builder> condition) {
         return conditionCheck(table, partitionKey, null, condition);
     }
 
@@ -119,11 +119,12 @@ public class TransactWriteBuilder {
      */
     public @NonNull <T> TransactWriteBuilder conditionCheck(@NonNull Table<T> table, @NonNull Object partitionKey,
                                                             @Nullable Object sortKey,
-                                                            @NonNull Consumer<FilterExpression> condition) {
-        FilterExpression filter = FilterExpression.builder();
-        condition.accept(filter);
+                                                            @NonNull Consumer<ConditionExpression.Builder> condition) {
+        var builder = ConditionExpression.builder();
+        condition.accept(builder);
+        ConditionExpression conditionExpression = builder.build();
 
-        Expression expression = filter.toSdkExpression();
+        Expression expression = conditionExpression.toSdkExpression();
 
         requestBuilder.addConditionCheck(
                 table.getRawTable(),

@@ -86,4 +86,30 @@ class IndexTest {
         verify(dynamoDbIndex).scan(any(ScanEnhancedRequest.class));
         assertNotNull(results);
     }
+
+    @Test
+    @DisplayName("indexName() delegates to DynamoDbIndex.indexName()")
+    void indexName_delegatesToDynamoDbIndex() {
+        when(dynamoDbIndex.indexName()).thenReturn("my-index");
+
+        assertEquals("my-index", createIndex().indexName());
+
+        verify(dynamoDbIndex).indexName();
+    }
+
+    @Test
+    @DisplayName("tableName() delegates to DynamoDbIndex.tableName()")
+    void tableName_delegatesToDynamoDbIndex() {
+        when(dynamoDbIndex.tableName()).thenReturn("my-table");
+
+        assertEquals("my-table", createIndex().tableName());
+
+        verify(dynamoDbIndex).tableName();
+    }
+
+    @Test
+    @DisplayName("getRawIndex() returns the wrapped DynamoDbIndex")
+    void getRawIndex_returnsWrappedIndex() {
+        assertSame(dynamoDbIndex, createIndex().getRawIndex());
+    }
 }

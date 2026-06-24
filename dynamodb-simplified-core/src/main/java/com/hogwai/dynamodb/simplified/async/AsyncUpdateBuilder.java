@@ -2,7 +2,7 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -33,7 +33,7 @@ public class AsyncUpdateBuilder<T> {
     private final T item;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private UpdateExpression updateExpression;
-    private FilterExpression conditionExpression;
+    private ConditionExpression conditionExpression;
     private boolean ignoreNulls = true;
 
     AsyncUpdateBuilder(@NonNull DynamoDbAsyncTable<T> table, @NonNull T item,
@@ -58,28 +58,31 @@ public class AsyncUpdateBuilder<T> {
     }
 
     /**
-     * Configures a condition expression using a {@link FilterExpression} consumer.
-     * The update will only succeed if the condition evaluates to true.
+     * Configures a condition expression that gates the update operation.
+     * DynamoDB evaluates this condition <b>before</b> updating the item
+     * (unlike a filter expression which applies after reading).
      *
-     * @param conditionBuilder a consumer that configures the {@link FilterExpression}
+     * @param configurator a consumer to build the condition expression
      * @return this builder for chaining
      */
     @NonNull
-    public AsyncUpdateBuilder<T> condition(@NonNull Consumer<FilterExpression> conditionBuilder) {
-        this.conditionExpression = FilterExpression.builder();
-        conditionBuilder.accept(this.conditionExpression);
+    public AsyncUpdateBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
+        var builder = ConditionExpression.builder();
+        configurator.accept(builder);
+        this.conditionExpression = builder.build();
         return this;
     }
 
     /**
-     * Configures a condition expression from a pre-built {@link FilterExpression}.
-     * The update will only succeed if the condition evaluates to true.
+     * Configures a condition expression that gates the update operation.
+     * DynamoDB evaluates this condition <b>before</b> updating the item
+     * (unlike a filter expression which applies after reading).
      *
      * @param condition the condition expression
      * @return this builder for chaining
      */
     @NonNull
-    public AsyncUpdateBuilder<T> condition(@Nullable FilterExpression condition) {
+    public AsyncUpdateBuilder<T> condition(@Nullable ConditionExpression condition) {
         this.conditionExpression = condition;
         return this;
     }
@@ -107,6 +110,11 @@ public class AsyncUpdateBuilder<T> {
      */
     @NonNull
     public CompletableFuture<T> execute() {
+        if (!ignoreNulls && updateExpression != null && !updateExpression.isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException(
+                "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
+                + "Remove the ignoreNulls() call or use a full-item update instead."));
+        }
         if (updateExpression != null && !updateExpression.isEmpty()) {
             return executeWithExpression();
         }

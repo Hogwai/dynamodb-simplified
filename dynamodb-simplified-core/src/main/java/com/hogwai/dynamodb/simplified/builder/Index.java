@@ -24,6 +24,36 @@ public class Index<T> {
     }
 
     /**
+     * Returns the underlying {@link DynamoDbIndex}.
+     *
+     * @return the raw DynamoDB index
+     */
+    @NonNull
+    public DynamoDbIndex<T> getRawIndex() {
+        return dynamoDbIndex;
+    }
+
+    /**
+     * Returns the name of this index.
+     *
+     * @return the index name
+     */
+    @NonNull
+    public String indexName() {
+        return dynamoDbIndex.indexName();
+    }
+
+    /**
+     * Returns the name of the table this index belongs to.
+     *
+     * @return the table name
+     */
+    @NonNull
+    public String tableName() {
+        return dynamoDbIndex.tableName();
+    }
+
+    /**
      * Starts building a query operation on this index.
      *
      * @return a query builder pre-configured for this index
