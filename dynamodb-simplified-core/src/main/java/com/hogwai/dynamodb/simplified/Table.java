@@ -9,8 +9,13 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
+import java.util.function.Consumer;
+import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -229,6 +234,22 @@ public class Table<T> {
                             .build());
     }
 
+    // ============ Secondary Index ============
+
+    /**
+     * Returns a typed wrapper for the named secondary index (GSI or LSI).
+     * <p>
+     * Use the returned {@link Index} to perform query and scan operations
+     * scoped to that index.
+     *
+     * @param indexName the name of the secondary index
+     * @return an {@code Index<T>} for the specified index
+     */
+    @NonNull
+    public Index<T> index(@NonNull String indexName) {
+        return new Index<>(dynamoDbTable.index(indexName));
+    }
+
     // ============ Batch Operations ============
 
     /**
@@ -287,6 +308,80 @@ public class Table<T> {
     @NonNull
     public DynamoDbClient getDynamoDbClient() {
         return dynamoDbClient;
+    }
+
+    // ============ Table Management (DDL) ============
+
+    /**
+     * Creates the DynamoDB table corresponding to this {@code Table} instance.
+     * <p>
+     * Uses the table schema defined during
+     * {@link DynamoSimplifiedClient#table(String, Class)} to create the table.
+     */
+    public void create() {
+        dynamoDbTable.createTable();
+    }
+
+    /**
+     * Creates the DynamoDB table with additional options.
+     *
+     * @param request the create table request options
+     */
+    public void create(@NonNull CreateTableEnhancedRequest request) {
+        Objects.requireNonNull(request, "request must not be null");
+        dynamoDbTable.createTable(request);
+    }
+
+    /**
+     * Creates the DynamoDB table with options configured by a consumer.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * table.create(b -> b
+     *     .provisionedThroughput(p -> p
+     *         .readCapacityUnits(10L)
+     *         .writeCapacityUnits(10L)));
+     * }</pre>
+     *
+     * @param configurator a consumer to configure the {@link CreateTableEnhancedRequest.Builder}
+     */
+    public void create(@NonNull Consumer<CreateTableEnhancedRequest.Builder> configurator) {
+        Objects.requireNonNull(configurator, "configurator must not be null");
+        dynamoDbTable.createTable(configurator);
+    }
+
+    /**
+     * Deletes the DynamoDB table corresponding to this {@code Table} instance permanently.
+     */
+    public void delete() {
+        dynamoDbTable.deleteTable();
+    }
+
+    /**
+     * Returns information about the DynamoDB table, including its status, schema,
+     * throughput settings, and indexes.
+     *
+     * @return the table description response
+     */
+    @NonNull
+    public DescribeTableEnhancedResponse describe() {
+        return dynamoDbTable.describeTable();
+    }
+
+    /**
+     * Checks whether the DynamoDB table exists.
+     * <p>
+     * Returns {@code true} if the table exists, {@code false} if it does not.
+     *
+     * @return {@code true} if the table exists, {@code false} otherwise
+     */
+    public boolean exists() {
+        try {
+            dynamoDbTable.describeTable();
+            return true;
+        } catch (ResourceNotFoundException _) {
+            return false;
+        }
     }
 
     private static AttributeValue toAttributeValue(Object value) {

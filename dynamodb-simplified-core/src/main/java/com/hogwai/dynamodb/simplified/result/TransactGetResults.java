@@ -3,7 +3,7 @@ package com.hogwai.dynamodb.simplified.result;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.Document;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.MappedTableResource;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class TransactGetResults {
 
     private final List<Document> documents;
-    private final List<DynamoDbTable<?>> tables;
+    private final List<MappedTableResource<?>> tables;
 
     /**
      * Constructs a results wrapper.
@@ -25,7 +25,7 @@ public class TransactGetResults {
      * @param documents the result documents from the transaction
      * @param tables    the table references (in builder order) for type-safe item extraction
      */
-    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<DynamoDbTable<?>> tables) {
+    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<? extends MappedTableResource<?>> tables) {
         this.documents = List.copyOf(documents);
         this.tables = List.copyOf(tables);
     }
@@ -43,7 +43,7 @@ public class TransactGetResults {
             return null;
         }
         Document doc = documents.get(index);
-        DynamoDbTable<T> table = (DynamoDbTable<T>) tables.get(index);
+        MappedTableResource<T> table = (MappedTableResource<T>) tables.get(index);
         return doc.getItem(table);
     }
 
