@@ -1,6 +1,5 @@
 package com.hogwai.dynamodb.simplified.builder;
 
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -117,15 +116,14 @@ class DeleteBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with direct FilterExpression overload includes condition expression")
-    void executeWithDirectFilterExpression() {
+    @DisplayName("execute with condition consumer includes condition expression")
+    void executeWithConditionConsumerDirect() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class))).thenReturn(new TestItem());
         DeleteBuilder<TestItem> builder = new DeleteBuilder<>(table, "pk", null);
-        FilterExpression fe = FilterExpression.builder().eq("color", "blue");
 
         // When
-        builder.condition(fe);
+        builder.condition(c -> c.eq("color", "blue"));
         builder.execute();
 
         // Then

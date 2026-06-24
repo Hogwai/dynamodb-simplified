@@ -1,7 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
-import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -128,17 +127,16 @@ class AsyncPutBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with direct FilterExpression overload includes condition expression")
-    void executeWithDirectFilterExpression() {
+    @DisplayName("execute with condition consumer includes condition expression")
+    void executeWithConditionConsumerDirect() {
         // Given
         TestItem item = new TestItem("item-1");
         AsyncPutBuilder<TestItem> builder = new AsyncPutBuilder<>(table, item);
         when(table.putItem(any(PutItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
-        FilterExpression fe = FilterExpression.builder().eq("color", "blue");
 
         // When
-        builder.condition(fe);
+        builder.condition(c -> c.eq("color", "blue"));
         builder.execute().join();
 
         // Then
