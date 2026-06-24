@@ -7,9 +7,7 @@ import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.util.concurrent.CompletableFuture;
@@ -76,32 +74,28 @@ public class AsyncDeleteBuilder<T> {
     }
 
     /**
-     * Executes the delete operation.
+     * Executes the delete operation and returns the deleted item.
      *
-     * @return a {@link CompletableFuture} that completes when the item has been deleted
+     * @return a {@link CompletableFuture} containing the deleted item
      */
     @NonNull
-    public CompletableFuture<Void> execute() {
+    public CompletableFuture<T> execute() {
         DeleteItemEnhancedRequest.Builder requestBuilder =
                 DeleteItemEnhancedRequest.builder().key(k -> {
-                    k.partitionValue(toAttributeValue(partitionKey));
+                    k.partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
                     if (sortKey != null) {
-                        k.sortValue(toAttributeValue(sortKey));
+                        k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
                     }
                 });
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    Expression.builder()
-                              .expression(conditionExpression.getExpression())
-                              .expressionNames(conditionExpression.getExpressionNames())
-                              .expressionValues(conditionExpression.getExpressionValues())
-                              .build()
+                    conditionExpression.toSdkExpression()
             );
         }
 
         return table.deleteItem(requestBuilder.build())
-                .<Void>thenApply(ignored -> null)
+                .thenApply(deletedItem -> deletedItem)
                 .exceptionally(e -> {
                     if (e instanceof ConditionalCheckFailedException ccf) {
                         throw ConditionFailedException.fromSdk(ccf);
@@ -113,7 +107,5 @@ public class AsyncDeleteBuilder<T> {
                 });
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

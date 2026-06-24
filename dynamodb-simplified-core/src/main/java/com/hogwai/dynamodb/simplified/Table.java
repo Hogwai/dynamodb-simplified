@@ -7,12 +7,11 @@ import com.hogwai.dynamodb.simplified.builder.*;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import java.util.function.Consumer;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
-import java.util.function.Consumer;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 import java.util.Objects;
@@ -108,7 +107,7 @@ public class Table<T> {
     @NonNull
     public Optional<T> getItem(@NonNull Object partitionKey) {
         return Optional.ofNullable(
-                dynamoDbTable.getItem(Key.builder().partitionValue(toAttributeValue(partitionKey)).build())
+                dynamoDbTable.getItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
         );
     }
 
@@ -123,8 +122,8 @@ public class Table<T> {
     public Optional<T> getItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return Optional.ofNullable(
                 dynamoDbTable.getItem(Key.builder()
-                                 .partitionValue(toAttributeValue(partitionKey))
-                                 .sortValue(toAttributeValue(sortKey))
+                                 .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                                 .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                                  .build())
         );
     }
@@ -218,7 +217,7 @@ public class Table<T> {
      * @param partitionKey the partition key value
      */
     public void deleteItem(@NonNull Object partitionKey) {
-        dynamoDbTable.deleteItem(Key.builder().partitionValue(toAttributeValue(partitionKey)).build());
+        dynamoDbTable.deleteItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
     }
 
     /**
@@ -229,8 +228,8 @@ public class Table<T> {
      */
     public void deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         dynamoDbTable.deleteItem(Key.builder()
-                            .partitionValue(toAttributeValue(partitionKey))
-                            .sortValue(toAttributeValue(sortKey))
+                            .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                            .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                             .build());
     }
 
@@ -384,7 +383,5 @@ public class Table<T> {
         }
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

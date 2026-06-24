@@ -36,7 +36,7 @@ class AsyncDeleteBuilderTest {
     private ArgumentCaptor<DeleteItemEnhancedRequest> requestCaptor;
 
     @Test
-    @DisplayName("execute with partition key only deletes by pk and returns Void")
+    @DisplayName("execute with partition key only deletes by pk and returns deleted item")
     void executeWithPartitionKeyOnly() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
@@ -44,9 +44,10 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null);
 
         // When
-        builder.execute().join();
+        TestItem result = builder.execute().join();
 
         // Then
+        assertNotNull(result);
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertEquals(AttributeValue.builder().s("pk").build(), request.key().partitionKeyValue());
@@ -55,7 +56,7 @@ class AsyncDeleteBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with partition and sort key deletes by pk+sk")
+    @DisplayName("execute with partition and sort key deletes by pk+sk and returns deleted item")
     void executeWithPartitionAndSortKey() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
@@ -63,9 +64,10 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", "sk");
 
         // When
-        builder.execute().join();
+        TestItem result = builder.execute().join();
 
         // Then
+        assertNotNull(result);
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertEquals(AttributeValue.builder().s("pk").build(), request.key().partitionKeyValue());
@@ -74,7 +76,7 @@ class AsyncDeleteBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with condition consumer includes condition expression in request")
+    @DisplayName("execute with condition consumer includes condition expression and returns deleted item")
     void executeWithConditionConsumer() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
@@ -83,9 +85,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.condition(c -> c.eq("status", "archived"));
-        builder.execute().join();
+        TestItem result = builder.execute().join();
 
         // Then
+        assertNotNull(result);
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertNotNull(request.conditionExpression());
@@ -98,7 +101,7 @@ class AsyncDeleteBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with onlyIfExists includes attribute_exists condition")
+    @DisplayName("execute with onlyIfExists includes attribute_exists condition and returns deleted item")
     void executeWithOnlyIfExists() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
@@ -107,9 +110,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.onlyIfExists("id");
-        builder.execute().join();
+        TestItem result = builder.execute().join();
 
         // Then
+        assertNotNull(result);
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertNotNull(request.conditionExpression());
@@ -119,7 +123,7 @@ class AsyncDeleteBuilderTest {
     }
 
     @Test
-    @DisplayName("execute with direct FilterExpression overload includes condition expression")
+    @DisplayName("execute with direct FilterExpression overload includes condition expression and returns deleted item")
     void executeWithDirectFilterExpression() {
         // Given
         when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
@@ -129,9 +133,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.condition(fe);
-        builder.execute().join();
+        TestItem result = builder.execute().join();
 
         // Then
+        assertNotNull(result);
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertNotNull(request.conditionExpression());

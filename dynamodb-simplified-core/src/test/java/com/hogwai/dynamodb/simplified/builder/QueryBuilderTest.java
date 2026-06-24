@@ -501,22 +501,17 @@ class QueryBuilderTest {
     }
 
     @Test
-    @DisplayName("useIndex(\"gsi1\") routes query through table.index().query()")
-    void useIndex() {
-        when(table.index("gsi1")).thenReturn(index);
+    @DisplayName("QueryBuilder(DynamoDbIndex) routes query through index.query()")
+    void constructWithIndex() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("idx1")));
         when(index.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
 
-        List<TestItem> result = new QueryBuilder<>(table)
+        List<TestItem> result = new QueryBuilder<>(index)
                 .partitionKey("pk")
-                .useIndex("gsi1")
                 .execute();
 
         assertEquals(1, result.size());
-        assertEquals("idx1", result.getFirst().id);
 
-        verify(table, never()).query(any(QueryEnhancedRequest.class));
-        verify(table).index("gsi1");
         verify(index).query(any(QueryEnhancedRequest.class));
     }
 

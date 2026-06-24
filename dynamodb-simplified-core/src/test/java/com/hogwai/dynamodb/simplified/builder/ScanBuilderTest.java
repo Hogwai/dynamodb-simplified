@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
@@ -37,6 +38,9 @@ class ScanBuilderTest {
 
     @Mock
     DynamoDbTable<TestItem> table;
+
+    @Mock
+    DynamoDbIndex<TestItem> index;
 
     // ============ Helpers ============
 
@@ -277,5 +281,19 @@ class ScanBuilderTest {
         assertEquals("#n0 = :v0", expr.expression());
         assertEquals(Map.of("#n0", "status"), expr.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("active").build()), expr.expressionValues());
+    }
+
+    // ============ Index Constructor ============
+
+    @Test
+    @DisplayName("constructWithIndex_executesViaIndexScan using DynamoDbIndex constructor")
+    void constructWithIndex() {
+        Page<TestItem> page = mockPage(2, 2, null);
+        when(index.scan(any(ScanEnhancedRequest.class))).thenReturn(PageIterable.create(() -> List.of(page).iterator()));
+
+        List<TestItem> result = new ScanBuilder<>(index).execute();
+
+        assertEquals(2, result.size());
+        verify(index).scan(any(ScanEnhancedRequest.class));
     }
 }

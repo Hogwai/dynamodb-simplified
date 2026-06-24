@@ -5,7 +5,10 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -58,6 +61,17 @@ public class AsyncDynamoSimplifiedClient {
         return new AsyncDynamoSimplifiedClient(
                 DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(client).build(),
                 client);
+    }
+
+    /**
+     * Returns a builder for creating an {@link AsyncDynamoSimplifiedClient} with
+     * extensions and a custom DynamoDB async client.
+     *
+     * @return a new builder instance
+     */
+    @NonNull
+    public static AsyncDynamoSimplifiedClientBuilder builder() {
+        return new AsyncDynamoSimplifiedClientBuilder();
     }
 
     /**
@@ -153,5 +167,16 @@ public class AsyncDynamoSimplifiedClient {
     @NonNull
     public DynamoDbAsyncClient getDynamoDbClient() {
         return dynamoDbAsyncClient;
+    }
+
+    /**
+     * Lists all DynamoDB tables asynchronously.
+     *
+     * @return a {@link CompletableFuture} containing a list of table names
+     */
+    @NonNull
+    public CompletableFuture<List<String>> listTables() {
+        return dynamoDbAsyncClient.listTables()
+                .thenApply(ListTablesResponse::tableNames);
     }
 }

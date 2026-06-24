@@ -126,7 +126,7 @@ class AsyncTransactGetBuilderTest {
         AsyncTransactGetBuilder builder = new AsyncTransactGetBuilder(enhancedClient);
         builder.addGetItem(asyncTableWrapper, "pk");
 
-        CompletableFuture<TransactGetResults> future = builder.execute();
+        var future = builder.execute();
         assertThrows(RuntimeException.class, future::join);
     }
 }

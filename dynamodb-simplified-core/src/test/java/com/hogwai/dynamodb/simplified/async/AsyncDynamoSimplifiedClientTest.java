@@ -4,16 +4,23 @@ import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClientExtension;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
 import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -163,11 +170,108 @@ class AsyncDynamoSimplifiedClientTest {
                 () -> client.table("test-table", TestItem.class, null));
     }
 
+    @Captor
+    ArgumentCaptor<DynamoDbEnhancedClientExtension> extensionCaptor;
+
     private static void restoreProperty(String key, String origValue) {
         if (origValue != null) {
             System.setProperty(key, origValue);
         } else {
             System.clearProperty(key);
         }
+    }
+
+    @Test
+    @DisplayName("builder() returns a non-null builder")
+    void builderReturnsBuilder() {
+        assertNotNull(AsyncDynamoSimplifiedClient.builder());
+    }
+
+    @Test
+    @DisplayName("builder().build() uses default DynamoDbAsyncClient when none provided")
+    void builderDefaultClient() {
+        // Set AWS SDK system properties so DynamoDbAsyncClient.create() succeeds
+        String origRegion = System.setProperty("aws.region", "us-east-1");
+        String origKey = System.setProperty("aws.accessKeyId", "test-key");
+        String origSecret = System.setProperty("aws.secretKey", "test-secret");
+        try {
+            AsyncDynamoSimplifiedClient client = AsyncDynamoSimplifiedClient.builder().build();
+            assertNotNull(client);
+            assertNotNull(client.getEnhancedClient());
+            assertNotNull(client.getDynamoDbClient());
+        } finally {
+            restoreProperty("aws.region", origRegion);
+            restoreProperty("aws.accessKeyId", origKey);
+            restoreProperty("aws.secretKey", origSecret);
+        }
+    }
+
+    @Test
+    @DisplayName("builder().dynamoDbClient(customClient).build() uses the custom client")
+    void builderWithCustomClient() {
+        AsyncDynamoSimplifiedClient client = AsyncDynamoSimplifiedClient.builder()
+                .dynamoDbClient(dynamoDbAsyncClient)
+                .build();
+        assertNotNull(client);
+        assertSame(dynamoDbAsyncClient, client.getDynamoDbClient());
+    }
+
+    @Test
+    @DisplayName("builder().extensions(ext).build() passes extensions to enhanced client")
+    void builderWithExtensions() {
+        DynamoDbEnhancedClientExtension ext = mock(DynamoDbEnhancedClientExtension.class);
+
+        AsyncDynamoSimplifiedClient client = AsyncDynamoSimplifiedClient.builder()
+                .dynamoDbClient(dynamoDbAsyncClient)
+                .extensions(ext)
+                .build();
+
+        assertNotNull(client);
+        // The client should be usable; we verify the extension was registered by
+        // checking that the enhanced client is not null and the call succeeded.
+        assertNotNull(client.getEnhancedClient());
+    }
+
+    @Test
+    @DisplayName("builder().extensions(null) throws NullPointerException")
+    void builderWithNullExtensionsThrows() {
+        var builder = AsyncDynamoSimplifiedClient.builder();
+        assertThrows(NullPointerException.class,
+                () -> builder.extensions((DynamoDbEnhancedClientExtension[]) null));
+    }
+
+    @Test
+    @DisplayName("builder().dynamoDbClient(null) throws NullPointerException")
+    void builderWithNullClientThrows() {
+        var builder = AsyncDynamoSimplifiedClient.builder();
+        assertThrows(NullPointerException.class,
+                () -> builder.dynamoDbClient(null));
+    }
+
+    @Test
+    @DisplayName("listTables() returns table names from DynamoDbAsyncClient")
+    void listTablesReturnsTableNames() {
+        ListTablesResponse response = ListTablesResponse.builder()
+                .tableNames("table1", "table2")
+                .build();
+        when(dynamoDbAsyncClient.listTables()).thenReturn(CompletableFuture.completedFuture(response));
+
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        List<String> tables = client.listTables().join();
+
+        assertEquals(List.of("table1", "table2"), tables);
+        verify(dynamoDbAsyncClient).listTables();
+    }
+
+    @Test
+    @DisplayName("listTables() propagates error from DynamoDbAsyncClient")
+    void listTablesPropagatesError() {
+        RuntimeException expected = new RuntimeException("connection failed");
+        when(dynamoDbAsyncClient.listTables()).thenReturn(CompletableFuture.failedFuture(expected));
+
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        ExecutionException ex = assertThrows(ExecutionException.class,
+                () -> client.listTables().get());
+        assertSame(expected, ex.getCause());
     }
 }

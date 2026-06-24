@@ -6,7 +6,6 @@ import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
@@ -76,17 +75,14 @@ public class AsyncPutBuilder<T> {
      */
     @NonNull
     public CompletableFuture<Void> execute() {
+        @SuppressWarnings("unchecked")
         PutItemEnhancedRequest.Builder<T> requestBuilder = PutItemEnhancedRequest
                 .builder((Class<T>) item.getClass())
                 .item(item);
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    Expression.builder()
-                              .expression(conditionExpression.getExpression())
-                              .expressionNames(conditionExpression.getExpressionNames())
-                              .expressionValues(conditionExpression.getExpressionValues())
-                              .build()
+                    conditionExpression.toSdkExpression()
             );
         }
 

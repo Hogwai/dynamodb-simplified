@@ -3,9 +3,10 @@ package com.hogwai.dynamodb.simplified.builder;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
+import software.amazon.awssdk.core.pagination.sync.SdkIterable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -26,6 +27,7 @@ import java.util.function.Consumer;
  */
 public class ScanBuilder<T> {
     private final DynamoDbTable<T> table;
+    private final DynamoDbIndex<T> index;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
     private Integer limit;
@@ -41,6 +43,17 @@ public class ScanBuilder<T> {
      */
     public ScanBuilder(@NonNull DynamoDbTable<T> table) {
         this.table = table;
+        this.index = null;
+    }
+
+    /**
+     * Constructs a new {@code ScanBuilder} for the given secondary index.
+     *
+     * @param index the DynamoDB index
+     */
+    public ScanBuilder(@NonNull DynamoDbIndex<T> index) {
+        this.table = null;
+        this.index = index;
     }
 
     // ============ Filter ============
@@ -192,17 +205,21 @@ public class ScanBuilder<T> {
         return total;
     }
 
-    private PageIterable<T> executeAsPages() {
+    private SdkIterable<Page<T>> executeAsPages() {
+        ScanEnhancedRequest request = buildScanRequest();
+        if (index != null) {
+            return index.scan(request);
+        }
+        return table.scan(request);
+    }
+
+    private ScanEnhancedRequest buildScanRequest() {
         ScanEnhancedRequest.Builder requestBuilder = ScanEnhancedRequest.builder()
                                                                         .consistentRead(consistentRead);
 
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(
-                    software.amazon.awssdk.enhanced.dynamodb.Expression.builder()
-                                                                       .expression(filterExpression.getExpression())
-                                                                       .expressionNames(filterExpression.getExpressionNames())
-                                                                       .expressionValues(filterExpression.getExpressionValues())
-                                                                       .build()
+                    filterExpression.toSdkExpression()
             );
         }
 
@@ -225,6 +242,6 @@ public class ScanBuilder<T> {
             requestBuilder.totalSegments(totalSegments);
         }
 
-        return table.scan(requestBuilder.build());
+        return requestBuilder.build();
     }
 }

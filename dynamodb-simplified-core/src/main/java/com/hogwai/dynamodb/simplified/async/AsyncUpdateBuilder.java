@@ -7,7 +7,6 @@ import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
@@ -124,11 +123,7 @@ public class AsyncUpdateBuilder<T> {
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    Expression.builder()
-                              .expression(conditionExpression.getExpression())
-                              .expressionNames(conditionExpression.getExpressionNames())
-                              .expressionValues(conditionExpression.getExpressionValues())
-                              .build()
+                    conditionExpression.toSdkExpression()
             );
         }
 

@@ -14,10 +14,10 @@ import java.util.List;
  * as they were added to the builder. A position may yield {@code null} if the item
  * does not exist in DynamoDB.
  */
-public class TransactGetResults {
+public class TransactGetResults<T extends MappedTableResource<?>> {
 
     private final List<Document> documents;
-    private final List<MappedTableResource<?>> tables;
+    private final List<T> tables;
 
     /**
      * Constructs a results wrapper.
@@ -25,7 +25,7 @@ public class TransactGetResults {
      * @param documents the result documents from the transaction
      * @param tables    the table references (in builder order) for type-safe item extraction
      */
-    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<? extends MappedTableResource<?>> tables) {
+    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<T> tables) {
         this.documents = List.copyOf(documents);
         this.tables = List.copyOf(tables);
     }
@@ -34,16 +34,16 @@ public class TransactGetResults {
      * Returns the item at the given position in the original builder order.
      *
      * @param index the position (0-based) matching the {@code addGetItem} call order
-     * @param <T>   the expected item type
+     * @param <R>   the expected item type
      * @return the item, or {@code null} if the item does not exist
      */
     @SuppressWarnings("unchecked")
-    public @Nullable <T> T get(int index) {
+    public @Nullable <R> R get(int index) {
         if (index >= documents.size()) {
             return null;
         }
         Document doc = documents.get(index);
-        MappedTableResource<T> table = (MappedTableResource<T>) tables.get(index);
+        MappedTableResource<R> table = (MappedTableResource<R>) tables.get(index);
         return doc.getItem(table);
     }
 

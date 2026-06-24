@@ -1,6 +1,9 @@
 package com.hogwai.dynamodb.simplified.expression;
 
+import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.PathSegment;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import org.jspecify.annotations.NonNull;
@@ -41,6 +44,21 @@ public class FilterExpression {
     @NonNull
     public static FilterExpression builder() {
         return new FilterExpression();
+    }
+
+    /**
+     * Converts this filter expression into an AWS SDK {@link Expression} for use
+     * with enhanced client request builders.
+     *
+     * @return the SDK expression
+     */
+    @NonNull
+    public Expression toSdkExpression() {
+        return Expression.builder()
+                .expression(getExpression())
+                .expressionNames(getExpressionNames())
+                .expressionValues(getExpressionValues())
+                .build();
     }
 
     // ============ Basic Comparisons ============
@@ -446,16 +464,13 @@ public class FilterExpression {
     }
 
     private String addNestedName(@NonNull String path) {
-        String[] parts = path.split("\\.");
+        List<PathSegment> segments = AttributePathParser.parse(path);
         StringJoiner joiner = new StringJoiner(".");
-        for (String part : parts) {
-            // Handle list indices (e.g., items[0])
-            if (part.contains("[")) {
-                String attrName = part.substring(0, part.indexOf('['));
-                String index = part.substring(part.indexOf('['));
-                joiner.add(addName(attrName) + index);
+        for (PathSegment segment : segments) {
+            if (segment.hasIndex()) {
+                joiner.add(addName(segment.name()) + segment.indexSuffix());
             } else {
-                joiner.add(addName(part));
+                joiner.add(addName(segment.name()));
             }
         }
         return joiner.toString();

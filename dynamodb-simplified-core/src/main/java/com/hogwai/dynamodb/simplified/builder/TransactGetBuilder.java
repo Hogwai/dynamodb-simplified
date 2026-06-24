@@ -8,7 +8,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactGetItemsEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import org.jspecify.annotations.NonNull;
 
@@ -65,7 +64,7 @@ public class TransactGetBuilder {
      *
      * @return a {@link TransactGetResults} object providing typed access to retrieved items
      */
-    public @NonNull TransactGetResults execute() {
+    public @NonNull TransactGetResults<DynamoDbTable<?>> execute() {
         TransactGetItemsEnhancedRequest.Builder request = TransactGetItemsEnhancedRequest.builder();
         for (Entry<?> entry : entries) {
             request.addGetItem(entry.table, entry.key);
@@ -76,20 +75,18 @@ public class TransactGetBuilder {
         for (Entry<?> entry : entries) {
             tables.add(entry.table);
         }
-        return new TransactGetResults(documents, tables);
+        return new TransactGetResults<>(documents, tables);
     }
 
     private static Key buildKey(Object partitionKey, Object sortKey) {
-        Key.Builder builder = Key.builder().partitionValue(toAttributeValue(partitionKey));
+        Key.Builder builder = Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
         if (sortKey != null) {
-            builder.sortValue(toAttributeValue(sortKey));
+            builder.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
         }
         return builder.build();
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 
     private static class Entry<T> {
         final DynamoDbTable<T> table;

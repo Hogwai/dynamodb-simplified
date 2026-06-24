@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
@@ -18,6 +19,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +42,9 @@ class AsyncScanBuilderTest {
 
     @Mock
     DynamoDbAsyncTable<TestItem> table;
+
+    @Mock
+    DynamoDbAsyncIndex<TestItem> index;
 
     // ============ Helpers ============
 
@@ -299,5 +304,35 @@ class AsyncScanBuilderTest {
         ScanEnhancedRequest request = captor.getValue();
 
         assertNull(request.filterExpression());
+    }
+
+    @Test
+    @DisplayName("constructWithIndex_executesViaIndexScan")
+    void constructWithIndex() {
+        PagePublisher<TestItem> pagePublisher = publisherThatEmits(mockPage(1, 1, null));
+        when(index.scan(any(ScanEnhancedRequest.class))).thenReturn(pagePublisher);
+
+        CompletableFuture<List<TestItem>> future = new AsyncScanBuilder<>(index).execute();
+        List<TestItem> result = future.join();
+        assertEquals(1, result.size());
+        verify(index).scan(any(ScanEnhancedRequest.class));
+        verifyNoInteractions(table);
+    }
+
+    @Test
+    @DisplayName("parallelScan sets segment and totalSegments in request")
+    void parallelScan() {
+        when(table.scan(any(ScanEnhancedRequest.class)))
+                .thenReturn(emptyPublisher());
+
+        new AsyncScanBuilder<>(table)
+                .parallelScan(4, 0)
+                .execute().join();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+        assertEquals(0, request.segment());
+        assertEquals(4, request.totalSegments());
     }
 }

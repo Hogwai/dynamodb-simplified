@@ -3,11 +3,12 @@ package com.hogwai.dynamodb.simplified.async;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.PageCollector;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
@@ -15,7 +16,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 /**
  * A fluent async builder for querying items in a DynamoDB table.
@@ -41,6 +39,7 @@ import org.reactivestreams.Subscription;
  */
 public class AsyncQueryBuilder<T> {
     private final DynamoDbAsyncTable<T> table;
+    private final DynamoDbAsyncIndex<T> index;
     private QueryConditional keyCondition;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
@@ -56,6 +55,17 @@ public class AsyncQueryBuilder<T> {
      */
     public AsyncQueryBuilder(@NonNull DynamoDbAsyncTable<T> table) {
         this.table = table;
+        this.index = null;
+    }
+
+    /**
+     * Constructs a new {@code AsyncQueryBuilder} for querying the given async secondary index.
+     *
+     * @param index the async DynamoDB secondary index
+     */
+    public AsyncQueryBuilder(@NonNull DynamoDbAsyncIndex<T> index) {
+        this.table = null;
+        this.index = index;
     }
 
     // ============ Key Conditions ============
@@ -68,7 +78,7 @@ public class AsyncQueryBuilder<T> {
      */
     public @NonNull AsyncQueryBuilder<T> partitionKey(@NonNull Object pkValue) {
         this.keyCondition = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(toAttributeValue(pkValue)).build()
+                Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue)).build()
         );
         return this;
     }
@@ -84,8 +94,8 @@ public class AsyncQueryBuilder<T> {
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyEquals(@NonNull Object pkValue, @NonNull Object skValue) {
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skValue))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
                    .build()
         );
         return this;
@@ -102,7 +112,7 @@ public class AsyncQueryBuilder<T> {
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyBeginsWith(@NonNull Object pkValue, @NonNull String skPrefix) {
         this.keyCondition = QueryConditional.sortBeginsWith(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
                    .sortValue(skPrefix)
                    .build()
         );
@@ -122,12 +132,12 @@ public class AsyncQueryBuilder<T> {
             @NonNull Object pkValue, @NonNull Object skLow, @NonNull Object skHigh) {
         this.keyCondition = QueryConditional.sortBetween(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skLow))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skLow))
                    .build(),
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skHigh))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skHigh))
                    .build()
         );
         return this;
@@ -144,8 +154,8 @@ public class AsyncQueryBuilder<T> {
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyGreaterThan(@NonNull Object pkValue, @NonNull Object skValue) {
         this.keyCondition = QueryConditional.sortGreaterThan(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skValue))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
                    .build()
         );
         return this;
@@ -162,8 +172,8 @@ public class AsyncQueryBuilder<T> {
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyGreaterThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
         this.keyCondition = QueryConditional.sortGreaterThanOrEqualTo(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skValue))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
                    .build()
         );
         return this;
@@ -180,8 +190,8 @@ public class AsyncQueryBuilder<T> {
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyLessThan(@NonNull Object pkValue, @NonNull Object skValue) {
         this.keyCondition = QueryConditional.sortLessThan(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skValue))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
                    .build()
         );
         return this;
@@ -198,8 +208,8 @@ public class AsyncQueryBuilder<T> {
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyLessThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
         this.keyCondition = QueryConditional.sortLessThanOrEqualTo(
                 Key.builder()
-                   .partitionValue(toAttributeValue(pkValue))
-                   .sortValue(toAttributeValue(skValue))
+                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
                    .build()
         );
         return this;
@@ -391,11 +401,7 @@ public class AsyncQueryBuilder<T> {
 
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(
-                    Expression.builder()
-                              .expression(filterExpression.getExpression())
-                              .expressionNames(filterExpression.getExpressionNames())
-                              .expressionValues(filterExpression.getExpressionValues())
-                              .build()
+                    filterExpression.toSdkExpression()
             );
         }
 
@@ -413,34 +419,11 @@ public class AsyncQueryBuilder<T> {
             requestBuilder.exclusiveStartKey(exclusiveStartKey);
         }
 
-        PagePublisher<T> publisher = table.query(requestBuilder.build());
-        CompletableFuture<List<Page<T>>> resultFuture = new CompletableFuture<>();
-        List<Page<T>> pages = Collections.synchronizedList(new ArrayList<>());
-        publisher.subscribe(new Subscriber<>() {
-            @Override
-            public void onSubscribe(Subscription s) {
-                s.request(Long.MAX_VALUE);
-            }
-
-            @Override
-            public void onNext(Page<T> page) {
-                pages.add(page);
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                resultFuture.completeExceptionally(t);
-            }
-
-            @Override
-            public void onComplete() {
-                resultFuture.complete(pages);
-            }
-        });
-        return resultFuture;
+        if (index != null) {
+            return PageCollector.collectPages(index.query(requestBuilder.build()));
+        }
+        return PageCollector.collectPages(table.query(requestBuilder.build()));
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

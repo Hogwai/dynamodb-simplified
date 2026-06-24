@@ -358,42 +358,42 @@ public class PostRepository {
         return query.execute();
     }
 
-    private static boolean andIfNeeded(FilterExpression f, boolean first) {
-        if (!first) f.and();
-        return false;
-    }
-
     private FilterExpression buildFilter(FilterExpression f, PostSearchCriteria criteria) {
         boolean first = true;
 
         if (criteria.getAuthor() != null) {
             f.eq(AUTHOR, criteria.getAuthor());
-            first = andIfNeeded(f, first);
+            first = false;
         }
 
         if (criteria.getSinceUtc() != null) {
+            if (!first) { f.and(); }
             f.gt(CREATED_UTC, criteria.getSinceUtc());
-            first = andIfNeeded(f, first);
+            first = false;
         }
 
         if (criteria.getUntilUtc() != null) {
+            if (!first) { f.and(); }
             f.lt(CREATED_UTC, criteria.getUntilUtc());
-            first = andIfNeeded(f, first);
+            first = false;
         }
 
         if (criteria.getKeyword() != null) {
+            if (!first) { f.and(); }
             f.contains(KEYWORDS, criteria.getKeyword());
-            first = andIfNeeded(f, first);
+            first = false;
         }
 
         if (criteria.getMinKeywords() != null) {
+            if (!first) { f.and(); }
             f.sizeGe(KEYWORDS, criteria.getMinKeywords());
-            first = andIfNeeded(f, first);
+            first = false;
         }
 
         if (criteria.getTitleContains() != null) {
+            if (!first) { f.and(); }
             f.contains(TITLE, criteria.getTitleContains());
-            first = andIfNeeded(f, first);
+            first = false;
         }
 
         return f;

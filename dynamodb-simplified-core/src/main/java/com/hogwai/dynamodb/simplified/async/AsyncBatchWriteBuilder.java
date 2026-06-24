@@ -7,7 +7,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +63,7 @@ public class AsyncBatchWriteBuilder<T> {
      */
     @NonNull
     public AsyncBatchWriteBuilder<T> delete(@NonNull Object partitionKey) {
-        keysToDelete.add(Key.builder().partitionValue(toAttributeValue(partitionKey)).build());
+        keysToDelete.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
         return this;
     }
 
@@ -78,8 +77,8 @@ public class AsyncBatchWriteBuilder<T> {
     @NonNull
     public AsyncBatchWriteBuilder<T> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
         keysToDelete.add(Key.builder()
-                .partitionValue(toAttributeValue(partitionKey))
-                .sortValue(toAttributeValue(sortKey))
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                 .build());
         return this;
     }
@@ -116,7 +115,5 @@ public class AsyncBatchWriteBuilder<T> {
                 .thenApply(ignored -> null);
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

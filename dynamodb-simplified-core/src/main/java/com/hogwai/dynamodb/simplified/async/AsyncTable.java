@@ -2,13 +2,13 @@ package com.hogwai.dynamodb.simplified.async;
 
 import org.jspecify.annotations.NonNull;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
@@ -100,7 +100,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public CompletableFuture<Optional<T>> getItem(@NonNull Object partitionKey) {
-        return dynamoDbAsyncTable.getItem(Key.builder().partitionValue(toAttributeValue(partitionKey)).build())
+        return dynamoDbAsyncTable.getItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
                 .thenApply(Optional::ofNullable);
     }
 
@@ -114,8 +114,8 @@ public class AsyncTable<T> {
     @NonNull
     public CompletableFuture<Optional<T>> getItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return dynamoDbAsyncTable.getItem(Key.builder()
-                        .partitionValue(toAttributeValue(partitionKey))
-                        .sortValue(toAttributeValue(sortKey))
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                         .build())
                 .thenApply(Optional::ofNullable);
     }
@@ -201,7 +201,8 @@ public class AsyncTable<T> {
      */
     @NonNull
     public CompletableFuture<Void> deleteItem(@NonNull Object partitionKey) {
-        return dynamoDbAsyncTable.deleteItem(Key.builder().partitionValue(toAttributeValue(partitionKey)).build())
+        return dynamoDbAsyncTable.deleteItem(
+                        Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
                 .thenApply(ignored -> null);
     }
 
@@ -215,8 +216,8 @@ public class AsyncTable<T> {
     @NonNull
     public CompletableFuture<Void> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return dynamoDbAsyncTable.deleteItem(Key.builder()
-                        .partitionValue(toAttributeValue(partitionKey))
-                        .sortValue(toAttributeValue(sortKey))
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                         .build())
                 .thenApply(ignored -> null);
     }
@@ -358,21 +359,17 @@ public class AsyncTable<T> {
     @NonNull
     public CompletableFuture<Boolean> exists() {
         return dynamoDbAsyncTable.describeTable()
-                .handle((result, error) -> {
-                    if (error == null) {
-                        return true;
-                    }
-                    if (error instanceof ResourceNotFoundException) {
-                        return false;
-                    }
+                .handle((_, error) -> switch (error) {
+                    case null -> true;
+                    case ResourceNotFoundException _ -> false;
+
                     // AWS SDK exceptions are RuntimeExceptions — re-throw as-is
-                    throw (RuntimeException) error;
+                    case RuntimeException re -> throw re;
+                    default -> throw new DynamoSimplifiedException(String.valueOf(error), error);
                 });
     }
 
     // ============ Internal Helpers ============
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

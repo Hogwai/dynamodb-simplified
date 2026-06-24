@@ -183,8 +183,9 @@ class DynamoSimplifiedClientIT {
 
         // Try again — should throw ConditionalCheckFailedException when item already exists
         var product2 = new Product("p6", "Second", 2.0, true, null, 8000L);
+        var putBuilder = table.put(product2).onlyIfNotExists("id");
         assertThrows(ConditionFailedException.class,
-                () -> table.put(product2).onlyIfNotExists("id").execute());
+                putBuilder::execute);
 
         // Original item should still be there (condition prevented overwrite)
         Optional<Product> found = table.getItem("p6");
@@ -223,10 +224,9 @@ class DynamoSimplifiedClientIT {
     void conditionalUpdateWithNonMatchingCondition() {
         table.putItem(new Product("p9", "KeepMe", 1.0, true, null, 13000L));
 
-        assertThrows(ConditionFailedException.class, () ->
-                table.update(new Product("p9", "ShouldNotApply", 2.0, true, null, 14000L))
-                        .condition(c -> c.eq("name", "NonExistent"))
-                        .execute()
+        var updateBuilder = table.update(new Product("p9", "ShouldNotApply", 2.0, true, null, 14000L))
+                .condition(c -> c.eq("name", "NonExistent"));
+        assertThrows(ConditionFailedException.class, updateBuilder::execute
         );
 
         // Verify item was NOT changed
@@ -250,9 +250,8 @@ class DynamoSimplifiedClientIT {
     void conditionalDeleteWithNonMatchingCondition() {
         table.putItem(new Product("p11", "KeepMeAlive", 1.0, true, null, 16000L));
 
-        assertThrows(ConditionFailedException.class, () ->
-                table.delete("p11").condition(c -> c.eq("name", "NonExistent")).execute()
-        );
+        var deleteBuilder = table.delete("p11").condition(c -> c.eq("name", "NonExistent"));
+        assertThrows(ConditionFailedException.class, deleteBuilder::execute);
 
         assertTrue(table.getItem("p11").isPresent());
     }

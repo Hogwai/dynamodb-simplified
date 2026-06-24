@@ -4,7 +4,6 @@ import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
@@ -125,11 +124,7 @@ public class UpdateBuilder<T> {
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    Expression.builder()
-                              .expression(conditionExpression.getExpression())
-                              .expressionNames(conditionExpression.getExpressionNames())
-                              .expressionValues(conditionExpression.getExpressionValues())
-                              .build()
+                    conditionExpression.toSdkExpression()
             );
         }
 

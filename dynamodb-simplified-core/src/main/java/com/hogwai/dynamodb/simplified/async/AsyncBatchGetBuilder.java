@@ -12,7 +12,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedReques
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +53,7 @@ public class AsyncBatchGetBuilder<T> {
     @NonNull
     public AsyncBatchGetBuilder<T> keys(@NonNull List<Object> partitionKeys) {
         for (Object pk : partitionKeys) {
-            this.keys.add(Key.builder().partitionValue(toAttributeValue(pk)).build());
+            this.keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(pk)).build());
         }
         return this;
     }
@@ -67,7 +66,7 @@ public class AsyncBatchGetBuilder<T> {
      */
     @NonNull
     public AsyncBatchGetBuilder<T> addKey(@NonNull Object partitionKey) {
-        this.keys.add(Key.builder().partitionValue(toAttributeValue(partitionKey)).build());
+        this.keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
         return this;
     }
 
@@ -81,8 +80,8 @@ public class AsyncBatchGetBuilder<T> {
     @NonNull
     public AsyncBatchGetBuilder<T> addKey(@NonNull Object partitionKey, @NonNull Object sortKey) {
         this.keys.add(Key.builder()
-                .partitionValue(toAttributeValue(partitionKey))
-                .sortValue(toAttributeValue(sortKey))
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                 .build());
         return this;
     }
@@ -236,7 +235,5 @@ public class AsyncBatchGetBuilder<T> {
         return resultFuture;
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

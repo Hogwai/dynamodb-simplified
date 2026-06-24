@@ -41,13 +41,13 @@ class IndexTest {
     }
 
     @Test
-    @DisplayName("query() returns a non-null IndexQueryBuilder")
+    @DisplayName("query() returns a non-null QueryBuilder")
     void queryReturnsBuilder() {
         assertNotNull(createIndex().query());
     }
 
     @Test
-    @DisplayName("scan() returns a non-null IndexScanBuilder")
+    @DisplayName("scan() returns a non-null ScanBuilder")
     void scanReturnsBuilder() {
         assertNotNull(createIndex().scan());
     }

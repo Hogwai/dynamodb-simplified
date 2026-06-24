@@ -35,4 +35,18 @@ class AsyncIndexTest {
         AsyncIndex<Object> index = new AsyncIndex<>(dynamoDbAsyncIndex);
         assertSame(dynamoDbAsyncIndex, index.getRawIndex());
     }
+
+    @Test
+    @DisplayName("query() returns a non-null AsyncQueryBuilder")
+    void queryReturnsBuilder() {
+        AsyncIndex<Object> idx = new AsyncIndex<>(dynamoDbAsyncIndex);
+        assertNotNull(idx.query());
+    }
+
+    @Test
+    @DisplayName("scan() returns a non-null AsyncScanBuilder")
+    void scanReturnsBuilder() {
+        AsyncIndex<Object> idx = new AsyncIndex<>(dynamoDbAsyncIndex);
+        assertNotNull(idx.scan());
+    }
 }

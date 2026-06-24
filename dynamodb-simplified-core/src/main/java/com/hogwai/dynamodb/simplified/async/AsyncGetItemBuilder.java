@@ -95,9 +95,9 @@ public class AsyncGetItemBuilder<T> {
     private CompletableFuture<Optional<T>> executeSimple() {
         GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
                 .key(k -> {
-                    k.partitionValue(toAttributeValue(partitionKey));
+                    k.partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
                     if (sortKey != null) {
-                        k.sortValue(toAttributeValue(sortKey));
+                        k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
                     }
                 })
                 .consistentRead(consistentRead)
@@ -111,9 +111,9 @@ public class AsyncGetItemBuilder<T> {
         String skName = table.tableSchema().tableMetadata().primarySortKey().orElse(null);
 
         Map<String, AttributeValue> keyMap = new HashMap<>();
-        keyMap.put(pkName, toAttributeValue(partitionKey));
+        keyMap.put(pkName, AttributeValueConverter.toKeyAttributeValue(partitionKey));
         if (skName != null && sortKey != null) {
-            keyMap.put(skName, toAttributeValue(sortKey));
+            keyMap.put(skName, AttributeValueConverter.toKeyAttributeValue(sortKey));
         }
 
         GetItemRequest request = GetItemRequest.builder()
@@ -133,7 +133,5 @@ public class AsyncGetItemBuilder<T> {
                 });
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

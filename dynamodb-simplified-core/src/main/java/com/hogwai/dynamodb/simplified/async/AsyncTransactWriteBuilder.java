@@ -8,7 +8,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -75,7 +74,7 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder delete(@NonNull AsyncTable<T> table, @NonNull Object partitionKey) {
-        Key key = Key.builder().partitionValue(toAttributeValue(partitionKey)).build();
+        Key key = Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build();
         requestBuilder.addDeleteItem(table.getRawTable(), key);
         return this;
     }
@@ -92,8 +91,8 @@ public class AsyncTransactWriteBuilder {
     @NonNull
     public <T> AsyncTransactWriteBuilder delete(@NonNull AsyncTable<T> table, @NonNull Object partitionKey, @NonNull Object sortKey) {
         Key key = Key.builder()
-                .partitionValue(toAttributeValue(partitionKey))
-                .sortValue(toAttributeValue(sortKey))
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                 .build();
         requestBuilder.addDeleteItem(table.getRawTable(), key);
         return this;
@@ -133,18 +132,14 @@ public class AsyncTransactWriteBuilder {
         FilterExpression filter = FilterExpression.builder();
         condition.accept(filter);
 
-        Expression expression = Expression.builder()
-                .expression(filter.getExpression())
-                .expressionNames(filter.getExpressionNames())
-                .expressionValues(filter.getExpressionValues())
-                .build();
+        Expression expression = filter.toSdkExpression();
 
         requestBuilder.addConditionCheck(
                 table.getRawTable(),
                 cb -> cb.key(k -> {
-                    k.partitionValue(toAttributeValue(partitionKey));
+                    k.partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
                     if (sortKey != null) {
-                        k.sortValue(toAttributeValue(sortKey));
+                        k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
                     }
                 }).conditionExpression(expression));
         return this;
@@ -164,7 +159,5 @@ public class AsyncTransactWriteBuilder {
         return enhancedClient.transactWriteItems(requestBuilder.build());
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

@@ -4,9 +4,7 @@ import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import org.jspecify.annotations.NonNull;
@@ -84,18 +82,14 @@ public class DeleteBuilder<T> {
     public @Nullable T execute() {
         DeleteItemEnhancedRequest.Builder requestBuilder =
                 DeleteItemEnhancedRequest.builder().key(k -> {
-                    k.partitionValue(toAttributeValue(partitionKey));
+                    k.partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
                     if (sortKey != null) {
-                        k.sortValue(toAttributeValue(sortKey));
+                        k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
                     }
                 });
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    Expression.builder()
-                              .expression(conditionExpression.getExpression())
-                              .expressionNames(conditionExpression.getExpressionNames())
-                              .expressionValues(conditionExpression.getExpressionValues())
-                              .build()
+                    conditionExpression.toSdkExpression()
             );
         }
 
@@ -106,7 +100,5 @@ public class DeleteBuilder<T> {
         }
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

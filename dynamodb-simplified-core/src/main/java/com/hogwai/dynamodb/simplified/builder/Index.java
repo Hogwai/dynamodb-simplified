@@ -29,8 +29,8 @@ public class Index<T> {
      * @return a query builder pre-configured for this index
      */
     @NonNull
-    public IndexQueryBuilder<T> query() {
-        return new IndexQueryBuilder<>(dynamoDbIndex);
+    public QueryBuilder<T> query() {
+        return new QueryBuilder<>(dynamoDbIndex);
     }
 
     /**
@@ -39,7 +39,7 @@ public class Index<T> {
      * @return a scan builder pre-configured for this index
      */
     @NonNull
-    public IndexScanBuilder<T> scan() {
-        return new IndexScanBuilder<>(dynamoDbIndex);
+    public ScanBuilder<T> scan() {
+        return new ScanBuilder<>(dynamoDbIndex);
     }
 }

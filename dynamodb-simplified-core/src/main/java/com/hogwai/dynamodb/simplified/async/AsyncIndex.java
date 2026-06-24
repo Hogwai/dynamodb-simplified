@@ -7,7 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
  * Typed wrapper for an async DynamoDB secondary index (GSI or LSI).
  * <p>
  * Obtained via {@link AsyncTable#index(String)}. Provides query and scan
- * builders (coming in a later phase) scoped to this index.
+ * builders scoped to this index.
  *
  * @param <T> the item type
  */
@@ -27,5 +27,25 @@ public class AsyncIndex<T> {
     @NonNull
     public DynamoDbAsyncIndex<T> getRawIndex() {
         return dynamoDbAsyncIndex;
+    }
+
+    /**
+     * Starts building an async query operation on this index.
+     *
+     * @return an {@link AsyncQueryBuilder} for configuring and executing the query
+     */
+    @NonNull
+    public AsyncQueryBuilder<T> query() {
+        return new AsyncQueryBuilder<>(dynamoDbAsyncIndex);
+    }
+
+    /**
+     * Starts building an async scan operation on this index.
+     *
+     * @return an {@link AsyncScanBuilder} for configuring and executing the scan
+     */
+    @NonNull
+    public AsyncScanBuilder<T> scan() {
+        return new AsyncScanBuilder<>(dynamoDbAsyncIndex);
     }
 }

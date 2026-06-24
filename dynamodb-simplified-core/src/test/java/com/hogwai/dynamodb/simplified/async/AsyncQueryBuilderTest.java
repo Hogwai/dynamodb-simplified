@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +52,9 @@ class AsyncQueryBuilderTest {
 
     @Mock
     DynamoDbAsyncTable<TestItem> table;
+
+    @Mock
+    DynamoDbAsyncIndex<TestItem> index;
 
     // ============ Helpers ============
 
@@ -514,5 +519,22 @@ class AsyncQueryBuilderTest {
         ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
         verify(table).query(captor.capture());
         assertNotNull(captor.getValue().queryConditional());
+    }
+
+    @Test
+    @DisplayName("constructWithIndex_executesViaIndexQuery when using DynamoDbAsyncIndex constructor")
+    void constructWithIndex() {
+        PagePublisher<TestItem> pagePublisher = publisherThatEmits(
+                mockPageWithItems(List.of(new TestItem("idx1"))));
+        when(index.query(any(QueryEnhancedRequest.class))).thenReturn(pagePublisher);
+
+        CompletableFuture<List<TestItem>> future = new AsyncQueryBuilder<>(index)
+                .partitionKey("pk")
+                .execute();
+
+        List<TestItem> result = future.join();
+        assertEquals(1, result.size());
+        assertEquals("idx1", result.getFirst().id);
+        verify(index).query(any(QueryEnhancedRequest.class));
     }
 }

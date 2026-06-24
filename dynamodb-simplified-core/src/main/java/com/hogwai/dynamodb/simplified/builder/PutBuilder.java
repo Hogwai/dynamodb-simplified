@@ -3,7 +3,6 @@ package com.hogwai.dynamodb.simplified.builder;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
@@ -75,17 +74,14 @@ public class PutBuilder<T> {
      * Executes the put operation.
      */
     public void execute() {
+        @SuppressWarnings("unchecked")
         PutItemEnhancedRequest.Builder<T> requestBuilder = PutItemEnhancedRequest
                 .builder((Class<T>) item.getClass())
                 .item(item);
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(
-                    Expression.builder()
-                              .expression(conditionExpression.getExpression())
-                              .expressionNames(conditionExpression.getExpressionNames())
-                              .expressionValues(conditionExpression.getExpressionValues())
-                              .build()
+                    conditionExpression.toSdkExpression()
             );
         }
 

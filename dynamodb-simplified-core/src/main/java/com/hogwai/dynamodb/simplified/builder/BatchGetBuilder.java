@@ -6,7 +6,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import org.jspecify.annotations.NonNull;
 
@@ -39,7 +38,7 @@ public class BatchGetBuilder<T> {
      * @return this builder
      */
     public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey) {
-        keys.add(Key.builder().partitionValue(toAttributeValue(partitionKey)).build());
+        keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
         return this;
     }
 
@@ -52,8 +51,8 @@ public class BatchGetBuilder<T> {
      */
     public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey, @NonNull Object sortKey) {
         keys.add(Key.builder()
-                     .partitionValue(toAttributeValue(partitionKey))
-                     .sortValue(toAttributeValue(sortKey))
+                     .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                     .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                      .build());
         return this;
     }
@@ -96,7 +95,5 @@ public class BatchGetBuilder<T> {
                 .toList();
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }

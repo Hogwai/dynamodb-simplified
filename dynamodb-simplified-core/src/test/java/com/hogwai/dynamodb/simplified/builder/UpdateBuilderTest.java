@@ -226,9 +226,8 @@ class UpdateBuilderTest {
         when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
                 .thenThrow(ConditionalCheckFailedException.class);
 
-        assertThrows(ConditionFailedException.class, () ->
-                new UpdateBuilder<>(table, item, dynamoDbClient)
-                        .update(u -> u.set("name", "new"))
-                        .execute());
+        var updateBuilder = new UpdateBuilder<>(table, item, dynamoDbClient)
+                .update(u -> u.set("name", "new"));
+        assertThrows(ConditionFailedException.class, updateBuilder::execute);
     }
 }

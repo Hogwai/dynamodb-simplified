@@ -2,18 +2,16 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.PageCollector;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -33,11 +31,14 @@ import java.util.function.Consumer;
  */
 public class AsyncScanBuilder<T> {
     private final DynamoDbAsyncTable<T> table;
+    private final DynamoDbAsyncIndex<T> index;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
     private Integer limit;
     private Map<String, AttributeValue> exclusiveStartKey;
     private Boolean consistentRead = false;
+    private Integer totalSegments;
+    private Integer segment;
 
     /**
      * Constructs a new {@code AsyncScanBuilder} for the given async table.
@@ -46,6 +47,17 @@ public class AsyncScanBuilder<T> {
      */
     public AsyncScanBuilder(@NonNull DynamoDbAsyncTable<T> table) {
         this.table = table;
+        this.index = null;
+    }
+
+    /**
+     * Constructs a new {@code AsyncScanBuilder} for scanning the given async secondary index.
+     *
+     * @param index the async DynamoDB secondary index
+     */
+    public AsyncScanBuilder(@NonNull DynamoDbAsyncIndex<T> index) {
+        this.table = null;
+        this.index = index;
     }
 
     // ============ Filter ============
@@ -96,6 +108,22 @@ public class AsyncScanBuilder<T> {
     public @NonNull AsyncScanBuilder<T> project(@NonNull Consumer<ProjectionExpression> projectionBuilder) {
         this.projectionExpression = ProjectionExpression.builder();
         projectionBuilder.accept(this.projectionExpression);
+        return this;
+    }
+
+    // ============ Parallel Scan ============
+
+    /**
+     * Configures a parallel scan by specifying the total number of segments and
+     * the segment index for this scan worker.
+     *
+     * @param totalSegments the total number of segments to divide the table into
+     * @param segment       the segment index for this worker (0-based)
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncScanBuilder<T> parallelScan(int totalSegments, int segment) {
+        this.totalSegments = totalSegments;
+        this.segment = segment;
         return this;
     }
 
@@ -196,16 +224,20 @@ public class AsyncScanBuilder<T> {
      * pages into a list through a {@link PagePublisher}.
      */
     private @NonNull CompletableFuture<List<Page<T>>> executeAsPages() {
+        ScanEnhancedRequest request = buildScanRequest();
+        if (index != null) {
+            return PageCollector.collectPages(index.scan(request));
+        }
+        return PageCollector.collectPages(table.scan(request));
+    }
+
+    private ScanEnhancedRequest buildScanRequest() {
         ScanEnhancedRequest.Builder requestBuilder = ScanEnhancedRequest.builder()
                 .consistentRead(consistentRead);
 
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(
-                    software.amazon.awssdk.enhanced.dynamodb.Expression.builder()
-                              .expression(filterExpression.getExpression())
-                              .expressionNames(filterExpression.getExpressionNames())
-                              .expressionValues(filterExpression.getExpressionValues())
-                              .build()
+                    filterExpression.toSdkExpression()
             );
         }
 
@@ -223,30 +255,11 @@ public class AsyncScanBuilder<T> {
             requestBuilder.exclusiveStartKey(exclusiveStartKey);
         }
 
-        PagePublisher<T> publisher = table.scan(requestBuilder.build());
-        CompletableFuture<List<Page<T>>> resultFuture = new CompletableFuture<>();
-        List<Page<T>> pages = Collections.synchronizedList(new ArrayList<>());
-        publisher.subscribe(new Subscriber<>() {
-            @Override
-            public void onSubscribe(Subscription s) {
-                s.request(Long.MAX_VALUE);
-            }
+        if (totalSegments != null && segment != null) {
+            requestBuilder.totalSegments(totalSegments);
+            requestBuilder.segment(segment);
+        }
 
-            @Override
-            public void onNext(Page<T> page) {
-                pages.add(page);
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                resultFuture.completeExceptionally(t);
-            }
-
-            @Override
-            public void onComplete() {
-                resultFuture.complete(pages);
-            }
-        });
-        return resultFuture;
+        return requestBuilder.build();
     }
 }
