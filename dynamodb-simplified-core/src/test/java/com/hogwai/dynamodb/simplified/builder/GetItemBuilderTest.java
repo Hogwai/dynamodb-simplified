@@ -85,7 +85,7 @@ class GetItemBuilderTest {
                 .thenReturn(GetItemResponse.builder().build());
     }
 
-    // ============ execute() — Simple GetItem ============
+    // ============ execute(), Simple GetItem ============
 
     @Test
     @DisplayName("execute() with only partition key calls getItem() with correct key")
@@ -141,7 +141,7 @@ class GetItemBuilderTest {
         verify(table).getItem(any(GetItemEnhancedRequest.class));
     }
 
-    // ============ execute() — With Projection ============
+    // ============ execute(), With Projection ============
 
     @Test
     @DisplayName("execute() with projection uses low-level client with projection expression")

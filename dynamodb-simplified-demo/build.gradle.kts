@@ -1,5 +1,5 @@
 plugins {
-    id("io.micronaut.application") // version from settings.gradle.kts pluginManagement
+    id("io.micronaut.minimal.application") // version from settings.gradle.kts pluginManagement
     id("com.gradleup.shadow") // version from settings.gradle.kts pluginManagement
     id("io.micronaut.aot") // version from settings.gradle.kts pluginManagement
 }
@@ -54,6 +54,3 @@ micronaut {
     }
 }
 
-tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
-    jdkVersion = "21"
-}

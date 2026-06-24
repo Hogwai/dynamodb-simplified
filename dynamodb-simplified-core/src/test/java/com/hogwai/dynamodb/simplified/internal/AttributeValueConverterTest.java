@@ -282,18 +282,15 @@ class AttributeValueConverterTest {
     }
 
     @Test
-    @DisplayName("toAttributeValue(empty Set) should return AttributeValue with empty l() (not ss/ns)")
-    void shouldConvertEmptySetToEmptyLAttribute() {
-        AttributeValue result = AttributeValueConverter.toAttributeValue(Set.of());
-        // Empty sets are returned as l([]), not ss([])
-        List<AttributeValue> items = result.l();
-        assertNotNull(items);
-        assertTrue(items.isEmpty());
-
-        // Verify the value is a list, not a typed set (ss/ns/bs)
-        assertTrue(result.ss().isEmpty(), "ss should be empty when l() is set");
-        assertTrue(result.ns().isEmpty(), "ns should be empty when l() is set");
-        assertTrue(result.bs().isEmpty(), "bs should be empty when l() is set");
+    @DisplayName("toAttributeValue(empty Set) should throw IllegalArgumentException")
+    void shouldThrowWhenConvertingEmptySet() {
+        var emptySet = Set.of();
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> AttributeValueConverter.toAttributeValue(emptySet)
+        );
+        assertTrue(ex.getMessage().contains("empty Set"));
+        assertTrue(ex.getMessage().contains("DynamoDB"));
     }
 
     // ---------------------------------------------------------------
@@ -303,9 +300,10 @@ class AttributeValueConverterTest {
     @Test
     @DisplayName("toAttributeValue(unsupported type) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingUnsupportedType() {
+        LocalDate date = LocalDate.of(2025, 1, 1);
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toAttributeValue(LocalDate.of(2025, 1, 1))
+                () -> AttributeValueConverter.toAttributeValue(date)
         );
         assertTrue(ex.getMessage().contains(LocalDate.class.getName()));
     }
@@ -313,9 +311,10 @@ class AttributeValueConverterTest {
     @Test
     @DisplayName("toAttributeValue(unsupported type) should include the class name in the message")
     void shouldThrowWithClassNameForUnsupportedType() {
+        var unsupported = new Object();
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toAttributeValue(new Object())
+                () -> AttributeValueConverter.toAttributeValue(unsupported)
         );
         assertTrue(ex.getMessage().contains(Object.class.getName()));
     }
@@ -384,36 +383,40 @@ class AttributeValueConverterTest {
     @Test
     @DisplayName("toKeyAttributeValue(List) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingListToKey() {
+        List<String> listArg = List.of("a");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toKeyAttributeValue(List.of("a"))
+                () -> AttributeValueConverter.toKeyAttributeValue(listArg)
         );
     }
 
     @Test
     @DisplayName("toKeyAttributeValue(Map) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingMapToKey() {
+        Map<String, String> mapArg = Map.of("k", "v");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toKeyAttributeValue(Map.of("k", "v"))
+                () -> AttributeValueConverter.toKeyAttributeValue(mapArg)
         );
     }
 
     @Test
     @DisplayName("toKeyAttributeValue(Set) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingSetToKey() {
+        Set<String> setArg = Set.of("x");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toKeyAttributeValue(Set.of("x"))
+                () -> AttributeValueConverter.toKeyAttributeValue(setArg)
         );
     }
 
     @Test
     @DisplayName("toKeyAttributeValue(LocalDate) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingLocalDateToKey() {
+        LocalDate now = LocalDate.now();
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toKeyAttributeValue(LocalDate.now())
+                () -> AttributeValueConverter.toKeyAttributeValue(now)
         );
     }
 
@@ -435,9 +438,10 @@ class AttributeValueConverterTest {
     @Test
     @DisplayName("toKeyAttributeValue(unsupported) should mention the unsupported type in the message")
     void shouldMentionClassNameInErrorMessage() {
+        boolean boolVal = true;
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toKeyAttributeValue(true)
+                () -> AttributeValueConverter.toKeyAttributeValue(boolVal)
         );
         assertTrue(ex.getMessage().contains(Boolean.class.getSimpleName())
                         || ex.getMessage().contains(Boolean.class.getName()),

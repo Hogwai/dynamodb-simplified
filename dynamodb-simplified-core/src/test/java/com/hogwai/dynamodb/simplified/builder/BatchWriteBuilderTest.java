@@ -83,7 +83,7 @@ class BatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute — empty queues ============
+    // ============ execute, empty queues ============
 
     @Test
     @DisplayName("execute with empty queues returns without calling batchWriteItem")
@@ -95,7 +95,7 @@ class BatchWriteBuilderTest {
         verify(enhancedClient, never()).batchWriteItem(any(BatchWriteItemEnhancedRequest.class));
     }
 
-    // ============ execute — with put ============
+    // ============ execute, with put ============
 
     @Test
     @DisplayName("execute with put delegates to enhanced client")

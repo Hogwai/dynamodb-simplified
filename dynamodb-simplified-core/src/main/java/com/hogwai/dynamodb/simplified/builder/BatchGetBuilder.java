@@ -6,7 +6,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import org.jspecify.annotations.NonNull;
 
@@ -26,6 +25,7 @@ public class BatchGetBuilder<T> {
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<T> table;
     private final List<Key> keys = new ArrayList<>();
+    private boolean consistentRead;
 
     public BatchGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbTable<T> table) {
         this.enhancedClient = enhancedClient;
@@ -39,7 +39,7 @@ public class BatchGetBuilder<T> {
      * @return this builder
      */
     public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey) {
-        keys.add(Key.builder().partitionValue(toAttributeValue(partitionKey)).build());
+        keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
         return this;
     }
 
@@ -52,8 +52,8 @@ public class BatchGetBuilder<T> {
      */
     public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey, @NonNull Object sortKey) {
         keys.add(Key.builder()
-                     .partitionValue(toAttributeValue(partitionKey))
-                     .sortValue(toAttributeValue(sortKey))
+                     .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                     .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                      .build());
         return this;
     }
@@ -66,6 +66,19 @@ public class BatchGetBuilder<T> {
      */
     public @NonNull BatchGetBuilder<T> addKeys(@NonNull Collection<Key> keys) {
         this.keys.addAll(keys);
+        return this;
+    }
+
+    /**
+     * Enables or disables strongly consistent reads for this batch get.
+     * <p>
+     * If not set, the default (eventually consistent) is used by the DynamoDB API.
+     *
+     * @param consistentRead {@code true} for strongly consistent reads
+     * @return this builder
+     */
+    public @NonNull BatchGetBuilder<T> consistentRead(boolean consistentRead) {
+        this.consistentRead = consistentRead;
         return this;
     }
 
@@ -83,7 +96,11 @@ public class BatchGetBuilder<T> {
         ReadBatch.Builder<T> batchBuilder = ReadBatch.builder(itemClass)
                 .mappedTableResource(table);
         for (Key key : keys) {
-            batchBuilder.addGetItem(key);
+            if (consistentRead) {
+                batchBuilder.addGetItem(b -> b.key(key).consistentRead(true));
+            } else {
+                batchBuilder.addGetItem(key);
+            }
         }
 
         BatchGetItemEnhancedRequest request = BatchGetItemEnhancedRequest.builder()
@@ -96,7 +113,5 @@ public class BatchGetBuilder<T> {
                 .toList();
     }
 
-    private static AttributeValue toAttributeValue(Object value) {
-        return AttributeValueConverter.toKeyAttributeValue(value);
-    }
+
 }
