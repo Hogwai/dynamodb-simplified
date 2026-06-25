@@ -22,8 +22,8 @@ import java.util.function.Consumer;
  * projection, and pagination.
  * <p>
  * Mirrors the sync {@code ScanBuilder} but returns {@link CompletableFuture}
- * from all execution methods and uses the AWS SDK's async {@link PagePublisher}
- * under the hood.
+ * from all execution methods and uses the AWS SDK's async
+ * {@link software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher} under the hood.
  *
  * @param <T> the type of the item
  */

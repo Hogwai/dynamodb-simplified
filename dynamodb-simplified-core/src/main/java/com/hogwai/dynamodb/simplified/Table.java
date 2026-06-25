@@ -261,7 +261,7 @@ public class Table<T> {
      */
     @NonNull
     public BatchGetBuilder<T> batchGet() {
-        return new BatchGetBuilder<>(enhancedClient, dynamoDbTable);
+        return new BatchGetBuilder<>(enhancedClient, dynamoDbTable, dynamoDbClient);
     }
 
     /**

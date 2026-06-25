@@ -64,6 +64,12 @@
         </properties>
     </rule>
 
+    <rule ref="category/java/design.xml/ExcessiveImports">
+        <properties>
+            <property name="minimum" value="35"/>
+        </properties>
+    </rule>
+
     <rule ref="category/java/errorprone.xml">
         <exclude name="AvoidAccessibilityAlteration"/>
         <exclude name="AvoidCatchingGenericException"/>

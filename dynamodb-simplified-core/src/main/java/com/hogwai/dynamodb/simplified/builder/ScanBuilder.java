@@ -138,7 +138,7 @@ public class ScanBuilder<T> {
 
     /**
      * Sets the exclusive start key for paginated scans.
-     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous scan.
+     * Typically obtained from the {@link PagedResult#getLastEvaluatedKey()} of a previous scan.
      *
      * @param lastEvaluatedKey the key map from which to start the next page
      * @return this builder for chaining

@@ -371,4 +371,80 @@ class DynamoSimplifiedClientRichIT {
         var putOp = table.put(dup).onlyIfNotExists("id");
         assertThrows(ConditionFailedException.class, putOp::execute);
     }
+
+    // ============ Query Execution Variants ============
+
+    @Test
+    void queryExecuteStream() {
+        for (int i = 0; i < 3; i++) {
+            table.putItem(new TestPost("qes", (long) i, "active", "Item" + i, null, i, null));
+        }
+
+        List<TestPost> collected;
+        try (var stream = table.query()
+                .partitionKey("qes")
+                .executeStream()) {
+            collected = stream.toList();
+        }
+        assertEquals(3, collected.size());
+    }
+
+    @Test
+    void queryExecuteAndGetFirst() {
+        table.putItem(new TestPost("qegf", 1L, "active", "FirstOne", null, 0, null));
+
+        var result = table.query()
+                .partitionKey("qegf")
+                .executeAndGetFirst();
+        assertTrue(result.isPresent());
+        assertEquals("FirstOne", result.get().getTitle());
+    }
+
+    @Test
+    void queryExecuteAndGetFirstOnEmptyPartition() {
+        var result = table.query()
+                .partitionKey("nonexistent-qegf")
+                .executeAndGetFirst();
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void batchGetWithProjection() {
+        var p1 = new TestPost("bgpj1", 1L, "active", "ProjectedTitle1", "ContentHidden", 10, null);
+        var p2 = new TestPost("bgpj2", 1L, "active", "ProjectedTitle2", "AlsoHidden", 20, null);
+        table.putItem(p1);
+        table.putItem(p2);
+
+        List<TestPost> results = table.batchGet()
+                .addKey("bgpj1", 1L)
+                .addKey("bgpj2", 1L)
+                .project("id", "createdAt", "title")
+                .execute();
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().anyMatch(p -> "ProjectedTitle1".equals(p.getTitle())));
+        assertTrue(results.stream().anyMatch(p -> "ProjectedTitle2".equals(p.getTitle())));
+        // Non-projected attributes should be null; projected ones should be set
+        assertTrue(results.stream().allMatch(p -> p.getContent() == null));
+        assertTrue(results.stream().allMatch(p -> p.getViews() == null)); // Integer, not in projection
+        assertTrue(results.stream().allMatch(p -> p.getId() != null));
+        assertTrue(results.stream().allMatch(p -> p.getCreatedAt() != null));
+        assertTrue(results.stream().allMatch(p -> p.getTitle() != null));
+    }
+
+    @Test
+    void transactWriteExpressionUpdateWithSortKey() {
+        var post = new TestPost("twexp", 1L, "active", "BeforeExp", "OldContent", 5, null);
+        table.putItem(post);
+
+        // Expression-based update inside transact write (low-level fallback path)
+        client.transactWrite()
+                .update(table, post, u -> u.set("title", "AfterExp").set("content", "NewContent"))
+                .execute();
+
+        var found = table.getItem("twexp", 1L);
+        assertTrue(found.isPresent());
+        assertEquals("AfterExp", found.get().getTitle());
+        assertEquals("NewContent", found.get().getContent());
+    }
 }

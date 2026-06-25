@@ -17,9 +17,14 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedReques
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -56,12 +61,15 @@ class BatchGetBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
+    @Mock
+    private DynamoDbClient dynamoDbClient;
+
     // ============ addKey ============
 
     @Test
     @DisplayName("addKey with partition key returns self")
     void addKey_withPartitionKey() {
-        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
 
         BatchGetBuilder<TestItem> result = builder.addKey("pk");
 
@@ -71,7 +79,7 @@ class BatchGetBuilderTest {
     @Test
     @DisplayName("addKey with partition and sort key returns self")
     void addKey_withPartitionAndSortKey() {
-        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
 
         BatchGetBuilder<TestItem> result = builder.addKey("pk", "sk");
 
@@ -83,7 +91,7 @@ class BatchGetBuilderTest {
     @Test
     @DisplayName("addKeys with collection returns self")
     void addKeys_collection() {
-        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
         List<Key> keys = List.of(
                 Key.builder().partitionValue(AttributeValue.builder().s("k").build()).build()
         );
@@ -98,7 +106,7 @@ class BatchGetBuilderTest {
     @Test
     @DisplayName("execute with empty keys returns empty list and does not call batchGetItem")
     void execute_emptyKeys_returnsEmptyList() {
-        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
 
         List<TestItem> result = builder.execute();
 
@@ -136,7 +144,7 @@ class BatchGetBuilderTest {
             when(batchBuilder.mappedTableResource(table)).thenReturn(batchBuilder);
             when(batchBuilder.build()).thenReturn(readBatch);
 
-            BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+            BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
             builder.consistentRead(true);
             builder.addKey("pk");
             builder.execute();
@@ -179,7 +187,7 @@ class BatchGetBuilderTest {
         when(resultPageIterable.resultsForTable(table)).thenReturn(sdkIterable);
         when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(resultPageIterable);
 
-        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table);
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
         builder.addKey("pk");
 
         List<TestItem> result = builder.execute();
@@ -187,5 +195,87 @@ class BatchGetBuilderTest {
         assertEquals(1, result.size());
         assertSame(expectedItem, result.getFirst());
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    // ============ project(String...) ============
+
+    @Test
+    @DisplayName("project(String...) returns self for chaining")
+    void project_varargs_returnsSelf() {
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+
+        BatchGetBuilder<TestItem> result = builder.project("attr1", "attr2");
+
+        assertSame(builder, result);
+    }
+
+    @Test
+    @DisplayName("project(String...) causes execute to route to low-level client")
+    @SuppressWarnings("unchecked")
+    void project_varargs_routesToLowLevel() {
+        // Mock the table schema so addKey works (index partition key lookup)
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("test_table");
+
+        // Mock low-level response
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(mockResponse);
+
+        TestItem expectedItem = new TestItem("result1");
+        when(tableSchema.mapToItem(any(Map.class))).thenReturn(expectedItem);
+
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        builder.addKey("pk1");
+        builder.project("attr1", "attr2");
+        builder.execute();
+
+        verify(dynamoDbClient).batchGetItem(any(BatchGetItemRequest.class));
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    // ============ project(Consumer) ============
+
+    @Test
+    @DisplayName("project(Consumer<ProjectionExpression>) returns self for chaining")
+    void project_consumer_returnsSelf() {
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+
+        BatchGetBuilder<TestItem> result = builder.project(pb -> pb.include("attr1"));
+
+        assertSame(builder, result);
+    }
+
+    @Test
+    @DisplayName("project(Consumer) causes execute to route to low-level with consumer-derived expression")
+    @SuppressWarnings("unchecked")
+    void project_consumer_routesToLowLevel() {
+        // Mock table schema chain
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("test_table");
+
+        // Mock low-level response
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(mockResponse);
+
+        TestItem expectedItem = new TestItem("consumer-result");
+        when(tableSchema.mapToItem(any(Map.class))).thenReturn(expectedItem);
+
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        builder.addKey("pk1");
+        builder.project(pb -> pb.include("consumerAttr"));
+        builder.execute();
+
+        verify(dynamoDbClient).batchGetItem(any(BatchGetItemRequest.class));
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 }
