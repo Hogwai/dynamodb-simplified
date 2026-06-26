@@ -496,11 +496,10 @@ class AsyncScanBuilderTest {
         publisher.subscribe(new Subscriber<>() {
             @Override public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
             @Override public void onNext(TestItem item) { collected.add(item); }
-            @Override public void onError(Throwable t) { }
-            @Override public void onComplete() { }
+            @Override public void onError(Throwable t) { /* not needed for this test scenario */ }
+            @Override public void onComplete() { /* not needed for this test scenario */ }
         });
-        // Small delay for reactive emission
-        try { Thread.sleep(100); } catch (InterruptedException _) { Thread.currentThread().interrupt(); }
+        // Items are emitted synchronously from the mock publisher
         assertEquals(2, collected.size());
         verify(table).scan(any(ScanEnhancedRequest.class));
     }
