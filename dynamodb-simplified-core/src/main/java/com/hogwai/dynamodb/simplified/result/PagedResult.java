@@ -19,30 +19,15 @@ import java.util.Map;
  *
  * @param <T> the type of items in the result page
  */
-public class PagedResult<T> {
-    private final List<T> items;
-    private final Map<String, AttributeValue> lastEvaluatedKey;
-
-    /**
-     * Constructs a new {@link PagedResult} with the given items and
-     * last-evaluated key.
-     *
-     * @param items            the items returned for this page
-     * @param lastEvaluatedKey the key to use for pagination, or {@code null}
-     *                         if there are no more pages
-     */
-    public PagedResult(@NonNull List<T> items, @Nullable Map<String, AttributeValue> lastEvaluatedKey) {
-        this.items = items;
-        this.lastEvaluatedKey = lastEvaluatedKey;
-    }
-
+public record PagedResult<T>(List<T> items, Map<String, AttributeValue> lastEvaluatedKey) {
     /**
      * Returns the list of items in this page.
      *
      * @return the items (never {@code null})
      */
+    @Override
     @NonNull
-    public List<T> getItems() {
+    public List<T> items() {
         return items;
     }
 
@@ -52,10 +37,11 @@ public class PagedResult<T> {
      * A return value of {@code null} or an empty map indicates no more pages.
      *
      * @return the last-evaluated key, or {@code null} / empty if this is the
-     *         last page
+     * last page
      */
+    @Override
     @Nullable
-    public Map<String, AttributeValue> getLastEvaluatedKey() {
+    public Map<String, AttributeValue> lastEvaluatedKey() {
         return lastEvaluatedKey;
     }
 
@@ -63,7 +49,7 @@ public class PagedResult<T> {
      * Returns whether there are more pages of results available.
      *
      * @return {@code true} if a subsequent request will yield more items,
-     *         {@code false} otherwise
+     * {@code false} otherwise
      */
     public boolean hasMorePages() {
         return lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty();

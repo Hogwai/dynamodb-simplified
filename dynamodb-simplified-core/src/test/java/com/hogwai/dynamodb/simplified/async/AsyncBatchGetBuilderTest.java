@@ -140,7 +140,7 @@ class AsyncBatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute().join();
 
-        assertTrue(result.getItems().isEmpty());
+        assertTrue(result.items().isEmpty());
         assertFalse(result.hasUnprocessed());
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
@@ -162,8 +162,8 @@ class AsyncBatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute().join();
 
-        assertEquals(1, result.getItems().size());
-        assertSame(expectedItem, result.getItems().getFirst());
+        assertEquals(1, result.items().size());
+        assertSame(expectedItem, result.items().getFirst());
         assertFalse(result.hasUnprocessed());
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
@@ -194,9 +194,9 @@ class AsyncBatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute().join();
 
-        assertEquals(2, result.getItems().size());
-        assertSame(item1, result.getItems().get(0));
-        assertSame(item2, result.getItems().get(1));
+        assertEquals(2, result.items().size());
+        assertSame(item1, result.items().get(0));
+        assertSame(item2, result.items().get(1));
         assertFalse(result.hasUnprocessed());
     }
 
@@ -232,7 +232,7 @@ class AsyncBatchGetBuilderTest {
         PagedResult<TestItem> result = builder.executeWithPagination().join();
 
         assertTrue(result.isEmpty());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
@@ -253,7 +253,7 @@ class AsyncBatchGetBuilderTest {
         PagedResult<TestItem> result = builder.executeWithPagination().join();
 
         assertEquals(2, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 

@@ -123,7 +123,7 @@ class AsyncBatchWriteBuilderTest {
         BatchWriteResult result = builder.execute().join();
 
         assertFalse(result.hasUnprocessed());
-        assertTrue(result.getUnprocessedItems().isEmpty());
+        assertTrue(result.unprocessedItems().isEmpty());
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 

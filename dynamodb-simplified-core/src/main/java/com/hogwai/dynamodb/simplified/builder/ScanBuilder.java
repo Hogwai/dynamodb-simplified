@@ -172,7 +172,7 @@ public class ScanBuilder<T> {
 
     /**
      * Sets the exclusive start key for paginated scans.
-     * Typically obtained from the {@link PagedResult#getLastEvaluatedKey()} of a previous scan.
+     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous scan.
      *
      * @param lastEvaluatedKey the key map from which to start the next page
      * @return this builder for chaining
@@ -260,7 +260,7 @@ public class ScanBuilder<T> {
         long start = System.nanoTime();
         try {
             PagedResult<T> firstPage = executeWithPagination();
-            Optional<T> result = firstPage.getItems().stream().findFirst();
+            Optional<T> result = firstPage.items().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Scan on table '{}' returned first item in {}ms",
                         getTableName(), (System.nanoTime() - start) / 1_000_000);

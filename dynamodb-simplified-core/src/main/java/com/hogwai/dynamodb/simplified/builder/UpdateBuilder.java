@@ -159,17 +159,7 @@ public class UpdateBuilder<T> {
                 "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
                 + "Remove the ignoreNulls() call or use a full-item update instead.");
         }
-        boolean hasExpression = updateExpression != null && !updateExpression.isEmpty();
-        if (returnValues != null && !hasExpression) {
-            throw new IllegalStateException(
-                "ReturnValues is not supported for full-item replacement. "
-                + "Use partial updates with update(expr -> ...) to configure ReturnValues.");
-        }
-        if (item == null && !hasExpression) {
-            throw new IllegalStateException(
-                "Key-only update requires a partial update expression. "
-                + "Use update(expr -> ...) to configure an update expression.");
-        }
+        boolean hasExpression = hasUpdateExpression();
         long start = System.nanoTime();
         if (hasExpression) {
             T result = executeWithExpression();
@@ -187,8 +177,24 @@ public class UpdateBuilder<T> {
         return Optional.ofNullable(result);
     }
 
+    private boolean hasUpdateExpression() {
+        boolean hasExpression = updateExpression != null && !updateExpression.isEmpty();
+        if (returnValues != null && !hasExpression) {
+            throw new IllegalStateException(
+                "ReturnValues is not supported for full-item replacement. "
+                + "Use partial updates with update(expr -> ...) to configure ReturnValues.");
+        }
+        if (item == null && !hasExpression) {
+            throw new IllegalStateException(
+                "Key-only update requires a partial update expression. "
+                + "Use update(expr -> ...) to configure an update expression.");
+        }
+        return hasExpression;
+    }
+
     // ---- Full item replacement (existing behavior) ----
 
+    @SuppressWarnings("unchecked")
     private T executeWithFullItem() {
         UpdateItemEnhancedRequest.Builder<T> requestBuilder =
                 UpdateItemEnhancedRequest.builder((Class<T>) item.getClass())

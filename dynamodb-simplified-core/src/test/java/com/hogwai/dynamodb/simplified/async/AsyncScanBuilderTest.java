@@ -136,8 +136,8 @@ class AsyncScanBuilderTest {
         PagedResult<TestItem> result = new AsyncScanBuilder<>(table).executeWithPagination().join();
 
         assertEquals(1, result.size());
-        assertNotNull(result.getLastEvaluatedKey());
-        assertEquals("next", result.getLastEvaluatedKey().get("key").s());
+        assertNotNull(result.lastEvaluatedKey());
+        assertEquals("next", result.lastEvaluatedKey().get("key").s());
         assertTrue(result.hasMorePages());
     }
 
@@ -150,7 +150,7 @@ class AsyncScanBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 

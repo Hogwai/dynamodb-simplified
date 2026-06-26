@@ -375,7 +375,7 @@ public class AsyncQueryBuilder<T> {
 
     /**
      * Sets the exclusive start key for paginated queries.
-     * Typically obtained from the {@link PagedResult#getLastEvaluatedKey()} of a previous query.
+     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous query.
      *
      * @param lastEvaluatedKey the key map from which to start the next page
      * @return this builder for chaining
@@ -500,7 +500,7 @@ public class AsyncQueryBuilder<T> {
         }
         long start = System.nanoTime();
         return executeWithPagination().thenApply(firstPage -> {
-            Optional<T> result = firstPage.getItems().stream().findFirst();
+            Optional<T> result = firstPage.items().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("AsyncQuery on table '{}' returned first item in {}ms",
                         getTableName(), (System.nanoTime() - start) / 1_000_000);

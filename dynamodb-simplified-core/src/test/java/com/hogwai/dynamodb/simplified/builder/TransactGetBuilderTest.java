@@ -72,7 +72,7 @@ class TransactGetBuilderTest {
 
         assertDoesNotThrow(() -> builder.addGetItem(tableWrapper, "pk-value"));
 
-        TransactGetResults results = builder.execute();
+        TransactGetResults<DynamoDbTable<?>> results = builder.execute();
         assertEquals(1, results.size());
     }
 
@@ -98,7 +98,7 @@ class TransactGetBuilderTest {
         TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
         builder.addGetItem(tableWrapper, "pk-value");
-        TransactGetResults results = builder.execute();
+        TransactGetResults<DynamoDbTable<?>> results = builder.execute();
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -126,7 +126,7 @@ class TransactGetBuilderTest {
                 .thenReturn(List.of());
         TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
-        TransactGetResults results = builder.execute();
+        TransactGetResults<DynamoDbTable<?>> results = builder.execute();
 
         assertNotNull(results);
         assertEquals(0, results.size());
@@ -158,7 +158,7 @@ class TransactGetBuilderTest {
                                 .build())
                         .build());
 
-        TransactGetResults results = builder.execute();
+        TransactGetResults<DynamoDbTable<?>> results = builder.execute();
         assertNotNull(results);
         assertEquals(1, results.size());
         verify(enhancedClient, never()).transactGetItems(any(TransactGetItemsEnhancedRequest.class));
@@ -181,7 +181,7 @@ class TransactGetBuilderTest {
                                 .build())
                         .build());
 
-        TransactGetResults results = builder.execute();
+        TransactGetResults<DynamoDbTable<?>> results = builder.execute();
         assertNotNull(results);
         assertEquals(1, results.size());
         verify(enhancedClient, never()).transactGetItems(any(TransactGetItemsEnhancedRequest.class));
@@ -217,7 +217,7 @@ class TransactGetBuilderTest {
                         .responses(ItemResponse.builder().build())
                         .build());
 
-        TransactGetResults results = builder.execute();
+        TransactGetResults<DynamoDbTable<?>> results = builder.execute();
         assertNotNull(results);
         assertEquals(1, results.size());
         assertNull(results.get(0));

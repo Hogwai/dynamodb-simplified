@@ -238,15 +238,6 @@ public class CrossTableBatchGetBuilder {
         return builder.build();
     }
 
-    private static class Entry<T> {
-        final Table<T> table;
-        final Key key;
-        @Nullable final ProjectionExpression projectionExpression;
-
-        Entry(Table<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            this.table = table;
-            this.key = key;
-            this.projectionExpression = projectionExpression;
-        }
+    private record Entry<T>(Table<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
     }
 }

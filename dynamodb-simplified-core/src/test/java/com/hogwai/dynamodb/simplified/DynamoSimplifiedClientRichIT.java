@@ -181,7 +181,7 @@ class DynamoSimplifiedClientRichIT {
                 .partitionKey("lim")
                 .limit(3)
                 .executeWithPagination();
-        assertEquals(3, page.getItems().size());
+        assertEquals(3, page.items().size());
         assertTrue(page.hasMorePages());
     }
 
@@ -266,7 +266,7 @@ class DynamoSimplifiedClientRichIT {
                 .addKey("bg2", 1L)
                 .consistentRead(true)
                 .execute();
-        assertEquals(2, results.getItems().size());
+        assertEquals(2, results.items().size());
     }
 
     // ============ TransactWrite with update ============
@@ -342,7 +342,7 @@ class DynamoSimplifiedClientRichIT {
                 .partitionKey("pagq")
                 .limit(3)
                 .executeWithPagination();
-        assertEquals(3, page.getItems().size());
+        assertEquals(3, page.items().size());
         assertTrue(page.hasMorePages());
     }
 
@@ -421,15 +421,15 @@ class DynamoSimplifiedClientRichIT {
                 .project("id", "createdAt", "title")
                 .execute();
 
-        assertEquals(2, results.getItems().size());
-        assertTrue(results.getItems().stream().anyMatch(p -> "ProjectedTitle1".equals(p.getTitle())));
-        assertTrue(results.getItems().stream().anyMatch(p -> "ProjectedTitle2".equals(p.getTitle())));
+        assertEquals(2, results.items().size());
+        assertTrue(results.items().stream().anyMatch(p -> "ProjectedTitle1".equals(p.getTitle())));
+        assertTrue(results.items().stream().anyMatch(p -> "ProjectedTitle2".equals(p.getTitle())));
         // Non-projected attributes should be null; projected ones should be set
-        assertTrue(results.getItems().stream().allMatch(p -> p.getContent() == null));
-        assertTrue(results.getItems().stream().allMatch(p -> p.getViews() == null)); // Integer, not in projection
-        assertTrue(results.getItems().stream().allMatch(p -> p.getId() != null));
-        assertTrue(results.getItems().stream().allMatch(p -> p.getCreatedAt() != null));
-        assertTrue(results.getItems().stream().allMatch(p -> p.getTitle() != null));
+        assertTrue(results.items().stream().allMatch(p -> p.getContent() == null));
+        assertTrue(results.items().stream().allMatch(p -> p.getViews() == null)); // Integer, not in projection
+        assertTrue(results.items().stream().allMatch(p -> p.getId() != null));
+        assertTrue(results.items().stream().allMatch(p -> p.getCreatedAt() != null));
+        assertTrue(results.items().stream().allMatch(p -> p.getTitle() != null));
     }
 
     @Test

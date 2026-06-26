@@ -143,8 +143,8 @@ class ScanBuilderTest {
         PagedResult<TestItem> result = new ScanBuilder<>(table).executeWithPagination();
 
         assertEquals(1, result.size());
-        assertNotNull(result.getLastEvaluatedKey());
-        assertEquals("next", result.getLastEvaluatedKey().get("key").s());
+        assertNotNull(result.lastEvaluatedKey());
+        assertEquals("next", result.lastEvaluatedKey().get("key").s());
         assertTrue(result.hasMorePages());
     }
 
@@ -157,7 +157,7 @@ class ScanBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 

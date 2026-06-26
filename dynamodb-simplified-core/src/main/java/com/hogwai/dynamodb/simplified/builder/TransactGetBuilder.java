@@ -219,20 +219,10 @@ public class TransactGetBuilder {
     }
 
 
+    private record Entry<T>(DynamoDbTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
+            Entry(DynamoDbTable<T> table, Key key) {
+                this(table, key, null);
+            }
 
-    private static class Entry<T> {
-        final DynamoDbTable<T> table;
-        final Key key;
-        @Nullable final ProjectionExpression projectionExpression;
-
-        Entry(DynamoDbTable<T> table, Key key) {
-            this(table, key, null);
-        }
-
-        Entry(DynamoDbTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            this.table = table;
-            this.key = key;
-            this.projectionExpression = projectionExpression;
-        }
     }
 }

@@ -179,7 +179,7 @@ class AsyncDynamoSimplifiedClientIT {
                 .addKey("abg2", 1L)
                 .execute()
                 .join();
-        assertEquals(2, results.getItems().size());
+        assertEquals(2, results.items().size());
     }
 
     @Test
@@ -431,7 +431,7 @@ class AsyncDynamoSimplifiedClientIT {
                 .executeWithPagination()
                 .join();
 
-        assertEquals(3, page.getItems().size());
+        assertEquals(3, page.items().size());
         assertTrue(page.hasMorePages());
     }
 

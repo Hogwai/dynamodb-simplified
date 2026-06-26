@@ -13,15 +13,12 @@ import java.util.Map;
  *
  * @param <T> the item type
  */
-public class BatchGetResult<T> {
-
-    private final List<T> items;
-    private final Map<String, KeysAndAttributes> unprocessedKeys;
+public record BatchGetResult<T>(List<T> items, Map<String, KeysAndAttributes> unprocessedKeys) {
 
     /**
      * Constructs a new {@code BatchGetResult}.
      *
-     * @param items          the successfully retrieved items
+     * @param items           the successfully retrieved items
      * @param unprocessedKeys the keys that were not processed, keyed by table name
      */
     public BatchGetResult(@NonNull List<T> items,
@@ -35,8 +32,9 @@ public class BatchGetResult<T> {
      *
      * @return an unmodifiable list of items (never {@code null})
      */
+    @Override
     @NonNull
-    public List<T> getItems() {
+    public List<T> items() {
         return items;
     }
 
@@ -45,8 +43,9 @@ public class BatchGetResult<T> {
      *
      * @return an unmodifiable map of unprocessed keys (never {@code null})
      */
+    @Override
     @NonNull
-    public Map<String, KeysAndAttributes> getUnprocessedKeys() {
+    public Map<String, KeysAndAttributes> unprocessedKeys() {
         return unprocessedKeys;
     }
 

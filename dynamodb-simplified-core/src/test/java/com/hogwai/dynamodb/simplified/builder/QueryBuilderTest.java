@@ -260,10 +260,10 @@ class QueryBuilderTest {
                 .executeWithPagination();
 
         assertEquals(2, result.size());
-        assertEquals("a", result.getItems().get(0).id);
-        assertEquals("b", result.getItems().get(1).id);
-        assertNotNull(result.getLastEvaluatedKey());
-        assertEquals("nextKey", result.getLastEvaluatedKey().get("pk").s());
+        assertEquals("a", result.items().get(0).id);
+        assertEquals("b", result.items().get(1).id);
+        assertNotNull(result.lastEvaluatedKey());
+        assertEquals("nextKey", result.lastEvaluatedKey().get("pk").s());
         assertTrue(result.hasMorePages());
     }
 
@@ -282,7 +282,7 @@ class QueryBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 
@@ -561,7 +561,7 @@ class QueryBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 

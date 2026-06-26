@@ -245,15 +245,6 @@ public class AsyncCrossTableBatchGetBuilder {
         return builder.build();
     }
 
-    private static class Entry<T> {
-        final AsyncTable<T> table;
-        final Key key;
-        @Nullable final ProjectionExpression projectionExpression;
-
-        Entry(AsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            this.table = table;
-            this.key = key;
-            this.projectionExpression = projectionExpression;
-        }
+    private record Entry<T>(AsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
     }
 }

@@ -167,7 +167,7 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder conditionCheck(@NonNull AsyncTable<T> table, @NonNull Object partitionKey,
-                                                         @NonNull Consumer<ConditionExpression.Builder> condition) {
+                                                        @NonNull Consumer<ConditionExpression.Builder> condition) {
         return conditionCheck(table, partitionKey, null, condition);
     }
 

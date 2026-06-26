@@ -12,9 +12,7 @@ import java.util.Map;
  * <p>
  * Contains any unprocessed items that were not written.
  */
-public class CrossTableBatchWriteResult {
-
-    private final Map<String, List<WriteRequest>> unprocessedItems;
+public record CrossTableBatchWriteResult(Map<String, List<WriteRequest>> unprocessedItems) {
 
     /**
      * Constructs a new {@code CrossTableBatchWriteResult}.
@@ -30,7 +28,8 @@ public class CrossTableBatchWriteResult {
      *
      * @return an unmodifiable map of unprocessed items (never {@code null})
      */
-    public @NonNull Map<String, List<WriteRequest>> getUnprocessedItems() {
+    @Override
+    public @NonNull Map<String, List<WriteRequest>> unprocessedItems() {
         return unprocessedItems;
     }
 

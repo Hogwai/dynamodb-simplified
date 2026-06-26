@@ -178,9 +178,9 @@ class AsyncQueryBuilderTest {
                 .join();
 
         assertEquals(1, result.size());
-        assertEquals("a", result.getItems().getFirst().id);
-        assertNotNull(result.getLastEvaluatedKey());
-        assertEquals("nextKey", result.getLastEvaluatedKey().get("pk").s());
+        assertEquals("a", result.items().getFirst().id);
+        assertNotNull(result.lastEvaluatedKey());
+        assertEquals("nextKey", result.lastEvaluatedKey().get("pk").s());
         assertTrue(result.hasMorePages());
     }
 
@@ -196,7 +196,7 @@ class AsyncQueryBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 

@@ -11,9 +11,7 @@ import java.util.Map;
  * Holds the result of a BatchWriteBuilder execution.
  * Contains any unprocessed items that were not written.
  */
-public class BatchWriteResult {
-
-    private final Map<String, List<WriteRequest>> unprocessedItems;
+public record BatchWriteResult(Map<String, List<WriteRequest>> unprocessedItems) {
 
     /**
      * Constructs a new {@code BatchWriteResult}.
@@ -29,8 +27,9 @@ public class BatchWriteResult {
      *
      * @return an unmodifiable map of unprocessed items (never {@code null})
      */
+    @Override
     @NonNull
-    public Map<String, List<WriteRequest>> getUnprocessedItems() {
+    public Map<String, List<WriteRequest>> unprocessedItems() {
         return unprocessedItems;
     }
 

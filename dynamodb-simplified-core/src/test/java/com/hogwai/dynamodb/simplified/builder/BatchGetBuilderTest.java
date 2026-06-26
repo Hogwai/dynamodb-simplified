@@ -111,7 +111,7 @@ class BatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute();
 
-        assertTrue(result.getItems().isEmpty());
+        assertTrue(result.items().isEmpty());
         assertFalse(result.hasUnprocessed());
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
@@ -189,8 +189,8 @@ class BatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute();
 
-        assertEquals(1, result.getItems().size());
-        assertSame(expectedItem, result.getItems().getFirst());
+        assertEquals(1, result.items().size());
+        assertSame(expectedItem, result.items().getFirst());
         assertFalse(result.hasUnprocessed());
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }

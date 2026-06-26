@@ -151,7 +151,7 @@ public class BatchGetBuilder<T> {
             var result = executeWithProjection();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("BatchGet on table '{}' returned {} items in {}ms (with projection)",
-                        table.tableName(), result.getItems().size(), (System.nanoTime() - start) / 1_000_000);
+                        table.tableName(), result.items().size(), (System.nanoTime() - start) / 1_000_000);
             }
             return result;
         }

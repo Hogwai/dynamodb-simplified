@@ -241,20 +241,10 @@ public class AsyncTransactGetBuilder {
     }
 
 
+    private record Entry<T>(DynamoDbAsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
+            Entry(DynamoDbAsyncTable<T> table, Key key) {
+                this(table, key, null);
+            }
 
-    private static class Entry<T> {
-        final DynamoDbAsyncTable<T> table;
-        final Key key;
-        @Nullable final ProjectionExpression projectionExpression;
-
-        Entry(DynamoDbAsyncTable<T> table, Key key) {
-            this(table, key, null);
-        }
-
-        Entry(DynamoDbAsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            this.table = table;
-            this.key = key;
-            this.projectionExpression = projectionExpression;
-        }
     }
 }
