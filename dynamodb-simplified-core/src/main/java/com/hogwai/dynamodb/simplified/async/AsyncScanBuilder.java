@@ -14,6 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
@@ -113,6 +114,29 @@ public class AsyncScanBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncScanBuilder<T> filter(@Nullable FilterExpression filter) {
+        this.filterExpression = filter;
+        return this;
+    }
+
+    /**
+     * Configures a scan filter from a map of attribute-value pairs.
+     * <p>
+     * All conditions are combined with AND. Each entry is treated as
+     * an equality filter. For other condition types, use {@link #filter(Consumer)}.
+     *
+     * @param conditions a map of attribute names to their expected values
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncScanBuilder<T> filter(@NonNull Map<String, Object> conditions) {
+        FilterExpression filter = FilterExpression.builder();
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            if (!first) {
+                filter.and();
+            }
+            filter.eq(entry.getKey(), entry.getValue());
+            first = false;
+        }
         this.filterExpression = filter;
         return this;
     }
@@ -311,6 +335,28 @@ public class AsyncScanBuilder<T> {
     }
 
     /**
+     * Returns a reactive publisher that lazily emits items as pages arrive.
+     * <p>
+     * Unlike {@link #executeAll()} which loads all pages into memory, this method
+     * streams items one-by-one as each page is received from DynamoDB.
+     *
+     * @return a {@link CompletableFuture} containing an {@link SdkPublisher}
+     *         that emits scan items
+     * @throws IllegalStateException if called with Select.COUNT
+     */
+    public @NonNull CompletableFuture<SdkPublisher<T>> executeStream() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncScan stream on table '{}'", getTableName());
+        }
+        return CompletableFuture.completedFuture(
+                buildPagePublisher().flatMapIterable(Page::items));
+    }
+
+    /**
      * Returns the total number of items asynchronously by iterating all scan
      * result pages.
      * <p>
@@ -417,6 +463,17 @@ public class AsyncScanBuilder<T> {
 
     private String getTableName() {
         return table != null ? table.tableName() : index.tableName();
+    }
+
+    /**
+     * Builds the scan request and returns the raw publisher without collecting pages.
+     */
+    private @NonNull SdkPublisher<Page<T>> buildPagePublisher() {
+        ScanEnhancedRequest request = buildScanRequest();
+        if (index != null) {
+            return index.scan(request);
+        }
+        return table.scan(request);
     }
 
     /**

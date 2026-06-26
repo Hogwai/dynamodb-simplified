@@ -16,7 +16,12 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,6 +59,9 @@ class AsyncBatchGetBuilderTest {
 
     @Mock
     private TableMetadata tableMetadata;
+
+    @Mock
+    private DynamoDbAsyncClient dynamoDbAsyncClient;
 
     // ============ Helpers ============
 
@@ -290,6 +298,110 @@ class AsyncBatchGetBuilderTest {
         }
 
         assertThrows(IllegalArgumentException.class, builder::execute);
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    // ============ project ============
+
+    @Test
+    @DisplayName("project with varargs returns self")
+    void project_withVarargs_returnsSelf() {
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+
+        AsyncBatchGetBuilder<TestItem> result = builder.project("attr1", "attr2");
+
+        assertSame(builder, result);
+    }
+
+    @Test
+    @DisplayName("project with consumer returns self")
+    void project_withConsumer_returnsSelf() {
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+
+        AsyncBatchGetBuilder<TestItem> result = builder.project(p -> p.include("attr1"));
+
+        assertSame(builder, result);
+    }
+
+    @Test
+    @DisplayName("execute with projection uses low-level path")
+    void execute_withProjection_usesLowLevelPath() {
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("testTable");
+
+        TestItem expectedItem = new TestItem("item1");
+        when(tableSchema.mapToItem(any())).thenReturn(expectedItem);
+
+        BatchGetItemResponse response = mock(BatchGetItemResponse.class);
+        when(response.responses()).thenReturn(Map.of("testTable",
+                List.of(Map.of("id", AttributeValue.builder().s("item1").build()))));
+        when(response.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table, dynamoDbAsyncClient);
+        builder.addKey("pk1").project("id");
+
+        BatchGetResult<TestItem> result = builder.execute().join();
+
+        assertEquals(1, result.items().size());
+        assertSame(expectedItem, result.items().getFirst());
+        assertFalse(result.hasUnprocessed());
+        verify(dynamoDbAsyncClient).batchGetItem(any(BatchGetItemRequest.class));
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute without projection uses enhanced path even when low-level client is available")
+    void execute_withoutProjection_usesEnhancedPath() {
+        stubTableSchema();
+
+        TestItem expectedItem = new TestItem("item1");
+        BatchGetResultPage page = mockPageWithItems(table, List.of(expectedItem));
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class)))
+                .thenReturn(publisherThatEmits(page));
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table, dynamoDbAsyncClient);
+        builder.addKey("pk1");
+
+        BatchGetResult<TestItem> result = builder.execute().join();
+
+        assertEquals(1, result.items().size());
+        assertSame(expectedItem, result.items().getFirst());
+        verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+        verify(dynamoDbAsyncClient, never()).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute with projection includes projection expression in low-level request")
+    void execute_withProjection_includesProjectionExpression() {
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("testTable");
+
+        TestItem expectedItem = new TestItem("item1");
+        when(tableSchema.mapToItem(any())).thenReturn(expectedItem);
+
+        BatchGetItemResponse response = mock(BatchGetItemResponse.class);
+        when(response.responses()).thenReturn(Map.of("testTable",
+                List.of(Map.of("id", AttributeValue.builder().s("item1").build()))));
+        when(response.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table, dynamoDbAsyncClient);
+        builder.addKey("pk1").project("id");
+
+        builder.execute().join();
+
+        verify(dynamoDbAsyncClient).batchGetItem(argThat((BatchGetItemRequest request) ->
+                !request.requestItems().isEmpty()
+                        && request.requestItems().containsKey("testTable")
+                        && request.requestItems().get("testTable").projectionExpression() != null
+        ));
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 }

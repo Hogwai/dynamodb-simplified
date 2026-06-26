@@ -1,6 +1,8 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.BatchGetResult;
@@ -16,14 +18,20 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedReques
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Builds an async batch get operation to retrieve multiple items from a single table by their keys.
@@ -37,11 +45,14 @@ public class AsyncBatchGetBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(AsyncBatchGetBuilder.class);
     private static final int MAX_BATCH_SIZE = 100;
+    public static final String BATCH_GET_ITEM = "BatchGetItem";
 
     private final DynamoDbEnhancedAsyncClient enhancedClient;
     private final DynamoDbAsyncTable<T> table;
+    private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<Key> keys = new ArrayList<>();
     private Boolean consistentRead;
+    private ProjectionExpression projectionExpression;
 
     /**
      * Constructs a new {@code AsyncBatchGetBuilder}.
@@ -50,8 +61,21 @@ public class AsyncBatchGetBuilder<T> {
      * @param table          the async DynamoDB table
      */
     AsyncBatchGetBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient, @NonNull DynamoDbAsyncTable<T> table) {
+        this(enhancedClient, table, null);
+    }
+
+    /**
+     * Constructs a new {@code AsyncBatchGetBuilder} with a low-level client for projection support.
+     *
+     * @param enhancedClient     the enhanced async DynamoDB client
+     * @param table              the async DynamoDB table
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client (nullable, required for projection)
+     */
+    AsyncBatchGetBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient, @NonNull DynamoDbAsyncTable<T> table,
+                         DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.enhancedClient = enhancedClient;
         this.table = table;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
     /**
@@ -112,6 +136,36 @@ public class AsyncBatchGetBuilder<T> {
     }
 
     /**
+     * Restricts the returned attributes to the specified ones for this batch get.
+     * <p>
+     * When projection is set, the operation falls back to the low-level DynamoDB API.
+     *
+     * @param attributes the attribute names to include in each result
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncBatchGetBuilder<T> project(@NonNull String... attributes) {
+        this.projectionExpression = ProjectionExpression.builder().include(attributes);
+        return this;
+    }
+
+    /**
+     * Restricts the returned attributes by configuring a {@link ProjectionExpression}
+     * via a consumer for this batch get.
+     * <p>
+     * When projection is set, the operation falls back to the low-level DynamoDB API.
+     *
+     * @param projectionBuilder a consumer that configures the {@link ProjectionExpression}
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncBatchGetBuilder<T> project(@NonNull Consumer<ProjectionExpression> projectionBuilder) {
+        this.projectionExpression = ProjectionExpression.builder();
+        projectionBuilder.accept(this.projectionExpression);
+        return this;
+    }
+
+    /**
      * Executes the batch get operation asynchronously and returns all matching items
      * aggregated from all pages.
      *
@@ -128,6 +182,10 @@ public class AsyncBatchGetBuilder<T> {
         if (keys.size() > MAX_BATCH_SIZE) {
             throw new IllegalArgumentException(
                     "BatchGet supports a maximum of " + MAX_BATCH_SIZE + " keys per request, but " + keys.size() + " were provided");
+        }
+
+        if (projectionExpression != null && !projectionExpression.isEmpty()) {
+            return executeWithProjection();
         }
 
         ReadBatch readBatch = buildReadBatch();
@@ -194,7 +252,7 @@ public class AsyncBatchGetBuilder<T> {
             public void onError(Throwable t) {
                 if (t instanceof DynamoDbException dde) {
                     resultFuture.completeExceptionally(
-                            new OperationFailedException("BatchGetItem", table.tableName(), dde));
+                            new OperationFailedException(BATCH_GET_ITEM, table.tableName(), dde));
                 } else {
                     resultFuture.completeExceptionally(t);
                 }
@@ -259,7 +317,7 @@ public class AsyncBatchGetBuilder<T> {
         }
         if (t instanceof DynamoDbException dde) {
             resultFuture.completeExceptionally(
-                    new OperationFailedException("BatchGetItem", table.tableName(), dde));
+                    new OperationFailedException(BATCH_GET_ITEM, table.tableName(), dde));
         } else {
             resultFuture.completeExceptionally(t);
         }
@@ -274,6 +332,48 @@ public class AsyncBatchGetBuilder<T> {
                     table.tableName(), (System.nanoTime() - start) / 1_000_000);
         }
         resultFuture.complete(new PagedResult<>(Collections.emptyList(), null));
+    }
+
+    private CompletableFuture<BatchGetResult<T>> executeWithProjection() {
+        String tableName = table.tableName();
+        if (dynamoDbAsyncClient == null) {
+            throw new IllegalStateException(
+                    "Projection requires a low-level DynamoDbAsyncClient, but none was provided. " +
+                    "Use the three-argument constructor or obtain the builder via AsyncTable.");
+        }
+
+        List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(keys.size());
+        for (Key key : keys) {
+            sdkKeys.add(key.primaryKeyMap(table.tableSchema()));
+        }
+
+        KeysAndAttributes.Builder keysAndAttributesBuilder = KeysAndAttributes.builder()
+                .keys(sdkKeys)
+                .projectionExpression(projectionExpression.getExpression())
+                .expressionAttributeNames(projectionExpression.getExpressionNames());
+        if (consistentRead != null) {
+            keysAndAttributesBuilder.consistentRead(consistentRead);
+        }
+
+        Map<String, KeysAndAttributes> requestItems = new HashMap<>();
+        requestItems.put(tableName, keysAndAttributesBuilder.build());
+
+        BatchGetItemRequest request = BatchGetItemRequest.builder()
+                .requestItems(requestItems)
+                .build();
+
+        return dynamoDbAsyncClient.batchGetItem(request)
+                .thenApply(response -> {
+                    List<Map<String, AttributeValue>> items = response.responses()
+                            .getOrDefault(tableName, List.of());
+                    Map<String, KeysAndAttributes> unprocessed = response.unprocessedKeys();
+                    List<T> results = new ArrayList<>(items.size());
+                    for (Map<String, AttributeValue> item : items) {
+                        results.add(table.tableSchema().mapToItem(item));
+                    }
+                    return new BatchGetResult<>(results, unprocessed != null ? unprocessed : Map.of());
+                })
+                .exceptionally(AsyncExceptionMapper.handler(BATCH_GET_ITEM, tableName));
     }
 
     private ReadBatch buildReadBatch() {

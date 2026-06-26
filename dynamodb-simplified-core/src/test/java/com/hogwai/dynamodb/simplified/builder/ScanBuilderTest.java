@@ -330,6 +330,28 @@ class ScanBuilderTest {
         assertEquals(Map.of(":v0", AttributeValue.builder().s("active").build()), expr.expressionValues());
     }
 
+    @Test
+    @DisplayName("filter with Map builds equality conditions AND'd together")
+    void filter_withMap() {
+        stubScanReturns(pageIterable());
+
+        new ScanBuilder<>(table)
+                .filter(Map.of("status", "active", "region", "us-east-1"))
+                .executeAll();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+
+        assertNotNull(request.filterExpression());
+        Expression expr = request.filterExpression();
+        // Two equality conditions joined with AND
+        assertTrue(expr.expression().contains("AND"));
+        assertTrue(expr.expression().contains("="));
+        assertEquals(2, expr.expressionNames().size());
+        assertEquals(2, expr.expressionValues().size());
+    }
+
     // ============ Index Constructor ============
 
     @Test

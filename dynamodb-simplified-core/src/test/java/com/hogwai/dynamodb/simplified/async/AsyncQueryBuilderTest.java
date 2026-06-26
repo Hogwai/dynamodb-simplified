@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
@@ -145,6 +146,45 @@ class AsyncQueryBuilderTest {
                 .join();
 
         assertFalse(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("executeStream returns publisher that emits items")
+    void executeStream_returnsPublisher() {
+        Page<TestItem> page = mockPageWithItems(List.of(new TestItem("a"), new TestItem("b")));
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        SdkPublisher<TestItem> publisher = new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .executeStream()
+                .join();
+
+        assertNotNull(publisher);
+        List<TestItem> collected = new java.util.ArrayList<>();
+        publisher.subscribe(new org.reactivestreams.Subscriber<>() {
+            @Override public void onSubscribe(org.reactivestreams.Subscription s) { s.request(Long.MAX_VALUE); }
+            @Override public void onNext(TestItem item) { collected.add(item); }
+            @Override public void onError(Throwable t) { }
+            @Override public void onComplete() { }
+        });
+        // Small delay for reactive emission
+        try { Thread.sleep(100); } catch (InterruptedException _) { Thread.currentThread().interrupt(); }
+        assertEquals(2, collected.size());
+        assertEquals("a", collected.get(0).id);
+        assertEquals("b", collected.get(1).id);
+        verify(table).query(any(QueryEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("executeStream() with Select.COUNT returns failed future")
+    void executeStream_throwsWithSelectCount() {
+        CompletableFuture<SdkPublisher<TestItem>> future = new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeStream();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 
     @Test

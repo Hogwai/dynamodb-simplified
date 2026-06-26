@@ -115,6 +115,29 @@ public class ScanBuilder<T> {
         return this;
     }
 
+    /**
+     * Configures a scan filter from a map of attribute-value pairs.
+     * <p>
+     * All conditions are combined with AND. Each entry is treated as
+     * an equality filter. For other condition types, use {@link #filter(Consumer)}.
+     *
+     * @param conditions a map of attribute names to their expected values
+     * @return this builder for chaining
+     */
+    public @NonNull ScanBuilder<T> filter(@NonNull Map<String, Object> conditions) {
+        FilterExpression filter = FilterExpression.builder();
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            if (!first) {
+                filter.and();
+            }
+            filter.eq(entry.getKey(), entry.getValue());
+            first = false;
+        }
+        this.filterExpression = filter;
+        return this;
+    }
+
     // ============ Projection ============
 
     /**

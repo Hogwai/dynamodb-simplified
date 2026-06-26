@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 /**
@@ -36,6 +37,8 @@ public class CrossTableBatchGetBuilder {
 
     private static final Logger LOG = Logging.getLogger(CrossTableBatchGetBuilder.class);
     private static final int MAX_BATCH_SIZE = 100;
+    private static final int MAX_RETRIES = 3;
+    private static final long BASE_BACKOFF_MS = 100;
 
     private final DynamoDbClient dynamoDbClient;
     private final List<Entry<?>> entries = new ArrayList<>();
@@ -157,9 +160,7 @@ public class CrossTableBatchGetBuilder {
         Map<String, TableSchema<?>> tableSchemas = new HashMap<>();
         Map<String, KeysAndAttributes> requestItems = buildRequestItems(entriesByTable, tableSchemas);
 
-        var response = executeRequest(requestItems);
-
-        return buildCrossTableBatchGetResult(response, tableSchemas, start);
+        return retryLoop(requestItems, tableSchemas, start);
     }
 
     private Map<String, List<Entry<?>>> groupEntriesByTable() {
@@ -214,19 +215,68 @@ public class CrossTableBatchGetBuilder {
         }
     }
 
-    private CrossTableBatchGetResult buildCrossTableBatchGetResult(
-            BatchGetItemResponse response, Map<String, TableSchema<?>> tableSchemas, long start) {
-        if (LOG.isDebugEnabled()) {
-            int totalItems = response.responses().values().stream()
-                    .mapToInt(List::size)
-                    .sum();
-            LOG.debug("CrossTable batch get returned {} items from {} tables in {}ms",
-                    totalItems, response.responses().size(), (System.nanoTime() - start) / 1_000_000);
+    private CrossTableBatchGetResult retryLoop(
+            Map<String, KeysAndAttributes> initialRequestItems,
+            Map<String, TableSchema<?>> tableSchemas,
+            long start) {
+        Map<String, KeysAndAttributes> currentItems = initialRequestItems;
+        Map<String, List<Map<String, AttributeValue>>> allResponses = new HashMap<>();
+        int attempt = 0;
+
+        while (true) {
+            BatchGetItemResponse response = executeRequest(currentItems);
+            accumulateItems(allResponses, response);
+            Map<String, KeysAndAttributes> unprocessed = response.unprocessedKeys();
+
+            if (unprocessed == null || unprocessed.isEmpty()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("CrossTable batch get returned {} items from {} tables in {}ms",
+                            allResponses.values().stream().mapToInt(List::size).sum(),
+                            allResponses.size(),
+                            (System.nanoTime() - start) / 1_000_000);
+                }
+                return new CrossTableBatchGetResult(allResponses, Map.of(), tableSchemas);
+            }
+
+            if (attempt >= MAX_RETRIES) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("CrossTable batch get exhausted retries, {} unprocessed keys remain",
+                            unprocessed.values().stream().mapToInt(ka -> ka.keys().size()).sum());
+                }
+                return new CrossTableBatchGetResult(allResponses, unprocessed, tableSchemas);
+            }
+
+            if (sleepWithBackoff(attempt)) {
+                return new CrossTableBatchGetResult(allResponses, unprocessed, tableSchemas);
+            }
+            currentItems = unprocessed;
+            attempt++;
         }
-        return new CrossTableBatchGetResult(
-                response.responses() != null ? response.responses() : Map.of(),
-                response.unprocessedKeys() != null ? response.unprocessedKeys() : Map.of(),
-                tableSchemas);
+    }
+
+    private boolean sleepWithBackoff(int attempt) {
+        long backoff = BASE_BACKOFF_MS * (1L << attempt);
+        backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
+        try {
+            Thread.sleep(backoff);
+        } catch (InterruptedException _) {
+            Thread.currentThread().interrupt();
+            return true;
+        }
+        return false;
+    }
+
+    private static void accumulateItems(
+            Map<String, List<Map<String, AttributeValue>>> allResponses,
+            BatchGetItemResponse response) {
+        Map<String, List<Map<String, AttributeValue>>> responses = response.responses();
+        if (responses == null) {
+            return;
+        }
+        for (Map.Entry<String, List<Map<String, AttributeValue>>> entry : responses.entrySet()) {
+            allResponses.computeIfAbsent(entry.getKey(), _ -> new ArrayList<>())
+                    .addAll(entry.getValue());
+        }
     }
 
     private static Key buildKey(@NonNull Object partitionKey, @Nullable Object sortKey) {

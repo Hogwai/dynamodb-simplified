@@ -8,7 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
@@ -207,6 +209,28 @@ class AsyncScanBuilderTest {
         assertEquals("#n0 = :v0", expr.expression());
         assertEquals(Map.of("#n0", "color"), expr.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("blue").build()), expr.expressionValues());
+    }
+
+    @Test
+    @DisplayName("filter with Map builds equality conditions AND'd together")
+    void filter_withMap() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(emptyPublisher());
+
+        new AsyncScanBuilder<>(table)
+                .filter(Map.of("status", "active", "region", "us-east-1"))
+                .executeAll()
+                .join();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+
+        assertNotNull(request.filterExpression());
+        Expression expr = request.filterExpression();
+        assertTrue(expr.expression().contains("AND"));
+        assertTrue(expr.expression().contains("="));
+        assertEquals(2, expr.expressionNames().size());
+        assertEquals(2, expr.expressionValues().size());
     }
 
     @Test
@@ -452,6 +476,41 @@ class AsyncScanBuilderTest {
         CompletableFuture<Optional<TestItem>> future = new AsyncScanBuilder<>(table)
                 .select(Select.COUNT)
                 .executeAndGetFirst();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeStream returns publisher that emits items")
+    void executeStream_returnsPublisher() {
+        Page<TestItem> page = mockPage(2, 2, null);
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        SdkPublisher<TestItem> publisher = new AsyncScanBuilder<>(table)
+                .executeStream()
+                .join();
+
+        assertNotNull(publisher);
+        List<TestItem> collected = new java.util.ArrayList<>();
+        publisher.subscribe(new Subscriber<>() {
+            @Override public void onSubscribe(org.reactivestreams.Subscription s) { s.request(Long.MAX_VALUE); }
+            @Override public void onNext(TestItem item) { collected.add(item); }
+            @Override public void onError(Throwable t) { }
+            @Override public void onComplete() { }
+        });
+        // Small delay for reactive emission
+        try { Thread.sleep(100); } catch (InterruptedException _) { Thread.currentThread().interrupt(); }
+        assertEquals(2, collected.size());
+        verify(table).scan(any(ScanEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("executeStream() with Select.COUNT returns failed future")
+    void executeStream_throwsWithSelectCount() {
+        CompletableFuture<SdkPublisher<TestItem>> future = new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeStream();
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
         assertInstanceOf(IllegalStateException.class, ex.getCause());

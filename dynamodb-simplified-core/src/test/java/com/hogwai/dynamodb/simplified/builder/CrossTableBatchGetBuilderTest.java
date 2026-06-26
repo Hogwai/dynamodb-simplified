@@ -240,4 +240,93 @@ class CrossTableBatchGetBuilderTest {
 
         assertThrows(IllegalStateException.class, () -> builder.project("attr"));
     }
+
+    // ============ retry ============
+
+    @Test
+    @DisplayName("execute retries unprocessed keys and accumulates items")
+    @SuppressWarnings("unchecked")
+    void execute_retriesUnprocessedKeys() throws Exception {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        // First response: 1 item + 1 unprocessed key
+        Map<String, List<Map<String, AttributeValue>>> firstResponses = new HashMap<>();
+        firstResponses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+        KeysAndAttributes unprocessedKa = KeysAndAttributes.builder()
+                .keys(List.of(Map.of("id", AttributeValue.builder().s("pk2").build())))
+                .build();
+        Map<String, KeysAndAttributes> unprocessedMap = Map.of("test_table", unprocessedKa);
+        BatchGetItemResponse firstResponse = mock(BatchGetItemResponse.class);
+        when(firstResponse.responses()).thenReturn(firstResponses);
+        when(firstResponse.unprocessedKeys()).thenReturn(unprocessedMap);
+
+        // Second response: 1 item, no unprocessed
+        Map<String, List<Map<String, AttributeValue>>> secondResponses = new HashMap<>();
+        secondResponses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk2").build())));
+        BatchGetItemResponse secondResponse = mock(BatchGetItemResponse.class);
+        when(secondResponse.responses()).thenReturn(secondResponses);
+        when(secondResponse.unprocessedKeys()).thenReturn(Map.of());
+
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(firstResponse, secondResponse);
+
+        TestItem item1 = new TestItem("result1");
+        TestItem item2 = new TestItem("result2");
+        when(tableSchema.mapToItem(any(Map.class)))
+                .thenReturn(item1, item2);
+
+        Table<TestItem> table = createTable(rawTable);
+        CrossTableBatchGetBuilder builder = new CrossTableBatchGetBuilder(dynamoDbClient);
+        builder.addKey(table, "pk1");
+        builder.addKey(table, "pk2");
+
+        CrossTableBatchGetResult result = builder.execute();
+
+        List<TestItem> items = result.getItems(table);
+        assertEquals(2, items.size());
+        assertSame(item1, items.get(0));
+        assertSame(item2, items.get(1));
+        assertFalse(result.hasUnprocessed());
+        verify(dynamoDbClient, times(2)).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute after retry exhaustion returns remaining unprocessed keys")
+    void execute_exhaustsRetries_returnsUnprocessedKeys() throws Exception {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        // All responses return no items but always have unprocessed keys
+        Map<String, List<Map<String, AttributeValue>>> emptyResponses = new HashMap<>();
+        emptyResponses.put("test_table", List.of());
+        KeysAndAttributes unprocessedKa = KeysAndAttributes.builder()
+                .keys(List.of(Map.of("id", AttributeValue.builder().s("pk1").build())))
+                .build();
+        Map<String, KeysAndAttributes> unprocessedMap = Map.of("test_table", unprocessedKa);
+
+        BatchGetItemResponse response = mock(BatchGetItemResponse.class);
+        when(response.responses()).thenReturn(emptyResponses);
+        when(response.unprocessedKeys()).thenReturn(unprocessedMap);
+
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(response);
+
+        Table<TestItem> table = createTable(rawTable);
+        CrossTableBatchGetBuilder builder = new CrossTableBatchGetBuilder(dynamoDbClient);
+        builder.addKey(table, "pk1");
+
+        CrossTableBatchGetResult result = builder.execute();
+
+        assertTrue(result.hasUnprocessed());
+        Map<String, KeysAndAttributes> remaining = result.getUnprocessedKeys();
+        assertEquals(1, remaining.size());
+        assertEquals(1, remaining.get("test_table").keys().size());
+        // Initial call + MAX_RETRIES (3) retries = 4 total calls
+        verify(dynamoDbClient, times(4)).batchGetItem(any(BatchGetItemRequest.class));
+    }
 }

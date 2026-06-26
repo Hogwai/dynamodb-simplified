@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 /**
@@ -37,6 +38,8 @@ public class BatchGetBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(BatchGetBuilder.class);
     private static final int MAX_BATCH_SIZE = 100;
+    private static final int MAX_RETRIES = 3;
+    private static final long BASE_BACKOFF_MS = 100;
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<T> table;
@@ -147,15 +150,24 @@ public class BatchGetBuilder<T> {
         }
 
         long start = System.nanoTime();
+
+        BatchGetResult<T> result;
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
-            var result = executeWithProjection();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("BatchGet on table '{}' returned {} items in {}ms (with projection)",
-                        table.tableName(), result.items().size(), (System.nanoTime() - start) / 1_000_000);
-            }
-            return result;
+            result = executeWithProjection();
+        } else {
+            result = executeEnhancedPath();
         }
 
+        result = retryLoop(result);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BatchGet on table '{}' returned {} items in {}ms",
+                    table.tableName(), result.items().size(), (System.nanoTime() - start) / 1_000_000);
+        }
+        return result;
+    }
+
+    private BatchGetResult<T> executeEnhancedPath() {
         Class<T> itemClass = table.tableSchema().itemType().rawClass();
         ReadBatch.Builder<T> batchBuilder = ReadBatch.builder(itemClass)
                 .mappedTableResource(table);
@@ -171,20 +183,96 @@ public class BatchGetBuilder<T> {
                 .readBatches(batchBuilder.build())
                 .build();
 
-        List<T> results;
+        List<T> allItems = new ArrayList<>();
+        Map<String, KeysAndAttributes> allUnprocessed = new HashMap<>();
+
         try {
-            results = enhancedClient.batchGetItem(request)
-                    .resultsForTable(table)
-                    .stream()
-                    .toList();
+            var pages = enhancedClient.batchGetItem(request);
+            for (var page : pages) {
+                List<T> pageItems = page.resultsForTable(table);
+                if (pageItems != null) {
+                    allItems.addAll(pageItems);
+                }
+                List<Key> unprocessedKeys = page.unprocessedKeysForTable(table);
+                if (unprocessedKeys != null && !unprocessedKeys.isEmpty()) {
+                    List<Map<String, AttributeValue>> keyMaps = new ArrayList<>(unprocessedKeys.size());
+                    for (Key key : unprocessedKeys) {
+                        keyMaps.add(key.primaryKeyMap(table.tableSchema()));
+                    }
+                    KeysAndAttributes keysAndAttrs = KeysAndAttributes.builder()
+                            .keys(keyMaps)
+                            .consistentRead(consistentRead)
+                            .build();
+                    allUnprocessed.put(table.tableName(), keysAndAttrs);
+                }
+            }
         } catch (DynamoDbException e) {
             throw new OperationFailedException("BatchGetItem", table.tableName(), e);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("BatchGet on table '{}' returned {} items in {}ms",
-                    table.tableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+
+        return new BatchGetResult<>(allItems, allUnprocessed);
+    }
+
+    private BatchGetResult<T> retryLoop(BatchGetResult<T> initialResult) {
+        List<T> allItems = new ArrayList<>(initialResult.items());
+        Map<String, KeysAndAttributes> unprocessed = initialResult.unprocessedKeys();
+
+        int attempt = 0;
+        while (unprocessed != null && !unprocessed.isEmpty()) {
+            if (attempt >= MAX_RETRIES) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("BatchGet on table '{}' exhausted retries, {} unprocessed keys remain",
+                            table.tableName(), unprocessed.size());
+                }
+                return new BatchGetResult<>(allItems, unprocessed);
+            }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("BatchGet on table '{}' has {} unprocessed keys, retrying (attempt {}/{})",
+                        table.tableName(), unprocessed.size(), attempt + 1, MAX_RETRIES);
+            }
+
+            if (sleepWithBackoff(attempt)) {
+                return new BatchGetResult<>(allItems, unprocessed);
+            }
+
+            unprocessed = attemptRetry(allItems, unprocessed);
+            attempt++;
         }
-        return new BatchGetResult<>(results, Map.of());
+
+        return new BatchGetResult<>(allItems, Map.of());
+    }
+
+    private Map<String, KeysAndAttributes> attemptRetry(
+            List<T> allItems, Map<String, KeysAndAttributes> unprocessed) {
+        String tableName = table.tableName();
+        BatchGetItemRequest retryRequest = BatchGetItemRequest.builder()
+                .requestItems(unprocessed)
+                .build();
+
+        try {
+            var response = dynamoDbClient.batchGetItem(retryRequest);
+            List<Map<String, AttributeValue>> retryItems = response.responses()
+                    .getOrDefault(tableName, List.of());
+            for (Map<String, AttributeValue> item : retryItems) {
+                allItems.add(table.tableSchema().mapToItem(item));
+            }
+            return response.unprocessedKeys();
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("BatchGetItem", table.tableName(), e);
+        }
+    }
+
+    private boolean sleepWithBackoff(int attempt) {
+        long backoff = BASE_BACKOFF_MS * (1L << attempt);
+        backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
+        try {
+            Thread.sleep(backoff);
+        } catch (InterruptedException _) {
+            Thread.currentThread().interrupt();
+            return true;
+        }
+        return false;
     }
 
     private BatchGetResult<T> executeWithProjection() {

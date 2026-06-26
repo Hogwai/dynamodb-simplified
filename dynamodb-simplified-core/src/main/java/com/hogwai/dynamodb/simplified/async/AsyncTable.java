@@ -288,7 +288,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncBatchGetBuilder<T> batchGet() {
-        return new AsyncBatchGetBuilder<>(enhancedAsyncClient, dynamoDbAsyncTable);
+        return new AsyncBatchGetBuilder<>(enhancedAsyncClient, dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
     /**
