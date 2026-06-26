@@ -295,7 +295,7 @@ public class UpdateExpression {
         return key;
     }
 
-    private static AttributeValue toAttributeValue(@NonNull Object value) {
+    private static AttributeValue toAttributeValue(@Nullable Object value) {
         return AttributeValueConverter.toAttributeValue(value);
     }
 
