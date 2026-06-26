@@ -1,8 +1,9 @@
 name: Deploy documentation
 on:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
   workflow_dispatch:
+    # Manual trigger only — docs publishing is disabled until the lib stabilises.
 
 permissions:
   contents: write
