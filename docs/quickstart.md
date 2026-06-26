@@ -110,6 +110,40 @@ Post deleted = table.delete()
     .execute();
 ```
 
+## Time To Live (TTL)
+
+```java
+// Enable TTL on an attribute
+table.enableTtl("expiresAt");
+
+// Set TTL on an update
+table.update(post, expr -> expr.set("status", "archived")
+                                .ttl("expiresAt", Duration.ofDays(90)))
+    .execute();
+```
+
+## Optimistic Locking
+
+```java
+@DynamoDbBean
+public class VersionedItem {
+    private String id;
+    private int version;  // @Version field
+
+    @DynamoDbPartitionKey
+    public String getId() { return id; }
+
+    @Version
+    public int getVersion() { return version; }
+}
+
+// Auto-checks version on write, increments on success
+table.put(item).withOptimisticLocking().execute();
+table.update(item, expr -> expr.set("title", "Updated"))
+    .withOptimisticLocking()
+    .execute();
+```
+
 ## Query
 
 ```java
@@ -153,6 +187,10 @@ PagedResult<Post> nextPage = table.query()
     .limit(10)
     .startFrom(page.getLastEvaluatedKey())
     .executeWithPagination();
+
+// Check consumed capacity
+PagedResult<Post> page = ...;
+ConsumedCapacity capacity = page.consumedCapacity();  // may be null
 
 // Count items (no data transferred)
 long count = table.query()
@@ -216,6 +254,13 @@ table.batchWrite()
     .put(post2)
     .delete("post-3", 11111L)
     .execute();
+```
+
+## Batch Put
+
+```java
+// Insert multiple items in one batch
+table.putAll(List.of(post1, post2, post3));
 ```
 
 ## Secondary indexes (GSI / LSI)
@@ -303,4 +348,51 @@ asyncClient.transactWrite()
     .update(asyncTable, existingPost, expr -> expr.set("title", "Updated"))
     .execute()
     .thenRun(() -> System.out.println("Transaction complete"));
+```
+
+## Single-Table Design
+
+Define entities with annotations:
+
+```java
+@Entity(discriminator = "POST", table = "myapp")
+@KeyPrefix(component = "PK", value = "POST")
+public class Post {
+    private String pk;
+    private String postId;
+
+    @KeyComponent(component = "PK", position = 0)
+    public String getPostId() { return postId; }
+
+    @DynamoDbPartitionKey
+    public String getPk() { return pk; }
+    public void setPk(String pk) { this.pk = pk; }
+}
+```
+
+Use the entity-aware table:
+
+```java
+EntityTable<Post> posts = client.entityTable(Post.class);
+posts.put(new Post("post-123"));  // pk auto-computed to "POST#post-123"
+
+// Read — auto-filters by discriminator
+List<Post> results = posts.query("POST#post-123").executeAll();
+```
+
+Cross-entity queries:
+
+```java
+CrossEntityResult result = client.entityQuery("myapp")
+    .partitionKey("POST#post-123")
+    .includeEntity(Post.class)
+    .includeEntity(Comment.class)
+    .execute();
+```
+
+Async variant:
+
+```java
+AsyncEntityTable<Post> asyncPosts = asyncClient.entityTable(Post.class);
+asyncPosts.put(new Post("post-456")).join();
 ```
