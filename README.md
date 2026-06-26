@@ -156,7 +156,7 @@ See the [Single-Table Design Guide](docs/guides/single-table-design.md) for full
 
 Full documentation is available at the [project site](https://hogwai.github.io/dynamodb-simplified/), including a [Quickstart guide](https://hogwai.github.io/dynamodb-simplified/quickstart/) with complete API coverage (CRUD, query, scan, batch, transactions, indexes, DDL, PartiQL, async).
 
-The [API reference](javadoc/index.html) is generated from Javadoc comments.
+The [API reference](https://hogwai.github.io/dynamodb-simplified/javadoc/index.html) is generated from Javadoc comments.
 
 ---
 

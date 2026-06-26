@@ -29,6 +29,7 @@ theme:
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
+  - Single-Table Design: guides/single-table-design.md
   - API Reference: javadoc/index.html
 
 markdown_extensions:
