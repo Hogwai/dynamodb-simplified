@@ -4,6 +4,7 @@ import com.hogwai.dynamodb.simplified.Table;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.internal.RetryUtils;
 import com.hogwai.dynamodb.simplified.result.CrossTableBatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Builds a cross-table batch write operation to put and delete items across multiple tables.
@@ -182,15 +182,7 @@ public class CrossTableBatchWriteBuilder {
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        long backoff = BASE_BACKOFF_MS * (1L << attempt);
-        backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
-        try {
-            Thread.sleep(backoff);
-        } catch (InterruptedException _) {
-            Thread.currentThread().interrupt();
-            return true;
-        }
-        return false;
+        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
     }
 
     @SuppressWarnings({"unchecked"})

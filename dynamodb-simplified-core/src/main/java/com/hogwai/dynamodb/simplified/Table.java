@@ -39,7 +39,7 @@ public class Table<T> {
     private final DynamoDbTable<T> dynamoDbTable;
     private final DynamoDbClient dynamoDbClient;
 
-    Table(DynamoDbEnhancedClient enhancedClient, DynamoDbTable<T> dynamoDbTable, DynamoDbClient dynamoDbClient) {
+    public Table(DynamoDbEnhancedClient enhancedClient, DynamoDbTable<T> dynamoDbTable, DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;
         this.dynamoDbTable = dynamoDbTable;
         this.dynamoDbClient = dynamoDbClient;

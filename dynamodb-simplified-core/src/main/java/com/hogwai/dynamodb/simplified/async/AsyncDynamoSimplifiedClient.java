@@ -9,6 +9,9 @@ import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
 import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
+import com.hogwai.dynamodb.simplified.entity.AsyncEntityTable;
+import com.hogwai.dynamodb.simplified.entity.AsyncEntityTableBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,6 +144,33 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
         configurator.accept(builder);
         TableSchema<T> schema = builder.build();
         return table(tableName, schema);
+    }
+
+    // ============ Single-Table / Entity Operations ============
+
+    /**
+     * Returns an {@link AsyncEntityTable} for the given entity class, enabling
+     * single-table design with auto-computed composite keys and discriminator
+     * filtering.
+     * <p>
+     * The entity class must be annotated with
+     * {@link com.hogwai.dynamodb.simplified.entity.Entity @Entity}.
+     * Key components are defined via
+     * {@link com.hogwai.dynamodb.simplified.entity.KeyComponent @KeyComponent}
+     * and automatically composed into the table's partition/sort keys before
+     * every put and update operation. Queries are automatically filtered by
+     * the entity's discriminator value.
+     *
+     * @param entityClass the entity class annotated with {@code @Entity}
+     * @param <T>         the entity type
+     * @return an {@code AsyncEntityTable<T>} for single-table design
+     */
+    @NonNull
+    public <T> AsyncEntityTable<T> entityTable(@NonNull Class<T> entityClass) {
+        return new AsyncEntityTableBuilder<>(entityClass)
+                .dynamoDbAsyncClient(dynamoDbAsyncClient)
+                .enhancedAsyncClient(enhancedAsyncClient)
+                .build();
     }
 
     // ============ Transaction Operations ============

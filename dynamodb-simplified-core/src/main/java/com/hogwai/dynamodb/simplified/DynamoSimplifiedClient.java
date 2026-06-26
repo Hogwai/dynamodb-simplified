@@ -6,6 +6,8 @@ import com.hogwai.dynamodb.simplified.builder.CrossTableBatchGetBuilder;
 import com.hogwai.dynamodb.simplified.builder.CrossTableBatchWriteBuilder;
 import com.hogwai.dynamodb.simplified.builder.TransactGetBuilder;
 import com.hogwai.dynamodb.simplified.builder.TransactWriteBuilder;
+import com.hogwai.dynamodb.simplified.entity.EntityTable;
+import com.hogwai.dynamodb.simplified.entity.EntityTableBuilder;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -168,6 +170,31 @@ public class DynamoSimplifiedClient implements AutoCloseable {
         configurator.accept(builder);
         TableSchema<T> schema = builder.build();
         return table(tableName, schema);
+    }
+
+    // ============ Single-Table / Entity Operations ============
+
+    /**
+     * Returns an {@link EntityTable} for the given entity class, enabling
+     * single-table design with auto-computed composite keys and discriminator
+     * filtering.
+     * <p>
+     * The entity class must be annotated with {@link com.hogwai.dynamodb.simplified.entity.Entity @Entity}.
+     * Key components are defined via {@link com.hogwai.dynamodb.simplified.entity.KeyComponent @KeyComponent}
+     * and automatically composed into the table's partition/sort keys before every
+     * put and update operation. Queries are automatically filtered by the entity's
+     * discriminator value.
+     *
+     * @param entityClass the entity class annotated with {@code @Entity}
+     * @param <T>         the entity type
+     * @return an {@code EntityTable<T>} for single-table design
+     */
+    @NonNull
+    public <T> EntityTable<T> entityTable(@NonNull Class<T> entityClass) {
+        return new EntityTableBuilder<>(entityClass)
+                .dynamoDbClient(dynamoDbClient)
+                .enhancedClient(enhancedClient)
+                .build();
     }
 
     // ============ Transaction Operations ============

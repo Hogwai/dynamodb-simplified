@@ -39,8 +39,14 @@ public class AsyncTable<T> {
     private final DynamoDbAsyncTable<T> dynamoDbAsyncTable;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    /** Package-private constructor. */
-    AsyncTable(
+    /**
+     * Creates a new {@code AsyncTable} wrapping the given clients and table mapping.
+     *
+     * @param enhancedAsyncClient the enhanced async DynamoDB client
+     * @param dynamoDbAsyncTable  the async DynamoDB table mapping
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client
+     */
+    public AsyncTable(
             @NonNull DynamoDbEnhancedAsyncClient enhancedAsyncClient,
             @NonNull DynamoDbAsyncTable<T> dynamoDbAsyncTable,
             @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
@@ -468,7 +474,7 @@ public class AsyncTable<T> {
                             spec.enabled(true);
                         })
                         .build())
-                .thenApply(_ -> (Void) null)
+                .<Void>thenApply(_ -> null)
                 .exceptionally(AsyncExceptionMapper.handler("UpdateTimeToLive", dynamoDbAsyncTable.tableName()));
     }
 
@@ -487,7 +493,7 @@ public class AsyncTable<T> {
                             spec.enabled(false);
                         })
                         .build())
-                .thenApply(_ -> (Void) null)
+                .<Void>thenApply(_ -> null)
                 .exceptionally(AsyncExceptionMapper.handler("UpdateTimeToLive", dynamoDbAsyncTable.tableName()));
     }
 

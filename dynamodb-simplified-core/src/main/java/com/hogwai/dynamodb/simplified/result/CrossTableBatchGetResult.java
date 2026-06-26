@@ -2,8 +2,10 @@ package com.hogwai.dynamodb.simplified.result;
 
 import com.hogwai.dynamodb.simplified.Table;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
 import java.util.Collections;
@@ -15,15 +17,17 @@ import java.util.Map;
  * <p>
  * Items are accessible per-table via {@link #getItems(Table)}.
  * Unprocessed keys (if any) are available via {@link #getUnprocessedKeys()}.
+ * Consumed capacity is available if requested via {@link #consumedCapacity()}.
  */
-public class CrossTableBatchGetResult {
+public final class CrossTableBatchGetResult implements Consumed {
 
     private final Map<String, List<Map<String, AttributeValue>>> responses;
     private final Map<String, KeysAndAttributes> unprocessedKeys;
     private final Map<String, TableSchema<?>> tableSchemas;
+    private final @Nullable ConsumedCapacity consumedCapacity;
 
     /**
-     * Constructs a new {@code CrossTableBatchGetResult}.
+     * Constructs a new {@code CrossTableBatchGetResult} with no consumed capacity information.
      *
      * @param responses       the raw response items per table name
      * @param unprocessedKeys the unprocessed keys per table name
@@ -33,9 +37,38 @@ public class CrossTableBatchGetResult {
             @NonNull Map<String, List<Map<String, AttributeValue>>> responses,
             @NonNull Map<String, KeysAndAttributes> unprocessedKeys,
             @NonNull Map<String, TableSchema<?>> tableSchemas) {
+        this(responses, unprocessedKeys, tableSchemas, null);
+    }
+
+    /**
+     * Constructs a new {@code CrossTableBatchGetResult}.
+     *
+     * @param responses       the raw response items per table name
+     * @param unprocessedKeys the unprocessed keys per table name
+     * @param tableSchemas    the table schemas per table name, for deserialization
+     * @param consumedCapacity the consumed capacity, or {@code null}
+     */
+    public CrossTableBatchGetResult(
+            @NonNull Map<String, List<Map<String, AttributeValue>>> responses,
+            @NonNull Map<String, KeysAndAttributes> unprocessedKeys,
+            @NonNull Map<String, TableSchema<?>> tableSchemas,
+            @Nullable ConsumedCapacity consumedCapacity) {
         this.responses = responses;
         this.unprocessedKeys = Collections.unmodifiableMap(unprocessedKeys);
         this.tableSchemas = tableSchemas;
+        this.consumedCapacity = consumedCapacity;
+    }
+
+    /**
+     * Returns the consumed capacity, or {@code null} if capacity was not requested
+     * or the operation does not support capacity tracking.
+     *
+     * @return consumed capacity, or {@code null}
+     */
+    @Override
+    @Nullable
+    public ConsumedCapacity consumedCapacity() {
+        return consumedCapacity;
     }
 
     /**

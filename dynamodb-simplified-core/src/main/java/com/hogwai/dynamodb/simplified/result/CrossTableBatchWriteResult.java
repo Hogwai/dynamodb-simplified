@@ -1,6 +1,8 @@
 package com.hogwai.dynamodb.simplified.result;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import java.util.Collections;
@@ -10,17 +12,45 @@ import java.util.Map;
 /**
  * Holds the result of a cross-table batch write operation.
  * <p>
- * Contains any unprocessed items that were not written.
+ * Contains any unprocessed items that were not written,
+ * and optionally the consumed capacity if requested.
  */
-public record CrossTableBatchWriteResult(Map<String, List<WriteRequest>> unprocessedItems) {
+public final class CrossTableBatchWriteResult implements Consumed {
+
+    private final Map<String, List<WriteRequest>> unprocessedItems;
+    private final @Nullable ConsumedCapacity consumedCapacity;
+
+    /**
+     * Constructs a new {@code CrossTableBatchWriteResult} with no consumed capacity information.
+     *
+     * @param unprocessedItems the items that were not processed, keyed by table name
+     */
+    public CrossTableBatchWriteResult(@NonNull Map<String, List<WriteRequest>> unprocessedItems) {
+        this(unprocessedItems, null);
+    }
 
     /**
      * Constructs a new {@code CrossTableBatchWriteResult}.
      *
      * @param unprocessedItems the items that were not processed, keyed by table name
+     * @param consumedCapacity the consumed capacity, or {@code null}
      */
-    public CrossTableBatchWriteResult(@NonNull Map<String, List<WriteRequest>> unprocessedItems) {
+    public CrossTableBatchWriteResult(@NonNull Map<String, List<WriteRequest>> unprocessedItems,
+                                      @Nullable ConsumedCapacity consumedCapacity) {
         this.unprocessedItems = Collections.unmodifiableMap(unprocessedItems);
+        this.consumedCapacity = consumedCapacity;
+    }
+
+    /**
+     * Returns the consumed capacity, or {@code null} if capacity was not requested
+     * or the operation does not support capacity tracking.
+     *
+     * @return consumed capacity, or {@code null}
+     */
+    @Override
+    @Nullable
+    public ConsumedCapacity consumedCapacity() {
+        return consumedCapacity;
     }
 
     /**
@@ -28,7 +58,6 @@ public record CrossTableBatchWriteResult(Map<String, List<WriteRequest>> unproce
      *
      * @return an unmodifiable map of unprocessed items (never {@code null})
      */
-    @Override
     public @NonNull Map<String, List<WriteRequest>> unprocessedItems() {
         return unprocessedItems;
     }

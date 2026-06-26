@@ -12,7 +12,8 @@ public final class VersionHelper {
 
     private static final String VERSION_ATTR = "version";
 
-    private VersionHelper() {}
+    private VersionHelper() {
+    }
 
     /**
      * Returns the version from a potentially-versioned item.

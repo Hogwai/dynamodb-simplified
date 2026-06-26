@@ -5,6 +5,7 @@ import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.internal.RetryUtils;
 import com.hogwai.dynamodb.simplified.result.CrossTableBatchGetResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -24,7 +25,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 /**
@@ -44,6 +44,7 @@ public class CrossTableBatchGetBuilder {
     private final DynamoDbClient dynamoDbClient;
     private final List<Entry<?>> entries = new ArrayList<>();
     private ReturnConsumedCapacity returnConsumedCapacity;
+    private Boolean consistentRead;
 
     /**
      * Constructs a new {@code CrossTableBatchGetBuilder}.
@@ -151,6 +152,19 @@ public class CrossTableBatchGetBuilder {
     }
 
     /**
+     * Configures whether to use strongly consistent reads for this batch get operation.
+     * <p>
+     * If not set, DynamoDB defaults to eventually consistent reads.
+     *
+     * @param consistentRead {@code true} for strongly consistent reads
+     * @return this builder for chaining
+     */
+    public @NonNull CrossTableBatchGetBuilder consistentRead(boolean consistentRead) {
+        this.consistentRead = consistentRead;
+        return this;
+    }
+
+    /**
      * Executes the batch get operation and returns items grouped by table.
      * <p>
      * Groups entries by table name and calls the low-level DynamoDB API.
@@ -215,6 +229,9 @@ public class CrossTableBatchGetBuilder {
                         .projectionExpression(projection.getExpression())
                         .expressionAttributeNames(projection.getExpressionNames());
             }
+            if (consistentRead != null) {
+                kaBuilder.consistentRead(consistentRead);
+            }
             requestItems.put(tableName, kaBuilder.build());
         }
         return requestItems;
@@ -272,15 +289,7 @@ public class CrossTableBatchGetBuilder {
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        long backoff = BASE_BACKOFF_MS * (1L << attempt);
-        backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
-        try {
-            Thread.sleep(backoff);
-        } catch (InterruptedException _) {
-            Thread.currentThread().interrupt();
-            return true;
-        }
-        return false;
+        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
     }
 
     private static void accumulateItems(

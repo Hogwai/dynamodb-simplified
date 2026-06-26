@@ -33,6 +33,7 @@ dependencies {
     errorprone("com.google.errorprone:error_prone_core:${project.findProperty("versionErrorProneCore")}")
 
     testImplementation("org.junit.jupiter:junit-jupiter:${project.findProperty("versionJunitJupiter")}")
+    testImplementation("org.assertj:assertj-core:${project.findProperty("versionAssertj")}")
     testImplementation("org.mockito:mockito-core:${project.findProperty("versionMockito")}")
     testImplementation("org.mockito:mockito-junit-jupiter:${project.findProperty("versionMockito")}")
     testImplementation(platform("org.testcontainers:testcontainers-bom:${project.findProperty("versionTestcontainersBom")}"))
@@ -47,6 +48,7 @@ tasks.named<Test>("test") {
     useJUnitPlatform {
         excludeTags("integration")
     }
+
 }
 
 // ---- Static Analysis: Error Prone ----

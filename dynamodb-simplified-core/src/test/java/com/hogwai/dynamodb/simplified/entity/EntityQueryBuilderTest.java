@@ -1,0 +1,596 @@
+package com.hogwai.dynamodb.simplified.entity;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class EntityQueryBuilderTest {
+
+    @Mock
+    private DynamoDbClient mockClient;
+
+    @Captor
+    private ArgumentCaptor<QueryRequest> requestCaptor;
+
+    private EntityQueryBuilder builder;
+
+    @BeforeEach
+    void setUp() {
+        builder = new EntityQueryBuilder(mockClient, "myapp", "_type");
+    }
+
+    @Test
+    void execute_shouldBuildCorrectRequest() {
+        builder.partitionKey("USER#abc123")
+               .includeEntity(UserEntity.class);
+
+        QueryResponse response = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("USER#abc123").build(),
+                        "userId", AttributeValue.builder().s("abc123").build()
+                )))
+                .count(1)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        CrossEntityResult result = builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.tableName()).isEqualTo("myapp");
+        assertThat(request.keyConditionExpression()).contains("#pk");
+        assertThat(request.filterExpression()).contains("#dt");
+        assertThat(result.get(UserEntity.class)).hasSize(1);
+    }
+
+    @Test
+    void execute_withMultipleEntityTypes_returnsGroupedResults() {
+        QueryResponse response = QueryResponse.builder()
+                .items(List.of(
+                    Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("PART#abc").build(),
+                        "userId", AttributeValue.builder().s("abc").build()
+                    ),
+                    Map.of(
+                        "_type", AttributeValue.builder().s("POST").build(),
+                        "pk", AttributeValue.builder().s("PART#abc").build(),
+                        "postId", AttributeValue.builder().s("post1").build()
+                    )
+                ))
+                .count(2)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.partitionKey("PART#abc")
+               .includeEntity(UserEntity.class)
+               .includeEntity(PostEntity.class);
+
+        CrossEntityResult result = builder.execute();
+        assertThat(result.get(UserEntity.class)).hasSize(1);
+        assertThat(result.get(PostEntity.class)).hasSize(1);
+        assertThat(result.size()).isEqualTo(2);
+    }
+
+    @Test
+    void execute_withoutPartitionKey_shouldThrow() {
+        assertThrows(IllegalStateException.class, () -> builder.execute());
+    }
+
+    @Test
+    void execute_withNoIncludedEntities_returnsEmpty() {
+        builder.partitionKey("ANY");
+        CrossEntityResult result = builder.execute();
+        assertThat(result.isEmpty()).isTrue();
+        verify(mockClient, never()).query(any(QueryRequest.class));
+    }
+
+    @Test
+    void execute_shouldIncludeDiscriminatorFilter() {
+        builder.partitionKey("USER#xyz")
+               .includeEntity(UserEntity.class);
+
+        QueryResponse response = QueryResponse.builder()
+                .items(List.of())
+                .count(0)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.filterExpression()).contains("#dt");
+        assertThat(request.filterExpression()).contains(":v0");
+        assertThat(request.expressionAttributeNames()).containsEntry("#dt", "_type");
+        assertThat(request.expressionAttributeValues()).containsKey(":v0");
+        assertThat(request.expressionAttributeValues().get(":v0").s()).isEqualTo("USER");
+    }
+
+    @Test
+    void get_withUnknownEntityType_returnsEmptyList() {
+        builder.partitionKey("PK").includeEntity(UserEntity.class);
+
+        when(mockClient.query(any(QueryRequest.class)))
+            .thenReturn(QueryResponse.builder().items(List.of()).build());
+
+        CrossEntityResult result = builder.execute();
+        assertThat(result.get(UserEntity.class)).isEmpty();
+    }
+
+    // ============ Sort Key Condition Tests ============
+
+    @Test
+    void sortKeyBeginsWith_addsCorrectKeyConditionExpression() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyBeginsWith("PREFIX");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("begins_with(#sk, :sk0)");
+        assertThat(request.expressionAttributeNames()).containsKey("#sk");
+        assertThat(request.expressionAttributeValues()).containsKey(":sk0");
+        assertThat(request.expressionAttributeValues().get(":sk0").s()).isEqualTo("PREFIX");
+    }
+
+    @Test
+    void sortKeyEquals_addsEQKeyCondition() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyEquals("EXACT");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("#sk = :sk0");
+        assertThat(request.expressionAttributeValues().get(":sk0").s()).isEqualTo("EXACT");
+    }
+
+    @Test
+    void sortKeyBetween_addsBETWEENKeyCondition() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyBetween("A", "Z");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("#sk BETWEEN :sk0 AND :sk1");
+        assertThat(request.expressionAttributeValues().get(":sk0").s()).isEqualTo("A");
+        assertThat(request.expressionAttributeValues().get(":sk1").s()).isEqualTo("Z");
+    }
+
+    @Test
+    void sortKeyGreaterThan_addsGTKeyCondition() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyGreaterThan("THRESHOLD");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("#sk > :sk0");
+    }
+
+    @Test
+    void sortKeyGreaterThanOrEqual_addsGEKeyCondition() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyGreaterThanOrEqual("THRESHOLD");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("#sk >= :sk0");
+    }
+
+    @Test
+    void sortKeyLessThan_addsLTKeyCondition() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyLessThan("THRESHOLD");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("#sk < :sk0");
+    }
+
+    @Test
+    void sortKeyLessThanOrEqual_addsLEKeyCondition() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(EntityWithSk.class)
+               .sortKeyLessThanOrEqual("THRESHOLD");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.keyConditionExpression()).contains("#sk <= :sk0");
+    }
+
+    // ============ Pagination Tests ============
+
+    @Test
+    void executeWithPagination_returnsFirstPageWithLastEvaluatedKey() {
+        Map<String, AttributeValue> lastKey = Map.of("pk", AttributeValue.builder().s("lastKey").build());
+        QueryResponse page1 = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("USER#1").build(),
+                        "userId", AttributeValue.builder().s("1").build()
+                )))
+                .lastEvaluatedKey(lastKey)
+                .count(1)
+                .build();
+
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(page1);
+
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class);
+
+        CrossEntityResultWithPagination result = builder.executeWithPagination();
+        assertThat(result.getResult().get(UserEntity.class)).hasSize(1);
+        assertThat(result.getLastEvaluatedKey()).isEqualTo(lastKey);
+        assertThat(result.hasMore()).isTrue();
+    }
+
+    @Test
+    void executeAll_iteratesMultiplePages() {
+        Map<String, AttributeValue> lastKey = Map.of("pk", AttributeValue.builder().s("USER#1").build());
+        QueryResponse page1 = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("USER#1").build(),
+                        "userId", AttributeValue.builder().s("1").build()
+                )))
+                .lastEvaluatedKey(lastKey)
+                .count(1)
+                .build();
+
+        QueryResponse page2 = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("USER#2").build(),
+                        "userId", AttributeValue.builder().s("2").build()
+                )))
+                .lastEvaluatedKey(Map.of())
+                .count(1)
+                .build();
+
+        when(mockClient.query(any(QueryRequest.class)))
+                .thenReturn(page1, page2);
+
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class);
+
+        List<CrossEntityResult> pages = builder.executeAll();
+        assertThat(pages).hasSize(2);
+        assertThat(pages.get(0).get(UserEntity.class)).hasSize(1);
+        assertThat(pages.get(1).get(UserEntity.class)).hasSize(1);
+        verify(mockClient, times(2)).query(any(QueryRequest.class));
+    }
+
+    @Test
+    void executeAndGetFirst_returnsFirstPageOnly() {
+        Map<String, AttributeValue> lastKey = Map.of("pk", AttributeValue.builder().s("USER#1").build());
+        QueryResponse page1 = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("USER#1").build(),
+                        "userId", AttributeValue.builder().s("1").build()
+                )))
+                .lastEvaluatedKey(lastKey)
+                .count(1)
+                .build();
+
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(page1);
+
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class);
+
+        var result = builder.executeAndGetFirst();
+        assertThat(result).isPresent();
+        assertThat(result.get().get(UserEntity.class)).hasSize(1);
+    }
+
+    @Test
+    void executeAndGetFirst_withNoResults_returnsEmpty() {
+        QueryResponse emptyPage = QueryResponse.builder()
+                .items(List.of())
+                .count(0)
+                .build();
+
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(emptyPage);
+
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class);
+
+        var result = builder.executeAndGetFirst();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void count_returnsCorrectCountFromSelectCount() {
+        Map<String, AttributeValue> lastKey = Map.of("pk", AttributeValue.builder().s("next").build());
+        QueryResponse page1 = QueryResponse.builder()
+                .items(List.of())
+                .count(5)
+                .lastEvaluatedKey(lastKey)
+                .build();
+
+        QueryResponse page2 = QueryResponse.builder()
+                .items(List.of())
+                .count(3)
+                .build();
+
+        when(mockClient.query(any(QueryRequest.class)))
+                .thenReturn(page1, page2);
+
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class);
+
+        long count = builder.count();
+        assertThat(count).isEqualTo(8);
+        verify(mockClient, times(2)).query(any(QueryRequest.class));
+    }
+
+    // ============ Projection Tests ============
+
+    @Test
+    void project_addsProjectionExpressionToRequest() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class)
+               .project("userId", "email");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.projectionExpression()).isEqualTo("userId, email");
+    }
+
+    // ============ ConsistentRead Tests ============
+
+    @Test
+    void consistentRead_addsConsistentReadToRequest() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class)
+               .consistentRead(true);
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.consistentRead()).isTrue();
+    }
+
+    @Test
+    void consistentRead_false_setsConsistentReadToFalse() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class)
+               .consistentRead(false);
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.consistentRead()).isFalse();
+    }
+
+    // ============ ScanIndexForward Tests ============
+
+    @Test
+    void scanIndexForward_setsScanIndexForwardParameter() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class)
+               .scanIndexForward(false);
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.scanIndexForward()).isFalse();
+    }
+
+    @Test
+    void scanIndexForward_true_setsScanIndexForwardToTrue() {
+        builder.partitionKey("USER#abc")
+               .includeEntity(UserEntity.class)
+               .scanIndexForward(true);
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.scanIndexForward()).isTrue();
+    }
+
+    // ============ PK Attribute Name Test ============
+
+    @Test
+    void execute_usesCorrectPkAttributeNameFromAnnotation() {
+        builder.partitionKey("USER#abc123")
+               .includeEntity(UserEntity.class);
+
+        QueryResponse response = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("USER").build(),
+                        "pk", AttributeValue.builder().s("USER#abc123").build(),
+                        "userId", AttributeValue.builder().s("abc123").build()
+                )))
+                .count(1)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        // UserEntity has @KeyComponent(component="PK") on getUserId() -> attributeName = "userId"
+        assertThat(request.expressionAttributeNames()).containsEntry("#pk", "userId");
+    }
+
+    // ============ Pagination with empty included entities ============
+
+    @Test
+    void executeWithPagination_withNoIncludedEntities_returnsEmpty() {
+        builder.partitionKey("ANY");
+        CrossEntityResultWithPagination result = builder.executeWithPagination();
+        assertThat(result.getResult().isEmpty()).isTrue();
+        assertThat(result.hasMore()).isFalse();
+        verify(mockClient, never()).query(any(QueryRequest.class));
+    }
+
+    @Test
+    void executeAll_withNoIncludedEntities_returnsEmptyList() {
+        builder.partitionKey("ANY");
+        List<CrossEntityResult> pages = builder.executeAll();
+        assertThat(pages).hasSize(1);
+        assertThat(pages.getFirst().isEmpty()).isTrue();
+        verify(mockClient, never()).query(any(QueryRequest.class));
+    }
+
+    // ============ No partition key throws ============
+
+    @Test
+    void executeWithPagination_withoutPartitionKey_shouldThrow() {
+        assertThrows(IllegalStateException.class, () -> builder.executeWithPagination());
+    }
+
+    @Test
+    void executeAll_withoutPartitionKey_shouldThrow() {
+        assertThrows(IllegalStateException.class, () -> builder.executeAll());
+    }
+
+    @Test
+    void count_withoutPartitionKey_shouldThrow() {
+        assertThrows(IllegalStateException.class, () -> builder.count());
+    }
+
+    // --- Test entity classes ---
+
+    @DynamoDbBean
+    @Entity(discriminator = "USER", table = "myapp")
+    public static class UserEntity {
+        private String pk;
+        private String userId;
+
+        public UserEntity() {
+            // default constructor required by DynamoDbBean
+        }
+
+        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        public String getPk() { return pk; }  // UserEntity partition key getter
+        public void setPk(String pk) { this.pk = pk; }  // UserEntity partition key setter
+
+        @KeyComponent(component = "PK")
+        public String getUserId() { return userId; }
+        public void setUserId(String userId) { this.userId = userId; }
+    }
+
+    @DynamoDbBean
+    @Entity(discriminator = "POST", table = "myapp")
+    public static class PostEntity {
+        private String pk;
+        private String postId;
+
+        public PostEntity() {
+            // default constructor required by DynamoDbBean
+        }
+
+        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        public String getPk() { return pk; }  // PostEntity partition key getter
+        public void setPk(String pk) { this.pk = pk; }  // PostEntity partition key setter
+
+        @KeyComponent(component = "PK")
+        public String getPostId() { return postId; }
+        public void setPostId(String postId) { this.postId = postId; }
+    }
+
+    @DynamoDbBean
+    @Entity(discriminator = "ITEM", table = "myapp")
+    public static class EntityWithSk {
+        private String pk;
+        private String sk;
+
+        public EntityWithSk() {
+            // default constructor required by DynamoDbBean
+        }
+
+        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        public String getPk() { return pk; }  // EntityWithSk partition key getter
+        public void setPk(String pk) { this.pk = pk; }  // EntityWithSk partition key setter
+
+        @KeyComponent(component = "PK")
+        public String getPkComponent() { return pk; }
+        public void setPkComponent(String pk) { this.pk = pk; }
+
+        @KeyComponent(component = "SK")
+        public String getSk() { return sk; }
+        public void setSk(String sk) { this.sk = sk; }
+    }
+}

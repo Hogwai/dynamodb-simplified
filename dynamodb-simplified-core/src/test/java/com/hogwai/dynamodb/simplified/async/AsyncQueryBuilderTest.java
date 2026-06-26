@@ -26,6 +26,7 @@ import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -164,11 +165,10 @@ class AsyncQueryBuilderTest {
         publisher.subscribe(new org.reactivestreams.Subscriber<>() {
             @Override public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
             @Override public void onNext(TestItem item) { collected.add(item); }
-            @Override public void onError(Throwable t) { }
-            @Override public void onComplete() { }
+            @Override public void onError(Throwable t) { /* not needed for this test scenario */ }
+            @Override public void onComplete() { /* not needed for this test scenario */ }
         });
-        // Small delay for reactive emission
-        try { Thread.sleep(100); } catch (InterruptedException _) { Thread.currentThread().interrupt(); }
+        // Items are emitted synchronously from the mock publisher
         assertEquals(2, collected.size());
         assertEquals("a", collected.get(0).id);
         assertEquals("b", collected.get(1).id);
@@ -284,6 +284,27 @@ class AsyncQueryBuilderTest {
         assertEquals("#n0 = :v0", expr.expression());
         assertEquals(Map.of("#n0", "color"), expr.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("red").build()), expr.expressionValues());
+    }
+
+    @Test
+    @DisplayName("filter(Map) builds AND'd equality conditions")
+    void filterWithMap_shouldBuildEqualityConditions() {
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPublisher());
+
+        Map<String, Object> conditions = new LinkedHashMap<>();
+        conditions.put("status", "active");
+        conditions.put("region", "us-east-1");
+        new AsyncQueryBuilder<>(table)
+                .filter(conditions)
+                .partitionKey("pk1")
+                .executeAll()
+                .join();
+
+        ArgumentCaptor<QueryEnhancedRequest> captor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
+        verify(table).query(captor.capture());
+        Expression expr = captor.getValue().filterExpression();
+        assertNotNull(expr);
+        assertEquals("#n0 = :v0 AND #n1 = :v1", expr.expression());
     }
 
     @Test

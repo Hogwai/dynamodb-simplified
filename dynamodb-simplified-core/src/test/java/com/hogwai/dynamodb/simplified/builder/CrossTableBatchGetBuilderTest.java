@@ -205,6 +205,35 @@ class CrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
+    // ============ consistentRead ============
+
+    @Test
+    @DisplayName("consistentRead(true) propagates to KeysAndAttributes in request")
+    void consistentRead_propagatesToRequest() throws Exception {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(mockResponse);
+
+        Table<TestItem> table = createTable(rawTable);
+        CrossTableBatchGetBuilder builder = new CrossTableBatchGetBuilder(dynamoDbClient);
+        builder.consistentRead(true);
+        builder.addKey(table, "pk1");
+        builder.execute();
+
+        ArgumentCaptor<BatchGetItemRequest> captor = ArgumentCaptor.forClass(BatchGetItemRequest.class);
+        verify(dynamoDbClient).batchGetItem(captor.capture());
+        KeysAndAttributes ka = captor.getValue().requestItems().values().iterator().next();
+        assertTrue(ka.consistentRead());
+    }
+
     // ============ project ============
 
     @Test

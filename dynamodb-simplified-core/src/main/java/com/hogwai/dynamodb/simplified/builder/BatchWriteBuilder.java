@@ -3,6 +3,7 @@ package com.hogwai.dynamodb.simplified.builder;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.internal.RetryUtils;
 import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -20,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Builds a batch write operation to put and delete multiple items in a single table.
@@ -170,15 +170,7 @@ public class BatchWriteBuilder<T> {
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        long backoff = BASE_BACKOFF_MS * (1L << attempt);
-        backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
-        try {
-            Thread.sleep(backoff);
-        } catch (InterruptedException _) {
-            Thread.currentThread().interrupt();
-            return true;
-        }
-        return false;
+        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
     }
 
     private Map<String, List<WriteRequest>> buildRequestItems() {

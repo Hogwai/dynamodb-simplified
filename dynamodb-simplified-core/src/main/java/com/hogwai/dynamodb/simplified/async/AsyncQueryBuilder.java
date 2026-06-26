@@ -46,6 +46,7 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of the item
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class AsyncQueryBuilder<T> {
     private static final Logger LOG = Logging.getLogger(AsyncQueryBuilder.class);
     private static final String CONDITION_JOINER = " AND ";
@@ -311,6 +312,30 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> filter(@Nullable FilterExpression filter) {
+        this.filterExpression = filter;
+        return this;
+    }
+
+    /**
+     * Configures a query filter from a map of attribute-value pairs.
+     * <p>
+     * All conditions are combined with AND. Each entry is treated as
+     * an equality filter. For other condition types, use the consumer-based
+     * {@link #filter(Consumer)} method.
+     *
+     * @param conditions a map of attribute names to their expected values
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncQueryBuilder<T> filter(@NonNull Map<String, Object> conditions) {
+        FilterExpression filter = FilterExpression.builder();
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            if (!first) {
+                filter.and();
+            }
+            filter.eq(entry.getKey(), entry.getValue());
+            first = false;
+        }
         this.filterExpression = filter;
         return this;
     }
