@@ -1,6 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.TestPost;
+import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -11,12 +12,14 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbAsyncWaiter;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -171,12 +174,12 @@ class AsyncDynamoSimplifiedClientIT {
         table.putItem(p2).join();
 
         // TestPost has a sort key, so addKey requires both partition and sort key
-        List<TestPost> results = table.batchGet()
+        var results = table.batchGet()
                 .addKey("abg1", 1L)
                 .addKey("abg2", 1L)
                 .execute()
                 .join();
-        assertEquals(2, results.size());
+        assertEquals(2, results.getItems().size());
     }
 
     @Test
@@ -311,5 +314,260 @@ class AsyncDynamoSimplifiedClientIT {
                 .dynamoDbClient(asyncClient)
                 .build();
         assertNotNull(builtClient);
+    }
+
+    // ============ Conditional Operations ============
+
+    @Test
+    void conditionalPutWithConditionExpression() {
+        var post = new TestPost("acpe1", 1L, "draft", "Original", null, 0, null);
+        table.putItem(post).join();
+
+        // Condition on existing item's status should pass
+        table.put(post).condition(c -> c.eq("status", "draft")).execute().join();
+
+        var found = table.getItem("acpe1", 1L).join();
+        assertTrue(found.isPresent());
+        assertEquals("Original", found.get().getTitle());
+    }
+
+    @Test
+    void conditionalPutWithNonMatchingCondition() {
+        var post = new TestPost("acpe2", 1L, "draft", "Original", null, 0, null);
+        table.putItem(post).join();
+
+        var putOp = table.put(post).condition(c -> c.eq("status", "published"));
+        assertThrows(Exception.class, () -> putOp.execute().join());
+
+        // Verify item unchanged
+        var found = table.getItem("acpe2", 1L).join();
+        assertTrue(found.isPresent());
+        assertEquals("draft", found.get().getStatus());
+    }
+
+    @Test
+    void conditionalUpdateWithMatchingCondition() {
+        var post = new TestPost("acup1", 1L, "active", "MatchMe", null, 0, null);
+        table.putItem(post).join();
+
+        post.setTitle("Matched");
+        var result = table.update(post)
+                .condition(c -> c.eq("status", "active"))
+                .execute()
+                .join();
+
+        assertTrue(result.isPresent());
+        assertEquals("Matched", result.orElseThrow().getTitle());
+    }
+
+    @Test
+    void conditionalUpdateWithNonMatchingCondition() {
+        var post = new TestPost("acup2", 1L, "active", "KeepMe", null, 0, null);
+        table.putItem(post).join();
+
+        post.setTitle("ShouldNotApply");
+        var updateOp = table.update(post)
+                .condition(c -> c.eq("status", "nonexistent"));
+        assertThrows(Exception.class, () -> updateOp.execute().join());
+
+        var found = table.getItem("acup2", 1L).join();
+        assertTrue(found.isPresent());
+        assertEquals("KeepMe", found.get().getTitle());
+    }
+
+    @Test
+    void conditionalDeleteWithMatchingCondition() {
+        var post = new TestPost("acdel1", 1L, "active", "DeleteMe", null, 0, null);
+        table.putItem(post).join();
+
+        table.delete("acdel1", 1L)
+                .condition(c -> c.eq("status", "active"))
+                .execute()
+                .join();
+
+        assertFalse(table.getItem("acdel1", 1L).join().isPresent());
+    }
+
+    @Test
+    void conditionalDeleteWithNonMatchingCondition() {
+        var post = new TestPost("acdel2", 1L, "active", "KeepMeAlive", null, 0, null);
+        table.putItem(post).join();
+
+        var deleteOp = table.delete("acdel2", 1L)
+                .condition(c -> c.eq("status", "nonexistent"));
+        assertThrows(Exception.class, () -> deleteOp.execute().join());
+
+        assertTrue(table.getItem("acdel2", 1L).join().isPresent());
+    }
+
+    // ============ Query Variants ============
+
+    @Test
+    void queryDescending() {
+        table.putItem(new TestPost("adesc", 10L, "active", "Low", null, 0, null)).join();
+        table.putItem(new TestPost("adesc", 20L, "active", "Mid", null, 0, null)).join();
+        table.putItem(new TestPost("adesc", 30L, "active", "High", null, 0, null)).join();
+
+        List<TestPost> results = table.query()
+                .partitionKey("adesc")
+                .descending()
+                .executeAll()
+                .join();
+
+        assertEquals(3, results.size());
+        assertEquals("High", results.get(0).getTitle());
+        assertEquals("Low", results.get(2).getTitle());
+    }
+
+    @Test
+    void queryWithPagination() {
+        for (int i = 0; i < 5; i++) {
+            table.putItem(new TestPost("apag", (long) i, "active", "Item" + i, null, i, null)).join();
+        }
+
+        PagedResult<TestPost> page = table.query()
+                .partitionKey("apag")
+                .limit(3)
+                .executeWithPagination()
+                .join();
+
+        assertEquals(3, page.getItems().size());
+        assertTrue(page.hasMorePages());
+    }
+
+    @Test
+    void queryCount() {
+        table.putItem(new TestPost("acnt", 1L, "active", "A", null, 0, null)).join();
+        table.putItem(new TestPost("acnt", 2L, "active", "B", null, 0, null)).join();
+
+        long count = table.query().partitionKey("acnt").count().join();
+        assertEquals(2, count);
+    }
+
+    @Test
+    void queryExecuteAndGetFirst() {
+        table.putItem(new TestPost("aqegf", 1L, "active", "First", null, 0, null)).join();
+
+        Optional<TestPost> result = table.query()
+                .partitionKey("aqegf")
+                .executeAndGetFirst()
+                .join();
+
+        assertTrue(result.isPresent());
+        assertEquals("First", result.get().getTitle());
+    }
+
+    @Test
+    void queryExecuteAndGetFirstOnEmptyPartition() {
+        Optional<TestPost> result = table.query()
+                .partitionKey("nonexistent-aqegf")
+                .executeAndGetFirst()
+                .join();
+
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void queryWithFilter() {
+        table.putItem(new TestPost("aqf", 1L, "active", "Visible", null, 10, null)).join();
+        table.putItem(new TestPost("aqf", 2L, "active", "Hidden", null, 0, null)).join();
+
+        List<TestPost> results = table.query()
+                .partitionKey("aqf")
+                .filter(f -> f.gt("views", 0))
+                .executeAll()
+                .join();
+
+        assertEquals(1, results.size());
+        assertEquals("Visible", results.getFirst().getTitle());
+    }
+
+    // ============ Scan Variant ============
+
+    @Test
+    void scanWithProjection() {
+        table.putItem(new TestPost("asp1", 1L, "active", "Projected", null, 99, null)).join();
+
+        List<TestPost> results = table.scan()
+                .project("id", "title")
+                .executeAll()
+                .join();
+
+        assertFalse(results.isEmpty());
+        var item = results.stream().filter(p -> "asp1".equals(p.getId())).findFirst();
+        assertTrue(item.isPresent());
+        assertEquals("Projected", item.get().getTitle());
+        // views should be null (not projected)
+        assertNull(item.get().getViews());
+    }
+
+    // ============ Delete with ReturnValues (low-level path) ============
+
+    @Test
+    void deleteItemWithReturnValues() {
+        var post = new TestPost("arv1", 1L, "active", "ReturnValueTest", null, 0, null);
+        table.putItem(post).join();
+
+        var deleted = table.delete("arv1", 1L)
+                .returnValues(ReturnValue.ALL_OLD)
+                .execute()
+                .join();
+
+        assertTrue(deleted.isPresent());
+        assertEquals("ReturnValueTest", deleted.orElseThrow().getTitle());
+        assertFalse(table.getItem("arv1", 1L).join().isPresent());
+    }
+
+    @Test
+    void deleteItemWithReturnValuesOnNonExistentKey() {
+        var result = table.delete("nonexistent-arv", 0L)
+                .returnValues(ReturnValue.ALL_OLD)
+                .execute()
+                .join();
+
+        assertTrue(result.isEmpty());
+    }
+
+    // ============ TransactWrite with UpdateExpression (low-level path) ============
+
+    @Test
+    void transactWriteWithUpdateExpression() {
+        var post = new TestPost("atwexp", 1L, "active", "Before", "Old", 0, null);
+        table.putItem(post).join();
+
+        client.transactWrite()
+                .update(table, post, u -> u.set("title", "After").set("content", "New"))
+                .execute()
+                .join();
+
+        var found = table.getItem("atwexp", 1L).join();
+        assertTrue(found.isPresent());
+        assertEquals("After", found.get().getTitle());
+        assertEquals("New", found.get().getContent());
+    }
+
+    @Test
+    void transactWriteWithUpdateExpressionAndConditionCheck() {
+        // Update and condition check must target different items (DynamoDB
+        // transaction constraint: each action must operate on a distinct item).
+        var updateTarget = new TestPost("atwexp2", 1L, "active", "CondBefore", null, 5, null);
+        var checkTarget = new TestPost("atwexp2ck", 1L, "active", "CheckItem", null, 0, null);
+        table.putItem(updateTarget).join();
+        table.putItem(checkTarget).join();
+
+        client.transactWrite()
+                .update(table, updateTarget, u -> u.set("views", 10))
+                .conditionCheck(table, "atwexp2ck", 1L, c -> c.eq("views", 0))
+                .execute()
+                .join();
+
+        var found = table.getItem("atwexp2", 1L).join();
+        assertTrue(found.isPresent());
+        assertEquals(10, found.get().getViews());
+
+        // Verify condition check target was not modified
+        var checkFound = table.getItem("atwexp2ck", 1L).join();
+        assertTrue(checkFound.isPresent());
+        assertEquals("CheckItem", checkFound.get().getTitle());
     }
 }

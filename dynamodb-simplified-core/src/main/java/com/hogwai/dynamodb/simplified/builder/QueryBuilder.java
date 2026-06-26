@@ -1,8 +1,10 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
@@ -11,11 +13,16 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -28,9 +35,14 @@ import java.util.stream.Stream;
  *
  * @param <T> the type of the item
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class QueryBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(QueryBuilder.class);
+    private static final String CONDITION_JOINER = " AND ";
+
     private final DynamoDbTable<T> table;
     private final DynamoDbIndex<T> index;
+    private final DynamoDbClient dynamoDbClient;
     private QueryConditional keyCondition;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
@@ -39,6 +51,15 @@ public class QueryBuilder<T> {
     private Map<String, AttributeValue> exclusiveStartKey;
     private Boolean consistentRead = false;
     private ReturnConsumedCapacity returnConsumedCapacity;
+    private Select select;
+
+    enum KeyConditionOp {
+        EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
+    }
+    private KeyConditionOp keyOp;
+    private Object pkValue;
+    private Object skValue;
+    private Object skValue2; // for BETWEEN only
 
     /**
      * Constructs a new {@code QueryBuilder} for the given table.
@@ -46,8 +67,7 @@ public class QueryBuilder<T> {
      * @param table the DynamoDB table
      */
     public QueryBuilder(@NonNull DynamoDbTable<T> table) {
-        this.table = table;
-        this.index = null;
+        this(table, null);
     }
 
     /**
@@ -56,8 +76,32 @@ public class QueryBuilder<T> {
      * @param index the DynamoDB secondary index
      */
     public QueryBuilder(@NonNull DynamoDbIndex<T> index) {
+        this(index, null);
+    }
+
+    /**
+     * Constructs a new {@code QueryBuilder} for the given table with a low-level client.
+     *
+     * @param table           the DynamoDB table
+     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     */
+    public QueryBuilder(@NonNull DynamoDbTable<T> table, @Nullable DynamoDbClient dynamoDbClient) {
+        this.table = table;
+        this.index = null;
+        this.dynamoDbClient = dynamoDbClient;
+    }
+
+    /**
+     * Constructs a new {@code QueryBuilder} for querying the given secondary index
+     * with a low-level client.
+     *
+     * @param index           the DynamoDB secondary index
+     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     */
+    public QueryBuilder(@NonNull DynamoDbIndex<T> index, @Nullable DynamoDbClient dynamoDbClient) {
         this.table = null;
         this.index = index;
+        this.dynamoDbClient = dynamoDbClient;
     }
 
     // ============ Key Conditions ============
@@ -68,7 +112,12 @@ public class QueryBuilder<T> {
      * @param pkValue the partition key value
      * @return this builder for chaining
      */
+    @SuppressWarnings("PMD.NullAssignment")
     public @NonNull QueryBuilder<T> partitionKey(@NonNull Object pkValue) {
+        this.pkValue = pkValue;
+        this.keyOp = KeyConditionOp.EQ;
+        this.skValue = null;
+        this.skValue2 = null;
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue)).build()
         );
@@ -84,6 +133,8 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyEquals(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -102,6 +153,9 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyBeginsWith(@NonNull Object pkValue, @NonNull String skPrefix) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.BEGINS_WITH;
+        this.skValue = skPrefix;
         this.keyCondition = QueryConditional.sortBeginsWith(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -121,6 +175,10 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyBetween(@NonNull Object pkValue, @NonNull Object skLow, @NonNull Object skHigh) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.BETWEEN;
+        this.skValue = skLow;
+        this.skValue2 = skHigh;
         this.keyCondition = QueryConditional.sortBetween(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -143,6 +201,9 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyGreaterThan(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.GT;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThan(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -161,6 +222,9 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyGreaterThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.GE;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThanOrEqualTo(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -179,6 +243,9 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyLessThan(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.LT;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThan(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -197,6 +264,9 @@ public class QueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull QueryBuilder<T> partitionKeyAndSortKeyLessThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.LE;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThanOrEqualTo(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -326,6 +396,18 @@ public class QueryBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the select parameter for the query, controlling which attributes are returned.
+     * Use {@link Select#COUNT} to request only the item count from the server.
+     *
+     * @param select the select parameter (nullable)
+     * @return this builder for chaining
+     */
+    public @NonNull QueryBuilder<T> select(@Nullable Select select) {
+        this.select = select;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
@@ -339,9 +421,22 @@ public class QueryBuilder<T> {
      */
     @NonNull
     public List<T> executeAll() {
-        return executeAsPages().stream()
-                               .flatMap(page -> page.items().stream())
-                               .toList();
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead.");
+        }
+        long start = System.nanoTime();
+        try {
+            List<T> results = executeAsPages().stream()
+                                   .flatMap(page -> page.items().stream())
+                                   .toList();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Query on table '{}' returned {} items in {}ms",
+                        getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return results;
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Query", getTableName(), e);
+        }
     }
 
     /**
@@ -353,8 +448,18 @@ public class QueryBuilder<T> {
      */
     @NonNull
     public Stream<T> executeStream() {
-        return executeAsPages().stream()
-                               .flatMap(page -> page.items().stream());
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead.");
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Query stream on table '{}'", getTableName());
+        }
+        try {
+            return executeAsPages().stream()
+                                   .flatMap(page -> page.items().stream());
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Query", getTableName(), e);
+        }
     }
 
     /**
@@ -365,15 +470,31 @@ public class QueryBuilder<T> {
      *         the last evaluated key (may be {@code null} if no more pages)
      */
     public @NonNull PagedResult<T> executeWithPagination() {
-        Iterator<Page<T>> pages = executeAsPages().iterator();
-        if (pages.hasNext()) {
-            Page<T> firstPage = pages.next();
-            return new PagedResult<>(
-                    firstPage.items(),
-                    firstPage.lastEvaluatedKey()
-            );
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead.");
         }
-        return new PagedResult<>(Collections.emptyList(), null);
+        long start = System.nanoTime();
+        try {
+            Iterator<Page<T>> pages = executeAsPages().iterator();
+            if (pages.hasNext()) {
+                Page<T> firstPage = pages.next();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Query on table '{}' returned {} items in {}ms (first page)",
+                            getTableName(), firstPage.items().size(), (System.nanoTime() - start) / 1_000_000);
+                }
+                return new PagedResult<>(
+                        firstPage.items(),
+                        firstPage.lastEvaluatedKey()
+                );
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Query on table '{}' returned 0 items in {}ms (first page)",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return new PagedResult<>(Collections.emptyList(), null);
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Query", getTableName(), e);
+        }
     }
 
     /**
@@ -382,27 +503,177 @@ public class QueryBuilder<T> {
      * @return an {@link Optional} containing the first item, or empty if no items match
      */
     public @NonNull Optional<T> executeAndGetFirst() {
-        return executeAll().stream().findFirst();
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead.");
+        }
+        long start = System.nanoTime();
+        try {
+            Optional<T> result = executeAll().stream().findFirst();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Query on table '{}' returned first item in {}ms",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return result;
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Query", getTableName(), e);
+        }
     }
 
     /**
      * Returns the total number of matching items by iterating all query result pages.
      * <p>
-     * Note: currently fetches items server-side but discards them. A future optimization
-     * could use the low-level {@code QueryRequest} with {@code Select: COUNT} to avoid
-     * transferring item data entirely.
+     * When a low-level {@link DynamoDbClient} is available, uses {@code Select.COUNT}
+     * server-side to avoid transferring item data. Falls back to the enhanced client
+     * page iteration otherwise.
      *
      * @return the total count of matching items
      */
     public long count() {
-        long total = 0;
-        for (Page<T> page : executeAsPages()) {
-            total += page.count();
+        long start = System.nanoTime();
+        try {
+            if (dynamoDbClient != null) {
+                long result = countWithLowLevel(select != null ? select : Select.COUNT);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Count on table '{}' returned {} items in {}ms",
+                            getTableName(), result, (System.nanoTime() - start) / 1_000_000);
+                }
+                return result;
+            }
+            long total = 0;
+            for (Page<T> page : executeAsPages()) {
+                total += page.count();
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Count on table '{}' returned {} items in {}ms",
+                        getTableName(), total, (System.nanoTime() - start) / 1_000_000);
+            }
+            return total;
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Query", getTableName(), e);
         }
-        return total;
+    }
+
+    // ============ Low-Level Count ============
+
+    private long countWithLowLevel(Select select) {
+        String tableName = getTableName();
+        Map<String, String> expressionNames = new HashMap<>();
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+
+        String keyConditionExpression = buildKeyConditionExpression(expressionNames, expressionValues);
+
+        QueryRequest.Builder requestBuilder = QueryRequest.builder()
+            .tableName(tableName)
+            .keyConditionExpression(keyConditionExpression)
+            .expressionAttributeNames(expressionNames)
+            .expressionAttributeValues(expressionValues)
+            .select(select);
+
+        applyFilterExpression(requestBuilder, expressionNames, expressionValues);
+        applyQueryOptions(requestBuilder);
+
+        if (index != null) {
+            requestBuilder.indexName(index.indexName());
+        }
+
+        try {
+            return dynamoDbClient.query(requestBuilder.build()).count();
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Query", tableName, e);
+        }
+    }
+
+    private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
+        String pkName = table != null
+            ? table.tableSchema().tableMetadata().primaryPartitionKey()
+            : index.tableSchema().tableMetadata().primaryPartitionKey();
+
+        StringBuilder keyExpr = new StringBuilder();
+        String pkPlaceholder = "#pk";
+        expressionNames.put(pkPlaceholder, pkName);
+        String pkValPlaceholder = ":pk0";
+        expressionValues.put(pkValPlaceholder, AttributeValueConverter.toKeyAttributeValue(pkValue));
+        keyExpr.append(pkPlaceholder).append(" = ").append(pkValPlaceholder);
+
+        Optional<String> skName = table != null
+            ? table.tableSchema().tableMetadata().primarySortKey()
+            : index.tableSchema().tableMetadata().primarySortKey();
+
+        if (skValue != null && skName.isPresent()) {
+            String skPlaceholder = "#sk";
+            expressionNames.put(skPlaceholder, skName.get());
+            String skValPlaceholder = ":sk0";
+            expressionValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
+
+            switch (keyOp) {
+                case BEGINS_WITH ->
+                    keyExpr.append(CONDITION_JOINER)
+                        .append("begins_with(").append(skPlaceholder).append(", ")
+                        .append(skValPlaceholder).append(')');
+                case BETWEEN -> {
+                    String skValPlaceholder2 = ":sk1";
+                    expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
+                    keyExpr.append(CONDITION_JOINER)
+                        .append(skPlaceholder).append(" BETWEEN ")
+                        .append(skValPlaceholder).append(CONDITION_JOINER)
+                        .append(skValPlaceholder2);
+                }
+                case GT ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                case GE ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                case LT ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                case LE ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                case EQ ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+            }
+        }
+        return keyExpr.toString();
+    }
+
+    private void applyFilterExpression(
+        QueryRequest.Builder requestBuilder,
+        Map<String, String> keyNames,
+        Map<String, AttributeValue> keyValues
+    ) {
+        if (filterExpression != null && !filterExpression.isEmpty()) {
+            requestBuilder.filterExpression(filterExpression.getExpression());
+            requestBuilder.expressionAttributeNames(mergeMaps(keyNames, filterExpression.getExpressionNames()));
+            requestBuilder.expressionAttributeValues(mergeMaps(keyValues, filterExpression.getExpressionValues()));
+        }
+    }
+
+    private void applyQueryOptions(QueryRequest.Builder requestBuilder) {
+        if (limit != null) {
+            requestBuilder.limit(limit);
+        }
+        if (exclusiveStartKey != null) {
+            requestBuilder.exclusiveStartKey(exclusiveStartKey);
+        }
+        if (consistentRead != null) {
+            requestBuilder.consistentRead(consistentRead);
+        }
+        if (scanIndexForward != null) {
+            requestBuilder.scanIndexForward(scanIndexForward);
+        }
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+    }
+
+    private static <K, V> Map<K, V> mergeMaps(Map<K, V> base, Map<K, V> override) {
+        Map<K, V> merged = new HashMap<>(base);
+        merged.putAll(override);
+        return merged;
     }
 
     // ============ Internal ============
+
+    private String getTableName() {
+        return table != null ? table.tableName() : index.tableName();
+    }
 
     private SdkIterable<Page<T>> executeAsPages() {
         QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()

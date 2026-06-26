@@ -16,9 +16,16 @@ import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.function.Consumer;
 
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -77,7 +84,7 @@ class AsyncTableTest {
         when(dynamoDbAsyncTable.getItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(item));
 
         AsyncTable<TestItem> table = createTable();
-        CompletableFuture<java.util.Optional<TestItem>> result = table.getItem("pk");
+        CompletableFuture<Optional<TestItem>> result = table.getItem("pk");
 
         assertNotNull(result);
         assertEquals(item, result.join().orElse(null));
@@ -237,7 +244,7 @@ class AsyncTableTest {
         when(dynamoDbAsyncTable.getItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(item));
 
         AsyncTable<TestItem> table = createTable();
-        CompletableFuture<java.util.Optional<TestItem>> result = table.getItem("pk", "sk");
+        CompletableFuture<Optional<TestItem>> result = table.getItem("pk", "sk");
 
         assertNotNull(result);
         assertEquals(item, result.join().orElse(null));
@@ -374,5 +381,55 @@ class AsyncTableTest {
         assertNotNull(result);
         result.join();
         verify(dynamoDbAsyncTable).createTable(request);
+    }
+
+    // ========== Key-Only Update ==========
+
+    @SuppressWarnings("unchecked")
+    private void mockSchema(String sortKeyName) {
+        TableSchema<TestItem> schema = mock(TableSchema.class);
+        TableMetadata tableMetadata = mock(TableMetadata.class);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("key");
+        if (sortKeyName != null) {
+            when(tableMetadata.primarySortKey()).thenReturn(Optional.of(sortKeyName));
+        } else {
+            lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+        }
+        when(schema.tableMetadata()).thenReturn(tableMetadata);
+        when(dynamoDbAsyncTable.tableSchema()).thenReturn(schema);
+    }
+
+    @Test
+    @DisplayName("update(pk, null, consumer) delegates to low-level client")
+    void updateWithKeyOnlyDelegatesToLowLevelClient() {
+        mockSchema(null);
+        when(dynamoDbAsyncTable.tableName()).thenReturn("test-table");
+        when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<Void> result = table.update("pk-val", null, expr -> expr.set("name", "new"));
+        assertNotNull(result);
+        result.join();
+
+        verify(dynamoDbAsyncClient).updateItem(any(UpdateItemRequest.class));
+    }
+
+    @Test
+    @DisplayName("update(pk, sk, consumer) delegates to low-level client with composite key")
+    void updateWithKeyAndSortKeyDelegatesToLowLevelClient() {
+        mockSchema("sk");
+        when(dynamoDbAsyncTable.tableName()).thenReturn("test-table");
+        when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<Void> result = table.update("pk-val", "sk-val", expr -> expr.set("name", "new"));
+        assertNotNull(result);
+        result.join();
+
+        verify(dynamoDbAsyncClient).updateItem(any(UpdateItemRequest.class));
     }
 }

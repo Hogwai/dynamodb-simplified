@@ -5,6 +5,8 @@ import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.Document;
 import software.amazon.awssdk.enhanced.dynamodb.MappedTableResource;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,7 +28,7 @@ public class TransactGetResults<T extends MappedTableResource<?>> {
      * @param tables    the table references (in builder order) for type-safe item extraction
      */
     public TransactGetResults(@NonNull List<Document> documents, @NonNull List<T> tables) {
-        this.documents = List.copyOf(documents);
+        this.documents = Collections.unmodifiableList(new ArrayList<>(documents));
         this.tables = List.copyOf(tables);
     }
 
@@ -43,6 +45,9 @@ public class TransactGetResults<T extends MappedTableResource<?>> {
             return null;
         }
         Document doc = documents.get(index);
+        if (doc == null) {
+            return null;
+        }
         MappedTableResource<R> table = (MappedTableResource<R>) tables.get(index);
         return doc.getItem(table);
     }

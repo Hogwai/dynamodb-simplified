@@ -1,6 +1,7 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.Table;
+import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,12 +13,15 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.CancellationReason;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsResponse;
 
 import java.lang.reflect.Constructor;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -190,9 +194,7 @@ class TransactWriteBuilderTest {
         Table<TestItem> tableWrapper = createTable(table);
         TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
 
-        builder.update(tableWrapper, item, expr -> {
-            expr.set("status", "active");
-        });
+        builder.update(tableWrapper, item, expr -> expr.set("status", "active"));
         builder.execute();
 
         verify(dynamoDbClient).transactWriteItems(any(TransactWriteItemsRequest.class));
@@ -218,5 +220,52 @@ class TransactWriteBuilderTest {
 
         verify(dynamoDbClient).transactWriteItems(any(TransactWriteItemsRequest.class));
         verify(enhancedClient, never()).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
+    }
+
+    // ============ TransactionCanceledException handling ============
+
+    @Test
+    @DisplayName("executeEnhanced wraps TransactionCanceledException with reasons")
+    void executeEnhanced_wrapsTransactionCanceledException() throws Exception {
+        doThrow(TransactionCanceledException.builder()
+                .cancellationReasons(List.of(
+                        CancellationReason.builder().code("ConditionalCheckFailed").message("Item exists").build(),
+                        CancellationReason.builder().code("None").message("").build()))
+                .build())
+                .when(enhancedClient).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
+
+        TestItem item = new TestItem("item-1");
+        Table<TestItem> tableWrapper = createTable(table);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
+
+        builder.put(tableWrapper, item);
+
+        var ex = assertThrows(TransactionFailedException.class, builder::execute);
+        assertEquals(2, ex.getCancellationReasons().size());
+        assertTrue(ex.getCancellationReason(0).contains("ConditionalCheckFailed"));
+        assertNull(ex.getCancellationReason(1));
+    }
+
+    @Test
+    @DisplayName("executeLowLevel wraps TransactionCanceledException from low-level client")
+    void executeLowLevel_wrapsTransactionCanceledException() throws Exception {
+        when(dynamoDbClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
+                .thenThrow(TransactionCanceledException.builder()
+                        .cancellationReasons(List.of(
+                                CancellationReason.builder().code("None").message("").build()))
+                        .build());
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(mock(TableSchema.class));
+
+        TestItem item = new TestItem("item-1");
+        Table<TestItem> tableWrapper = createTable(table);
+        TransactWriteBuilder builder = new TransactWriteBuilder(enhancedClient, dynamoDbClient);
+
+        builder.update(tableWrapper, item, expr -> expr.set("status", "active"));
+
+        var ex = assertThrows(TransactionFailedException.class, builder::execute);
+        assertEquals(1, ex.getCancellationReasons().size());
+        assertNull(ex.getCancellationReason(0));
+        verify(dynamoDbClient).transactWriteItems(any(TransactWriteItemsRequest.class));
     }
 }

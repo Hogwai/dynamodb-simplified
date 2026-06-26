@@ -11,11 +11,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.Collections;
 
@@ -37,9 +43,6 @@ class QueryBuilderTest {
     static class TestItem {
         public String id;
 
-        TestItem() {
-        }
-
         TestItem(String id) {
             this.id = id;
         }
@@ -49,9 +52,6 @@ class QueryBuilderTest {
 
     @Mock
     DynamoDbTable<TestItem> table;
-
-    @Mock
-    PageIterable<TestItem> pageIterable;
 
     @Mock
     DynamoDbIndex<TestItem> index;
@@ -92,11 +92,24 @@ class QueryBuilderTest {
         return page;
     }
 
-    /**
-     * Creates a mock Page with {@code items()}, {@code count()}, and {@code lastEvaluatedKey()} stubbed.
-     * Use this for tests that need full page metadata (count, executeWithPagination, etc.).
-     */
+    // ============ Mock Setup Helpers ============
 
+    /**
+     * Configures table.query() to return an empty page iterable.
+     * Use this for tests that only verify request structure.
+     */
+    private void stubQueryReturnsEmpty() {
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+    }
+
+    /**
+     * Configures table.query() to return pages with the given items.
+     */
+    @SafeVarargs
+    @SuppressWarnings("varargs")
+    private void stubQueryReturns(Page<TestItem>... pages) {
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(pages));
+    }
 
     // ============ Key Condition Tests ============
 
@@ -104,7 +117,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKey sets keyEqualTo condition and executes")
     void partitionKey() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1"), new TestItem("2")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -123,7 +136,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyEquals sets keyEqualTo with both pk and sk")
     void partitionKeyAndSortKeyEquals() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyEquals("pk", "sk")
@@ -140,7 +153,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyBeginsWith sets sortBeginsWith condition")
     void partitionKeyAndSortKeyBeginsWith() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyBeginsWith("pk", "prefix")
@@ -157,7 +170,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyBetween sets sortBetween condition")
     void partitionKeyAndSortKeyBetween() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyBetween("pk", 10, 20)
@@ -174,7 +187,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyGreaterThan sets sortGreaterThan condition")
     void partitionKeyAndSortKeyGreaterThan() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThan("pk", 5)
@@ -189,7 +202,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyGreaterThanOrEqual sets sortGreaterThanOrEqualTo condition")
     void partitionKeyAndSortKeyGreaterThanOrEqual() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyGreaterThanOrEqual("pk", 5)
@@ -204,7 +217,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyLessThan sets sortLessThan condition")
     void partitionKeyAndSortKeyLessThan() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyLessThan("pk", 5)
@@ -219,7 +232,7 @@ class QueryBuilderTest {
     @DisplayName("partitionKeyAndSortKeyLessThanOrEqual sets sortLessThanOrEqualTo condition")
     void partitionKeyAndSortKeyLessThanOrEqual() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         new QueryBuilder<>(table)
                 .partitionKeyAndSortKeyLessThanOrEqual("pk", 5)
@@ -239,7 +252,7 @@ class QueryBuilderTest {
         Page<TestItem> page = mock(Page.class);
         when(page.items()).thenReturn(List.of(new TestItem("a"), new TestItem("b")));
         when(page.lastEvaluatedKey()).thenReturn(Map.of("pk", attrVal("nextKey")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         PagedResult<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -260,7 +273,7 @@ class QueryBuilderTest {
         Page<TestItem> emptyPage = mock(Page.class);
         when(emptyPage.items()).thenReturn(Collections.emptyList());
         when(emptyPage.lastEvaluatedKey()).thenReturn(null);
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(emptyPage));
+        stubQueryReturns(emptyPage);
 
         PagedResult<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -276,7 +289,7 @@ class QueryBuilderTest {
     @DisplayName("executeAndGetFirst() returns first item when results exist")
     void executeAndGetFirst_whenResultsExist() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("first"), new TestItem("second")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         Optional<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -290,7 +303,7 @@ class QueryBuilderTest {
     @DisplayName("executeAndGetFirst() returns empty when no results")
     void executeAndGetFirst_whenNoResults() {
         Page<TestItem> emptyPage = mockPageItems(Collections.emptyList());
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(emptyPage));
+        stubQueryReturns(emptyPage);
 
         Optional<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -308,7 +321,7 @@ class QueryBuilderTest {
         @SuppressWarnings("unchecked")
         Page<TestItem> page2 = mock(Page.class);
         when(page2.count()).thenReturn(3);
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page1, page2));
+        stubQueryReturns(page1, page2);
 
         long total = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -325,7 +338,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("descending() sets scanIndexForward to false")
     void descending() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -342,7 +355,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("ascending() sets scanIndexForward to true (default)")
     void ascending() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -359,7 +372,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("limit(10) sets limit in request")
     void limit() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -376,7 +389,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("filter(c -> c.eq(\"a\", \"b\")) sets filter expression in request")
     void filterWithConsumer() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -397,7 +410,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("filter(FilterExpression) overload passes FilterExpression to request")
     void filterWithFilterExpression() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         FilterExpression fe = FilterExpression.builder().eq("status", "active");
 
@@ -420,7 +433,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("filter(null) is null-safe and does not set filter expression")
     void filterNull() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -437,7 +450,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("project(\"a\", \"b\") sets attributesToProject in request")
     void projectWithVarargs() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -454,7 +467,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("project(Consumer) builds projection expression via consumer")
     void projectWithConsumer() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -471,7 +484,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("startFrom(map) sets exclusiveStartKey in request")
     void startFrom() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         Map<String, AttributeValue> startKey = Map.of("k", attrVal("v"));
 
@@ -505,7 +518,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("consistentRead(true) sets consistentRead in request")
     void consistentRead() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -522,7 +535,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("consistentRead(false) sets consistentRead to false in request")
     void consistentReadFalse() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -539,7 +552,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("executeWithPagination() when iterable yields no pages returns empty PagedResult with null key")
     void executeWithPagination_emptyIterable() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         PagedResult<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -556,7 +569,7 @@ class QueryBuilderTest {
     @Test
     @DisplayName("returnConsumedCapacity(TOTAL) sets returnConsumedCapacity in request")
     void returnConsumedCapacity_setsOnRequest() {
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(emptyPageIterable());
+        stubQueryReturnsEmpty();
 
         new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -574,7 +587,7 @@ class QueryBuilderTest {
     @DisplayName("executeAll() returns all items aggregated from pages")
     void executeAll_returnsAllItems() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("1"), new TestItem("2")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         List<TestItem> result = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -589,7 +602,7 @@ class QueryBuilderTest {
     @DisplayName("executeStream() returns a lazy stream of items")
     void executeStream_returnsLazyStream() {
         Page<TestItem> page = mockPageItems(List.of(new TestItem("a"), new TestItem("b")));
-        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(page));
+        stubQueryReturns(page);
 
         Stream<TestItem> stream = new QueryBuilder<>(table)
                 .partitionKey("pk")
@@ -600,5 +613,197 @@ class QueryBuilderTest {
         assertEquals(2, result.size());
         assertEquals("a", result.get(0).id);
         assertEquals("b", result.get(1).id);
+    }
+
+    // ============ Low-Level Client Tests ============
+
+    @Mock
+    DynamoDbClient dynamoDbClient;
+
+    @Mock
+    TableSchema<TestItem> tableSchema;
+
+    @Mock
+    TableMetadata tableMetadata;
+
+    /**
+     * Configures the table mock to return schema metadata with the given partition
+     * and optional sort key names.
+     */
+    private void mockTableSchema(String skNameOrNull) {
+        lenient().when(table.tableSchema()).thenReturn(tableSchema);
+        lenient().when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        if (skNameOrNull != null) {
+            lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.of(skNameOrNull));
+        } else {
+            lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+        }
+    }
+
+    /**
+     * Configures dynamoDbClient.query() to return a response with the given count.
+     */
+    private void stubLowLevelQueryReturns(int count) {
+        QueryResponse response = QueryResponse.builder().count(count).build();
+        when(dynamoDbClient.query(any(QueryRequest.class))).thenReturn(response);
+    }
+
+    // ============ Low-Level Count Tests ============
+
+    @Test
+    @DisplayName("count() with DynamoDbClient uses low-level QueryRequest with Select.COUNT")
+    void count_withLowLevelClient() {
+        mockTableSchema("sk");
+        stubLowLevelQueryReturns(42);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .partitionKeyAndSortKeyBeginsWith("pkVal", "prefix")
+                .count();
+
+        assertEquals(42L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertEquals(Select.COUNT, request.select());
+        assertTrue(request.keyConditionExpression().contains("begins_with"));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and partition-key-only uses key eq expression")
+    void count_withLowLevelClient_partitionKeyOnly() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(7);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertEquals(Select.COUNT, request.select());
+        assertEquals("#pk = :pk0", request.keyConditionExpression());
+    }
+
+    @Test
+    @DisplayName("count() with explicit select(Select.COUNT) uses specified Select")
+    void count_withExplicitSelectCount() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(3);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .select(Select.COUNT)
+                .count();
+
+        assertEquals(3L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals(Select.COUNT, captor.getValue().select());
+    }
+
+    @Test
+    @DisplayName("count() with select(ALL_PROJECTED_ATTRIBUTES) passes through to low-level request")
+    void count_withExplicitSelectAllProjected() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(5);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .select(Select.ALL_PROJECTED_ATTRIBUTES)
+                .count();
+
+        assertEquals(5L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals(Select.ALL_PROJECTED_ATTRIBUTES, captor.getValue().select());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and filter expression includes filter in request")
+    void count_withLowLevelClientAndFilter() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(10);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .filter(c -> c.eq("status", "active"))
+                .count();
+
+        assertEquals(10L, total);
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertNotNull(captor.getValue().filterExpression());
+    }
+
+    // ============ Routing Guard Tests ============
+
+    @Test
+    @DisplayName("executeAll() throws when Select.COUNT is set")
+    void executeAll_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeAll()
+        );
+    }
+
+    @Test
+    @DisplayName("executeStream() throws when Select.COUNT is set")
+    void executeStream_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeStream()
+        );
+    }
+
+    @Test
+    @DisplayName("executeWithPagination() throws when Select.COUNT is set")
+    void executeWithPagination_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeWithPagination()
+        );
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() throws when Select.COUNT is set")
+    void executeAndGetFirst_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeAndGetFirst()
+        );
+    }
+
+    @Test
+    @DisplayName("count() does NOT throw when Select.COUNT is set")
+    void count_doesNotThrowWithSelectCount() {
+        // With old constructor (no client), falls through to enhanced path.
+        // page.count() needs to be stubbed since count() calls page.count().
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page = mock(Page.class);
+        when(page.count()).thenReturn(3);
+        stubQueryReturns(page);
+
+        assertDoesNotThrow(() ->
+            new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .count()
+        );
     }
 }

@@ -12,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
 import java.net.URI;
@@ -145,13 +146,14 @@ class DynamoSimplifiedClientIT {
         var product = new Product("p4", "Original", 10.0, true, Set.of("a"), 5000L);
         table.putItem(product);
 
-        Product result = table.update(product)
+        var result = table.update(product)
                 .update(u -> u.set("price", 15.99).set("name", "Updated"))
                 .execute();
 
         // The low-level client returns ALL_NEW
-        assertEquals(15.99, result.getPrice(), 0.001);
-        assertEquals("Updated", result.getName());
+        assertTrue(result.isPresent());
+        assertEquals(15.99, result.orElseThrow().getPrice(), 0.001);
+        assertEquals("Updated", result.orElseThrow().getName());
 
         // Verify via get
         Optional<Product> found = table.getItem("p4");
@@ -213,11 +215,12 @@ class DynamoSimplifiedClientIT {
     void conditionalUpdateWithMatchingCondition() {
         table.putItem(new Product("p8", "MatchMe", 1.0, true, null, 11000L));
 
-        Product result = table.update(new Product("p8", "Matched", 2.0, true, null, 12000L))
+        var result = table.update(new Product("p8", "Matched", 2.0, true, null, 12000L))
                 .condition(c -> c.eq("name", "MatchMe"))
                 .execute();
 
-        assertEquals("Matched", result.getName());
+        assertTrue(result.isPresent());
+        assertEquals("Matched", result.orElseThrow().getName());
     }
 
     @Test
@@ -378,12 +381,12 @@ class DynamoSimplifiedClientIT {
         table.putItem(bg1);
         table.putItem(bg2);
 
-        List<Product> results = table.batchGet()
+        var results = table.batchGet()
                 .addKey("bg1")
                 .addKey("bg2")
                 .execute();
 
-        assertEquals(2, results.size());
+        assertEquals(2, results.getItems().size());
     }
 
     // ============ Transaction operations ============
@@ -444,6 +447,108 @@ class DynamoSimplifiedClientIT {
         assertTrue(result.isPresent());
         assertEquals("ProjectedGet", result.get().getName());
         assertNull(result.get().getPrice()); // not projected
+    }
+
+    // ============ Delete with ReturnValues ============
+
+    @Test
+    void deleteItemWithReturnValues() {
+        var product = new Product("rv1", "ReturnValueTest", 5.0, true, Set.of("test"), 90000L);
+        table.putItem(product);
+
+        var deleted = table.delete("rv1")
+                .returnValues(ReturnValue.ALL_OLD)
+                .execute();
+
+        assertTrue(deleted.isPresent());
+        assertEquals("ReturnValueTest", deleted.orElseThrow().getName());
+        assertEquals(5.0, deleted.orElseThrow().getPrice(), 0.001);
+        assertFalse(table.getItem("rv1").isPresent());
+    }
+
+    @Test
+    void deleteItemWithReturnValuesOnNonExistentKey() {
+        var deleted = table.delete("nonexistent-rv")
+                .returnValues(ReturnValue.ALL_OLD)
+                .execute();
+
+        assertTrue(deleted.isEmpty());
+    }
+
+    // ============ Execution Variants ============
+
+    @Test
+    void scanExecuteStream() {
+        for (int i = 0; i < 3; i++) {
+            table.putItem(new Product("ev" + i, "E" + i, (double) i, true, null, 91000L + i));
+        }
+
+        List<Product> collected;
+        try (var stream = table.scan().executeStream()) {
+            collected = stream.toList();
+        }
+        assertEquals(3, collected.size());
+    }
+
+    @Test
+    void scanExecuteAndGetFirst() {
+        table.putItem(new Product("fg1", "FirstGet", 1.0, true, null, 92000L));
+
+        var result = table.scan().executeAndGetFirst();
+        assertTrue(result.isPresent());
+        assertEquals("FirstGet", result.get().getName());
+    }
+
+    @Test
+    void scanExecuteAndGetFirstOnEmptyTable() {
+        // Table is cleaned by @AfterEach, so no items should remain
+        var result = table.scan().executeAndGetFirst();
+        assertFalse(result.isPresent());
+    }
+
+    // ============ TransactWrite with UpdateExpression ============
+
+    @Test
+    void transactWriteWithUpdateExpression() {
+        // Expression-based transact write exercises the low-level fallback path
+        var product = new Product("twue1", "Before", 1.0, true, null, 93000L);
+        table.putItem(product);
+
+        // Use expression-based update inside a transaction
+        client.transactWrite()
+                .update(table, product, u -> u.set("name", "After").set("price", 99.99))
+                .execute();
+
+        var found = table.getItem("twue1");
+        assertTrue(found.isPresent());
+        assertEquals("After", found.get().getName());
+        assertEquals(99.99, found.get().getPrice(), 0.001);
+    }
+
+    @Test
+    void transactWriteWithUpdateExpressionAndConditionCheck() {
+        // Update and condition check must target different items (DynamoDB
+        // transaction constraint: each action in a transact write must operate
+        // on a distinct item).
+        var updateTarget = new Product("twue2", "CondBefore", 10.0, true, null, 94000L);
+        var checkTarget = new Product("twue2ck", "CheckItem", 5.0, true, null, 94001L);
+        table.putItem(updateTarget);
+        table.putItem(checkTarget);
+
+        client.transactWrite()
+                .update(table, updateTarget, u -> u.set("price", 20.0))
+                .conditionCheck(table, "twue2ck", c -> c.eq("price", 5.0))
+                .execute();
+
+        var found = table.getItem("twue2");
+        assertTrue(found.isPresent());
+        assertEquals(20.0, found.get().getPrice(), 0.001);
+
+        // Verify condition check target was not modified (still exists with original values)
+        var checkFound = table.getItem("twue2ck");
+        assertTrue(checkFound.isPresent());
+        assertEquals("CheckItem", checkFound.get().getName());
+        assertEquals(5.0, checkFound.get().getPrice(), 0.001);
     }
 
     // ============ DDL tests ============

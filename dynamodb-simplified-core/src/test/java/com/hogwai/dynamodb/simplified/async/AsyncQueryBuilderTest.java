@@ -12,17 +12,24 @@ import org.reactivestreams.Subscription;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,10 +46,6 @@ class AsyncQueryBuilderTest {
 
     static class TestItem {
         public String id;
-
-        TestItem() {
-            // test
-        }
 
         TestItem(String id) {
             this.id = id;
@@ -557,4 +560,115 @@ class AsyncQueryBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
     }
 
+    // ============ Low-Level Client Tests ============
+
+    @Mock
+    DynamoDbAsyncClient dynamoDbAsyncClient;
+
+    @Mock
+    TableSchema<TestItem> tableSchema;
+
+    @Mock
+    TableMetadata tableMetadata;
+
+    private void mockTableSchema() {
+        lenient().when(table.tableSchema()).thenReturn(tableSchema);
+        lenient().when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client uses async QueryRequest with Select.COUNT")
+    void count_withLowLevelClient() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertEquals(Select.COUNT, captor.getValue().select());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and filter expression includes filter in low-level request")
+    void count_withLowLevelClientAndFilter() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(3).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .select(Select.COUNT)
+                .count()
+                .join();
+
+        assertEquals(3L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertEquals(Select.COUNT, captor.getValue().select());
+    }
+
+    @Test
+    @DisplayName("executeAll() with Select.COUNT returns failed future")
+    void executeAll_throwsWithSelectCount() {
+        CompletableFuture<List<TestItem>> future = new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeAll();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeWithPagination() with Select.COUNT returns failed future")
+    void executeWithPagination_throwsWithSelectCount() {
+        CompletableFuture<PagedResult<TestItem>> future = new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeWithPagination();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() with Select.COUNT returns failed future")
+    void executeAndGetFirst_throwsWithSelectCount() {
+        CompletableFuture<Optional<TestItem>> future = new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .executeAndGetFirst();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("count() does NOT fail when Select.COUNT is set (no client)")
+    void count_doesNotThrowWithSelectCount() {
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page = mock(Page.class);
+        when(page.count()).thenReturn(5);
+        when(table.query(any(QueryEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        long total = new AsyncQueryBuilder<>(table)
+                .partitionKey("pk")
+                .select(Select.COUNT)
+                .count()
+                .join();
+
+        assertEquals(5L, total);
+    }
 }

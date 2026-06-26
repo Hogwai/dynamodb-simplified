@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import com.hogwai.dynamodb.simplified.builder.*;
+import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -49,7 +50,7 @@ public class Table<T> {
      */
     @NonNull
     public QueryBuilder<T> query() {
-        return new QueryBuilder<>(dynamoDbTable);
+        return new QueryBuilder<>(dynamoDbTable, dynamoDbClient);
     }
 
     // ============ Scan ============
@@ -64,7 +65,7 @@ public class Table<T> {
      */
     @NonNull
     public ScanBuilder<T> scan() {
-        return new ScanBuilder<>(dynamoDbTable);
+        return new ScanBuilder<>(dynamoDbTable, dynamoDbClient);
     }
 
     // ============ Get Item ============
@@ -141,7 +142,7 @@ public class Table<T> {
      */
     @NonNull
     public PutBuilder<T> put(@NonNull T item) {
-        return new PutBuilder<>(dynamoDbTable, item);
+        return new PutBuilder<>(dynamoDbTable, item, dynamoDbClient);
     }
 
     /**
@@ -167,6 +168,41 @@ public class Table<T> {
     @NonNull
     public UpdateBuilder<T> update(@NonNull T item) {
         return new UpdateBuilder<>(dynamoDbTable, item, dynamoDbClient);
+    }
+
+    /**
+     * Starts building a partial update operation with an expression consumer.
+     * <p>
+     * This is a convenience shorthand for {@code update(item).update(consumer)}.
+     * The returned builder can be further configured before calling {@code execute()}.
+     *
+     * @param item               the item identifying the record to update (key fields only)
+     * @param expressionConsumer a consumer to configure the update expression (SET, REMOVE, ADD, DELETE)
+     * @return an update builder for further configuration and execution
+     */
+    @NonNull
+    public UpdateBuilder<T> update(@NonNull T item, @NonNull Consumer<UpdateExpression> expressionConsumer) {
+        Objects.requireNonNull(expressionConsumer, "expressionConsumer must not be null");
+        return update(item).update(expressionConsumer);
+    }
+
+    /**
+     * Updates an item identified by partition and sort key using a partial update expression.
+     * <p>
+     * This avoids creating a dummy item object when the key is already known.
+     * Pass {@code null} for the sort key when the table has no sort key.
+     *
+     * @param partitionKey        the partition key value
+     * @param sortKey             the sort key value, or {@code null} if the table has no sort key
+     * @param expressionConsumer a consumer to build the update expression
+     */
+    public void update(@NonNull Object partitionKey,
+                       @Nullable Object sortKey,
+                       @NonNull Consumer<UpdateExpression> expressionConsumer) {
+        Objects.requireNonNull(expressionConsumer, "expressionConsumer must not be null");
+        new UpdateBuilder<>(dynamoDbTable, dynamoDbClient, partitionKey, sortKey)
+                .update(expressionConsumer)
+                .execute();
     }
 
     /**
@@ -246,7 +282,7 @@ public class Table<T> {
      */
     @NonNull
     public Index<T> index(@NonNull String indexName) {
-        return new Index<>(dynamoDbTable.index(indexName));
+        return new Index<>(dynamoDbTable.index(indexName), dynamoDbClient);
     }
 
     // ============ Batch Operations ============
@@ -261,7 +297,7 @@ public class Table<T> {
      */
     @NonNull
     public BatchGetBuilder<T> batchGet() {
-        return new BatchGetBuilder<>(enhancedClient, dynamoDbTable);
+        return new BatchGetBuilder<>(enhancedClient, dynamoDbTable, dynamoDbClient);
     }
 
     /**
@@ -274,7 +310,7 @@ public class Table<T> {
      */
     @NonNull
     public BatchWriteBuilder<T> batchWrite() {
-        return new BatchWriteBuilder<>(enhancedClient, dynamoDbTable);
+        return new BatchWriteBuilder<>(dynamoDbTable, dynamoDbClient);
     }
 
     // ============ Raw Access ============

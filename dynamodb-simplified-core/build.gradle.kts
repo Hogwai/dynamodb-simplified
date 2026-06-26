@@ -27,6 +27,8 @@ dependencies {
 
     api("org.jspecify:jspecify:${project.findProperty("versionJspecify")}")
 
+    implementation("org.slf4j:slf4j-api:${project.findProperty("versionSlf4j")}")
+
     // Static analysis: Error Prone
     errorprone("com.google.errorprone:error_prone_core:${project.findProperty("versionErrorProneCore")}")
 

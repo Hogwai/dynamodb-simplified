@@ -1,7 +1,9 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
 /**
  * Typed wrapper for an async DynamoDB secondary index (GSI or LSI).
@@ -13,10 +15,22 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
  */
 public class AsyncIndex<T> {
     private final DynamoDbAsyncIndex<T> dynamoDbAsyncIndex;
+    private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
     /** Package-private constructor. */
     AsyncIndex(@NonNull DynamoDbAsyncIndex<T> dynamoDbAsyncIndex) {
+        this(dynamoDbAsyncIndex, null);
+    }
+
+    /**
+     * Constructs a new {@code AsyncIndex} with a low-level async client.
+     *
+     * @param dynamoDbAsyncIndex   the async DynamoDB index
+     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     */
+    AsyncIndex(@NonNull DynamoDbAsyncIndex<T> dynamoDbAsyncIndex, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.dynamoDbAsyncIndex = dynamoDbAsyncIndex;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
     /**
@@ -56,7 +70,7 @@ public class AsyncIndex<T> {
      */
     @NonNull
     public AsyncQueryBuilder<T> query() {
-        return new AsyncQueryBuilder<>(dynamoDbAsyncIndex);
+        return new AsyncQueryBuilder<>(dynamoDbAsyncIndex, dynamoDbAsyncClient);
     }
 
     /**
@@ -66,6 +80,6 @@ public class AsyncIndex<T> {
      */
     @NonNull
     public AsyncScanBuilder<T> scan() {
-        return new AsyncScanBuilder<>(dynamoDbAsyncIndex);
+        return new AsyncScanBuilder<>(dynamoDbAsyncIndex, dynamoDbAsyncClient);
     }
 }

@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.result.BatchGetResult;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,6 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -134,13 +134,14 @@ class AsyncBatchGetBuilderTest {
     // ============ execute, empty keys ============
 
     @Test
-    @DisplayName("execute with empty keys returns empty list and does not call batchGetItem")
+    @DisplayName("execute with empty keys returns empty result and does not call batchGetItem")
     void execute_emptyKeys_returnsEmptyList() {
         AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
 
-        List<TestItem> result = builder.execute().join();
+        BatchGetResult<TestItem> result = builder.execute().join();
 
-        assertTrue(result.isEmpty());
+        assertTrue(result.getItems().isEmpty());
+        assertFalse(result.hasUnprocessed());
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
@@ -159,10 +160,11 @@ class AsyncBatchGetBuilderTest {
         AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
         builder.addKey("pk");
 
-        List<TestItem> result = builder.execute().join();
+        BatchGetResult<TestItem> result = builder.execute().join();
 
-        assertEquals(1, result.size());
-        assertSame(expectedItem, result.getFirst());
+        assertEquals(1, result.getItems().size());
+        assertSame(expectedItem, result.getItems().getFirst());
+        assertFalse(result.hasUnprocessed());
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
@@ -190,11 +192,12 @@ class AsyncBatchGetBuilderTest {
         AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
         builder.addKey("pk1").addKey("pk2");
 
-        List<TestItem> result = builder.execute().join();
+        BatchGetResult<TestItem> result = builder.execute().join();
 
-        assertEquals(2, result.size());
-        assertSame(item1, result.get(0));
-        assertSame(item2, result.get(1));
+        assertEquals(2, result.getItems().size());
+        assertSame(item1, result.getItems().get(0));
+        assertSame(item2, result.getItems().get(1));
+        assertFalse(result.hasUnprocessed());
     }
 
     @Test
@@ -214,7 +217,7 @@ class AsyncBatchGetBuilderTest {
         AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
         builder.addKey("pk");
 
-        CompletableFuture<List<TestItem>> future = builder.execute();
+        CompletableFuture<BatchGetResult<TestItem>> future = builder.execute();
 
         assertThrows(RuntimeException.class, future::join);
     }
@@ -274,5 +277,19 @@ class AsyncBatchGetBuilderTest {
         CompletableFuture<PagedResult<TestItem>> future = builder.executeWithPagination();
 
         assertThrows(RuntimeException.class, future::join);
+    }
+
+    // ============ limit validation ============
+
+    @Test
+    @DisplayName("execute with more than 100 keys throws IllegalArgumentException")
+    void execute_exceedsKeyLimit_throws() {
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+        for (int i = 0; i < 101; i++) {
+            builder.addKey("pk" + i);
+        }
+
+        assertThrows(IllegalArgumentException.class, builder::execute);
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 }

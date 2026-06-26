@@ -18,16 +18,20 @@ import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AsyncUpdateBuilder")
@@ -71,11 +75,12 @@ class AsyncUpdateBuilderTest {
         when(table.updateItem(any(UpdateItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(resultItem));
 
-        TestItem actual = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+        Optional<TestItem> actual = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
                 .execute()
                 .join();
 
-        assertSame(resultItem, actual);
+        assertTrue(actual.isPresent());
+        assertSame(resultItem, actual.get());
         verify(table).updateItem(enhancedRequestCaptor.capture());
         UpdateItemEnhancedRequest<TestItem> request = enhancedRequestCaptor.getValue();
         assertSame(item, request.item());
@@ -172,7 +177,7 @@ class AsyncUpdateBuilderTest {
                 .thenReturn(CompletableFuture.failedFuture(
                         ConditionalCheckFailedException.builder().build()));
 
-        CompletableFuture<TestItem> result = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+        CompletableFuture<Optional<TestItem>> result = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
                 .condition(c -> c.eq("status", "active"))
                 .execute();
 
@@ -194,12 +199,13 @@ class AsyncUpdateBuilderTest {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
-        TestItem actual = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+        Optional<TestItem> actual = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
                 .update(u -> u.set("name", "new"))
                 .execute()
                 .join();
 
-        assertSame(resultItem, actual);
+        assertTrue(actual.isPresent());
+        assertSame(resultItem, actual.get());
         verify(dynamoDbAsyncClient).updateItem(lowLevelRequestCaptor.capture());
         UpdateItemRequest request = lowLevelRequestCaptor.getValue();
         assertEquals("SET #u0 = :u0", request.updateExpression());
@@ -257,7 +263,7 @@ class AsyncUpdateBuilderTest {
                 .thenReturn(CompletableFuture.failedFuture(
                         ConditionalCheckFailedException.builder().build()));
 
-        CompletableFuture<TestItem> result = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+        CompletableFuture<Optional<TestItem>> result = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
                 .update(u -> u.set("name", "new"))
                 .execute();
 
@@ -270,12 +276,149 @@ class AsyncUpdateBuilderTest {
     void ignoreNullsFalseWithPartialUpdateThrowsException() {
         var builder = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient);
 
-        CompletableFuture<TestItem> future = builder
+        CompletableFuture<Optional<TestItem>> future = builder
                 .update(u -> u.set("name", "updated"))
                 .ignoreNulls(false)
                 .execute();
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    // ============ ReturnValues tests ============
+
+    @Test
+    @DisplayName("returnValues() sets the returnValues field")
+    void returnValues_setsReturnValue() {
+        var builder = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient);
+
+        assertSame(builder, builder.returnValues(ReturnValue.ALL_NEW));
+    }
+
+    @Test
+    @DisplayName("partial update defaults to ReturnValue.ALL_NEW when returnValues not set")
+    void update_returnValues_defaultAllNew() {
+        when(table.tableName()).thenReturn("test-table");
+        when(table.keyFrom(any())).thenReturn(key);
+        when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
+        when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.mapToItem(any())).thenReturn(resultItem);
+
+        new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+                .update(u -> u.set("name", "new"))
+                .execute()
+                .join();
+
+        verify(dynamoDbAsyncClient).updateItem(lowLevelRequestCaptor.capture());
+        UpdateItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals(ReturnValue.ALL_NEW, request.returnValues());
+    }
+
+    @Test
+    @DisplayName("partial update with custom returnValues uses the specified value")
+    void update_returnValues_customValue() {
+        when(table.tableName()).thenReturn("test-table");
+        when(table.keyFrom(any())).thenReturn(key);
+        when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
+        when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.mapToItem(any())).thenReturn(resultItem);
+
+        new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+                .update(u -> u.set("name", "new"))
+                .returnValues(ReturnValue.NONE)
+                .execute()
+                .join();
+
+        verify(dynamoDbAsyncClient).updateItem(lowLevelRequestCaptor.capture());
+        UpdateItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals(ReturnValue.NONE, request.returnValues());
+    }
+
+    // ============ Key-only update tests ============
+
+    /**
+     * Sets up minimal TableSchema/TableMetadata mocks so that
+     * {@code buildKeyMapFromValues} in the key-only constructor
+     * does not NPE when calling {@code Key.primaryKeyMap(TableSchema)}.
+     */
+    @SuppressWarnings("unchecked")
+    private TableSchema<TestItem> mockSchema(String sortKeyName) {
+        TableSchema<TestItem> schema = mock(TableSchema.class);
+        TableMetadata tableMetadata = mock(TableMetadata.class);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("key");
+        if (sortKeyName != null) {
+            when(tableMetadata.primarySortKey()).thenReturn(Optional.of(sortKeyName));
+        } else {
+            lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+        }
+        when(schema.tableMetadata()).thenReturn(tableMetadata);
+        when(table.tableSchema()).thenReturn(schema);
+        return schema;
+    }
+
+    @Test
+    @DisplayName("key-only constructor with expression performs partial update via low-level client")
+    void execute_withKeyOnlyAndExpression_usesLowLevelClient() {
+        TableSchema<TestItem> schema = mockSchema(null);
+        when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+        when(schema.mapToItem(any())).thenReturn(resultItem);
+        when(table.tableName()).thenReturn("test-table");
+
+        Optional<TestItem> actual = new AsyncUpdateBuilder<>(table, dynamoDbAsyncClient, "pk-val", null)
+                .update(u -> u.set("name", "new"))
+                .execute()
+                .join();
+
+        assertTrue(actual.isPresent());
+        assertSame(resultItem, actual.get());
+        verify(dynamoDbAsyncClient).updateItem(lowLevelRequestCaptor.capture());
+        UpdateItemRequest request = lowLevelRequestCaptor.getValue();
+        assertNotNull(request.key());
+        assertFalse(request.key().isEmpty());
+        assertEquals("SET #u0 = :u0", request.updateExpression());
+        assertEquals("test-table", request.tableName());
+        verify(table, never()).updateItem(any(UpdateItemEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("key-only constructor with sort key builds correct composite key")
+    void execute_withKeyOnlyAndSortKey_buildsCompositeKey() {
+        TableSchema<TestItem> schema = mockSchema("sk");
+        when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+        when(schema.mapToItem(any())).thenReturn(resultItem);
+        when(table.tableName()).thenReturn("test-table");
+
+        new AsyncUpdateBuilder<>(table, dynamoDbAsyncClient, "pk-val", "sk-val")
+                .update(u -> u.set("name", "new"))
+                .execute()
+                .join();
+
+        verify(dynamoDbAsyncClient).updateItem(lowLevelRequestCaptor.capture());
+        UpdateItemRequest request = lowLevelRequestCaptor.getValue();
+        assertNotNull(request.key());
+        assertFalse(request.key().isEmpty());
+        assertEquals("test-table", request.tableName());
+    }
+
+    @Test
+    @DisplayName("key-only constructor without expression throws IllegalStateException")
+    void execute_withKeyOnlyNoExpression_throwsIllegalStateException() {
+        mockSchema(null);
+
+        var builder = new AsyncUpdateBuilder<>(table, dynamoDbAsyncClient, "pk-val", null);
+
+        CompletableFuture<Optional<TestItem>> result = builder.execute();
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
         assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 }

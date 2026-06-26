@@ -2,9 +2,14 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
@@ -12,6 +17,8 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItem;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
 import java.util.ArrayList;
@@ -30,6 +37,8 @@ import java.util.function.Consumer;
  * is rejected.
  */
 public class AsyncTransactWriteBuilder {
+
+    private static final Logger LOG = Logging.getLogger(AsyncTransactWriteBuilder.class);
 
     private final DynamoDbEnhancedAsyncClient enhancedClient;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
@@ -198,13 +207,24 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public CompletableFuture<Void> execute() {
+        long start = System.nanoTime();
         boolean hasExpressionOperation = operations.stream()
                 .anyMatch(op -> op.type() == Operation.Type.UPDATE_WITH_EXPRESSION);
 
         if (hasExpressionOperation) {
-            return executeLowLevel();
+            return executeLowLevel().thenRun(() -> {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("AsyncTransactWrite (low-level) completed in {}ms ({} operations)",
+                            (System.nanoTime() - start) / 1_000_000, operations.size());
+                }
+            });
         } else {
-            return executeEnhanced();
+            return executeEnhanced().thenRun(() -> {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("AsyncTransactWrite (enhanced) completed in {}ms ({} operations)",
+                            (System.nanoTime() - start) / 1_000_000, operations.size());
+                }
+            });
         }
     }
 
@@ -244,7 +264,16 @@ public class AsyncTransactWriteBuilder {
                 default -> throw new IllegalStateException("Unexpected operation type in enhanced path: " + op.type());
             }
         }
-        return enhancedClient.transactWriteItems(requestBuilder.build());
+        return enhancedClient.transactWriteItems(requestBuilder.build())
+                .exceptionally(e -> {
+                    if (e instanceof TransactionCanceledException tce) {
+                        throw new TransactionFailedException(tce);
+                    }
+                    if (e instanceof DynamoDbException dde) {
+                        throw new OperationFailedException("TransactWrite", null, dde);
+                    }
+                    throw new DynamoSimplifiedException("Async transaction failed", e);
+                });
     }
 
     @NonNull
@@ -255,7 +284,18 @@ public class AsyncTransactWriteBuilder {
         }
         return dynamoDbAsyncClient.transactWriteItems(
                         TransactWriteItemsRequest.builder().transactItems(items).build())
-                .thenApply(ignored -> null);
+                .handle((_, e) -> {
+                    if (e != null) {
+                        if (e instanceof TransactionCanceledException tce) {
+                            throw new TransactionFailedException(tce);
+                        }
+                        if (e instanceof DynamoDbException dde) {
+                            throw new OperationFailedException("TransactWrite", null, dde);
+                        }
+                        throw new DynamoSimplifiedException("Async transaction failed", e);
+                    }
+                    return null;
+                });
     }
 
     private TransactWriteItem buildTransactWriteItem(Operation op) {

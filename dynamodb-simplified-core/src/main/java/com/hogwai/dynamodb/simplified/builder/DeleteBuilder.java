@@ -1,8 +1,10 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -10,13 +12,16 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -26,6 +31,8 @@ import java.util.function.Consumer;
  * @param <T> the type of the item
  */
 public class DeleteBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(DeleteBuilder.class);
+
     private final DynamoDbTable<T> table;
     private final Object partitionKey;
     private final Object sortKey;
@@ -106,11 +113,18 @@ public class DeleteBuilder<T> {
     /**
      * Executes the delete operation and returns the deleted item.
      *
-     * @return the deleted item, or {@code null} if no item matched the key
+     * @return the deleted item, or empty if no item matched the key
      */
-    public @Nullable T execute() {
+    @NonNull
+    public Optional<T> execute() {
+        long start = System.nanoTime();
         if (returnValues != null) {
-            return executeWithReturnValues();
+            T result = executeWithReturnValues();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Delete on table '{}' completed in {}ms (with return values)",
+                        table.tableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return Optional.ofNullable(result);
         }
 
         DeleteItemEnhancedRequest.Builder requestBuilder =
@@ -127,9 +141,16 @@ public class DeleteBuilder<T> {
         }
 
         try {
-            return table.deleteItem(requestBuilder.build());
+            T result = table.deleteItem(requestBuilder.build());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Delete on table '{}' completed in {}ms",
+                        table.tableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return Optional.ofNullable(result);
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("DeleteItem", table.tableName(), e);
         }
     }
 
@@ -164,6 +185,8 @@ public class DeleteBuilder<T> {
             return table.tableSchema().mapToItem(response.attributes());
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("DeleteItem", table.tableName(), e);
         }
     }
 

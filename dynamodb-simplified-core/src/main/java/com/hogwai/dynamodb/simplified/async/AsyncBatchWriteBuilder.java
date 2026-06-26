@@ -1,46 +1,60 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Builds an async batch write operation to put and delete multiple items in a single table.
  * <p>
  * Obtain via {@link AsyncTable#batchWrite()}. Executes using the async enhanced client and
- * returns a {@link CompletableFuture} that completes when the batch write has been submitted.
+ * returns a {@link CompletableFuture} that completes with the batch write result.
  * <p>
  * A single batch write can contain up to 25 put and delete operations combined.
- * If the batch size exceeds DynamoDB limits, unprocessed items may remain.
- * Automatic retry of unprocessed items is not currently implemented.
+ * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
  *
  * @param <T> the item type
  */
 public class AsyncBatchWriteBuilder<T> {
 
-    private final DynamoDbEnhancedAsyncClient enhancedClient;
+    private static final Logger LOG = Logging.getLogger(AsyncBatchWriteBuilder.class);
+    private static final int MAX_BATCH_SIZE = 25;
+    private static final int MAX_RETRIES = 3;
+    private static final long BASE_BACKOFF_MS = 100;
+
     private final DynamoDbAsyncTable<T> table;
+    private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<T> itemsToPut = new ArrayList<>();
     private final List<Key> keysToDelete = new ArrayList<>();
 
     /**
      * Constructs a new {@code AsyncBatchWriteBuilder}.
      *
-     * @param enhancedClient the enhanced async DynamoDB client
-     * @param table          the async DynamoDB table
+     * @param table                the async DynamoDB table
+     * @param dynamoDbAsyncClient  the low-level async DynamoDB client
      */
-    AsyncBatchWriteBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient, @NonNull DynamoDbAsyncTable<T> table) {
-        this.enhancedClient = enhancedClient;
+    AsyncBatchWriteBuilder(@NonNull DynamoDbAsyncTable<T> table,
+                           @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.table = table;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
     /**
@@ -87,32 +101,79 @@ public class AsyncBatchWriteBuilder<T> {
      * Executes the batch write operation asynchronously.
      * <p>
      * All puts and deletes added to this builder are sent in a single batch write request.
-     * Unprocessed items are not automatically retried.
+     * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
      *
-     * @return a {@link CompletableFuture} that completes when the batch write has been submitted
+     * @return a {@link CompletableFuture} containing the {@link BatchWriteResult}
+     * @throws IllegalArgumentException if more than 25 items (puts + deletes combined) are provided
      */
     @NonNull
-    public CompletableFuture<Void> execute() {
+    public CompletableFuture<BatchWriteResult> execute() {
+        long start = System.nanoTime();
         if (itemsToPut.isEmpty() && keysToDelete.isEmpty()) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(new BatchWriteResult(Map.of()));
         }
 
-        Class<T> itemClass = table.tableSchema().itemType().rawClass();
-        WriteBatch.Builder<T> batchBuilder = WriteBatch.builder(itemClass)
-                .mappedTableResource(table);
+        int totalItems = itemsToPut.size() + keysToDelete.size();
+        if (totalItems > MAX_BATCH_SIZE) {
+            throw new IllegalArgumentException(
+                    "BatchWrite supports a maximum of " + MAX_BATCH_SIZE + " items per request, but " + totalItems + " were provided");
+        }
+
+        if (dynamoDbAsyncClient == null) {
+            return CompletableFuture.failedFuture(new IllegalStateException(
+                    "AsyncBatchWrite requires a low-level DynamoDbAsyncClient (use the 3-param constructor)"));
+        }
+
+        Map<String, List<WriteRequest>> requestItems = buildRequestItems();
+        return executeWithRetry(requestItems, 0, start);
+    }
+
+    private CompletableFuture<BatchWriteResult> executeWithRetry(
+            Map<String, List<WriteRequest>> requestItems, int attempt, long start) {
+        return dynamoDbAsyncClient.batchWriteItem(
+                        BatchWriteItemRequest.builder().requestItems(requestItems).build())
+                .exceptionally(e -> {
+                    if (e instanceof DynamoDbException dde) {
+                        throw new OperationFailedException("BatchWriteItem", table.tableName(), dde);
+                    }
+                    throw new DynamoSimplifiedException("BatchWriteItem failed", e);
+                })
+                .thenCompose(response -> {
+                    Map<String, List<WriteRequest>> unprocessed = response.unprocessedItems();
+                    if (unprocessed == null || unprocessed.isEmpty()) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncBatchWrite on table '{}' completed in {}ms ({} puts, {} deletes)",
+                                    table.tableName(), (System.nanoTime() - start) / 1_000_000,
+                                    itemsToPut.size(), keysToDelete.size());
+                        }
+                        return CompletableFuture.completedFuture(new BatchWriteResult(Map.of()));
+                    }
+                    if (attempt >= MAX_RETRIES) {
+                        return CompletableFuture.completedFuture(new BatchWriteResult(unprocessed));
+                    }
+                    long backoff = BASE_BACKOFF_MS * (1L << attempt);
+                    backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
+                    try {
+                        Thread.sleep(backoff);
+                    } catch (InterruptedException _) {
+                        Thread.currentThread().interrupt();
+                        return CompletableFuture.completedFuture(new BatchWriteResult(unprocessed));
+                    }
+                    return executeWithRetry(unprocessed, attempt + 1, start);
+                });
+    }
+
+    private Map<String, List<WriteRequest>> buildRequestItems() {
+        List<WriteRequest> writes = new ArrayList<>(itemsToPut.size() + keysToDelete.size());
         for (T item : itemsToPut) {
-            batchBuilder.addPutItem(item);
+            Map<String, AttributeValue> itemMap = table.tableSchema().itemToMap(item, true);
+            writes.add(WriteRequest.builder().putRequest(r -> r.item(itemMap)).build());
         }
         for (Key key : keysToDelete) {
-            batchBuilder.addDeleteItem(key);
+            Map<String, AttributeValue> keyMap = key.primaryKeyMap(table.tableSchema());
+            writes.add(WriteRequest.builder().deleteRequest(r -> r.key(keyMap)).build());
         }
-
-        BatchWriteItemEnhancedRequest request = BatchWriteItemEnhancedRequest.builder()
-                .writeBatches(batchBuilder.build())
-                .build();
-
-        return enhancedClient.batchWriteItem(request)
-                .thenApply(ignored -> null);
+        return Map.of(table.tableName(), writes);
     }
 
 

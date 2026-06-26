@@ -9,6 +9,9 @@ import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
 import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -20,14 +23,18 @@ import java.util.function.Consumer;
  * instances for DynamoDB table operations. Wraps a {@link DynamoDbEnhancedAsyncClient}
  * and a {@link DynamoDbAsyncClient}.
  * </p>
- *
- * <p>This class is <b>not</b> thread-safe.</p>
+ * <p>
+ * Thread safety: this client is safe to use from multiple threads once created.
+ * The {@code table()} factory method may be called concurrently. Individual builders
+ * returned by {@code AsyncTable} methods are single-use and not thread-safe.
+ * </p>
  *
  * @see AsyncTable
  * @see DynamoDbEnhancedAsyncClient
  * @see DynamoDbAsyncClient
  */
-public class AsyncDynamoSimplifiedClient {
+public class AsyncDynamoSimplifiedClient implements AutoCloseable {
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncDynamoSimplifiedClient.class);
     private final DynamoDbEnhancedAsyncClient enhancedAsyncClient;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
@@ -47,6 +54,9 @@ public class AsyncDynamoSimplifiedClient {
     @NonNull
     public static AsyncDynamoSimplifiedClient create() {
         DynamoDbAsyncClient client = DynamoDbAsyncClient.create();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncDynamoSimplifiedClient created");
+        }
         return new AsyncDynamoSimplifiedClient(
                 DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(client).build(),
                 client);
@@ -60,6 +70,9 @@ public class AsyncDynamoSimplifiedClient {
      */
     @NonNull
     public static AsyncDynamoSimplifiedClient create(@NonNull DynamoDbAsyncClient client) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncDynamoSimplifiedClient created");
+        }
         return new AsyncDynamoSimplifiedClient(
                 DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(client).build(),
                 client);
@@ -136,7 +149,7 @@ public class AsyncDynamoSimplifiedClient {
      */
     @NonNull
     public AsyncTransactGetBuilder transactGet() {
-        return new AsyncTransactGetBuilder(enhancedAsyncClient);
+        return new AsyncTransactGetBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
     }
 
     /**
@@ -149,6 +162,28 @@ public class AsyncDynamoSimplifiedClient {
     @NonNull
     public AsyncTransactWriteBuilder transactWrite() {
         return new AsyncTransactWriteBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
+    }
+
+    // ============ Cross-Table Batch Operations ============
+
+    /**
+     * Returns an async cross-table batch get builder for retrieving items from multiple tables.
+     *
+     * @return an async cross-table batch get builder
+     */
+    @NonNull
+    public AsyncCrossTableBatchGetBuilder batchGet() {
+        return new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
+    }
+
+    /**
+     * Returns an async cross-table batch write builder for putting/deleting items across multiple tables.
+     *
+     * @return an async cross-table batch write builder
+     */
+    @NonNull
+    public AsyncCrossTableBatchWriteBuilder batchWrite() {
+        return new AsyncCrossTableBatchWriteBuilder(dynamoDbAsyncClient);
     }
 
     /**
@@ -194,5 +229,15 @@ public class AsyncDynamoSimplifiedClient {
     @NonNull
     public CompletableFuture<ExecuteStatementResponse> executeStatement(@NonNull ExecuteStatementRequest request) {
         return dynamoDbAsyncClient.executeStatement(request);
+    }
+
+    /**
+     * Closes the underlying DynamoDB async clients, releasing any network resources.
+     * <p>
+     * After calling this method, the client instance is no longer usable.
+     */
+    @Override
+    public void close() {
+        dynamoDbAsyncClient.close();
     }
 }

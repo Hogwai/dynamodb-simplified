@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("FilterExpression")
 class FilterExpressionTest {
 
+    private static final String ATTR = "data";
+
     // ============ isEmpty ============
 
     @Test
@@ -223,7 +225,7 @@ class FilterExpressionTest {
     @DisplayName("attributeType with STRING produces attribute_type expression with type code 'S'")
     void attributeType_STRING() {
         FilterExpression fe = FilterExpression.builder()
-                .attributeType("data", FilterExpression.AttributeType.STRING);
+                .attributeType(ATTR, FilterExpression.AttributeType.STRING);
         assertEquals("attribute_type(#n0, :v0)", fe.getExpression());
         assertEquals(AttributeValue.builder().s("S").build(), fe.getExpressionValues().get(":v0"));
     }
@@ -231,20 +233,20 @@ class FilterExpressionTest {
     @Test
     @DisplayName("attributeType with all supported types produces correct type codes")
     void attributeType_allTypes() {
-        assertAttributeType("data", FilterExpression.AttributeType.STRING, "S");
-        assertAttributeType("data", FilterExpression.AttributeType.NUMBER, "N");
-        assertAttributeType("data", FilterExpression.AttributeType.BINARY, "B");
-        assertAttributeType("data", FilterExpression.AttributeType.BOOLEAN, "BOOL");
-        assertAttributeType("data", FilterExpression.AttributeType.NULL, "NULL");
-        assertAttributeType("data", FilterExpression.AttributeType.STRING_SET, "SS");
-        assertAttributeType("data", FilterExpression.AttributeType.NUMBER_SET, "NS");
-        assertAttributeType("data", FilterExpression.AttributeType.BINARY_SET, "BS");
-        assertAttributeType("data", FilterExpression.AttributeType.LIST, "L");
-        assertAttributeType("data", FilterExpression.AttributeType.MAP, "M");
+        assertAttributeType(FilterExpression.AttributeType.STRING, "S");
+        assertAttributeType(FilterExpression.AttributeType.NUMBER, "N");
+        assertAttributeType(FilterExpression.AttributeType.BINARY, "B");
+        assertAttributeType(FilterExpression.AttributeType.BOOLEAN, "BOOL");
+        assertAttributeType(FilterExpression.AttributeType.NULL, "NULL");
+        assertAttributeType(FilterExpression.AttributeType.STRING_SET, "SS");
+        assertAttributeType(FilterExpression.AttributeType.NUMBER_SET, "NS");
+        assertAttributeType(FilterExpression.AttributeType.BINARY_SET, "BS");
+        assertAttributeType(FilterExpression.AttributeType.LIST, "L");
+        assertAttributeType(FilterExpression.AttributeType.MAP, "M");
     }
 
-    private static void assertAttributeType(String attr, FilterExpression.AttributeType type, String expectedCode) {
-        FilterExpression fe = FilterExpression.builder().attributeType(attr, type);
+    private static void assertAttributeType(FilterExpression.AttributeType type, String expectedCode) {
+        FilterExpression fe = FilterExpression.builder().attributeType(ATTR, type);
         assertEquals("attribute_type(#n0, :v0)", fe.getExpression(),
                 "attributeType with " + type + " should produce expression");
         assertEquals(AttributeValue.builder().s(expectedCode).build(), fe.getExpressionValues().get(":v0"),
@@ -607,7 +609,7 @@ class FilterExpressionTest {
         }
 
         // Outer already has one condition, so nameOffset=1 and valueOffset=1
-        // Inner's #n0..#n9 → #n1..#n10 and :v0..:v9 → :v1..:v10
+        // Inner's #n0..#n9 -> #n1..#n10 and :v0..:v9 -> :v1..:v10
         FilterExpression outer = FilterExpression.builder()
                 .eq("outer", true)
                 .and()

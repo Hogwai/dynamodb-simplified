@@ -1,17 +1,26 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.PageCollector;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -22,14 +31,17 @@ import java.util.function.Consumer;
  * projection, and pagination.
  * <p>
  * Mirrors the sync {@code ScanBuilder} but returns {@link CompletableFuture}
- * from all execution methods and uses the AWS SDK's async {@link PagePublisher}
- * under the hood.
+ * from all execution methods and uses the AWS SDK's async
+ * {@link software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher} under the hood.
  *
  * @param <T> the type of the item
  */
 public class AsyncScanBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(AsyncScanBuilder.class);
+
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncIndex<T> index;
+    private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
     private Integer limit;
@@ -38,6 +50,7 @@ public class AsyncScanBuilder<T> {
     private ReturnConsumedCapacity returnConsumedCapacity;
     private Integer totalSegments;
     private Integer segment;
+    private Select select;
 
     /**
      * Constructs a new {@code AsyncScanBuilder} for the given async table.
@@ -45,8 +58,7 @@ public class AsyncScanBuilder<T> {
      * @param table the async DynamoDB table
      */
     public AsyncScanBuilder(@NonNull DynamoDbAsyncTable<T> table) {
-        this.table = table;
-        this.index = null;
+        this(table, null);
     }
 
     /**
@@ -55,8 +67,31 @@ public class AsyncScanBuilder<T> {
      * @param index the async DynamoDB secondary index
      */
     public AsyncScanBuilder(@NonNull DynamoDbAsyncIndex<T> index) {
+        this(index, null);
+    }
+
+    /**
+     * Constructs a new {@code AsyncScanBuilder} for the given async table with a low-level client.
+     *
+     * @param table                the async DynamoDB table
+     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     */
+    public AsyncScanBuilder(@NonNull DynamoDbAsyncTable<T> table, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
+        this.table = table;
+        this.index = null;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+    }
+
+    /**
+     * Constructs a new {@code AsyncScanBuilder} for the given async index with a low-level client.
+     *
+     * @param index                the async DynamoDB secondary index
+     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     */
+    public AsyncScanBuilder(@NonNull DynamoDbAsyncIndex<T> index, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.table = null;
         this.index = index;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
     // ============ Filter ============
@@ -177,6 +212,18 @@ public class AsyncScanBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the select parameter for the scan, controlling which attributes are returned.
+     * Use {@link Select#COUNT} to request only the item count from the server.
+     *
+     * @param select the select parameter (nullable)
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncScanBuilder<T> select(@Nullable Select select) {
+        this.select = select;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
@@ -191,10 +238,22 @@ public class AsyncScanBuilder<T> {
      * @return a {@link CompletableFuture} containing a list of matching items
      */
     public @NonNull CompletableFuture<List<T>> executeAll() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
         return executeAsPages()
-                .thenApply(pages -> pages.stream()
-                        .flatMap(page -> page.items().stream())
-                        .toList());
+                .thenApply(pages -> {
+                    List<T> results = pages.stream()
+                            .flatMap(page -> page.items().stream())
+                            .toList();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncScan on table '{}' returned {} items in {}ms",
+                                getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+                    }
+                    return results;
+                });
     }
 
     /**
@@ -206,12 +265,25 @@ public class AsyncScanBuilder<T> {
      *         (may be {@code null} if no more pages)
      */
     public @NonNull CompletableFuture<PagedResult<T>> executeWithPagination() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
         return executeAsPages()
                 .thenApply(pages -> {
                     Iterator<Page<T>> iter = pages.iterator();
                     if (iter.hasNext()) {
                         Page<T> first = iter.next();
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncScan on table '{}' returned {} items in {}ms (first page)",
+                                    getTableName(), first.items().size(), (System.nanoTime() - start) / 1_000_000);
+                        }
                         return new PagedResult<>(first.items(), first.lastEvaluatedKey());
+                    }
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncScan on table '{}' returned 0 items in {}ms (first page)",
+                                getTableName(), (System.nanoTime() - start) / 1_000_000);
                     }
                     return new PagedResult<>(Collections.emptyList(), null);
                 });
@@ -220,22 +292,116 @@ public class AsyncScanBuilder<T> {
     /**
      * Returns the total number of items asynchronously by iterating all scan
      * result pages.
+     * <p>
+     * When a low-level {@link DynamoDbAsyncClient} is available, uses
+     * {@code Select.COUNT} server-side to avoid transferring item data.
+     * Falls back to the enhanced client page iteration otherwise.
      *
      * @return a {@link CompletableFuture} containing the total count of
      *         scanned items matching the filter
      */
     public @NonNull CompletableFuture<Long> count() {
+        long start = System.nanoTime();
+        if (dynamoDbAsyncClient != null) {
+            return countWithLowLevel(select != null ? select : Select.COUNT)
+                    .thenApply(result -> {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncScan count on table '{}' returned {} items in {}ms",
+                                    getTableName(), result, (System.nanoTime() - start) / 1_000_000);
+                        }
+                        return result;
+                    });
+        }
         return executeAsPages()
                 .thenApply(pages -> {
                     long total = 0;
                     for (Page<T> page : pages) {
                         total += page.count();
                     }
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncScan count on table '{}' returned {} items in {}ms",
+                                getTableName(), total, (System.nanoTime() - start) / 1_000_000);
+                    }
                     return total;
                 });
     }
 
+    private ScanRequest buildCountRequest(Select select) {
+        String tableName = table != null ? table.tableName() : index.tableName();
+        ScanRequest.Builder builder = ScanRequest.builder()
+            .tableName(tableName).select(select);
+        applyFilterIfPresent(builder);
+        applyLimitIfPresent(builder);
+        applyExclusiveStartKeyIfPresent(builder);
+        applyConsistentReadIfPresent(builder);
+        applyParallelScanIfPresent(builder);
+        applyReturnConsumedCapacityIfPresent(builder);
+        applyIndexNameIfPresent(builder);
+        return builder.build();
+    }
+
+    private void applyFilterIfPresent(ScanRequest.Builder builder) {
+        if (filterExpression != null && !filterExpression.isEmpty()) {
+            builder.filterExpression(filterExpression.getExpression());
+            builder.expressionAttributeNames(filterExpression.getExpressionNames());
+            builder.expressionAttributeValues(filterExpression.getExpressionValues());
+        }
+    }
+
+    private void applyLimitIfPresent(ScanRequest.Builder builder) {
+        if (limit != null) {
+            builder.limit(limit);
+        }
+    }
+
+    private void applyExclusiveStartKeyIfPresent(ScanRequest.Builder builder) {
+        if (exclusiveStartKey != null) {
+            builder.exclusiveStartKey(exclusiveStartKey);
+        }
+    }
+
+    private void applyConsistentReadIfPresent(ScanRequest.Builder builder) {
+        if (consistentRead != null) {
+            builder.consistentRead(consistentRead);
+        }
+    }
+
+    private void applyParallelScanIfPresent(ScanRequest.Builder builder) {
+        if (totalSegments != null && segment != null) {
+            builder.totalSegments(totalSegments);
+            builder.segment(segment);
+        }
+    }
+
+    private void applyReturnConsumedCapacityIfPresent(ScanRequest.Builder builder) {
+        if (returnConsumedCapacity != null) {
+            builder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+    }
+
+    private void applyIndexNameIfPresent(ScanRequest.Builder builder) {
+        if (index != null) {
+            builder.indexName(index.indexName());
+        }
+    }
+
+    private @NonNull CompletableFuture<Long> countWithLowLevel(Select select) {
+        ScanRequest request = buildCountRequest(select);
+        return dynamoDbAsyncClient.scan(request)
+            .thenApply(r -> (long) r.count())
+            .exceptionally(e -> {
+                if (e instanceof DynamoDbException dde) {
+                    throw new OperationFailedException("Scan", request.tableName(), dde);
+                }
+                throw new DynamoSimplifiedException("Scan failed", e);
+            });
+    }
+
     // ============ Internal ============
+
+    private String getTableName() {
+        return table != null ? table.tableName() : index.tableName();
+    }
 
     /**
      * Builds the request, executes it via the async table, and collects all
@@ -243,11 +409,19 @@ public class AsyncScanBuilder<T> {
      */
     private @NonNull CompletableFuture<List<Page<T>>> executeAsPages() {
         ScanEnhancedRequest request = buildScanRequest();
+        CompletableFuture<List<Page<T>>> result;
         if (index != null) {
-            return PageCollector.collectPages(index.scan(request));
+            result = PageCollector.collectPages(index.scan(request));
+        } else {
+            Objects.requireNonNull(table, "table must not be null");
+            result = PageCollector.collectPages(table.scan(request));
         }
-        Objects.requireNonNull(table, "table must not be null");
-        return PageCollector.collectPages(table.scan(request));
+        return result.exceptionally(e -> {
+            if (e instanceof DynamoDbException dde) {
+                throw new OperationFailedException("Scan", getTableName(), dde);
+            }
+            throw new DynamoSimplifiedException("Scan failed", e);
+        });
     }
 
     private ScanEnhancedRequest buildScanRequest() {

@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Singleton
-public class PostRepository {
+public class PostRepository implements AutoCloseable {
 
     private static final String TABLE_NAME = "posts";
     public static final String AUTHOR = "author";
@@ -24,10 +24,16 @@ public class PostRepository {
     public static final String KEYWORDS = "keywords";
 
     private final Table<SocialMediaPost> table;
+    private final DynamoSimplifiedClient dynamoSimplifiedClient;
 
     public PostRepository(DynamoDbClient dynamoDbClient) {
-        this.table = DynamoSimplifiedClient.create(dynamoDbClient)
-                                           .table(TABLE_NAME, SocialMediaPost.class);
+        this.dynamoSimplifiedClient = DynamoSimplifiedClient.create(dynamoDbClient);
+        this.table = this.dynamoSimplifiedClient.table(TABLE_NAME, SocialMediaPost.class);
+    }
+
+    @Override
+    public void close() {
+        dynamoSimplifiedClient.close();
     }
 
     // ============ CRUD de base ============
@@ -314,22 +320,22 @@ public class PostRepository {
              .execute();
     }
 
-    public SocialMediaPost updateIfAuthorMatches(SocialMediaPost socialMediaPost, String expectedAuthor) {
+    public Optional<SocialMediaPost> updateIfAuthorMatches(SocialMediaPost socialMediaPost, String expectedAuthor) {
         return table.update(socialMediaPost)
                     .condition(c -> c.eq(AUTHOR, expectedAuthor))
                     .execute();
     }
 
-    public SocialMediaPost deleteIfOlderThan(String subreddit, String id, long olderThanUtc) {
+    public Optional<SocialMediaPost> deleteIfOlderThan(String subreddit, String id, long olderThanUtc) {
         return table.delete(subreddit, id)
                     .condition(c -> c.lt(CREATED_UTC, olderThanUtc))
                     .execute();
     }
 
-    public SocialMediaPost deleteByAuthor(String subreddit, String id, String author) {
-        return table.delete(subreddit, id)
-                    .condition(c -> c.eq(AUTHOR, author))
-                    .execute();
+    public void deleteByAuthor(String subreddit, String id, String author) {
+        table.delete(subreddit, id)
+                .condition(c -> c.eq(AUTHOR, author))
+                .execute();
     }
 
     // ============ Dynamic Search Method ============
@@ -358,7 +364,7 @@ public class PostRepository {
         return query.executeAll();
     }
 
-    private FilterExpression buildFilter(FilterExpression f, PostSearchCriteria criteria) {
+    private void buildFilter(FilterExpression f, PostSearchCriteria criteria) {
         boolean hasPrevious = false;
 
         if (criteria.getAuthor() != null) {
@@ -366,26 +372,25 @@ public class PostRepository {
             hasPrevious = true;
         }
 
-        hasPrevious = addGtFilter(hasPrevious, f, criteria.getSinceUtc(), CREATED_UTC);
-        hasPrevious = addLtFilter(hasPrevious, f, criteria.getUntilUtc(), CREATED_UTC);
+        hasPrevious = addGtFilter(hasPrevious, f, criteria.getSinceUtc());
+        hasPrevious = addLtFilter(hasPrevious, f, criteria.getUntilUtc());
         hasPrevious = addContainsFilter(hasPrevious, f, criteria.getKeyword(), KEYWORDS);
-        hasPrevious = addSizeGeFilter(hasPrevious, f, criteria.getMinKeywords(), KEYWORDS);
-        hasPrevious = addContainsFilter(hasPrevious, f, criteria.getTitleContains(), TITLE);
+        hasPrevious = addSizeGeFilter(hasPrevious, f, criteria.getMinKeywords());
+        addContainsFilter(hasPrevious, f, criteria.getTitleContains(), TITLE);
 
-        return f;
     }
 
-    private static boolean addGtFilter(boolean hasPrevious, FilterExpression f, Long value, String attr) {
+    private static boolean addGtFilter(boolean hasPrevious, FilterExpression f, Long value) {
         if (value == null) return hasPrevious;
         if (hasPrevious) f.and();
-        f.gt(attr, value);
+        f.gt(CREATED_UTC, value);
         return true;
     }
 
-    private static boolean addLtFilter(boolean hasPrevious, FilterExpression f, Long value, String attr) {
+    private static boolean addLtFilter(boolean hasPrevious, FilterExpression f, Long value) {
         if (value == null) return hasPrevious;
         if (hasPrevious) f.and();
-        f.lt(attr, value);
+        f.lt(CREATED_UTC, value);
         return true;
     }
 
@@ -396,10 +401,10 @@ public class PostRepository {
         return true;
     }
 
-    private static boolean addSizeGeFilter(boolean hasPrevious, FilterExpression f, Integer value, String attr) {
+    private static boolean addSizeGeFilter(boolean hasPrevious, FilterExpression f, Integer value) {
         if (value == null) return hasPrevious;
         if (hasPrevious) f.and();
-        f.sizeGe(attr, value);
+        f.sizeGe(KEYWORDS, value);
         return true;
     }
 }

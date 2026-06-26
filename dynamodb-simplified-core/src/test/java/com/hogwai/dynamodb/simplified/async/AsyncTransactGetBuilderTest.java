@@ -11,9 +11,14 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactGetItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.TransactGetItemsRequest;
+import software.amazon.awssdk.services.dynamodb.model.TransactGetItemsResponse;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +39,9 @@ class AsyncTransactGetBuilderTest {
 
     @Mock
     private DynamoDbEnhancedAsyncClient enhancedClient;
+
+    @Mock
+    private DynamoDbAsyncClient dynamoDbAsyncClient;
 
     // ============ Helpers ============
 
@@ -128,5 +136,98 @@ class AsyncTransactGetBuilderTest {
 
         var future = builder.execute();
         assertThrows(RuntimeException.class, future::join);
+    }
+
+    // ============ Projection ============
+
+    @Test
+    @DisplayName("project without entries throws IllegalStateException")
+    void project_withoutEntries_throwsIllegalStateException() {
+        AsyncTransactGetBuilder builder = new AsyncTransactGetBuilder(enhancedClient);
+        assertThrows(IllegalStateException.class, () -> builder.project("attr1"));
+    }
+
+    @Test
+    @DisplayName("project with attributes uses low-level client")
+    void project_withAttributes_usesLowLevelClient() throws Exception {
+        AsyncTable<?> asyncTableWrapper = createAsyncTable(table);
+        AsyncTransactGetBuilder builder = new AsyncTransactGetBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.addGetItem(asyncTableWrapper, "pk-value");
+        builder.project("attr1", "attr2");
+
+        when(dynamoDbAsyncClient.transactGetItems(any(TransactGetItemsRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        TransactGetItemsResponse.builder()
+                                .responses(ItemResponse.builder()
+                                        .item(Map.of("attr1", AttributeValue.fromS("val1")))
+                                        .build())
+                                .build()));
+
+        TransactGetResults results = builder.execute().join();
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        verify(enhancedClient, never()).transactGetItems(any(TransactGetItemsEnhancedRequest.class));
+        verify(dynamoDbAsyncClient, times(1)).transactGetItems(any(TransactGetItemsRequest.class));
+    }
+
+    @Test
+    @DisplayName("project with consumer uses low-level client")
+    void project_withConsumer_usesLowLevelClient() throws Exception {
+        AsyncTable<?> asyncTableWrapper = createAsyncTable(table);
+        AsyncTransactGetBuilder builder = new AsyncTransactGetBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.addGetItem(asyncTableWrapper, "pk-value");
+        builder.project(p -> p.include("attr1", "attr2"));
+
+        when(dynamoDbAsyncClient.transactGetItems(any(TransactGetItemsRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        TransactGetItemsResponse.builder()
+                                .responses(ItemResponse.builder()
+                                        .item(Map.of("attr1", AttributeValue.fromS("val1")))
+                                        .build())
+                                .build()));
+
+        TransactGetResults results = builder.execute().join();
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        verify(enhancedClient, never()).transactGetItems(any(TransactGetItemsEnhancedRequest.class));
+        verify(dynamoDbAsyncClient, times(1)).transactGetItems(any(TransactGetItemsRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute without projection uses enhanced client")
+    void execute_withoutProjection_usesEnhancedClient() throws Exception {
+        when(enhancedClient.transactGetItems(any(TransactGetItemsEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(List.of()));
+        AsyncTable<?> asyncTableWrapper = createAsyncTable(table);
+        AsyncTransactGetBuilder builder = new AsyncTransactGetBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.addGetItem(asyncTableWrapper, "pk-value");
+        builder.execute().join();
+
+        verify(enhancedClient, times(1)).transactGetItems(any(TransactGetItemsEnhancedRequest.class));
+        verify(dynamoDbAsyncClient, never()).transactGetItems(any(TransactGetItemsRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute with null item response returns null item")
+    void execute_withNullItemResponse_returnsNullItem() throws Exception {
+        AsyncTable<?> asyncTableWrapper = createAsyncTable(table);
+        AsyncTransactGetBuilder builder = new AsyncTransactGetBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.addGetItem(asyncTableWrapper, "pk-value");
+        builder.project("attr1");
+
+        when(dynamoDbAsyncClient.transactGetItems(any(TransactGetItemsRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        TransactGetItemsResponse.builder()
+                                .responses(ItemResponse.builder().build())
+                                .build()));
+
+        TransactGetResults results = builder.execute().join();
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertNull(results.get(0));
     }
 }

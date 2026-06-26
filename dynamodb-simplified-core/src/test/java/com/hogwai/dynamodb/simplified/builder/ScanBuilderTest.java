@@ -14,8 +14,12 @@ import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 
 import java.util.List;
@@ -352,5 +356,122 @@ class ScanBuilderTest {
         assertNotNull(stream);
         List<TestItem> result = stream.toList();
         assertEquals(2, result.size());
+    }
+
+    // ============ Low-Level Client Tests ============
+
+    @Mock
+    DynamoDbClient dynamoDbClient;
+
+    /**
+     * Configures dynamoDbClient.scan() to return a response with the given count.
+     */
+    private void stubLowLevelScanReturns(int count) {
+        ScanResponse response = ScanResponse.builder().count(count).build();
+        when(dynamoDbClient.scan(any(ScanRequest.class))).thenReturn(response);
+    }
+
+    @Test
+    @DisplayName("count() with DynamoDbClient uses low-level ScanRequest with Select.COUNT")
+    void count_withLowLevelClient() {
+        stubLowLevelScanReturns(15);
+
+        long total = new ScanBuilder<>(table, dynamoDbClient)
+                .count();
+
+        assertEquals(15L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        ScanRequest request = captor.getValue();
+        assertEquals(Select.COUNT, request.select());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and filter includes filter in request")
+    void count_withLowLevelClientAndFilter() {
+        stubLowLevelScanReturns(5);
+
+        long total = new ScanBuilder<>(table, dynamoDbClient)
+                .filter(c -> c.eq("status", "active"))
+                .count();
+
+        assertEquals(5L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        ScanRequest request = captor.getValue();
+        assertEquals(Select.COUNT, request.select());
+        assertNotNull(request.filterExpression());
+    }
+
+    @Test
+    @DisplayName("count() with explicit select(Select.COUNT) uses specified Select")
+    void count_withExplicitSelectCount() {
+        stubLowLevelScanReturns(3);
+
+        long total = new ScanBuilder<>(table, dynamoDbClient)
+                .select(Select.COUNT)
+                .count();
+
+        assertEquals(3L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals(Select.COUNT, captor.getValue().select());
+    }
+
+    // ============ Routing Guard Tests ============
+
+    @Test
+    @DisplayName("executeAll() throws when Select.COUNT is set")
+    void executeAll_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new ScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeAll()
+        );
+    }
+
+    @Test
+    @DisplayName("executeStream() throws when Select.COUNT is set")
+    void executeStream_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new ScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeStream()
+        );
+    }
+
+    @Test
+    @DisplayName("executeWithPagination() throws when Select.COUNT is set")
+    void executeWithPagination_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new ScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeWithPagination()
+        );
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() throws when Select.COUNT is set")
+    void executeAndGetFirst_throwsWithSelectCount() {
+        assertThrows(IllegalStateException.class, () ->
+            new ScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeAndGetFirst()
+        );
+    }
+
+    @Test
+    @DisplayName("count() does NOT throw when Select.COUNT is set")
+    void count_doesNotThrowWithSelectCount() {
+        stubScanReturns(pageIterable());
+
+        assertDoesNotThrow(() ->
+            new ScanBuilder<>(table)
+                .select(Select.COUNT)
+                .count()
+        );
     }
 }
