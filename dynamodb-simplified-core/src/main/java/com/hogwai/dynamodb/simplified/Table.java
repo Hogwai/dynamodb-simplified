@@ -5,7 +5,9 @@ import org.jspecify.annotations.Nullable;
 
 import com.hogwai.dynamodb.simplified.builder.*;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import java.util.function.Consumer;
@@ -13,8 +15,13 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTimeToLiveRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.dynamodb.model.TimeToLiveDescription;
+import software.amazon.awssdk.services.dynamodb.model.UpdateTimeToLiveRequest;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -317,6 +324,25 @@ public class Table<T> {
         return new BatchWriteBuilder<>(dynamoDbTable, dynamoDbClient);
     }
 
+    /**
+     * Puts all items in a single batch write operation.
+     * <p>
+     * Equivalent to creating a {@link BatchWriteBuilder}, adding all items,
+     * and executing it. At most 25 items per call are allowed by DynamoDB.
+     *
+     * @param items the items to put
+     * @return the batch write result
+     * @throws IllegalArgumentException if more than 25 items are provided
+     */
+    @NonNull
+    public BatchWriteResult putAll(@NonNull Collection<T> items) {
+        BatchWriteBuilder<T> batch = batchWrite();
+        for (T item : items) {
+            batch.put(item);
+        }
+        return batch.execute();
+    }
+
     // ============ Raw Access ============
 
     /**
@@ -423,5 +449,64 @@ public class Table<T> {
         }
     }
 
+    // ============ TTL Management ============
+
+    /**
+     * Enables Time To Live (TTL) on this table with the given attribute name.
+     *
+     * @param attributeName the attribute that stores the TTL epoch value
+     * @throws OperationFailedException if the DynamoDB API call fails
+     */
+    public void enableTtl(@NonNull String attributeName) {
+        try {
+            dynamoDbClient.updateTimeToLive(UpdateTimeToLiveRequest.builder()
+                    .tableName(dynamoDbTable.tableName())
+                    .timeToLiveSpecification(spec -> {
+                        spec.attributeName(attributeName);
+                        spec.enabled(true);
+                    })
+                    .build());
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("UpdateTimeToLive", dynamoDbTable.tableName(), e);
+        }
+    }
+
+    /**
+     * Disables TTL on this table for the given attribute name.
+     *
+     * @param attributeName the TTL attribute name to disable
+     * @throws OperationFailedException if the DynamoDB API call fails
+     */
+    public void disableTtl(@NonNull String attributeName) {
+        try {
+            dynamoDbClient.updateTimeToLive(UpdateTimeToLiveRequest.builder()
+                    .tableName(dynamoDbTable.tableName())
+                    .timeToLiveSpecification(spec -> {
+                        spec.attributeName(attributeName);
+                        spec.enabled(false);
+                    })
+                    .build());
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("UpdateTimeToLive", dynamoDbTable.tableName(), e);
+        }
+    }
+
+    /**
+     * Describes the current TTL configuration for this table.
+     *
+     * @return the TTL description
+     * @throws OperationFailedException if the DynamoDB API call fails
+     */
+    @NonNull
+    public TimeToLiveDescription describeTtl() {
+        try {
+            return dynamoDbClient.describeTimeToLive(DescribeTimeToLiveRequest.builder()
+                    .tableName(dynamoDbTable.tableName())
+                    .build())
+                    .timeToLiveDescription();
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("DescribeTimeToLive", dynamoDbTable.tableName(), e);
+        }
+    }
 
 }

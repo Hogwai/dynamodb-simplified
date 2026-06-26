@@ -369,4 +369,14 @@ class UpdateBuilderTest {
 
         assertThrows(IllegalStateException.class, builder::execute);
     }
+
+    // ============ Optimistic locking tests ============
+
+    @Test
+    @DisplayName("withOptimisticLocking returns itself for fluent chaining")
+    void withOptimisticLocking_returnsItself() {
+        var item = new TestItem();
+        UpdateBuilder<TestItem> builder = new UpdateBuilder<>(table, item, dynamoDbClient);
+        assertSame(builder, builder.withOptimisticLocking());
+    }
 }

@@ -3,6 +3,7 @@ package com.hogwai.dynamodb.simplified.result;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,11 +68,44 @@ class PagedResultTest {
     }
 
     @Test
-    @DisplayName("getItems returns the exact same list reference that was passed to the constructor")
-    void getItems_returnsSameReference() {
+    @DisplayName("items list is wrapped in an unmodifiable list")
+    void items_isWrappedInUnmodifiableList() {
         List<String> original = new ArrayList<>(List.of("a", "b"));
         PagedResult<String> result = new PagedResult<>(original, null);
 
-        assertSame(original, result.items(), "getItems() must return the same list reference");
+        assertNotSame(original, result.items(), "items() should return a different list reference");
+        assertEquals(original, result.items(), "items() should contain the same elements");
+        // noinspection ImmutableObjectModified
+        assertThrows(UnsupportedOperationException.class, () -> result.items().add("c"),
+                "items() should return an unmodifiable list");
+    }
+
+    @Test
+    @DisplayName("2-arg constructor returns null consumedCapacity")
+    void twoArgConstructor_consumedCapacityIsNull() {
+        PagedResult<String> result = new PagedResult<>(List.of(), null);
+
+        assertNull(result.consumedCapacity(), "consumedCapacity should be null with 2-arg constructor");
+    }
+
+    @Test
+    @DisplayName("3-arg constructor stores consumed capacity")
+    void threeArgConstructor_storesConsumedCapacity() {
+        ConsumedCapacity capacity = ConsumedCapacity.builder()
+                .tableName("test-table")
+                .capacityUnits(10.0)
+                .build();
+
+        PagedResult<String> result = new PagedResult<>(List.of(), null, capacity);
+
+        assertSame(capacity, result.consumedCapacity(), "should return the same ConsumedCapacity reference");
+    }
+
+    @Test
+    @DisplayName("implements Consumed interface")
+    void implementsConsumed() {
+        PagedResult<String> result = new PagedResult<>(List.of(), null);
+
+        assertInstanceOf(Consumed.class, result, "PagedResult should implement Consumed");
     }
 }

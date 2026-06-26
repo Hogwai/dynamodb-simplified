@@ -261,6 +261,28 @@ class PutBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
+    // ============ Optimistic locking tests ============
+
+    @Test
+    @DisplayName("withOptimisticLocking returns itself for fluent chaining")
+    void withOptimisticLocking_returnsItself() {
+        TestItem item = new TestItem("item-1");
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient);
+        assertSame(builder, builder.withOptimisticLocking());
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking on non-Versioned item executes without condition")
+    void withOptimisticLocking_nonVersioned_executesWithoutCondition() {
+        TestItem item = new TestItem("item-1");
+        new PutBuilder<>(table, item, dynamoDbClient)
+                .withOptimisticLocking()
+                .execute();
+        verify(table).putItem(requestCaptor.capture());
+        PutItemEnhancedRequest<TestItem> request = requestCaptor.getValue();
+        assertNull(request.conditionExpression(), "Non-Versioned item should not get a condition");
+    }
+
     // ============ executeReturning tests ============
 
     @Test

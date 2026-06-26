@@ -1,9 +1,11 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.Versioned;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.internal.VersionHelper;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -36,6 +38,7 @@ public class PutBuilder<T> {
     private final DynamoDbClient dynamoDbClient;
     private ConditionExpression conditionExpression;
     private ReturnValue returnValues;
+    private boolean optimisticLocking;
 
     /**
      * Constructs a new {@code PutBuilder} for the given table and item.
@@ -110,16 +113,32 @@ public class PutBuilder<T> {
     }
 
     /**
+     * Enables optimistic locking for this put operation.
+     * <p>
+     * When enabled, the library adds a condition expression checking that the
+     * version attribute hasn't changed, and increments the version on success.
+     * The item must implement {@link com.hogwai.dynamodb.simplified.Versioned}.
+     *
+     * @return this builder for chaining
+     */
+    public @NonNull PutBuilder<T> withOptimisticLocking() {
+        this.optimisticLocking = true;
+        return this;
+    }
+
+    /**
      * Executes the put operation.
      */
     public void execute() {
         long start = System.nanoTime();
+        applyOptimisticLocking();
         if (returnValues != null) {
             executeWithReturnValues(); // ignore return value for void execute()
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Put on table '{}' completed in {}ms (with return values)",
                         table.tableName(), (System.nanoTime() - start) / 1_000_000);
             }
+            incrementVersion();
             return;
         }
         @SuppressWarnings("unchecked")
@@ -140,6 +159,7 @@ public class PutBuilder<T> {
         } catch (DynamoDbException e) {
             throw new OperationFailedException("PutItem", table.tableName(), e);
         }
+        incrementVersion();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Put on table '{}' completed in {}ms",
                     table.tableName(), (System.nanoTime() - start) / 1_000_000);
@@ -157,10 +177,41 @@ public class PutBuilder<T> {
      */
     @NonNull
     public Optional<T> executeReturning() {
+        applyOptimisticLocking();
         if (returnValues != null) {
-            return Optional.ofNullable(executeWithReturnValues());
+            T result = executeWithReturnValues();
+            incrementVersion();
+            return Optional.ofNullable(result);
         }
         return Optional.empty();
+    }
+
+    // ---- Optimistic locking ----
+
+    private void applyOptimisticLocking() {
+        if (!optimisticLocking) {
+            return;
+        }
+        ConditionExpression versionCondition = VersionHelper.buildCondition(item);
+        if (versionCondition == null) {
+            return;
+        }
+
+        if (conditionExpression != null && !conditionExpression.isEmpty()) {
+            conditionExpression = ConditionExpression.builder()
+                    .group(conditionExpression)
+                    .and()
+                    .group(versionCondition)
+                    .build();
+        } else {
+            conditionExpression = versionCondition;
+        }
+    }
+
+    private void incrementVersion() {
+        if (optimisticLocking && item instanceof Versioned v) {
+            VersionHelper.incrementVersion(v);
+        }
     }
 
     // ---- Low-level put with return values ----

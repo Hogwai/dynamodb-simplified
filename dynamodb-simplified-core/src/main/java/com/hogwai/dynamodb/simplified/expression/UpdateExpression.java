@@ -7,6 +7,8 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -59,7 +61,7 @@ public class UpdateExpression {
      * @throws IllegalArgumentException if value is null
      */
     @NonNull
-    public UpdateExpression set(@NonNull String attribute, @NonNull Object value) {
+    public UpdateExpression set(@NonNull String attribute, @Nullable Object value) {
         if (value == null) {
             throw new IllegalArgumentException(
                     "Cannot set attribute '" + attribute + "' to null. Use remove(\"" + attribute + "\") instead.");
@@ -190,6 +192,21 @@ public class UpdateExpression {
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s = %s".formatted(nameKey, valueKey));
         return this;
+    }
+
+    /**
+     * Sets the TTL attribute to the given duration from now.
+     * <p>
+     * Convenience method that computes the epoch timestamp and delegates to {@link #set(String, Object)}.
+     *
+     * @param attribute the TTL attribute name
+     * @param duration  the duration from now when the item should expire
+     * @return this builder for chaining
+     */
+    @NonNull
+    public UpdateExpression ttl(@NonNull String attribute, @NonNull Duration duration) {
+        long epoch = Instant.now().plus(duration).getEpochSecond();
+        return set(attribute, epoch);
     }
 
     // ============ REMOVE Operations ============

@@ -1,10 +1,13 @@
 package com.hogwai.dynamodb.simplified.result;
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -19,13 +22,55 @@ import java.util.Map;
  *
  * @param <T> the type of items in the result page
  */
-public record PagedResult<T>(List<T> items, Map<String, AttributeValue> lastEvaluatedKey) {
+public final class PagedResult<T> implements Consumed {
+
+    private final List<T> items;
+    private final @Nullable Map<String, AttributeValue> lastEvaluatedKey;
+    private final @Nullable ConsumedCapacity consumedCapacity;
+
+    /**
+     * Constructs a new {@code PagedResult} with no consumed capacity information.
+     *
+     * @param items           the items in this page
+     * @param lastEvaluatedKey the last-evaluated key for pagination, or {@code null}
+     */
+    public PagedResult(@NonNull List<T> items,
+                       @Nullable Map<String, AttributeValue> lastEvaluatedKey) {
+        this(items, lastEvaluatedKey, null);
+    }
+
+    /**
+     * Constructs a new {@code PagedResult}.
+     *
+     * @param items            the items in this page
+     * @param lastEvaluatedKey the last-evaluated key for pagination, or {@code null}
+     * @param consumedCapacity the consumed capacity, or {@code null}
+     */
+    public PagedResult(@NonNull List<T> items,
+                       @Nullable Map<String, AttributeValue> lastEvaluatedKey,
+                       @Nullable ConsumedCapacity consumedCapacity) {
+        this.items = Collections.unmodifiableList(new ArrayList<>(items));
+        this.lastEvaluatedKey = lastEvaluatedKey;
+        this.consumedCapacity = consumedCapacity;
+    }
+
+    /**
+     * Returns the consumed capacity, or {@code null} if capacity was not requested
+     * or the operation does not support capacity tracking.
+     *
+     * @return consumed capacity, or {@code null}
+     */
+    @Override
+    @Nullable
+    public ConsumedCapacity consumedCapacity() {
+        return consumedCapacity;
+    }
+
     /**
      * Returns the list of items in this page.
      *
      * @return the items (never {@code null})
      */
-    @Override
     @NonNull
     public List<T> items() {
         return items;
@@ -39,7 +84,6 @@ public record PagedResult<T>(List<T> items, Map<String, AttributeValue> lastEval
      * @return the last-evaluated key, or {@code null} / empty if this is the
      * last page
      */
-    @Override
     @Nullable
     public Map<String, AttributeValue> lastEvaluatedKey() {
         return lastEvaluatedKey;
