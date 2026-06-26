@@ -77,9 +77,14 @@ public class DynamoSimplifiedClient implements AutoCloseable {
         if (LOG.isDebugEnabled()) {
             LOG.debug("DynamoSimplifiedClient created");
         }
-        return new DynamoSimplifiedClient(
-                DynamoDbEnhancedClient.builder().dynamoDbClient(client).build(),
-                client);
+        try {
+            return new DynamoSimplifiedClient(
+                    DynamoDbEnhancedClient.builder().dynamoDbClient(client).build(),
+                    client);
+        } catch (RuntimeException e) {
+            client.close();
+            throw e;
+        }
     }
 
     /**

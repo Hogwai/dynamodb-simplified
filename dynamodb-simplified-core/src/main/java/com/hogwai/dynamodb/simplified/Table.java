@@ -10,9 +10,9 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import java.util.function.Consumer;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 import java.util.Objects;
@@ -251,9 +251,11 @@ public class Table<T> {
      * Deletes an item by partition key directly.
      *
      * @param partitionKey the partition key value
+     * @return the deleted item, or {@code null} if no item with the given key exists
      */
-    public void deleteItem(@NonNull Object partitionKey) {
-        dynamoDbTable.deleteItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
+    @Nullable
+    public T deleteItem(@NonNull Object partitionKey) {
+        return dynamoDbTable.deleteItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
     }
 
     /**
@@ -261,9 +263,11 @@ public class Table<T> {
      *
      * @param partitionKey the partition key value
      * @param sortKey      the sort key value
+     * @return the deleted item, or {@code null} if no item with the given key exists
      */
-    public void deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        dynamoDbTable.deleteItem(Key.builder()
+    @Nullable
+    public T deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
+        return dynamoDbTable.deleteItem(Key.builder()
                             .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
                             .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
                             .build());

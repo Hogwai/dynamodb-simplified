@@ -238,13 +238,13 @@ public class AsyncTable<T> {
      * Deletes an item by partition key directly.
      *
      * @param partitionKey the partition key value
-     * @return a {@link CompletableFuture} that completes when the item has been deleted
+     * @return a {@link CompletableFuture} that completes with the deleted item,
+     *         or {@code null} if no item with the given key exists
      */
     @NonNull
-    public CompletableFuture<Void> deleteItem(@NonNull Object partitionKey) {
+    public CompletableFuture<T> deleteItem(@NonNull Object partitionKey) {
         return dynamoDbAsyncTable.deleteItem(
-                        Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
-                .thenApply(ignored -> null);
+                Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
     }
 
     /**
@@ -252,15 +252,15 @@ public class AsyncTable<T> {
      *
      * @param partitionKey the partition key value
      * @param sortKey      the sort key value
-     * @return a {@link CompletableFuture} that completes when the item has been deleted
+     * @return a {@link CompletableFuture} that completes with the deleted item,
+     *         or {@code null} if no item with the given key exists
      */
     @NonNull
-    public CompletableFuture<Void> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
+    public CompletableFuture<T> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return dynamoDbAsyncTable.deleteItem(Key.builder()
                         .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
                         .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                        .build())
-                .thenApply(ignored -> null);
+                        .build());
     }
 
     // ============ Secondary Index ============

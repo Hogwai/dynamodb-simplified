@@ -11,6 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class AsyncBatchWriteBuilder<T> {
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<T> itemsToPut = new ArrayList<>();
     private final List<Key> keysToDelete = new ArrayList<>();
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncBatchWriteBuilder}.
@@ -96,6 +98,18 @@ public class AsyncBatchWriteBuilder<T> {
     }
 
     /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncBatchWriteBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
+    /**
      * Executes the batch write operation asynchronously.
      * <p>
      * All puts and deletes added to this builder are sent in a single batch write request.
@@ -128,8 +142,11 @@ public class AsyncBatchWriteBuilder<T> {
 
     private CompletableFuture<BatchWriteResult> executeWithRetry(
             Map<String, List<WriteRequest>> requestItems, int attempt, long start) {
-        return dynamoDbAsyncClient.batchWriteItem(
-                        BatchWriteItemRequest.builder().requestItems(requestItems).build())
+        BatchWriteItemRequest.Builder batchRequestBuilder = BatchWriteItemRequest.builder().requestItems(requestItems);
+        if (returnConsumedCapacity != null) {
+            batchRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        return dynamoDbAsyncClient.batchWriteItem(batchRequestBuilder.build())
                 .exceptionally(AsyncExceptionMapper.handler("BatchWriteItem", table.tableName()))
                 .thenCompose(response -> {
                     Map<String, List<WriteRequest>> unprocessed = response.unprocessedItems();

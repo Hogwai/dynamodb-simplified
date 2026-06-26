@@ -61,11 +61,19 @@ public class AsyncDynamoSimplifiedClientBuilder {
      */
     @NonNull
     public AsyncDynamoSimplifiedClient build() {
-        DynamoDbAsyncClient client = this.dynamoDbClient != null ? this.dynamoDbClient : DynamoDbAsyncClient.create();
+        boolean created = this.dynamoDbClient == null;
+        DynamoDbAsyncClient client = created ? DynamoDbAsyncClient.create() : this.dynamoDbClient;
         DynamoDbEnhancedAsyncClient.Builder enhancedBuilder = DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(client);
         if (extensions != null && extensions.length > 0) {
             enhancedBuilder = enhancedBuilder.extensions(extensions);
         }
-        return new AsyncDynamoSimplifiedClient(enhancedBuilder.build(), client);
+        try {
+            return new AsyncDynamoSimplifiedClient(enhancedBuilder.build(), client);
+        } catch (RuntimeException e) {
+            if (created) {
+                client.close();
+            }
+            throw e;
+        }
     }
 }

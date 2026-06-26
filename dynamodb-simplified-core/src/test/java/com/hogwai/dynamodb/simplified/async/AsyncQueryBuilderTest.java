@@ -162,7 +162,7 @@ class AsyncQueryBuilderTest {
         assertNotNull(publisher);
         List<TestItem> collected = new java.util.ArrayList<>();
         publisher.subscribe(new org.reactivestreams.Subscriber<>() {
-            @Override public void onSubscribe(org.reactivestreams.Subscription s) { s.request(Long.MAX_VALUE); }
+            @Override public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
             @Override public void onNext(TestItem item) { collected.add(item); }
             @Override public void onError(Throwable t) { }
             @Override public void onComplete() { }

@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import org.jspecify.annotations.NonNull;
@@ -42,6 +43,7 @@ public class BatchWriteBuilder<T> {
     private final DynamoDbClient dynamoDbClient;
     private final List<T> itemsToPut = new ArrayList<>();
     private final List<Key> keysToDelete = new ArrayList<>();
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Creates a new {@code BatchWriteBuilder} with the given table and low-level client.
@@ -93,6 +95,18 @@ public class BatchWriteBuilder<T> {
     }
 
     /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public BatchWriteBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
+    /**
      * Executes the batch write operation.
      * <p>
      * All puts and deletes added to this builder are sent in a single batch write request.
@@ -130,8 +144,11 @@ public class BatchWriteBuilder<T> {
         while (true) {
             Map<String, List<WriteRequest>> unprocessed;
             try {
-                var response = dynamoDbClient.batchWriteItem(
-                        BatchWriteItemRequest.builder().requestItems(currentItems).build());
+                BatchWriteItemRequest.Builder batchRequestBuilder = BatchWriteItemRequest.builder().requestItems(currentItems);
+                if (returnConsumedCapacity != null) {
+                    batchRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+                }
+                var response = dynamoDbClient.batchWriteItem(batchRequestBuilder.build());
                 unprocessed = response.unprocessedItems();
             } catch (DynamoDbException e) {
                 throw new OperationFailedException("BatchWriteItem", table.tableName(), e);

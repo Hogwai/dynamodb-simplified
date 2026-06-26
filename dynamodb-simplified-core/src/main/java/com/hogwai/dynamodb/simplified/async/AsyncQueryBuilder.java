@@ -70,9 +70,9 @@ public class AsyncQueryBuilder<T> {
         EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
     }
     private KeyConditionOp keyOp;
-    private Object pkValue;
-    private Object skValue;
-    private Object skValue2; // for BETWEEN only
+    private @Nullable Object pkValue;
+    private @Nullable Object skValue;
+    private @Nullable Object skValue2; // for BETWEEN only
 
     /**
      * Constructs a new {@code AsyncQueryBuilder} for the given async table.
@@ -572,6 +572,11 @@ public class AsyncQueryBuilder<T> {
     // ============ Low-Level Count ============
 
     private @NonNull CompletableFuture<Long> countWithLowLevel(Select select) {
+        if (pkValue == null) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Partition key value must be set before executing a query. "
+                        + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first."));
+        }
         String tableName = table != null ? table.tableName() : index.tableName();
         Map<String, String> expressionNames = new HashMap<>();
         Map<String, AttributeValue> expressionValues = new HashMap<>();
@@ -689,15 +694,18 @@ public class AsyncQueryBuilder<T> {
         return table != null ? table.tableName() : index.tableName();
     }
 
-    /**
-     * Builds the query request and returns the raw publisher without collecting pages.
-     */
-    private @NonNull SdkPublisher<Page<T>> buildPagePublisher() {
+    private void requirePartitionKey() {
+        if (pkValue == null) {
+            throw new IllegalStateException("Partition key value must be set before executing a query. "
+                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+        }
+    }
+
+    private QueryEnhancedRequest.@NonNull Builder buildBaseRequest() {
         QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
                 .queryConditional(keyCondition)
                 .scanIndexForward(scanIndexForward)
                 .consistentRead(consistentRead);
-
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(filterExpression.toSdkExpression());
         }
@@ -714,11 +722,19 @@ public class AsyncQueryBuilder<T> {
         if (returnConsumedCapacity != null) {
             requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
+        return requestBuilder;
+    }
 
+    /**
+     * Builds the query request and returns the raw publisher without collecting pages.
+     */
+    private @NonNull SdkPublisher<Page<T>> buildPagePublisher() {
+        requirePartitionKey();
+        QueryEnhancedRequest request = buildBaseRequest().build();
         if (index != null) {
-            return index.query(requestBuilder.build());
+            return index.query(request);
         }
-        return table.query(requestBuilder.build());
+        return table.query(request);
     }
 
     /**
@@ -726,42 +742,16 @@ public class AsyncQueryBuilder<T> {
      * pages into a list through a {@link PagePublisher}.
      */
     private @NonNull CompletableFuture<List<Page<T>>> executeAsPages() {
-        QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
-                .queryConditional(keyCondition)
-                .scanIndexForward(scanIndexForward)
-                .consistentRead(consistentRead);
-
-        if (filterExpression != null && !filterExpression.isEmpty()) {
-            requestBuilder.filterExpression(
-                    filterExpression.toSdkExpression()
-            );
+        try {
+            requirePartitionKey();
+            QueryEnhancedRequest request = buildBaseRequest().build();
+            if (index != null) {
+                return PageCollector.collectPages(index.query(request));
+            }
+            return PageCollector.collectPages(table.query(request));
+        } catch (RuntimeException e) {
+            return CompletableFuture.failedFuture(e);
         }
-
-        if (projectionExpression != null && !projectionExpression.isEmpty()) {
-            requestBuilder.attributesToProject(
-                    projectionExpression.getProjectedAttributes().toArray(new String[0])
-            );
-        }
-
-        if (limit != null) {
-            requestBuilder.limit(limit);
-        }
-
-        if (exclusiveStartKey != null) {
-            requestBuilder.exclusiveStartKey(exclusiveStartKey);
-        }
-
-        if (returnConsumedCapacity != null) {
-            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
-        }
-
-        CompletableFuture<List<Page<T>>> result;
-        if (index != null) {
-            result = PageCollector.collectPages(index.query(requestBuilder.build()));
-        } else {
-            result = PageCollector.collectPages(table.query(requestBuilder.build()));
-        }
-        return result.exceptionally(AsyncExceptionMapper.handler("Query", getTableName()));
     }
 
 

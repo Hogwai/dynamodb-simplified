@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
@@ -164,6 +165,44 @@ class CrossTableBatchGetBuilderTest {
         assertSame(expectedItem, items.getFirst());
         assertFalse(result.hasUnprocessed());
         verify(dynamoDbClient).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    // ============ returnConsumedCapacity ============
+
+    @Test
+    @DisplayName("returnConsumedCapacity is propagated to the request")
+    void returnConsumedCapacity_propagatesToRequest() throws Exception {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(mockResponse);
+
+        Table<TestItem> table = createTable(rawTable);
+        CrossTableBatchGetBuilder builder = new CrossTableBatchGetBuilder(dynamoDbClient);
+        builder.addKey(table, "pk1");
+        builder.returnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+        builder.execute();
+
+        var captor = ArgumentCaptor.forClass(BatchGetItemRequest.class);
+        verify(dynamoDbClient).batchGetItem(captor.capture());
+        assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
+    }
+
+    @Test
+    @DisplayName("returnConsumedCapacity returns self for chaining")
+    void returnConsumedCapacity_returnsSelf() {
+        CrossTableBatchGetBuilder builder = new CrossTableBatchGetBuilder(dynamoDbClient);
+
+        CrossTableBatchGetBuilder result = builder.returnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+
+        assertSame(builder, result);
     }
 
     // ============ project ============

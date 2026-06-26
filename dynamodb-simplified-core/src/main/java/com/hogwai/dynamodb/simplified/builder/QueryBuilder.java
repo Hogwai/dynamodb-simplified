@@ -57,9 +57,9 @@ public class QueryBuilder<T> {
         EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
     }
     private KeyConditionOp keyOp;
-    private Object pkValue;
-    private Object skValue;
-    private Object skValue2; // for BETWEEN only
+    private @Nullable Object pkValue;
+    private @Nullable Object skValue;
+    private @Nullable Object skValue2; // for BETWEEN only
 
     /**
      * Constructs a new {@code QueryBuilder} for the given table.
@@ -557,6 +557,10 @@ public class QueryBuilder<T> {
     // ============ Low-Level Count ============
 
     private long countWithLowLevel(Select select) {
+        if (pkValue == null) {
+            throw new IllegalStateException("Partition key value must be set before executing a query. "
+                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+        }
         String tableName = getTableName();
         Map<String, String> expressionNames = new HashMap<>();
         Map<String, AttributeValue> expressionValues = new HashMap<>();
@@ -677,8 +681,12 @@ public class QueryBuilder<T> {
     }
 
     private SdkIterable<Page<T>> executeAsPages() {
+        if (pkValue == null) {
+            throw new IllegalStateException("Partition key value must be set before executing a query. "
+                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+        }
         QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
-                                                                          .queryConditional(keyCondition)
+                                                                           .queryConditional(keyCondition)
                                                                           .scanIndexForward(scanIndexForward)
                                                                           .consistentRead(consistentRead);
 

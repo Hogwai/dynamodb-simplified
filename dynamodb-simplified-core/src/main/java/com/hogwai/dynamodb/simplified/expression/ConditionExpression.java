@@ -237,9 +237,17 @@ public final class ConditionExpression {
             delegate.not();
             return this;
         }
+        /**
+         * Wraps the given nested {@link ConditionExpression} in parentheses and
+         * merges its expression attribute names and values into this builder.
+         * Useful for creating grouped or nested conditions with proper precedence.
+         *
+         * @param nested the condition expression to wrap in parentheses
+         * @return this builder for chaining
+         */
         @NonNull
-        public Builder group(@NonNull FilterExpression nested) {
-            delegate.group(nested);
+        public Builder group(@NonNull ConditionExpression nested) {
+            delegate.group(nested.delegate);
             return this;
         }
 

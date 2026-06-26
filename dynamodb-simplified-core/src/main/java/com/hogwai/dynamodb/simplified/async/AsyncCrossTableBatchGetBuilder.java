@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +39,7 @@ public class AsyncCrossTableBatchGetBuilder {
 
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<Entry<?>> entries = new ArrayList<>();
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncCrossTableBatchGetBuilder}.
@@ -136,6 +138,18 @@ public class AsyncCrossTableBatchGetBuilder {
     }
 
     /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncCrossTableBatchGetBuilder returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
+    /**
      * Executes the batch get operation asynchronously.
      * <p>
      * Groups entries by table name and calls the low-level DynamoDB API.
@@ -161,8 +175,11 @@ public class AsyncCrossTableBatchGetBuilder {
         Map<String, TableSchema<?>> tableSchemas = new HashMap<>();
         Map<String, KeysAndAttributes> requestItems = buildRequestItems(entriesByTable, tableSchemas);
 
-        return dynamoDbAsyncClient.batchGetItem(
-                        BatchGetItemRequest.builder().requestItems(requestItems).build())
+        BatchGetItemRequest.Builder requestBuilder = BatchGetItemRequest.builder().requestItems(requestItems);
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        return dynamoDbAsyncClient.batchGetItem(requestBuilder.build())
                 .thenApply(response -> buildCrossTableBatchGetResult(response, tableSchemas, start))
                 .exceptionally(AsyncExceptionMapper.handler("BatchGetItem", null));
     }

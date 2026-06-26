@@ -119,18 +119,52 @@ class TableTest {
     }
 
     @Test
-    @DisplayName("deleteItem(pk) delegates to DynamoDbTable.deleteItem(Key)")
+    @DisplayName("deleteItem(pk) delegates to DynamoDbTable.deleteItem(Key) and returns deleted item")
     void deleteItemDelegates() {
+        TestItem expected = new TestItem();
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(expected);
+
         Table<TestItem> table = createTable();
-        table.deleteItem("pk");
+        TestItem result = table.deleteItem("pk");
+
+        assertSame(expected, result);
         verify(dynamoDbTable).deleteItem(any(Key.class));
     }
 
     @Test
-    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbTable.deleteItem(Key) with sort key")
+    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbTable.deleteItem(Key) with sort key and returns deleted item")
     void deleteItemWithPartitionAndSortKey() {
+        TestItem expected = new TestItem();
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(expected);
+
         Table<TestItem> table = createTable();
-        table.deleteItem("pk", "sk");
+        TestItem result = table.deleteItem("pk", "sk");
+
+        assertSame(expected, result);
+        verify(dynamoDbTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk) returns null when item does not exist")
+    void deleteItemReturnsNullWhenNotFound() {
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(null);
+
+        Table<TestItem> table = createTable();
+        TestItem result = table.deleteItem("pk");
+
+        assertNull(result);
+        verify(dynamoDbTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk, sk) returns null when item does not exist")
+    void deleteItemWithSortKeyReturnsNullWhenNotFound() {
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(null);
+
+        Table<TestItem> table = createTable();
+        TestItem result = table.deleteItem("pk", "sk");
+
+        assertNull(result);
         verify(dynamoDbTable).deleteItem(any(Key.class));
     }
 

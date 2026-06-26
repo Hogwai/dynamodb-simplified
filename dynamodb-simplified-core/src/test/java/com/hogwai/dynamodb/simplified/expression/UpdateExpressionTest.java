@@ -338,14 +338,10 @@ class UpdateExpressionTest {
     }
 
     @Test
-    @DisplayName("set() with null value stores NULL attribute value")
+    @DisplayName("set() with null value throws IllegalArgumentException")
     void setWithNull() {
-        UpdateExpression expr = UpdateExpression.builder()
-                .set("nullable", null);
-
-        assertEquals(
-                AttributeValue.builder().nul(true).build(),
-                expr.getExpressionValues().get(":u0"));
+        assertThrows(IllegalArgumentException.class,
+                () -> UpdateExpression.builder().set("nullable", null));
     }
 
     @Test

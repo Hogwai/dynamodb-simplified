@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class BatchGetBuilder<T> {
     private final List<Key> keys = new ArrayList<>();
     private boolean consistentRead;
     private ProjectionExpression projectionExpression;
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     public BatchGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbTable<T> table,
                            @NonNull DynamoDbClient dynamoDbClient) {
@@ -130,6 +132,18 @@ public class BatchGetBuilder<T> {
     }
 
     /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public BatchGetBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
+    /**
      * Executes the batch get operation and returns all matching items along
      * with any unprocessed keys.
      * <p>
@@ -179,9 +193,10 @@ public class BatchGetBuilder<T> {
             }
         }
 
-        BatchGetItemEnhancedRequest request = BatchGetItemEnhancedRequest.builder()
-                .readBatches(batchBuilder.build())
-                .build();
+        BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder()
+                .readBatches(batchBuilder.build());
+        applyReturnConsumedCapacityIfNeeded(requestBuilder);
+        BatchGetItemEnhancedRequest request = requestBuilder.build();
 
         List<T> allItems = new ArrayList<>();
         Map<String, KeysAndAttributes> allUnprocessed = new HashMap<>();
@@ -246,9 +261,12 @@ public class BatchGetBuilder<T> {
     private Map<String, KeysAndAttributes> attemptRetry(
             List<T> allItems, Map<String, KeysAndAttributes> unprocessed) {
         String tableName = table.tableName();
-        BatchGetItemRequest retryRequest = BatchGetItemRequest.builder()
-                .requestItems(unprocessed)
-                .build();
+        BatchGetItemRequest.Builder retryRequestBuilder = BatchGetItemRequest.builder()
+                .requestItems(unprocessed);
+        if (returnConsumedCapacity != null) {
+            retryRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        BatchGetItemRequest retryRequest = retryRequestBuilder.build();
 
         try {
             var response = dynamoDbClient.batchGetItem(retryRequest);
@@ -292,9 +310,12 @@ public class BatchGetBuilder<T> {
         Map<String, KeysAndAttributes> requestItems = new HashMap<>();
         requestItems.put(tableName, keysAndAttributes);
 
-        BatchGetItemRequest request = BatchGetItemRequest.builder()
-                .requestItems(requestItems)
-                .build();
+        BatchGetItemRequest.Builder requestBuilder = BatchGetItemRequest.builder()
+                .requestItems(requestItems);
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        BatchGetItemRequest request = requestBuilder.build();
 
         List<Map<String, AttributeValue>> items;
         Map<String, KeysAndAttributes> unprocessed;
@@ -311,6 +332,12 @@ public class BatchGetBuilder<T> {
             results.add(table.tableSchema().mapToItem(item));
         }
         return new BatchGetResult<>(results, unprocessed != null ? unprocessed : Map.of());
+    }
+
+    private void applyReturnConsumedCapacityIfNeeded(BatchGetItemEnhancedRequest.Builder builder) {
+        if (returnConsumedCapacity != null) {
+            builder.returnConsumedCapacity(returnConsumedCapacity);
+        }
     }
 
 

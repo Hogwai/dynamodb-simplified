@@ -53,12 +53,17 @@ public class UpdateExpression {
      * Adds a {@code SET} action that assigns the given value to the specified
      * attribute, overwriting any existing value.
      *
-     * @param attribute the attribute name
-     * @param value     the value to set
+     * @param attribute the attribute name (must not be null)
+     * @param value     the value to set (must not be null — use {@link #remove(String...)} instead)
      * @return this builder for chaining
+     * @throws IllegalArgumentException if value is null
      */
     @NonNull
-    public UpdateExpression set(@NonNull String attribute, @Nullable Object value) {
+    public UpdateExpression set(@NonNull String attribute, @NonNull Object value) {
+        if (value == null) {
+            throw new IllegalArgumentException(
+                    "Cannot set attribute '" + attribute + "' to null. Use remove(\"" + attribute + "\") instead.");
+        }
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s = %s".formatted(nameKey, valueKey));

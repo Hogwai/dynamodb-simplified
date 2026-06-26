@@ -106,15 +106,17 @@ class AsyncTableTest {
     }
 
     @Test
-    @DisplayName("deleteItem(pk) delegates to DynamoDbAsyncTable.deleteItem(Key)")
+    @DisplayName("deleteItem(pk) delegates to DynamoDbAsyncTable.deleteItem(Key) and returns deleted item")
     void deleteItemDelegates() {
-        when(dynamoDbAsyncTable.deleteItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(null));
+        TestItem expected = new TestItem();
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(expected));
 
         AsyncTable<TestItem> table = createTable();
-        CompletableFuture<Void> result = table.deleteItem("pk");
+        CompletableFuture<TestItem> result = table.deleteItem("pk");
 
         assertNotNull(result);
-        result.join();
+        assertSame(expected, result.join());
         verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
     }
 
@@ -252,15 +254,45 @@ class AsyncTableTest {
     }
 
     @Test
-    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbAsyncTable.deleteItem(Key)")
+    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbAsyncTable.deleteItem(Key) and returns deleted item")
     void deleteItemWithSortKeyDelegates() {
-        when(dynamoDbAsyncTable.deleteItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(null));
+        TestItem expected = new TestItem();
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(expected));
 
         AsyncTable<TestItem> table = createTable();
-        CompletableFuture<Void> result = table.deleteItem("pk", "sk");
+        CompletableFuture<TestItem> result = table.deleteItem("pk", "sk");
 
         assertNotNull(result);
-        result.join();
+        assertSame(expected, result.join());
+        verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk) returns null when item does not exist")
+    void deleteItemReturnsNullWhenNotFound() {
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<TestItem> result = table.deleteItem("pk");
+
+        assertNotNull(result);
+        assertNull(result.join());
+        verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk, sk) returns null when item does not exist")
+    void deleteItemWithSortKeyReturnsNullWhenNotFound() {
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<TestItem> result = table.deleteItem("pk", "sk");
+
+        assertNotNull(result);
+        assertNull(result.join());
         verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
     }
 

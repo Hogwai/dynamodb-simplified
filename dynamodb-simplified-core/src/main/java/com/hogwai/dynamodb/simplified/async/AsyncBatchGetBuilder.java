@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +54,7 @@ public class AsyncBatchGetBuilder<T> {
     private final List<Key> keys = new ArrayList<>();
     private Boolean consistentRead;
     private ProjectionExpression projectionExpression;
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncBatchGetBuilder}.
@@ -166,6 +168,18 @@ public class AsyncBatchGetBuilder<T> {
     }
 
     /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncBatchGetBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
+    /**
      * Executes the batch get operation asynchronously and returns all matching items
      * aggregated from all pages.
      *
@@ -190,9 +204,12 @@ public class AsyncBatchGetBuilder<T> {
 
         ReadBatch readBatch = buildReadBatch();
 
-        BatchGetItemEnhancedRequest request = BatchGetItemEnhancedRequest.builder()
-                .readBatches(readBatch)
-                .build();
+        BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder()
+                .readBatches(readBatch);
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        BatchGetItemEnhancedRequest request = requestBuilder.build();
 
         BatchGetResultPagePublisher publisher = enhancedClient.batchGetItem(request);
 
@@ -222,9 +239,12 @@ public class AsyncBatchGetBuilder<T> {
             return CompletableFuture.completedFuture(new PagedResult<>(Collections.emptyList(), null));
         }
 
-        BatchGetItemEnhancedRequest request = BatchGetItemEnhancedRequest.builder()
-                .readBatches(buildReadBatch())
-                .build();
+        BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder()
+                .readBatches(buildReadBatch());
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        BatchGetItemEnhancedRequest request = requestBuilder.build();
 
         BatchGetResultPagePublisher publisher = enhancedClient.batchGetItem(request);
 
@@ -358,9 +378,12 @@ public class AsyncBatchGetBuilder<T> {
         Map<String, KeysAndAttributes> requestItems = new HashMap<>();
         requestItems.put(tableName, keysAndAttributesBuilder.build());
 
-        BatchGetItemRequest request = BatchGetItemRequest.builder()
-                .requestItems(requestItems)
-                .build();
+        BatchGetItemRequest.Builder lowLevelRequestBuilder = BatchGetItemRequest.builder()
+                .requestItems(requestItems);
+        if (returnConsumedCapacity != null) {
+            lowLevelRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        BatchGetItemRequest request = lowLevelRequestBuilder.build();
 
         return dynamoDbAsyncClient.batchGetItem(request)
                 .thenApply(response -> {
