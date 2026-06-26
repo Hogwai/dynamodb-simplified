@@ -148,7 +148,7 @@ CrossEntityResult result = client.entityQuery("myapp")
     .execute();
 ```
 
-See the [Single-Table Design Guide](docs/superpowers/guides/single-table-design.md) for full documentation.
+See the [Single-Table Design Guide](docs/guides/single-table-design.md) for full documentation.
 
 ---
 
