@@ -4,8 +4,10 @@ plugins {
     id("io.micronaut.aot") version "4.6.1" apply false
 }
 
+val libraryVersion = "0.1.0"
+
 group = "com.hogwai"
-version = "0.1.0"
+version = libraryVersion
 
 subprojects {
     group = rootProject.group

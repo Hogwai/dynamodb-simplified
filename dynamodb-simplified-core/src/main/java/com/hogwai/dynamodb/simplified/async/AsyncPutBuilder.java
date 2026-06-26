@@ -4,6 +4,7 @@ import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -137,18 +138,7 @@ public class AsyncPutBuilder<T> {
         }
 
         return table.putItem(requestBuilder.build())
-                .exceptionally(e -> {
-                    if (e instanceof ConditionalCheckFailedException ccf) {
-                        throw ConditionFailedException.fromSdk(ccf);
-                    }
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("PutItem", table.tableName(), dde);
-                    }
-                    if (e instanceof RuntimeException re) {
-                        throw re;
-                    }
-                    throw new DynamoSimplifiedException(e);
-                })
+                .exceptionally(AsyncExceptionMapper.handler("PutItem", table.tableName()))
                 .thenRun(() -> {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("AsyncPut on table '{}' completed in {}ms",

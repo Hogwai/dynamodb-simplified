@@ -61,11 +61,19 @@ public class DynamoSimplifiedClientBuilder {
      */
     @NonNull
     public DynamoSimplifiedClient build() {
-        DynamoDbClient client = this.dynamoDbClient != null ? this.dynamoDbClient : DynamoDbClient.create();
+        boolean created = this.dynamoDbClient == null;
+        DynamoDbClient client = created ? DynamoDbClient.create() : this.dynamoDbClient;
         DynamoDbEnhancedClient.Builder enhancedBuilder = DynamoDbEnhancedClient.builder().dynamoDbClient(client);
         if (extensions != null && extensions.length > 0) {
             enhancedBuilder = enhancedBuilder.extensions(extensions);
         }
-        return new DynamoSimplifiedClient(enhancedBuilder.build(), client);
+        try {
+            return new DynamoSimplifiedClient(enhancedBuilder.build(), client);
+        } catch (RuntimeException e) {
+            if (created) {
+                client.close();
+            }
+            throw e;
+        }
     }
 }

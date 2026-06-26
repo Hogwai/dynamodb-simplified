@@ -36,12 +36,7 @@ class AsyncTransactWriteBuilderTest {
     // ============ Test Items ============
 
     @SuppressWarnings("unused")
-    static class TestItem {
-        final String id;
-
-        TestItem(String id) {
-            this.id = id;
-        }
+    record TestItem(String id) {
     }
 
     // ============ Mocks ============

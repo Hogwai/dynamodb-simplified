@@ -4,6 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -338,14 +340,10 @@ class UpdateExpressionTest {
     }
 
     @Test
-    @DisplayName("set() with null value stores NULL attribute value")
+    @DisplayName("set() with null value throws IllegalArgumentException")
     void setWithNull() {
-        UpdateExpression expr = UpdateExpression.builder()
-                .set("nullable", null);
-
-        assertEquals(
-                AttributeValue.builder().nul(true).build(),
-                expr.getExpressionValues().get(":u0"));
+        assertThrows(IllegalArgumentException.class,
+                () -> UpdateExpression.builder().set("nullable", null));
     }
 
     @Test
@@ -364,5 +362,25 @@ class UpdateExpressionTest {
         assertEquals(
                 AttributeValue.builder().s("value").build(),
                 expr.getExpressionValues().get(":u0"));
+    }
+
+    @Test
+    @DisplayName("ttl() sets the TTL attribute to the correct epoch value")
+    void ttl() {
+        UpdateExpression expr = UpdateExpression.builder()
+                .ttl("expiresAt", Duration.ofDays(7));
+
+        assertEquals("SET #u0 = :u0", expr.getExpression());
+        assertEquals(Map.of("#u0", "expiresAt"), expr.getExpressionNames());
+
+        AttributeValue value = expr.getExpressionValues().get(":u0");
+        assertNotNull(value);
+        assertNotNull(value.n());
+
+        long expectedEpoch = Instant.now().plus(Duration.ofDays(7)).getEpochSecond();
+        long actualEpoch = Long.parseLong(value.n());
+        // Allow 1 second tolerance for test execution time
+        assertTrue(Math.abs(expectedEpoch - actualEpoch) <= 1,
+                "Expected epoch ~" + expectedEpoch + " but got " + actualEpoch);
     }
 }

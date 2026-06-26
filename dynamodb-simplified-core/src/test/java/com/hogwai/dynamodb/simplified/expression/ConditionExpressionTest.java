@@ -194,9 +194,33 @@ class ConditionExpressionTest {
     @Test
     @DisplayName("group wraps sub-expression in parentheses")
     void group() {
-        var inner = FilterExpression.builder().eq("role", "admin");
+        var inner = ConditionExpression.builder().eq("role", "admin").build();
         var expr = ConditionExpression.builder().eq("status", "active").and().group(inner).build();
         assertEquals("#n0 = :v0 AND (#n1 = :v1)", expr.getExpression());
+    }
+
+    @Test
+    @DisplayName("group accepts ConditionExpression directly")
+    void group_shouldAcceptConditionExpression() {
+        var inner = ConditionExpression.builder().eq("role", "admin").build();
+        var expr = ConditionExpression.builder().eq("status", "active").and().group(inner).build();
+        assertEquals("#n0 = :v0 AND (#n1 = :v1)", expr.getExpression());
+    }
+
+    @Test
+    @DisplayName("group nests complex conditions with AND/OR")
+    void group_shouldNestProperly() {
+        var inner = ConditionExpression.builder()
+                .eq("role", "admin")
+                .or()
+                .eq("role", "moderator")
+                .build();
+        var expr = ConditionExpression.builder()
+                .eq("status", "active")
+                .and()
+                .group(inner)
+                .build();
+        assertEquals("#n0 = :v0 AND (#n1 = :v1 OR #n2 = :v2)", expr.getExpression());
     }
 
     @Test

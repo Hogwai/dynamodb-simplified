@@ -78,6 +78,12 @@ List<Post> posts = table.query()
 | **GSI/LSI Support** | Query and scan through secondary indexes |
 | **Type Safety** | Leverages DynamoDB Enhanced Client's bean mapping |
 | **Zero framework deps** | Pure Java, no Spring/Micronaut dependency in the core |
+| **Single-Table Design** | Entity annotations (`@Entity`, `@KeyComponent`, `@KeyPrefix`) with auto-computed composite keys and discriminator filtering |
+| **Optimistic Locking** | `@Version` annotation with automatic version checking on put/update |
+| **TTL Management** | `enableTtl()`, `disableTtl()`, `describeTtl()` and `UpdateExpression.ttl(Duration)` |
+| **Consumed Capacity** | Every result type exposes consumed capacity via the `Consumed` interface |
+| **Batch Retry** | Automatic retry of unprocessed keys with exponential backoff (batch get + write) |
+| **Async Streaming** | `executeStream()` returning `CompletableFuture<SdkPublisher<T>>` for reactive async iteration |
 
 ---
 
@@ -113,6 +119,41 @@ client.transactWrite()
 
 ---
 
+## Single-Table Design
+
+DynamoDB Simplified is the first Java library with **first-class single-table design support**.
+
+```java
+@Entity(discriminator = "USER", table = "myapp")
+@KeyPrefix(component = "PK", value = "USER")
+public class User {
+    private String pk;                   // auto-computed: "USER#user123"
+    private String userId;
+
+    @KeyComponent(component = "PK", position = 0)
+    public String getUserId() { return userId; }
+
+    @DynamoDbPartitionKey
+    public String getPk() { return pk; }
+    public void setPk(String pk) { this.pk = pk; }
+}
+
+// Entity-aware table — keys auto-computed, discriminator auto-filtered
+EntityTable<User> users = client.entityTable(User.class);
+users.put(new User("user123"));  // pk auto-set to "USER#user123"
+
+// Cross-entity queries
+CrossEntityResult result = client.entityQuery("myapp")
+    .partitionKey("USER#user123")
+    .includeEntity(User.class)
+    .includeEntity(Post.class)
+    .execute();
+```
+
+See the [Single-Table Design Guide](docs/superpowers/guides/single-table-design.md) for full documentation.
+
+---
+
 ## Documentation
 
 Full documentation is available at the [project site](https://hogwai.github.io/dynamodb-simplified/), including a [Quickstart guide](https://hogwai.github.io/dynamodb-simplified/quickstart/) with complete API coverage (CRUD, query, scan, batch, transactions, indexes, DDL, PartiQL, async).
@@ -123,7 +164,7 @@ The [API reference](javadoc/index.html) is generated from Javadoc comments.
 
 ## Requirements
 
-- Java 17+ (tested with Java 25)
+- Java 21+ (tested with Java 25)
 - AWS SDK v2 (2.29.52+)
 
 ---
@@ -140,6 +181,7 @@ dynamodb-simplified/
 │       ├── async/                         # AsyncDynamoSimplifiedClient, AsyncTable, async builders
 │       ├── builder/                       # QueryBuilder, PutBuilder, TransactWriteBuilder, etc.
 │       ├── exception/                     # DynamoSimplifiedException, ConditionFailedException
+│       ├── entity/                        # @Entity, @KeyComponent, EntityTable, EntityQueryBuilder
 │       ├── expression/                    # FilterExpression, UpdateExpression, ProjectionExpression
 │       ├── internal/                      # AttributeValueConverter
 │       └── result/                        # PagedResult, TransactGetResults, BatchGetResults

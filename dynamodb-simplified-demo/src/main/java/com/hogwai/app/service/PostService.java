@@ -10,8 +10,6 @@ import com.hogwai.app.search.PostSearchCriteria;
 import jakarta.inject.Singleton;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -25,53 +23,9 @@ public class PostService {
         this.repository = repository;
     }
 
-    // Create a post
-    public void createPost(String subreddit,
-                           String title,
-                           String author,
-                           String content,
-                           Set<String> keywords) {
-        SocialMediaPost socialMediaPost = new SocialMediaPost(
-                generateId(),
-                subreddit,
-                Instant.now().getEpochSecond(),
-                author,
-                title,
-                content,
-                "/r/" + subreddit + "/comments/" + generateId(),
-                keywords
-        );
-        repository.saveIfNotExists(socialMediaPost);
-    }
-
     // Recent posts from a subreddit
     public List<SocialMediaPost> getRecentPosts(String subreddit, int limit) {
         return repository.findBySubreddit(subreddit, limit);
-    }
-
-    // Posts from the last 24 hours
-    public List<SocialMediaPost> getPostsLast24Hours(String subreddit) {
-        long yesterday = Instant.now().minus(24, ChronoUnit.HOURS).getEpochSecond();
-        return repository.findCreatedAfter(subreddit, yesterday);
-    }
-
-    // Advanced search
-    public List<SocialMediaPost> searchPosts(String subreddit, String author, String keyword, int limit) {
-        PostSearchCriteria criteria = PostSearchCriteria.builder()
-                                                        .subreddit(subreddit)
-                                                        .author(author)
-                                                        .keyword(keyword)
-                                                        .sinceUtc(Instant.now().minus(7, ChronoUnit.DAYS).getEpochSecond())
-                                                        .limit(limit)
-                                                        .build();
-
-        return repository.search(criteria);
-    }
-
-    // Pagination
-    public PagedResult<SocialMediaPost> getPostsPage(String subreddit, int pageSize, String lastKeyJson) {
-        var lastKey = lastKeyJson != null ? deserializeKey(lastKeyJson) : null;
-        return repository.findBySubredditPaginated(subreddit, pageSize, lastKey);
     }
 
     private String generateId() {
@@ -100,10 +54,6 @@ public class PostService {
         return repository.findCreatedAfter(subreddit, since);
     }
 
-    public List<SocialMediaPost> getPostsByKeyword(String subreddit, String keyword) {
-        return repository.findByKeyword(subreddit, keyword);
-    }
-
     // ============ Recherche ============
 
     public List<SocialMediaPost> search(PostSearchRequest request) {
@@ -129,8 +79,8 @@ public class PostService {
         PagedResult<SocialMediaPost> result = repository.findBySubredditPaginated(subreddit, pageSize, lastKey);
 
         return PagedResponse.<SocialMediaPost>builder()
-                            .items(result.getItems())
-                            .nextCursor(encodeCursor(result.getLastEvaluatedKey()))
+                            .items(result.items())
+                            .nextCursor(encodeCursor(result.lastEvaluatedKey()))
                             .hasMore(result.hasMorePages())
                             .build();
     }
@@ -173,15 +123,6 @@ public class PostService {
 
     public void deletePost(String subreddit, String id) {
         repository.delete(subreddit, id);
-    }
-
-    public boolean tryDeleteByAuthor(String subreddit, String id, String author) {
-        try {
-            repository.deleteByAuthor(subreddit, id, author);
-            return true;
-        } catch (ConditionalCheckFailedException _) {
-            return false;
-        }
     }
 
     // ============ Utility Methods ============

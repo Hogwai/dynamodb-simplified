@@ -47,6 +47,11 @@ table.query()
 - **Batch operations**: `batchGet()` and `batchWrite()` with consistent reads
 - **DDL**: `createTable()`, `deleteTable()`, `describeTable()`, `tableExists()`
 - **GSI / LSI**: `table.index("name").query()` with full fluent API
+- **Single-table design**: `@Entity`/`@KeyComponent` annotations, auto-computed composite keys, cross-entity queries
+- **Optimistic locking**: `@Version` annotation with automatic version checking
+- **TTL management**: enable/disable/describe TTL with `UpdateExpression.ttl(Duration)`
+- **Consumed capacity**: every result type exposes consumed capacity
+- **Automatic batch retry**: unprocessed keys automatically retried with exponential backoff
 - **PartiQL**: `client.executeStatement()` for raw SQL-like queries
 - **Low-level fallback**: when the Enhanced Client lacks a feature (update expressions, returnValues), the library delegates to the low-level DynamoDB client transparently
 - **No framework dependencies**: pure Java, works with any stack
@@ -78,6 +83,8 @@ client.transactWrite()
 ```
 
 See the [Quickstart](quickstart.md) guide for a complete walkthrough.
+
+Looking for single-table design? See the [Single-Table Design Guide](superpowers/guides/single-table-design.md).
 
 ## API Reference
 

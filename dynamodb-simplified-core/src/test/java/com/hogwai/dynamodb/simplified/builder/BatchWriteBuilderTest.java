@@ -92,7 +92,7 @@ class BatchWriteBuilderTest {
         BatchWriteResult result = builder.execute();
 
         assertFalse(result.hasUnprocessed());
-        assertTrue(result.getUnprocessedItems().isEmpty());
+        assertTrue(result.unprocessedItems().isEmpty());
         verifyNoInteractions(dynamoDbClient);
     }
 

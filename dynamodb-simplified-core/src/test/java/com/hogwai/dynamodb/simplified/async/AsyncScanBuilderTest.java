@@ -8,7 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
@@ -24,6 +26,7 @@ import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -135,8 +138,8 @@ class AsyncScanBuilderTest {
         PagedResult<TestItem> result = new AsyncScanBuilder<>(table).executeWithPagination().join();
 
         assertEquals(1, result.size());
-        assertNotNull(result.getLastEvaluatedKey());
-        assertEquals("next", result.getLastEvaluatedKey().get("key").s());
+        assertNotNull(result.lastEvaluatedKey());
+        assertEquals("next", result.lastEvaluatedKey().get("key").s());
         assertTrue(result.hasMorePages());
     }
 
@@ -149,7 +152,7 @@ class AsyncScanBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 
@@ -206,6 +209,28 @@ class AsyncScanBuilderTest {
         assertEquals("#n0 = :v0", expr.expression());
         assertEquals(Map.of("#n0", "color"), expr.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("blue").build()), expr.expressionValues());
+    }
+
+    @Test
+    @DisplayName("filter with Map builds equality conditions AND'd together")
+    void filter_withMap() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(emptyPublisher());
+
+        new AsyncScanBuilder<>(table)
+                .filter(Map.of("status", "active", "region", "us-east-1"))
+                .executeAll()
+                .join();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+
+        assertNotNull(request.filterExpression());
+        Expression expr = request.filterExpression();
+        assertTrue(expr.expression().contains("AND"));
+        assertTrue(expr.expression().contains("="));
+        assertEquals(2, expr.expressionNames().size());
+        assertEquals(2, expr.expressionValues().size());
     }
 
     @Test
@@ -414,5 +439,79 @@ class AsyncScanBuilderTest {
                 .count()
                 .join()
         );
+    }
+
+    // ============ executeAndGetFirst() Tests ============
+
+    @Test
+    @DisplayName("executeAndGetFirst() returns first item from page")
+    void executeAndGetFirst_returnsFirstItem() {
+        Page<TestItem> page = mockPage(3, 3, null);
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        Optional<TestItem> result = new AsyncScanBuilder<>(table)
+                .executeAndGetFirst()
+                .join();
+
+        assertTrue(result.isPresent());
+        verify(table).scan(any(ScanEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() returns empty when no items in page")
+    void executeAndGetFirst_returnsEmptyWhenNoItems() {
+        Page<TestItem> page = mockPage(0, 0, null);
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        Optional<TestItem> result = new AsyncScanBuilder<>(table)
+                .executeAndGetFirst()
+                .join();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() with Select.COUNT returns failed future")
+    void executeAndGetFirst_throwsOnCountSelect() {
+        CompletableFuture<Optional<TestItem>> future = new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeAndGetFirst();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeStream returns publisher that emits items")
+    void executeStream_returnsPublisher() {
+        Page<TestItem> page = mockPage(2, 2, null);
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        SdkPublisher<TestItem> publisher = new AsyncScanBuilder<>(table)
+                .executeStream()
+                .join();
+
+        assertNotNull(publisher);
+        List<TestItem> collected = new java.util.ArrayList<>();
+        publisher.subscribe(new Subscriber<>() {
+            @Override public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
+            @Override public void onNext(TestItem item) { collected.add(item); }
+            @Override public void onError(Throwable t) { /* not needed for this test scenario */ }
+            @Override public void onComplete() { /* not needed for this test scenario */ }
+        });
+        // Items are emitted synchronously from the mock publisher
+        assertEquals(2, collected.size());
+        verify(table).scan(any(ScanEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("executeStream() with Select.COUNT returns failed future")
+    void executeStream_throwsWithSelectCount() {
+        CompletableFuture<SdkPublisher<TestItem>> future = new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeStream();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 }

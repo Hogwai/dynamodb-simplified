@@ -16,9 +16,12 @@ import com.hogwai.dynamodb.simplified.builder.Index;
 
 import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -119,18 +122,52 @@ class TableTest {
     }
 
     @Test
-    @DisplayName("deleteItem(pk) delegates to DynamoDbTable.deleteItem(Key)")
+    @DisplayName("deleteItem(pk) delegates to DynamoDbTable.deleteItem(Key) and returns deleted item")
     void deleteItemDelegates() {
+        TestItem expected = new TestItem();
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(expected);
+
         Table<TestItem> table = createTable();
-        table.deleteItem("pk");
+        TestItem result = table.deleteItem("pk");
+
+        assertSame(expected, result);
         verify(dynamoDbTable).deleteItem(any(Key.class));
     }
 
     @Test
-    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbTable.deleteItem(Key) with sort key")
+    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbTable.deleteItem(Key) with sort key and returns deleted item")
     void deleteItemWithPartitionAndSortKey() {
+        TestItem expected = new TestItem();
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(expected);
+
         Table<TestItem> table = createTable();
-        table.deleteItem("pk", "sk");
+        TestItem result = table.deleteItem("pk", "sk");
+
+        assertSame(expected, result);
+        verify(dynamoDbTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk) returns null when item does not exist")
+    void deleteItemReturnsNullWhenNotFound() {
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(null);
+
+        Table<TestItem> table = createTable();
+        TestItem result = table.deleteItem("pk");
+
+        assertNull(result);
+        verify(dynamoDbTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk, sk) returns null when item does not exist")
+    void deleteItemWithSortKeyReturnsNullWhenNotFound() {
+        when(dynamoDbTable.deleteItem(any(Key.class))).thenReturn(null);
+
+        Table<TestItem> table = createTable();
+        TestItem result = table.deleteItem("pk", "sk");
+
+        assertNull(result);
         verify(dynamoDbTable).deleteItem(any(Key.class));
     }
 
@@ -212,6 +249,25 @@ class TableTest {
         Table<TestItem> table = createTable();
 
         assertNotNull(table.batchWrite());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    @DisplayName("putAll(items) puts all items via batch write")
+    void putAllDelegatesToBatchWrite() {
+        TableSchema<TestItem> schema = mock(TableSchema.class);
+        when(schema.itemToMap(any(), anyBoolean())).thenReturn(Map.of());
+        when(dynamoDbTable.tableSchema()).thenReturn(schema);
+        when(dynamoDbTable.tableName()).thenReturn("test-table");
+        when(dynamoDbClient.batchWriteItem(any(BatchWriteItemRequest.class)))
+                .thenReturn(BatchWriteItemResponse.builder().build());
+
+        Table<TestItem> table = createTable();
+        TestItem item1 = new TestItem();
+        TestItem item2 = new TestItem();
+        assertNotNull(table.putAll(List.of(item1, item2)));
+
+        verify(dynamoDbClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
     // ============ Secondary Index ============

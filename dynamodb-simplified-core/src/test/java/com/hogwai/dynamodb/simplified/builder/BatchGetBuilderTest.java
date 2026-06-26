@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
@@ -15,6 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
@@ -22,12 +22,12 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -111,7 +111,7 @@ class BatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute();
 
-        assertTrue(result.getItems().isEmpty());
+        assertTrue(result.items().isEmpty());
         assertFalse(result.hasUnprocessed());
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
@@ -130,9 +130,10 @@ class BatchGetBuilderTest {
 
         // Mock the batch get result
         BatchGetResultPageIterable resultPageIterable = mock(BatchGetResultPageIterable.class);
-        SdkIterable<TestItem> sdkIterable = mock(SdkIterable.class);
-        when(sdkIterable.stream()).thenReturn(Stream.of());
-        when(resultPageIterable.resultsForTable(table)).thenReturn(sdkIterable);
+        BatchGetResultPage page = mock(BatchGetResultPage.class);
+        when(page.resultsForTable(table)).thenReturn(List.of());
+        when(page.unprocessedKeysForTable(table)).thenReturn(List.of());
+        when(resultPageIterable.iterator()).thenReturn(List.of(page).iterator());
         when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(resultPageIterable);
 
         // Intercept ReadBatch.builder() to capture the consumer passed to addGetItem
@@ -176,12 +177,13 @@ class BatchGetBuilderTest {
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
         when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
-        // Mock the batch get result page iterable -> SdkIterable -> stream
+        // Mock the batch get result page -> page iteration -> results
         BatchGetResultPageIterable resultPageIterable = mock(BatchGetResultPageIterable.class);
-        SdkIterable<TestItem> sdkIterable = mock(SdkIterable.class);
+        BatchGetResultPage page = mock(BatchGetResultPage.class);
         TestItem expectedItem = new TestItem("item1");
-        when(sdkIterable.stream()).thenReturn(Stream.of(expectedItem));
-        when(resultPageIterable.resultsForTable(table)).thenReturn(sdkIterable);
+        when(page.resultsForTable(table)).thenReturn(List.of(expectedItem));
+        when(page.unprocessedKeysForTable(table)).thenReturn(List.of());
+        when(resultPageIterable.iterator()).thenReturn(List.of(page).iterator());
         when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(resultPageIterable);
 
         BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
@@ -189,8 +191,8 @@ class BatchGetBuilderTest {
 
         BatchGetResult<TestItem> result = builder.execute();
 
-        assertEquals(1, result.getItems().size());
-        assertSame(expectedItem, result.getItems().getFirst());
+        assertEquals(1, result.items().size());
+        assertSame(expectedItem, result.items().getFirst());
         assertFalse(result.hasUnprocessed());
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
@@ -292,5 +294,157 @@ class BatchGetBuilderTest {
 
         assertThrows(IllegalArgumentException.class, builder::execute);
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    // ============ retry ============
+
+    @Test
+    @DisplayName("execute with unprocessed keys from enhanced path retries using low-level client")
+    @SuppressWarnings("unchecked")
+    void execute_withUnprocessedKeys_enhancedPath_retries() {
+        EnhancedType<TestItem> enhancedType = mock(EnhancedType.class);
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemType()).thenReturn(enhancedType);
+        when(enhancedType.rawClass()).thenReturn(TestItem.class);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("test_table");
+
+        // Enhanced client first call: 1 item returned, 1 key unprocessed
+        TestItem firstItem = new TestItem("item1");
+        Key unprocessedKey = Key.builder().partitionValue("pk2").build();
+
+        BatchGetResultPage page = mock(BatchGetResultPage.class);
+        when(page.resultsForTable(table)).thenReturn(List.of(firstItem));
+        when(page.unprocessedKeysForTable(table)).thenReturn(List.of(unprocessedKey));
+
+        BatchGetResultPageIterable pages = mock(BatchGetResultPageIterable.class);
+        when(pages.iterator()).thenReturn(List.of(page).iterator());
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(pages);
+
+        // Low-level client retry: returns the remaining item
+        Map<String, List<Map<String, AttributeValue>>> retryResponses = new HashMap<>();
+        retryResponses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk2").build())));
+        BatchGetItemResponse retryResponse = mock(BatchGetItemResponse.class);
+        when(retryResponse.responses()).thenReturn(retryResponses);
+        when(retryResponse.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(retryResponse);
+
+        TestItem secondItem = new TestItem("item2");
+        when(tableSchema.mapToItem(any(Map.class))).thenReturn(secondItem);
+
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        builder.addKey("pk1");
+        builder.addKey("pk2");
+
+        BatchGetResult<TestItem> result = builder.execute();
+
+        assertEquals(2, result.items().size());
+        assertSame(firstItem, result.items().get(0));
+        assertSame(secondItem, result.items().get(1));
+        assertFalse(result.hasUnprocessed());
+        verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+        verify(dynamoDbClient).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute with projection and unprocessed keys retries using low-level client")
+    @SuppressWarnings("unchecked")
+    void execute_withUnprocessedKeys_projectionPath_retries() {
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("test_table");
+
+        // First low-level call: returns 1 item + unprocessed keys
+        Map<String, List<Map<String, AttributeValue>>> firstResponses = new HashMap<>();
+        firstResponses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+        KeysAndAttributes unprocessedKeys = KeysAndAttributes.builder()
+                .keys(List.of(Map.of("id", AttributeValue.builder().s("pk2").build())))
+                .build();
+        Map<String, KeysAndAttributes> unprocessedMap = Map.of("test_table", unprocessedKeys);
+        BatchGetItemResponse firstResponse = mock(BatchGetItemResponse.class);
+        when(firstResponse.responses()).thenReturn(firstResponses);
+        when(firstResponse.unprocessedKeys()).thenReturn(unprocessedMap);
+
+        // Second low-level call (retry): returns remaining item, no unprocessed
+        Map<String, List<Map<String, AttributeValue>>> secondResponses = new HashMap<>();
+        secondResponses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk2").build())));
+        BatchGetItemResponse secondResponse = mock(BatchGetItemResponse.class);
+        when(secondResponse.responses()).thenReturn(secondResponses);
+        when(secondResponse.unprocessedKeys()).thenReturn(Map.of());
+
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(firstResponse, secondResponse);
+
+        TestItem firstItem = new TestItem("result1");
+        TestItem secondItem = new TestItem("result2");
+        when(tableSchema.mapToItem(any(Map.class)))
+                .thenReturn(firstItem, secondItem);
+
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        builder.addKey("pk1");
+        builder.addKey("pk2");
+        builder.project("attr1");
+
+        BatchGetResult<TestItem> result = builder.execute();
+
+        assertEquals(2, result.items().size());
+        assertSame(firstItem, result.items().get(0));
+        assertSame(secondItem, result.items().get(1));
+        assertFalse(result.hasUnprocessed());
+        verify(dynamoDbClient, times(2)).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    @Test
+    @DisplayName("execute with persistent unprocessed keys returns remaining after retry exhaustion")
+    @SuppressWarnings("unchecked")
+    void execute_retryExhaustion_returnsUnprocessedKeys() {
+        EnhancedType<TestItem> enhancedType = mock(EnhancedType.class);
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemType()).thenReturn(enhancedType);
+        when(enhancedType.rawClass()).thenReturn(TestItem.class);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("test_table");
+
+        // Enhanced page returns 0 items with 1 unprocessed key
+        Key unprocessedKey = Key.builder().partitionValue("pk1").build();
+
+        BatchGetResultPage page = mock(BatchGetResultPage.class);
+        when(page.resultsForTable(table)).thenReturn(List.of());
+        when(page.unprocessedKeysForTable(table)).thenReturn(List.of(unprocessedKey));
+
+        BatchGetResultPageIterable pages = mock(BatchGetResultPageIterable.class);
+        when(pages.iterator()).thenReturn(List.of(page).iterator());
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(pages);
+
+        // All retry attempts also return unprocessed keys
+        Map<String, List<Map<String, AttributeValue>>> emptyResponses = new HashMap<>();
+        emptyResponses.put("test_table", List.of());
+        KeysAndAttributes stillUnprocessed = KeysAndAttributes.builder()
+                .keys(List.of(Map.of("id", AttributeValue.builder().s("pk1").build())))
+                .build();
+        Map<String, KeysAndAttributes> stillUnprocessedMap = Map.of("test_table", stillUnprocessed);
+
+        BatchGetItemResponse retryResponse = mock(BatchGetItemResponse.class);
+        when(retryResponse.responses()).thenReturn(emptyResponses);
+        when(retryResponse.unprocessedKeys()).thenReturn(stillUnprocessedMap);
+
+        when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(retryResponse);
+
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        builder.addKey("pk1");
+
+        BatchGetResult<TestItem> result = builder.execute();
+
+        assertTrue(result.items().isEmpty());
+        assertTrue(result.hasUnprocessed());
+        // Enhanced path converts unprocessed keys to KeysAndAttributes; retry exhaustion returns them
+        assertFalse(result.unprocessedKeys().isEmpty());
+
+        // Verify: 1 enhanced client call + MAX_RETRIES (3) low-level retry calls
+        verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+        verify(dynamoDbClient, times(3)).batchGetItem(any(BatchGetItemRequest.class));
     }
 }

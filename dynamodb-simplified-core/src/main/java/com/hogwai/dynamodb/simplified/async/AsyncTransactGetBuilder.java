@@ -1,8 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.TransactGetResults;
@@ -16,7 +15,6 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.internal.DefaultDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactGetItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.Get;
 import software.amazon.awssdk.services.dynamodb.model.ItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.TransactGetItem;
@@ -183,12 +181,7 @@ public class AsyncTransactGetBuilder {
                     }
                     return new TransactGetResults<>(documents, tables);
                 })
-                .exceptionally(e -> {
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("TransactGet", null, dde);
-                    }
-                    throw new DynamoSimplifiedException("TransactGet failed", e);
-                });
+                .exceptionally(AsyncExceptionMapper.handler("TransactGet", null));
     }
 
     private CompletableFuture<TransactGetResults<DynamoDbAsyncTable<?>>> executeLowLevel() {
@@ -213,12 +206,7 @@ public class AsyncTransactGetBuilder {
                     }
                     return new TransactGetResults<>(documents, tables);
                 })
-                .exceptionally(e -> {
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("TransactGet", null, dde);
-                    }
-                    throw new DynamoSimplifiedException("TransactGet failed", e);
-                });
+                .exceptionally(AsyncExceptionMapper.handler("TransactGet", null));
     }
 
     private List<TransactGetItem> buildTransactItems() {
@@ -253,20 +241,10 @@ public class AsyncTransactGetBuilder {
     }
 
 
+    private record Entry<T>(DynamoDbAsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
+            Entry(DynamoDbAsyncTable<T> table, Key key) {
+                this(table, key, null);
+            }
 
-    private static class Entry<T> {
-        final DynamoDbAsyncTable<T> table;
-        final Key key;
-        @Nullable final ProjectionExpression projectionExpression;
-
-        Entry(DynamoDbAsyncTable<T> table, Key key) {
-            this(table, key, null);
-        }
-
-        Entry(DynamoDbAsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            this.table = table;
-            this.key = key;
-            this.projectionExpression = projectionExpression;
-        }
     }
 }

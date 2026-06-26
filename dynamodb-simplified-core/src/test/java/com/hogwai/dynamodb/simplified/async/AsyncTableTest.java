@@ -18,11 +18,21 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTimeToLiveRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTimeToLiveResponse;
+import software.amazon.awssdk.services.dynamodb.model.TimeToLiveDescription;
+import software.amazon.awssdk.services.dynamodb.model.TimeToLiveSpecification;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.UpdateTimeToLiveRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateTimeToLiveResponse;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -40,6 +50,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AsyncTable")
+@SuppressWarnings("PMD.ExcessiveImports")
 class AsyncTableTest {
 
     @Mock
@@ -106,15 +117,17 @@ class AsyncTableTest {
     }
 
     @Test
-    @DisplayName("deleteItem(pk) delegates to DynamoDbAsyncTable.deleteItem(Key)")
+    @DisplayName("deleteItem(pk) delegates to DynamoDbAsyncTable.deleteItem(Key) and returns deleted item")
     void deleteItemDelegates() {
-        when(dynamoDbAsyncTable.deleteItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(null));
+        TestItem expected = new TestItem();
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(expected));
 
         AsyncTable<TestItem> table = createTable();
-        CompletableFuture<Void> result = table.deleteItem("pk");
+        CompletableFuture<TestItem> result = table.deleteItem("pk");
 
         assertNotNull(result);
-        result.join();
+        assertSame(expected, result.join());
         verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
     }
 
@@ -252,15 +265,45 @@ class AsyncTableTest {
     }
 
     @Test
-    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbAsyncTable.deleteItem(Key)")
+    @DisplayName("deleteItem(pk, sk) delegates to DynamoDbAsyncTable.deleteItem(Key) and returns deleted item")
     void deleteItemWithSortKeyDelegates() {
-        when(dynamoDbAsyncTable.deleteItem(any(Key.class))).thenReturn(CompletableFuture.completedFuture(null));
+        TestItem expected = new TestItem();
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(expected));
 
         AsyncTable<TestItem> table = createTable();
-        CompletableFuture<Void> result = table.deleteItem("pk", "sk");
+        CompletableFuture<TestItem> result = table.deleteItem("pk", "sk");
 
         assertNotNull(result);
-        result.join();
+        assertSame(expected, result.join());
+        verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk) returns null when item does not exist")
+    void deleteItemReturnsNullWhenNotFound() {
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<TestItem> result = table.deleteItem("pk");
+
+        assertNotNull(result);
+        assertNull(result.join());
+        verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
+    }
+
+    @Test
+    @DisplayName("deleteItem(pk, sk) returns null when item does not exist")
+    void deleteItemWithSortKeyReturnsNullWhenNotFound() {
+        when(dynamoDbAsyncTable.deleteItem(any(Key.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<TestItem> result = table.deleteItem("pk", "sk");
+
+        assertNotNull(result);
+        assertNull(result.join());
         verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
     }
 
@@ -336,6 +379,27 @@ class AsyncTableTest {
         assertNotNull(table.batchWrite());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    @DisplayName("putAll(items) puts all items via async batch write")
+    void putAllDelegatesToBatchWrite() {
+        TableSchema<TestItem> schema = mock(TableSchema.class);
+        when(schema.itemToMap(any(), anyBoolean())).thenReturn(Map.of());
+        when(dynamoDbAsyncTable.tableSchema()).thenReturn(schema);
+        when(dynamoDbAsyncTable.tableName()).thenReturn("test-table");
+        when(dynamoDbAsyncClient.batchWriteItem(any(BatchWriteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(BatchWriteItemResponse.builder().build()));
+
+        AsyncTable<TestItem> table = createTable();
+        TestItem item1 = new TestItem();
+        TestItem item2 = new TestItem();
+        CompletableFuture<BatchWriteResult> result = table.putAll(List.of(item1, item2));
+        assertNotNull(result);
+        result.join();
+
+        verify(dynamoDbAsyncClient).batchWriteItem(any(BatchWriteItemRequest.class));
+    }
+
     @Test
     @DisplayName("query() returns a non-null AsyncQueryBuilder")
     void queryReturnsBuilder() {
@@ -381,6 +445,72 @@ class AsyncTableTest {
         assertNotNull(result);
         result.join();
         verify(dynamoDbAsyncTable).createTable(request);
+    }
+
+    // ============ TTL Management ============
+
+    @Test
+    @DisplayName("enableTtl() calls dynamoDbAsyncClient.updateTimeToLive with correct params")
+    void enableTtlDelegates() {
+        when(dynamoDbAsyncTable.tableName()).thenReturn("test-table");
+        when(dynamoDbAsyncClient.updateTimeToLive(any(UpdateTimeToLiveRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateTimeToLiveResponse.builder().build()));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<Void> result = table.enableTtl("expiresAt");
+
+        assertNotNull(result);
+        result.join();
+        verify(dynamoDbAsyncClient).updateTimeToLive(UpdateTimeToLiveRequest.builder()
+                .tableName("test-table")
+                .timeToLiveSpecification(TimeToLiveSpecification.builder()
+                        .attributeName("expiresAt")
+                        .enabled(true)
+                        .build())
+                .build());
+    }
+
+    @Test
+    @DisplayName("disableTtl() calls dynamoDbAsyncClient.updateTimeToLive with enabled=false")
+    void disableTtlDelegates() {
+        when(dynamoDbAsyncTable.tableName()).thenReturn("test-table");
+        when(dynamoDbAsyncClient.updateTimeToLive(any(UpdateTimeToLiveRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        UpdateTimeToLiveResponse.builder().build()));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<Void> result = table.disableTtl("expiresAt");
+
+        assertNotNull(result);
+        result.join();
+        verify(dynamoDbAsyncClient).updateTimeToLive(UpdateTimeToLiveRequest.builder()
+                .tableName("test-table")
+                .timeToLiveSpecification(TimeToLiveSpecification.builder()
+                        .attributeName("expiresAt")
+                        .enabled(false)
+                        .build())
+                .build());
+    }
+
+    @Test
+    @DisplayName("describeTtl() calls dynamoDbAsyncClient.describeTimeToLive and returns description")
+    void describeTtlDelegates() {
+        when(dynamoDbAsyncTable.tableName()).thenReturn("test-table");
+        TimeToLiveDescription description = mock(TimeToLiveDescription.class);
+        DescribeTimeToLiveResponse response = mock(DescribeTimeToLiveResponse.class);
+        when(response.timeToLiveDescription()).thenReturn(description);
+        when(dynamoDbAsyncClient.describeTimeToLive(any(DescribeTimeToLiveRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        AsyncTable<TestItem> table = createTable();
+        CompletableFuture<TimeToLiveDescription> result = table.describeTtl();
+
+        assertNotNull(result);
+        assertSame(description, result.join());
+        verify(dynamoDbAsyncClient).describeTimeToLive(DescribeTimeToLiveRequest.builder()
+                .tableName("test-table")
+                .build());
     }
 
     // ========== Key-Only Update ==========

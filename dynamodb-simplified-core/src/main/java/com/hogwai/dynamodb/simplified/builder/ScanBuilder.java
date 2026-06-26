@@ -115,6 +115,29 @@ public class ScanBuilder<T> {
         return this;
     }
 
+    /**
+     * Configures a scan filter from a map of attribute-value pairs.
+     * <p>
+     * All conditions are combined with AND. Each entry is treated as
+     * an equality filter. For other condition types, use {@link #filter(Consumer)}.
+     *
+     * @param conditions a map of attribute names to their expected values
+     * @return this builder for chaining
+     */
+    public @NonNull ScanBuilder<T> filter(@NonNull Map<String, Object> conditions) {
+        FilterExpression filter = FilterExpression.builder();
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            if (!first) {
+                filter.and();
+            }
+            filter.eq(entry.getKey(), entry.getValue());
+            first = false;
+        }
+        this.filterExpression = filter;
+        return this;
+    }
+
     // ============ Projection ============
 
     /**
@@ -172,7 +195,7 @@ public class ScanBuilder<T> {
 
     /**
      * Sets the exclusive start key for paginated scans.
-     * Typically obtained from the {@link PagedResult#getLastEvaluatedKey()} of a previous scan.
+     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous scan.
      *
      * @param lastEvaluatedKey the key map from which to start the next page
      * @return this builder for chaining
@@ -259,7 +282,8 @@ public class ScanBuilder<T> {
         }
         long start = System.nanoTime();
         try {
-            Optional<T> result = executeAll().stream().findFirst();
+            PagedResult<T> firstPage = executeWithPagination();
+            Optional<T> result = firstPage.items().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Scan on table '{}' returned first item in {}ms",
                         getTableName(), (System.nanoTime() - start) / 1_000_000);

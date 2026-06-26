@@ -325,16 +325,16 @@ class DynamoSimplifiedClientIT {
         }
 
         PagedResult<Product> firstPage = table.scan().limit(2).executeWithPagination();
-        assertEquals(2, firstPage.getItems().size());
+        assertEquals(2, firstPage.items().size());
         assertTrue(firstPage.hasMorePages());
 
         // Fetch second page
         PagedResult<Product> secondPage = table.scan()
                 .limit(2)
-                .startFrom(firstPage.getLastEvaluatedKey())
+                .startFrom(firstPage.lastEvaluatedKey())
                 .executeWithPagination();
 
-        assertEquals(2, secondPage.getItems().size());
+        assertEquals(2, secondPage.items().size());
     }
 
     // ============ Count ============
@@ -386,7 +386,7 @@ class DynamoSimplifiedClientIT {
                 .addKey("bg2")
                 .execute();
 
-        assertEquals(2, results.getItems().size());
+        assertEquals(2, results.items().size());
     }
 
     // ============ Transaction operations ============

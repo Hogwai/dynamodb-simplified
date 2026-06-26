@@ -1,8 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
@@ -18,9 +17,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.Select;
@@ -47,6 +46,7 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of the item
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class AsyncQueryBuilder<T> {
     private static final Logger LOG = Logging.getLogger(AsyncQueryBuilder.class);
     private static final String CONDITION_JOINER = " AND ";
@@ -71,9 +71,9 @@ public class AsyncQueryBuilder<T> {
         EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
     }
     private KeyConditionOp keyOp;
-    private Object pkValue;
-    private Object skValue;
-    private Object skValue2; // for BETWEEN only
+    private @Nullable Object pkValue;
+    private @Nullable Object skValue;
+    private @Nullable Object skValue2; // for BETWEEN only
 
     /**
      * Constructs a new {@code AsyncQueryBuilder} for the given async table.
@@ -316,6 +316,30 @@ public class AsyncQueryBuilder<T> {
         return this;
     }
 
+    /**
+     * Configures a query filter from a map of attribute-value pairs.
+     * <p>
+     * All conditions are combined with AND. Each entry is treated as
+     * an equality filter. For other condition types, use the consumer-based
+     * {@link #filter(Consumer)} method.
+     *
+     * @param conditions a map of attribute names to their expected values
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncQueryBuilder<T> filter(@NonNull Map<String, Object> conditions) {
+        FilterExpression filter = FilterExpression.builder();
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            if (!first) {
+                filter.and();
+            }
+            filter.eq(entry.getKey(), entry.getValue());
+            first = false;
+        }
+        this.filterExpression = filter;
+        return this;
+    }
+
     // ============ Projection ============
 
     /**
@@ -377,7 +401,7 @@ public class AsyncQueryBuilder<T> {
 
     /**
      * Sets the exclusive start key for paginated queries.
-     * Typically obtained from the {@link PagedResult#getLastEvaluatedKey()} of a previous query.
+     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous query.
      *
      * @param lastEvaluatedKey the key map from which to start the next page
      * @return this builder for chaining
@@ -501,14 +525,36 @@ public class AsyncQueryBuilder<T> {
                 new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
         }
         long start = System.nanoTime();
-        return executeAll().thenApply(items -> {
-            Optional<T> result = items.stream().findFirst();
+        return executeWithPagination().thenApply(firstPage -> {
+            Optional<T> result = firstPage.items().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("AsyncQuery on table '{}' returned first item in {}ms",
                         getTableName(), (System.nanoTime() - start) / 1_000_000);
             }
             return result;
         });
+    }
+
+    /**
+     * Returns a reactive publisher that lazily emits items as pages arrive.
+     * <p>
+     * Unlike {@link #executeAll()} which loads all pages into memory, this method
+     * streams items one-by-one as each page is received from DynamoDB.
+     *
+     * @return a {@link CompletableFuture} containing an {@link SdkPublisher}
+     *         that emits query items
+     * @throws IllegalStateException if called with Select.COUNT
+     */
+    public @NonNull CompletableFuture<SdkPublisher<T>> executeStream() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncQuery stream on table '{}'", getTableName());
+        }
+        return CompletableFuture.completedFuture(
+                buildPagePublisher().flatMapIterable(Page::items));
     }
 
     /**
@@ -551,6 +597,11 @@ public class AsyncQueryBuilder<T> {
     // ============ Low-Level Count ============
 
     private @NonNull CompletableFuture<Long> countWithLowLevel(Select select) {
+        if (pkValue == null) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Partition key value must be set before executing a query. "
+                        + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first."));
+        }
         String tableName = table != null ? table.tableName() : index.tableName();
         Map<String, String> expressionNames = new HashMap<>();
         Map<String, AttributeValue> expressionValues = new HashMap<>();
@@ -573,12 +624,7 @@ public class AsyncQueryBuilder<T> {
 
         return dynamoDbAsyncClient.query(requestBuilder.build())
             .thenApply(r -> (long) r.count())
-            .exceptionally(e -> {
-                if (e instanceof DynamoDbException dde) {
-                    throw new OperationFailedException("Query", tableName, dde);
-                }
-                throw new DynamoSimplifiedException("Query failed", e);
-            });
+            .exceptionally(AsyncExceptionMapper.handler("Query", tableName));
     }
 
     private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
@@ -673,52 +719,64 @@ public class AsyncQueryBuilder<T> {
         return table != null ? table.tableName() : index.tableName();
     }
 
+    private void requirePartitionKey() {
+        if (pkValue == null) {
+            throw new IllegalStateException("Partition key value must be set before executing a query. "
+                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+        }
+    }
+
+    private QueryEnhancedRequest.@NonNull Builder buildBaseRequest() {
+        QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
+                .queryConditional(keyCondition)
+                .scanIndexForward(scanIndexForward)
+                .consistentRead(consistentRead);
+        if (filterExpression != null && !filterExpression.isEmpty()) {
+            requestBuilder.filterExpression(filterExpression.toSdkExpression());
+        }
+        if (projectionExpression != null && !projectionExpression.isEmpty()) {
+            requestBuilder.attributesToProject(
+                    projectionExpression.getProjectedAttributes().toArray(new String[0]));
+        }
+        if (limit != null) {
+            requestBuilder.limit(limit);
+        }
+        if (exclusiveStartKey != null) {
+            requestBuilder.exclusiveStartKey(exclusiveStartKey);
+        }
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        return requestBuilder;
+    }
+
+    /**
+     * Builds the query request and returns the raw publisher without collecting pages.
+     */
+    private @NonNull SdkPublisher<Page<T>> buildPagePublisher() {
+        requirePartitionKey();
+        QueryEnhancedRequest request = buildBaseRequest().build();
+        if (index != null) {
+            return index.query(request);
+        }
+        return table.query(request);
+    }
+
     /**
      * Builds the request, executes it via the async table, and collects all
      * pages into a list through a {@link PagePublisher}.
      */
     private @NonNull CompletableFuture<List<Page<T>>> executeAsPages() {
-        QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
-                .queryConditional(keyCondition)
-                .scanIndexForward(scanIndexForward)
-                .consistentRead(consistentRead);
-
-        if (filterExpression != null && !filterExpression.isEmpty()) {
-            requestBuilder.filterExpression(
-                    filterExpression.toSdkExpression()
-            );
-        }
-
-        if (projectionExpression != null && !projectionExpression.isEmpty()) {
-            requestBuilder.attributesToProject(
-                    projectionExpression.getProjectedAttributes().toArray(new String[0])
-            );
-        }
-
-        if (limit != null) {
-            requestBuilder.limit(limit);
-        }
-
-        if (exclusiveStartKey != null) {
-            requestBuilder.exclusiveStartKey(exclusiveStartKey);
-        }
-
-        if (returnConsumedCapacity != null) {
-            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
-        }
-
-        CompletableFuture<List<Page<T>>> result;
-        if (index != null) {
-            result = PageCollector.collectPages(index.query(requestBuilder.build()));
-        } else {
-            result = PageCollector.collectPages(table.query(requestBuilder.build()));
-        }
-        return result.exceptionally(e -> {
-            if (e instanceof DynamoDbException dde) {
-                throw new OperationFailedException("Query", getTableName(), dde);
+        try {
+            requirePartitionKey();
+            QueryEnhancedRequest request = buildBaseRequest().build();
+            if (index != null) {
+                return PageCollector.collectPages(index.query(request));
             }
-            throw new DynamoSimplifiedException("Query failed", e);
-        });
+            return PageCollector.collectPages(table.query(request));
+        } catch (RuntimeException e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
 

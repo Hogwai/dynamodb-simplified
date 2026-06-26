@@ -115,6 +115,25 @@ class ScanBuilderTest {
     }
 
     @Test
+    @DisplayName("executeAndGetFirst() only reads first page when multiple pages exist")
+    void executeAndGetFirst_onlyReadsFirstPage() {
+        TestItem firstItem = new TestItem();
+        firstItem.id = "first";
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page1 = mock(Page.class);
+        when(page1.items()).thenReturn(List.of(firstItem));
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page2 = mock(Page.class);
+        lenient().when(page2.items()).thenThrow(new AssertionError("Second page should not be accessed"));
+        stubScanReturns(pageIterable(page1, page2));
+
+        Optional<TestItem> result = new ScanBuilder<>(table).executeAndGetFirst();
+
+        assertTrue(result.isPresent());
+        assertEquals("first", result.get().id);
+    }
+
+    @Test
     @DisplayName("executeWithPagination() returns first page items + lastEvaluatedKey")
     void executeWithPagination_returnsFirstPageAndKey() {
         Page<TestItem> page1 = mockPage(1, 1, Map.of("key", attrVal("next")));
@@ -124,8 +143,8 @@ class ScanBuilderTest {
         PagedResult<TestItem> result = new ScanBuilder<>(table).executeWithPagination();
 
         assertEquals(1, result.size());
-        assertNotNull(result.getLastEvaluatedKey());
-        assertEquals("next", result.getLastEvaluatedKey().get("key").s());
+        assertNotNull(result.lastEvaluatedKey());
+        assertEquals("next", result.lastEvaluatedKey().get("key").s());
         assertTrue(result.hasMorePages());
     }
 
@@ -138,7 +157,7 @@ class ScanBuilderTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.size());
-        assertNull(result.getLastEvaluatedKey());
+        assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
     }
 
@@ -309,6 +328,28 @@ class ScanBuilderTest {
         assertEquals("#n0 = :v0", expr.expression());
         assertEquals(Map.of("#n0", "status"), expr.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("active").build()), expr.expressionValues());
+    }
+
+    @Test
+    @DisplayName("filter with Map builds equality conditions AND'd together")
+    void filter_withMap() {
+        stubScanReturns(pageIterable());
+
+        new ScanBuilder<>(table)
+                .filter(Map.of("status", "active", "region", "us-east-1"))
+                .executeAll();
+
+        ArgumentCaptor<ScanEnhancedRequest> captor = ArgumentCaptor.forClass(ScanEnhancedRequest.class);
+        verify(table).scan(captor.capture());
+        ScanEnhancedRequest request = captor.getValue();
+
+        assertNotNull(request.filterExpression());
+        Expression expr = request.filterExpression();
+        // Two equality conditions joined with AND
+        assertTrue(expr.expression().contains("AND"));
+        assertTrue(expr.expression().contains("="));
+        assertEquals(2, expr.expressionNames().size());
+        assertEquals(2, expr.expressionValues().size());
     }
 
     // ============ Index Constructor ============

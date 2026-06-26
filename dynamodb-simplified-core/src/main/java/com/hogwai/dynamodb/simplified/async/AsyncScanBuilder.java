@@ -1,9 +1,8 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.PageCollector;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
@@ -15,9 +14,9 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.Select;
@@ -119,6 +118,29 @@ public class AsyncScanBuilder<T> {
         return this;
     }
 
+    /**
+     * Configures a scan filter from a map of attribute-value pairs.
+     * <p>
+     * All conditions are combined with AND. Each entry is treated as
+     * an equality filter. For other condition types, use {@link #filter(Consumer)}.
+     *
+     * @param conditions a map of attribute names to their expected values
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncScanBuilder<T> filter(@NonNull Map<String, Object> conditions) {
+        FilterExpression filter = FilterExpression.builder();
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            if (!first) {
+                filter.and();
+            }
+            filter.eq(entry.getKey(), entry.getValue());
+            first = false;
+        }
+        this.filterExpression = filter;
+        return this;
+    }
+
     // ============ Projection ============
 
     /**
@@ -176,7 +198,7 @@ public class AsyncScanBuilder<T> {
 
     /**
      * Sets the exclusive start key for paginated scans.
-     * Typically obtained from the {@link PagedResult#getLastEvaluatedKey()} of a previous scan.
+     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous scan.
      *
      * @param lastEvaluatedKey the key map from which to start the next page
      * @return this builder for chaining
@@ -290,6 +312,51 @@ public class AsyncScanBuilder<T> {
     }
 
     /**
+     * Executes the scan asynchronously and returns the first matching item, if any.
+     * <p>Only the first page of results is loaded — subsequent pages are never fetched.</p>
+     *
+     * @return a {@link CompletableFuture} containing an {@link Optional}
+     *         with the first item, or empty if no items match
+     */
+    public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
+        return executeWithPagination().thenApply(firstPage -> {
+            Optional<T> result = firstPage.items().stream().findFirst();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("AsyncScan on table '{}' returned first item in {}ms",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return result;
+        });
+    }
+
+    /**
+     * Returns a reactive publisher that lazily emits items as pages arrive.
+     * <p>
+     * Unlike {@link #executeAll()} which loads all pages into memory, this method
+     * streams items one-by-one as each page is received from DynamoDB.
+     *
+     * @return a {@link CompletableFuture} containing an {@link SdkPublisher}
+     *         that emits scan items
+     * @throws IllegalStateException if called with Select.COUNT
+     */
+    public @NonNull CompletableFuture<SdkPublisher<T>> executeStream() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncScan stream on table '{}'", getTableName());
+        }
+        return CompletableFuture.completedFuture(
+                buildPagePublisher().flatMapIterable(Page::items));
+    }
+
+    /**
      * Returns the total number of items asynchronously by iterating all scan
      * result pages.
      * <p>
@@ -389,18 +456,24 @@ public class AsyncScanBuilder<T> {
         ScanRequest request = buildCountRequest(select);
         return dynamoDbAsyncClient.scan(request)
             .thenApply(r -> (long) r.count())
-            .exceptionally(e -> {
-                if (e instanceof DynamoDbException dde) {
-                    throw new OperationFailedException("Scan", request.tableName(), dde);
-                }
-                throw new DynamoSimplifiedException("Scan failed", e);
-            });
+            .exceptionally(AsyncExceptionMapper.handler("Scan", request.tableName()));
     }
 
     // ============ Internal ============
 
     private String getTableName() {
         return table != null ? table.tableName() : index.tableName();
+    }
+
+    /**
+     * Builds the scan request and returns the raw publisher without collecting pages.
+     */
+    private @NonNull SdkPublisher<Page<T>> buildPagePublisher() {
+        ScanEnhancedRequest request = buildScanRequest();
+        if (index != null) {
+            return index.scan(request);
+        }
+        return table.scan(request);
     }
 
     /**
@@ -416,12 +489,7 @@ public class AsyncScanBuilder<T> {
             Objects.requireNonNull(table, "table must not be null");
             result = PageCollector.collectPages(table.scan(request));
         }
-        return result.exceptionally(e -> {
-            if (e instanceof DynamoDbException dde) {
-                throw new OperationFailedException("Scan", getTableName(), dde);
-            }
-            throw new DynamoSimplifiedException("Scan failed", e);
-        });
+        return result.exceptionally(AsyncExceptionMapper.handler("Scan", getTableName()));
     }
 
     private ScanEnhancedRequest buildScanRequest() {

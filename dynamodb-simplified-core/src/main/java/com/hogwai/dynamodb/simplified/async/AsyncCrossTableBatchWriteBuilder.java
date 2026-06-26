@@ -1,7 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.CrossTableBatchWriteResult;
@@ -13,7 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import java.util.ArrayList;
@@ -41,6 +40,7 @@ public class AsyncCrossTableBatchWriteBuilder {
 
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<Operation> operations = new ArrayList<>();
+    private ReturnConsumedCapacity returnConsumedCapacity;
 
     private record Operation(
             Type type,
@@ -109,6 +109,18 @@ public class AsyncCrossTableBatchWriteBuilder {
     }
 
     /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncCrossTableBatchWriteBuilder returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
+        return this;
+    }
+
+    /**
      * Executes the batch write operation asynchronously.
      * <p>
      * All puts and deletes are sent in a single batch write request.
@@ -136,14 +148,12 @@ public class AsyncCrossTableBatchWriteBuilder {
 
     private CompletableFuture<CrossTableBatchWriteResult> executeWithRetry(
             Map<String, List<WriteRequest>> requestItems, int attempt, long start) {
-        return dynamoDbAsyncClient.batchWriteItem(
-                        BatchWriteItemRequest.builder().requestItems(requestItems).build())
-                .exceptionally(e -> {
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("BatchWriteItem", null, dde);
-                    }
-                    throw new DynamoSimplifiedException("BatchWriteItem failed", e);
-                })
+        BatchWriteItemRequest.Builder batchRequestBuilder = BatchWriteItemRequest.builder().requestItems(requestItems);
+        if (returnConsumedCapacity != null) {
+            batchRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+        return dynamoDbAsyncClient.batchWriteItem(batchRequestBuilder.build())
+                .exceptionally(AsyncExceptionMapper.handler("BatchWriteItem", null))
                 .thenCompose(response -> {
                     Map<String, List<WriteRequest>> unprocessed = response.unprocessedItems();
                     if (unprocessed == null || unprocessed.isEmpty()) {

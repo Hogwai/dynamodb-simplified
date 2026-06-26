@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.Versioned;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
@@ -7,6 +8,7 @@ import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.Table;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.internal.VersionHelper;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
@@ -47,6 +49,7 @@ public class UpdateBuilder<T> {
     private ConditionExpression conditionExpression;
     private boolean ignoreNulls = true;
     private ReturnValue returnValues;
+    private boolean optimisticLocking;
 
     /**
      * Constructs a new {@code UpdateBuilder} for the given table and item.
@@ -146,6 +149,51 @@ public class UpdateBuilder<T> {
     }
 
     /**
+     * Enables optimistic locking for this update operation.
+     * <p>
+     * When enabled, the library adds a condition expression checking that the
+     * version attribute hasn't changed, and increments the version on success.
+     * The item must implement {@link com.hogwai.dynamodb.simplified.Versioned}.
+     * <p>
+     * This is only supported for full-item replacement. For partial updates
+     * ({@link #update(Consumer)}), the item must be provided in the constructor.
+     *
+     * @return this builder for chaining
+     */
+    public @NonNull UpdateBuilder<T> withOptimisticLocking() {
+        this.optimisticLocking = true;
+        return this;
+    }
+
+    // ---- Optimistic locking ----
+
+    private void applyOptimisticLocking() {
+        if (!optimisticLocking || item == null) {
+            return;
+        }
+        ConditionExpression versionCondition = VersionHelper.buildCondition(item);
+        if (versionCondition == null) {
+            return;
+        }
+
+        if (conditionExpression != null && !conditionExpression.isEmpty()) {
+            conditionExpression = ConditionExpression.builder()
+                    .group(conditionExpression)
+                    .and()
+                    .group(versionCondition)
+                    .build();
+        } else {
+            conditionExpression = versionCondition;
+        }
+    }
+
+    private void incrementVersion() {
+        if (optimisticLocking && item instanceof Versioned v) {
+            VersionHelper.incrementVersion(v);
+        }
+    }
+
+    /**
      * Executes the update operation. If a partial update expression was configured
      * via {@link #update(Consumer)}, a targeted partial update is performed via the
      * low-level DynamoDB client. Otherwise, the full item is replaced.
@@ -159,6 +207,28 @@ public class UpdateBuilder<T> {
                 "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
                 + "Remove the ignoreNulls() call or use a full-item update instead.");
         }
+        boolean hasExpression = hasUpdateExpression();
+        applyOptimisticLocking();
+        long start = System.nanoTime();
+        if (hasExpression) {
+            T result = executeWithExpression();
+            incrementVersion();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Update on table '{}' completed in {}ms (expression)",
+                        table.tableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return Optional.ofNullable(result);
+        }
+        T result = executeWithFullItem();
+        incrementVersion();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Update on table '{}' completed in {}ms (full item)",
+                    table.tableName(), (System.nanoTime() - start) / 1_000_000);
+        }
+        return Optional.ofNullable(result);
+    }
+
+    private boolean hasUpdateExpression() {
         boolean hasExpression = updateExpression != null && !updateExpression.isEmpty();
         if (returnValues != null && !hasExpression) {
             throw new IllegalStateException(
@@ -170,25 +240,12 @@ public class UpdateBuilder<T> {
                 "Key-only update requires a partial update expression. "
                 + "Use update(expr -> ...) to configure an update expression.");
         }
-        long start = System.nanoTime();
-        if (hasExpression) {
-            T result = executeWithExpression();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Update on table '{}' completed in {}ms (expression)",
-                        table.tableName(), (System.nanoTime() - start) / 1_000_000);
-            }
-            return Optional.ofNullable(result);
-        }
-        T result = executeWithFullItem();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Update on table '{}' completed in {}ms (full item)",
-                    table.tableName(), (System.nanoTime() - start) / 1_000_000);
-        }
-        return Optional.ofNullable(result);
+        return hasExpression;
     }
 
     // ---- Full item replacement (existing behavior) ----
 
+    @SuppressWarnings("unchecked")
     private T executeWithFullItem() {
         UpdateItemEnhancedRequest.Builder<T> requestBuilder =
                 UpdateItemEnhancedRequest.builder((Class<T>) item.getClass())

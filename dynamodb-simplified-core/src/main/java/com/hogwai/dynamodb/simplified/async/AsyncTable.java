@@ -5,15 +5,18 @@ import org.jspecify.annotations.Nullable;
 
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.Objects;
 
@@ -36,8 +39,14 @@ public class AsyncTable<T> {
     private final DynamoDbAsyncTable<T> dynamoDbAsyncTable;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    /** Package-private constructor. */
-    AsyncTable(
+    /**
+     * Creates a new {@code AsyncTable} wrapping the given clients and table mapping.
+     *
+     * @param enhancedAsyncClient the enhanced async DynamoDB client
+     * @param dynamoDbAsyncTable  the async DynamoDB table mapping
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client
+     */
+    public AsyncTable(
             @NonNull DynamoDbEnhancedAsyncClient enhancedAsyncClient,
             @NonNull DynamoDbAsyncTable<T> dynamoDbAsyncTable,
             @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
@@ -238,13 +247,13 @@ public class AsyncTable<T> {
      * Deletes an item by partition key directly.
      *
      * @param partitionKey the partition key value
-     * @return a {@link CompletableFuture} that completes when the item has been deleted
+     * @return a {@link CompletableFuture} that completes with the deleted item,
+     *         or {@code null} if no item with the given key exists
      */
     @NonNull
-    public CompletableFuture<Void> deleteItem(@NonNull Object partitionKey) {
+    public CompletableFuture<T> deleteItem(@NonNull Object partitionKey) {
         return dynamoDbAsyncTable.deleteItem(
-                        Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
-                .thenApply(ignored -> null);
+                Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
     }
 
     /**
@@ -252,15 +261,15 @@ public class AsyncTable<T> {
      *
      * @param partitionKey the partition key value
      * @param sortKey      the sort key value
-     * @return a {@link CompletableFuture} that completes when the item has been deleted
+     * @return a {@link CompletableFuture} that completes with the deleted item,
+     *         or {@code null} if no item with the given key exists
      */
     @NonNull
-    public CompletableFuture<Void> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
+    public CompletableFuture<T> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return dynamoDbAsyncTable.deleteItem(Key.builder()
                         .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
                         .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                        .build())
-                .thenApply(ignored -> null);
+                        .build());
     }
 
     // ============ Secondary Index ============
@@ -288,7 +297,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncBatchGetBuilder<T> batchGet() {
-        return new AsyncBatchGetBuilder<>(enhancedAsyncClient, dynamoDbAsyncTable);
+        return new AsyncBatchGetBuilder<>(enhancedAsyncClient, dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
     /**
@@ -299,6 +308,25 @@ public class AsyncTable<T> {
     @NonNull
     public AsyncBatchWriteBuilder<T> batchWrite() {
         return new AsyncBatchWriteBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient);
+    }
+
+    /**
+     * Puts all items in a single async batch write operation.
+     * <p>
+     * Equivalent to creating an {@link AsyncBatchWriteBuilder}, adding all items,
+     * and executing it. At most 25 items per call are allowed by DynamoDB.
+     *
+     * @param items the items to put
+     * @return a future containing the batch write result
+     * @throws IllegalArgumentException if more than 25 items are provided
+     */
+    @NonNull
+    public CompletableFuture<BatchWriteResult> putAll(@NonNull Collection<T> items) {
+        AsyncBatchWriteBuilder<T> batch = batchWrite();
+        for (T item : items) {
+            batch.put(item);
+        }
+        return batch.execute();
     }
 
     // ============ Raw Access ============
@@ -427,6 +455,60 @@ public class AsyncTable<T> {
                         default -> throw new DynamoSimplifiedException(String.valueOf(actualError), actualError);
                     };
                 });
+    }
+
+    // ============ TTL Management ============
+
+    /**
+     * Enables Time To Live (TTL) on this table with the given attribute name.
+     *
+     * @param attributeName the attribute that stores the TTL epoch value
+     * @return a {@link CompletableFuture} that completes when TTL has been enabled
+     */
+    @NonNull
+    public CompletableFuture<Void> enableTtl(@NonNull String attributeName) {
+        return dynamoDbAsyncClient.updateTimeToLive(UpdateTimeToLiveRequest.builder()
+                        .tableName(dynamoDbAsyncTable.tableName())
+                        .timeToLiveSpecification(spec -> {
+                            spec.attributeName(attributeName);
+                            spec.enabled(true);
+                        })
+                        .build())
+                .<Void>thenApply(_ -> null)
+                .exceptionally(AsyncExceptionMapper.handler("UpdateTimeToLive", dynamoDbAsyncTable.tableName()));
+    }
+
+    /**
+     * Disables TTL on this table for the given attribute name.
+     *
+     * @param attributeName the TTL attribute name to disable
+     * @return a {@link CompletableFuture} that completes when TTL has been disabled
+     */
+    @NonNull
+    public CompletableFuture<Void> disableTtl(@NonNull String attributeName) {
+        return dynamoDbAsyncClient.updateTimeToLive(UpdateTimeToLiveRequest.builder()
+                        .tableName(dynamoDbAsyncTable.tableName())
+                        .timeToLiveSpecification(spec -> {
+                            spec.attributeName(attributeName);
+                            spec.enabled(false);
+                        })
+                        .build())
+                .<Void>thenApply(_ -> null)
+                .exceptionally(AsyncExceptionMapper.handler("UpdateTimeToLive", dynamoDbAsyncTable.tableName()));
+    }
+
+    /**
+     * Describes the current TTL configuration for this table.
+     *
+     * @return a {@link CompletableFuture} containing the TTL description
+     */
+    @NonNull
+    public CompletableFuture<TimeToLiveDescription> describeTtl() {
+        return dynamoDbAsyncClient.describeTimeToLive(DescribeTimeToLiveRequest.builder()
+                        .tableName(dynamoDbAsyncTable.tableName())
+                        .build())
+                .thenApply(DescribeTimeToLiveResponse::timeToLiveDescription)
+                .exceptionally(AsyncExceptionMapper.handler("DescribeTimeToLive", dynamoDbAsyncTable.tableName()));
     }
 
     // ============ Internal Helpers ============
