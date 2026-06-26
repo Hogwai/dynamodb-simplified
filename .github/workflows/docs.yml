@@ -3,7 +3,7 @@ on:
   # push:
   #   branches: [main]
   workflow_dispatch:
-    # Manual trigger only — docs publishing is disabled until the lib stabilises.
+    # Manual trigger only: docs publishing is disabled until the lib stabilises.
 
 permissions:
   contents: write

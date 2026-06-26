@@ -56,7 +56,7 @@ public class UpdateExpression {
      * attribute, overwriting any existing value.
      *
      * @param attribute the attribute name (must not be null)
-     * @param value     the value to set (must not be null — use {@link #remove(String...)} instead)
+     * @param value     the value to set (must not be null: use {@link #remove(String...)} instead)
      * @return this builder for chaining
      * @throws IllegalArgumentException if value is null
      */

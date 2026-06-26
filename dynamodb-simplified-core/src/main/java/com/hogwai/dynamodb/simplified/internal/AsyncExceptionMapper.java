@@ -34,7 +34,7 @@ public final class AsyncExceptionMapper {
      * @param operation the DynamoDB operation name (e.g., "Query", "UpdateItem")
      * @param tableName the table name (nullable for cross-table operations)
      * @param cause     the throwable from the exceptionally handler
-     * @return never returns — always throws
+     * @return never returns: always throws
      */
     public static @NonNull RuntimeException mapException(
             @NonNull String operation, @Nullable String tableName, @NonNull Throwable cause) {

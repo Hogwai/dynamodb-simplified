@@ -376,7 +376,7 @@ Use the entity-aware table:
 EntityTable<Post> posts = client.entityTable(Post.class);
 posts.put(new Post("post-123"));  // pk auto-computed to "POST#post-123"
 
-// Read — auto-filters by discriminator
+// Read: auto-filters by discriminator
 List<Post> results = posts.query("POST#post-123").executeAll();
 ```
 

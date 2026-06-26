@@ -1,12 +1,10 @@
 # DynamoDB Simplified
 
-> **⚠ Pre-release (v0.1.0)** — Not yet available on Maven Central. Clone and build locally to try it out.
+> **⚠ Pre-release (v0.1.0)**: Not yet available on Maven Central. Clone and build locally to try it out.
 
 A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
 
 ---
-
-## Before & After
 
 ### Vanilla AWS SDK
 
@@ -61,29 +59,29 @@ List<Post> posts = table.query()
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Fluent API** | Chain methods naturally with IntelliSense support |
-| **Filter Expressions** | Simple methods for all DynamoDB operators |
-| **Update Expressions** | SET, REMOVE, ADD, DELETE operations with a fluent API |
-| **Server-side `size()`** | Filter by collection/string size without fetching data |
-| **Projections** | Select only the attributes you need |
-| **Pagination** | Built-in cursor-based pagination support |
-| **Conditional Writes** | Put, Update, Delete with conditions |
-| **Transactions** | TransactGet and TransactWrite with expression-based partial updates |
-| **Batch Operations** | BatchGet and BatchWrite across tables |
-| **Async API** | Complete async counterpart (CompletableFuture-based) |
-| **DDL Operations** | Create, delete, describe, and check existence of tables |
-| **PartiQL** | Passthrough PartiQL executeStatement for ad-hoc queries |
-| **GSI/LSI Support** | Query and scan through secondary indexes |
-| **Type Safety** | Leverages DynamoDB Enhanced Client's bean mapping |
-| **Zero framework deps** | Pure Java, no Spring/Micronaut dependency in the core |
-| **Single-Table Design** | Entity annotations (`@Entity`, `@KeyComponent`, `@KeyPrefix`) with auto-computed composite keys and discriminator filtering |
-| **Optimistic Locking** | `@Version` annotation with automatic version checking on put/update |
-| **TTL Management** | `enableTtl()`, `disableTtl()`, `describeTtl()` and `UpdateExpression.ttl(Duration)` |
-| **Consumed Capacity** | Every result type exposes consumed capacity via the `Consumed` interface |
-| **Batch Retry** | Automatic retry of unprocessed keys with exponential backoff (batch get + write) |
-| **Async Streaming** | `executeStream()` returning `CompletableFuture<SdkPublisher<T>>` for reactive async iteration |
+| Feature                  | Description                                                                                                                 |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **Fluent API**           | Chain methods naturally with IntelliSense support                                                                           |
+| **Filter Expressions**   | Simple methods for all DynamoDB operators                                                                                   |
+| **Update Expressions**   | SET, REMOVE, ADD, DELETE operations with a fluent API                                                                       |
+| **Server-side `size()`** | Filter by collection/string size without fetching data                                                                      |
+| **Projections**          | Select only the attributes you need                                                                                         |
+| **Pagination**           | Built-in cursor-based pagination support                                                                                    |
+| **Conditional Writes**   | Put, Update, Delete with conditions                                                                                         |
+| **Transactions**         | TransactGet and TransactWrite with expression-based partial updates                                                         |
+| **Batch Operations**     | BatchGet and BatchWrite across tables                                                                                       |
+| **Async API**            | Complete async counterpart (CompletableFuture-based)                                                                        |
+| **DDL Operations**       | Create, delete, describe, and check existence of tables                                                                     |
+| **PartiQL**              | Passthrough PartiQL executeStatement for ad-hoc queries                                                                     |
+| **GSI/LSI Support**      | Query and scan through secondary indexes                                                                                    |
+| **Type Safety**          | Leverages DynamoDB Enhanced Client's bean mapping                                                                           |
+| **Zero framework deps**  | Pure Java, no Spring/Micronaut dependency in the core                                                                       |
+| **Single-Table Design**  | Entity annotations (`@Entity`, `@KeyComponent`, `@KeyPrefix`) with auto-computed composite keys and discriminator filtering |
+| **Optimistic Locking**   | `@Version` annotation with automatic version checking on put/update                                                         |
+| **TTL Management**       | `enableTtl()`, `disableTtl()`, `describeTtl()` and `UpdateExpression.ttl(Duration)`                                         |
+| **Consumed Capacity**    | Every result type exposes consumed capacity via the `Consumed` interface                                                    |
+| **Batch Retry**          | Automatic retry of unprocessed keys with exponential backoff (batch get + write)                                            |
+| **Async Streaming**      | `executeStream()` returning `CompletableFuture<SdkPublisher<T>>` for reactive async iteration                               |
 
 ---
 
@@ -138,7 +136,7 @@ public class User {
     public void setPk(String pk) { this.pk = pk; }
 }
 
-// Entity-aware table — keys auto-computed, discriminator auto-filtered
+// Entity-aware table: keys auto-computed, discriminator auto-filtered
 EntityTable<User> users = client.entityTable(User.class);
 users.put(new User("user123"));  // pk auto-set to "USER#user123"
 
@@ -197,10 +195,4 @@ dynamodb-simplified/
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-Built on top of the excellent [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2).
+This project is licensed under the [MIT license](LICENSE).
