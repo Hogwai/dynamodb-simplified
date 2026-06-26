@@ -1,8 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
@@ -20,7 +19,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.Select;
@@ -501,8 +499,8 @@ public class AsyncQueryBuilder<T> {
                 new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
         }
         long start = System.nanoTime();
-        return executeAll().thenApply(items -> {
-            Optional<T> result = items.stream().findFirst();
+        return executeWithPagination().thenApply(firstPage -> {
+            Optional<T> result = firstPage.getItems().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("AsyncQuery on table '{}' returned first item in {}ms",
                         getTableName(), (System.nanoTime() - start) / 1_000_000);
@@ -573,12 +571,7 @@ public class AsyncQueryBuilder<T> {
 
         return dynamoDbAsyncClient.query(requestBuilder.build())
             .thenApply(r -> (long) r.count())
-            .exceptionally(e -> {
-                if (e instanceof DynamoDbException dde) {
-                    throw new OperationFailedException("Query", tableName, dde);
-                }
-                throw new DynamoSimplifiedException("Query failed", e);
-            });
+            .exceptionally(AsyncExceptionMapper.handler("Query", tableName));
     }
 
     private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
@@ -713,12 +706,7 @@ public class AsyncQueryBuilder<T> {
         } else {
             result = PageCollector.collectPages(table.query(requestBuilder.build()));
         }
-        return result.exceptionally(e -> {
-            if (e instanceof DynamoDbException dde) {
-                throw new OperationFailedException("Query", getTableName(), dde);
-            }
-            throw new DynamoSimplifiedException("Query failed", e);
-        });
+        return result.exceptionally(AsyncExceptionMapper.handler("Query", getTableName()));
     }
 
 

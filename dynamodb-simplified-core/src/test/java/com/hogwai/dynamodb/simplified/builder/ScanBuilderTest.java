@@ -115,6 +115,25 @@ class ScanBuilderTest {
     }
 
     @Test
+    @DisplayName("executeAndGetFirst() only reads first page when multiple pages exist")
+    void executeAndGetFirst_onlyReadsFirstPage() {
+        TestItem firstItem = new TestItem();
+        firstItem.id = "first";
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page1 = mock(Page.class);
+        when(page1.items()).thenReturn(List.of(firstItem));
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page2 = mock(Page.class);
+        lenient().when(page2.items()).thenThrow(new AssertionError("Second page should not be accessed"));
+        stubScanReturns(pageIterable(page1, page2));
+
+        Optional<TestItem> result = new ScanBuilder<>(table).executeAndGetFirst();
+
+        assertTrue(result.isPresent());
+        assertEquals("first", result.get().id);
+    }
+
+    @Test
     @DisplayName("executeWithPagination() returns first page items + lastEvaluatedKey")
     void executeWithPagination_returnsFirstPageAndKey() {
         Page<TestItem> page1 = mockPage(1, 1, Map.of("key", attrVal("next")));

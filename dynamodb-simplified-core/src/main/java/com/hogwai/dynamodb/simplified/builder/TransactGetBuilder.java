@@ -35,6 +35,9 @@ import java.util.function.Consumer;
  * <p>
  * All items are retrieved in a single all-or-nothing transaction.
  * If any item cannot be read, the entire transaction fails and no results are returned.
+ * <p>
+ * <b>Note:</b> DynamoDB's TransactGetItems API does not support ConsistentRead.
+ * This is an API-level limitation and cannot be worked around through any code path.
  */
 public class TransactGetBuilder {
 
@@ -43,11 +46,6 @@ public class TransactGetBuilder {
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient dynamoDbClient;
     private final List<Entry<?>> entries = new ArrayList<>();
-
-    public TransactGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient) {
-        this.enhancedClient = enhancedClient;
-        this.dynamoDbClient = null;
-    }
 
     public TransactGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;
@@ -134,11 +132,6 @@ public class TransactGetBuilder {
                 .anyMatch(TransactGetBuilder::hasNonEmptyProjection);
 
         if (hasProjection) {
-            if (dynamoDbClient == null) {
-                throw new IllegalStateException(
-                    "Projection expressions require a low-level DynamoDbClient. " +
-                    "Use DynamoSimplifiedClient.transactGet() to create a TransactGetBuilder.");
-            }
             TransactGetResults<DynamoDbTable<?>> results = executeLowLevel();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("TransactGet (low-level) completed in {}ms ({} entries)",

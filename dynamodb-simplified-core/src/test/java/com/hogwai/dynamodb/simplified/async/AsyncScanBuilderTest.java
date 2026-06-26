@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -414,5 +415,45 @@ class AsyncScanBuilderTest {
                 .count()
                 .join()
         );
+    }
+
+    // ============ executeAndGetFirst() Tests ============
+
+    @Test
+    @DisplayName("executeAndGetFirst() returns first item from page")
+    void executeAndGetFirst_returnsFirstItem() {
+        Page<TestItem> page = mockPage(3, 3, null);
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        Optional<TestItem> result = new AsyncScanBuilder<>(table)
+                .executeAndGetFirst()
+                .join();
+
+        assertTrue(result.isPresent());
+        verify(table).scan(any(ScanEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() returns empty when no items in page")
+    void executeAndGetFirst_returnsEmptyWhenNoItems() {
+        Page<TestItem> page = mockPage(0, 0, null);
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(publisherThatEmits(page));
+
+        Optional<TestItem> result = new AsyncScanBuilder<>(table)
+                .executeAndGetFirst()
+                .join();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst() with Select.COUNT returns failed future")
+    void executeAndGetFirst_throwsOnCountSelect() {
+        CompletableFuture<Optional<TestItem>> future = new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeAndGetFirst();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 }

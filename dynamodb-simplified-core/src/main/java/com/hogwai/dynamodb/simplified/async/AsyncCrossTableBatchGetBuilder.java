@@ -1,8 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.CrossTableBatchGetResult;
@@ -15,7 +14,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
 import java.util.ArrayList;
@@ -166,12 +164,7 @@ public class AsyncCrossTableBatchGetBuilder {
         return dynamoDbAsyncClient.batchGetItem(
                         BatchGetItemRequest.builder().requestItems(requestItems).build())
                 .thenApply(response -> buildCrossTableBatchGetResult(response, tableSchemas, start))
-                .exceptionally(e -> {
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("BatchGetItem", null, dde);
-                    }
-                    throw new DynamoSimplifiedException("CrossTableBatchGet failed", e);
-                });
+                .exceptionally(AsyncExceptionMapper.handler("BatchGetItem", null));
     }
 
     private Map<String, List<Entry<?>>> groupEntriesByTable() {

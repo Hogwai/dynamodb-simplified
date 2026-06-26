@@ -68,7 +68,7 @@ class TransactGetBuilderTest {
         when(enhancedClient.transactGetItems(any(TransactGetItemsEnhancedRequest.class)))
                 .thenReturn(List.of());
         Table<?> tableWrapper = createTable(table);
-        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient);
+        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
         assertDoesNotThrow(() -> builder.addGetItem(tableWrapper, "pk-value"));
 
@@ -80,7 +80,7 @@ class TransactGetBuilderTest {
     @DisplayName("addGetItem with partition and sort key adds entry without throwing")
     void addGetItem_withPartitionAndSortKey() throws Exception {
         Table<?> tableWrapper = createTable(table);
-        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient);
+        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
         assertDoesNotThrow(() -> builder.addGetItem(tableWrapper, "pk-value", "sk-value"));
         // execute() not called because SDK's build() validates sort keys against
@@ -95,7 +95,7 @@ class TransactGetBuilderTest {
         when(enhancedClient.transactGetItems(any(TransactGetItemsEnhancedRequest.class)))
                 .thenReturn(List.of());
         Table<?> tableWrapper = createTable(table);
-        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient);
+        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
         builder.addGetItem(tableWrapper, "pk-value");
         TransactGetResults results = builder.execute();
@@ -110,7 +110,7 @@ class TransactGetBuilderTest {
         when(enhancedClient.transactGetItems(any(TransactGetItemsEnhancedRequest.class)))
                 .thenReturn(List.of());
         Table<?> tableWrapper = createTable(table);
-        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient);
+        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
         builder.addGetItem(tableWrapper, "pk1");
         builder.addGetItem(tableWrapper, "pk2");
@@ -124,7 +124,7 @@ class TransactGetBuilderTest {
     void execute_empty_noEntries() {
         when(enhancedClient.transactGetItems(any(TransactGetItemsEnhancedRequest.class)))
                 .thenReturn(List.of());
-        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient);
+        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
 
         TransactGetResults results = builder.execute();
 
@@ -138,7 +138,7 @@ class TransactGetBuilderTest {
     @Test
     @DisplayName("project without entries throws IllegalStateException")
     void project_withoutEntries_throwsIllegalStateException() {
-        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient);
+        TransactGetBuilder builder = new TransactGetBuilder(enhancedClient, dynamoDbClient);
         assertThrows(IllegalStateException.class, () -> builder.project("attr1"));
     }
 
@@ -222,4 +222,5 @@ class TransactGetBuilderTest {
         assertEquals(1, results.size());
         assertNull(results.get(0));
     }
+
 }

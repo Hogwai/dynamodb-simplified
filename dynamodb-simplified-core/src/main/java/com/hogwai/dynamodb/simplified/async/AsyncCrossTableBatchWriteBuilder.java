@@ -1,7 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.CrossTableBatchWriteResult;
@@ -13,7 +12,6 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import java.util.ArrayList;
@@ -138,12 +136,7 @@ public class AsyncCrossTableBatchWriteBuilder {
             Map<String, List<WriteRequest>> requestItems, int attempt, long start) {
         return dynamoDbAsyncClient.batchWriteItem(
                         BatchWriteItemRequest.builder().requestItems(requestItems).build())
-                .exceptionally(e -> {
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("BatchWriteItem", null, dde);
-                    }
-                    throw new DynamoSimplifiedException("BatchWriteItem failed", e);
-                })
+                .exceptionally(AsyncExceptionMapper.handler("BatchWriteItem", null))
                 .thenCompose(response -> {
                     Map<String, List<WriteRequest>> unprocessed = response.unprocessedItems();
                     if (unprocessed == null || unprocessed.isEmpty()) {

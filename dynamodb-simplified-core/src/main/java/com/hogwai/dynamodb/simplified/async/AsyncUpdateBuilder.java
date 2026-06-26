@@ -1,10 +1,8 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
@@ -17,8 +15,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
@@ -204,18 +200,7 @@ public class AsyncUpdateBuilder<T> {
         }
 
         return table.updateItem(requestBuilder.build())
-                .exceptionally(e -> {
-                    if (e instanceof ConditionalCheckFailedException ccf) {
-                        throw ConditionFailedException.fromSdk(ccf);
-                    }
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("UpdateItem", table.tableName(), dde);
-                    }
-                    if (e instanceof RuntimeException re) {
-                        throw re;
-                    }
-                    throw new DynamoSimplifiedException(e);
-                });
+                .exceptionally(AsyncExceptionMapper.handler("UpdateItem", table.tableName()));
     }
 
     // ---- Partial update via low-level async client ----
@@ -244,18 +229,7 @@ public class AsyncUpdateBuilder<T> {
         }
 
         return dynamoDbAsyncClient.updateItem(requestBuilder.build())
-                .exceptionally(e -> {
-                    if (e instanceof ConditionalCheckFailedException ccf) {
-                        throw ConditionFailedException.fromSdk(ccf);
-                    }
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("UpdateItem", table.tableName(), dde);
-                    }
-                    if (e instanceof RuntimeException re) {
-                        throw re;
-                    }
-                    throw new DynamoSimplifiedException(e);
-                })
+                .exceptionally(AsyncExceptionMapper.handler("UpdateItem", table.tableName()))
                 .thenApply(response -> table.tableSchema().mapToItem(response.attributes()));
     }
 

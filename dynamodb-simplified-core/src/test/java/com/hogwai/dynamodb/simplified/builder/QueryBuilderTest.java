@@ -26,6 +26,7 @@ import software.amazon.awssdk.services.dynamodb.model.Select;
 import java.util.Collections;
 
 import java.util.List;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -779,14 +780,29 @@ class QueryBuilderTest {
     }
 
     @Test
+    @DisplayName("executeAndGetFirst() only reads first page when multiple pages exist")
+    void executeAndGetFirst_onlyReadsFirstPage() {
+        Page<TestItem> page1 = mockPageItems(List.of(new TestItem("first")));
+        @SuppressWarnings("unchecked")
+        Page<TestItem> page2 = mock(Page.class);
+        lenient().when(page2.items()).thenThrow(new AssertionError("Second page should not be accessed"));
+        stubQueryReturns(page1, page2);
+
+        Optional<TestItem> result = new QueryBuilder<>(table)
+                .partitionKey("pk")
+                .executeAndGetFirst();
+
+        assertTrue(result.isPresent());
+        assertEquals("first", result.get().id);
+    }
+
+    @Test
     @DisplayName("executeAndGetFirst() throws when Select.COUNT is set")
     void executeAndGetFirst_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new QueryBuilder<>(table)
+        var builder = new QueryBuilder<>(table)
                 .partitionKey("pk")
-                .select(Select.COUNT)
-                .executeAndGetFirst()
-        );
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeAndGetFirst);
     }
 
     @Test

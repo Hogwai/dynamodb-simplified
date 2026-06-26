@@ -1,9 +1,8 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.PageCollector;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
@@ -17,7 +16,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.Select;
@@ -290,6 +288,29 @@ public class AsyncScanBuilder<T> {
     }
 
     /**
+     * Executes the scan asynchronously and returns the first matching item, if any.
+     * <p>Only the first page of results is loaded — subsequent pages are never fetched.</p>
+     *
+     * @return a {@link CompletableFuture} containing an {@link Optional}
+     *         with the first item, or empty if no items match
+     */
+    public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
+        return executeWithPagination().thenApply(firstPage -> {
+            Optional<T> result = firstPage.getItems().stream().findFirst();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("AsyncScan on table '{}' returned first item in {}ms",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return result;
+        });
+    }
+
+    /**
      * Returns the total number of items asynchronously by iterating all scan
      * result pages.
      * <p>
@@ -389,12 +410,7 @@ public class AsyncScanBuilder<T> {
         ScanRequest request = buildCountRequest(select);
         return dynamoDbAsyncClient.scan(request)
             .thenApply(r -> (long) r.count())
-            .exceptionally(e -> {
-                if (e instanceof DynamoDbException dde) {
-                    throw new OperationFailedException("Scan", request.tableName(), dde);
-                }
-                throw new DynamoSimplifiedException("Scan failed", e);
-            });
+            .exceptionally(AsyncExceptionMapper.handler("Scan", request.tableName()));
     }
 
     // ============ Internal ============
@@ -416,12 +432,7 @@ public class AsyncScanBuilder<T> {
             Objects.requireNonNull(table, "table must not be null");
             result = PageCollector.collectPages(table.scan(request));
         }
-        return result.exceptionally(e -> {
-            if (e instanceof DynamoDbException dde) {
-                throw new OperationFailedException("Scan", getTableName(), dde);
-            }
-            throw new DynamoSimplifiedException("Scan failed", e);
-        });
+        return result.exceptionally(AsyncExceptionMapper.handler("Scan", getTableName()));
     }
 
     private ScanEnhancedRequest buildScanRequest() {

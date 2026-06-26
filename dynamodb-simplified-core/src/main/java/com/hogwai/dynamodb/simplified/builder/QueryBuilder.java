@@ -508,7 +508,8 @@ public class QueryBuilder<T> {
         }
         long start = System.nanoTime();
         try {
-            Optional<T> result = executeAll().stream().findFirst();
+            PagedResult<T> firstPage = executeWithPagination();
+            Optional<T> result = firstPage.getItems().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Query on table '{}' returned first item in {}ms",
                         getTableName(), (System.nanoTime() - start) / 1_000_000);
