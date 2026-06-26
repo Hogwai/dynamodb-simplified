@@ -1,7 +1,10 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
+import com.hogwai.dynamodb.simplified.result.BatchGetResult;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -10,9 +13,11 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +34,9 @@ import java.util.function.Consumer;
  * @param <T> the item type
  */
 public class BatchGetBuilder<T> {
+
+    private static final Logger LOG = Logging.getLogger(BatchGetBuilder.class);
+    private static final int MAX_BATCH_SIZE = 100;
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<T> table;
@@ -119,20 +127,33 @@ public class BatchGetBuilder<T> {
     }
 
     /**
-     * Executes the batch get operation and returns all matching items.
+     * Executes the batch get operation and returns all matching items along
+     * with any unprocessed keys.
      * <p>
      * If a projection was set via {@link #project(String...)}, the operation
      * falls back to the low-level DynamoDB API to support attribute filtering.
      *
-     * @return the list of retrieved items (order may not match the requested keys)
+     * @return a {@link BatchGetResult} containing the retrieved items and unprocessed keys
+     * @throws IllegalArgumentException if more than 100 keys are provided
      */
-    public @NonNull List<T> execute() {
+    public @NonNull BatchGetResult<T> execute() {
         if (keys.isEmpty()) {
-            return List.of();
+            return new BatchGetResult<>(List.of(), Map.of());
         }
 
+        if (keys.size() > MAX_BATCH_SIZE) {
+            throw new IllegalArgumentException(
+                    "BatchGet supports a maximum of " + MAX_BATCH_SIZE + " keys per request, but " + keys.size() + " were provided");
+        }
+
+        long start = System.nanoTime();
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
-            return executeWithProjection();
+            var result = executeWithProjection();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("BatchGet on table '{}' returned {} items in {}ms (with projection)",
+                        table.tableName(), result.getItems().size(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return result;
         }
 
         Class<T> itemClass = table.tableSchema().itemType().rawClass();
@@ -150,13 +171,23 @@ public class BatchGetBuilder<T> {
                 .readBatches(batchBuilder.build())
                 .build();
 
-        return enhancedClient.batchGetItem(request)
-                .resultsForTable(table)
-                .stream()
-                .toList();
+        List<T> results;
+        try {
+            results = enhancedClient.batchGetItem(request)
+                    .resultsForTable(table)
+                    .stream()
+                    .toList();
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("BatchGetItem", table.tableName(), e);
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BatchGet on table '{}' returned {} items in {}ms",
+                    table.tableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+        }
+        return new BatchGetResult<>(results, Map.of());
     }
 
-    private List<T> executeWithProjection() {
+    private BatchGetResult<T> executeWithProjection() {
         String tableName = table.tableName();
         List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(keys.size());
         for (Key key : keys) {
@@ -177,14 +208,21 @@ public class BatchGetBuilder<T> {
                 .requestItems(requestItems)
                 .build();
 
-        var response = dynamoDbClient.batchGetItem(request);
-        List<Map<String, AttributeValue>> items = response.responses()
-                .getOrDefault(tableName, List.of());
+        List<Map<String, AttributeValue>> items;
+        Map<String, KeysAndAttributes> unprocessed;
+        try {
+            var response = dynamoDbClient.batchGetItem(request);
+            items = response.responses()
+                    .getOrDefault(tableName, List.of());
+            unprocessed = response.unprocessedKeys();
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("BatchGetItem", tableName, e);
+        }
         List<T> results = new ArrayList<>(items.size());
         for (Map<String, AttributeValue> item : items) {
             results.add(table.tableSchema().mapToItem(item));
         }
-        return results;
+        return new BatchGetResult<>(results, unprocessed != null ? unprocessed : Map.of());
     }
 
 

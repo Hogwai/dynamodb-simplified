@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,11 +12,15 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.CancellationReason;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsResponse;
 
 import java.lang.reflect.Constructor;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -234,5 +239,57 @@ class AsyncTransactWriteBuilderTest {
 
         verify(dynamoDbAsyncClient).transactWriteItems(any(TransactWriteItemsRequest.class));
         verify(enhancedClient, never()).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
+    }
+
+    // ============ TransactionCanceledException handling ============
+
+    @Test
+    @DisplayName("executeEnhanced wraps TransactionCanceledException from enhanced client")
+    void executeEnhanced_wrapsTransactionCanceledException() throws Exception {
+        when(enhancedClient.transactWriteItems(any(TransactWriteItemsEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        TransactionCanceledException.builder()
+                                .cancellationReasons(List.of(
+                                        CancellationReason.builder().code("ConditionalCheckFailed").message("Item exists").build()))
+                                .build()));
+
+        TestItem item = new TestItem("item-1");
+        AsyncTable<TestItem> tableWrapper = createAsyncTable(table);
+        AsyncTransactWriteBuilder builder = new AsyncTransactWriteBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.put(tableWrapper, item);
+
+        CompletableFuture<Void> future = builder.execute();
+        var ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(TransactionFailedException.class, ex.getCause());
+        var tfe = (TransactionFailedException) ex.getCause();
+        assertEquals(1, tfe.getCancellationReasons().size());
+        assertTrue(tfe.getCancellationReason(0).contains("ConditionalCheckFailed"));
+    }
+
+    @Test
+    @DisplayName("executeLowLevel wraps TransactionCanceledException from low-level client")
+    void executeLowLevel_wrapsTransactionCanceledException() throws Exception {
+        when(dynamoDbAsyncClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        TransactionCanceledException.builder()
+                                .cancellationReasons(List.of(
+                                        CancellationReason.builder().code("None").message("").build()))
+                                .build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(mock(TableSchema.class));
+
+        TestItem item = new TestItem("item-1");
+        AsyncTable<TestItem> tableWrapper = createAsyncTable(table);
+        AsyncTransactWriteBuilder builder = new AsyncTransactWriteBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.update(tableWrapper, item, expr -> expr.set("status", "active"));
+
+        CompletableFuture<Void> future = builder.execute();
+        var ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(TransactionFailedException.class, ex.getCause());
+        var tfe = (TransactionFailedException) ex.getCause();
+        assertEquals(1, tfe.getCancellationReasons().size());
+        assertNull(tfe.getCancellationReason(0));
     }
 }

@@ -14,6 +14,14 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import com.hogwai.dynamodb.simplified.builder.Index;
 
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
+
+import java.util.Map;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -218,6 +226,50 @@ class TableTest {
 
         assertNotNull(idx);
         verify(dynamoDbTable).index("my-index");
+    }
+
+    // ============ Key-Only Update ============
+
+    @SuppressWarnings("unchecked")
+    private void mockSchema(String sortKeyName) {
+        TableSchema<TestItem> schema = mock(TableSchema.class);
+        TableMetadata tableMetadata = mock(TableMetadata.class);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("key");
+        if (sortKeyName != null) {
+            when(tableMetadata.primarySortKey()).thenReturn(Optional.of(sortKeyName));
+        } else {
+            lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+        }
+        when(schema.tableMetadata()).thenReturn(tableMetadata);
+        when(dynamoDbTable.tableSchema()).thenReturn(schema);
+    }
+
+    @Test
+    @DisplayName("update(pk, null, consumer) delegates to low-level client")
+    void updateWithKeyOnlyDelegatesToLowLevelClient() {
+        mockSchema(null);
+        when(dynamoDbTable.tableName()).thenReturn("test-table");
+        when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(UpdateItemResponse.builder().attributes(Map.of()).build());
+
+        Table<TestItem> table = createTable();
+        table.update("pk-val", null, expr -> expr.set("name", "new"));
+
+        verify(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
+    }
+
+    @Test
+    @DisplayName("update(pk, sk, consumer) delegates to low-level client with composite key")
+    void updateWithKeyAndSortKeyDelegatesToLowLevelClient() {
+        mockSchema("sk");
+        when(dynamoDbTable.tableName()).thenReturn("test-table");
+        when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
+                .thenReturn(UpdateItemResponse.builder().attributes(Map.of()).build());
+
+        Table<TestItem> table = createTable();
+        table.update("pk-val", "sk-val", expr -> expr.set("name", "new"));
+
+        verify(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
     }
 
     // ============ Raw Access ============

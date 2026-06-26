@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,10 +61,11 @@ class DeleteBuilderTest {
         DeleteBuilder<TestItem> builder = new DeleteBuilder<>(table, "pk", null, null);
 
         // When
-        TestItem result = builder.execute();
+        Optional<TestItem> result = builder.execute();
 
         // Then
-        assertSame(deletedItem, result);
+        assertTrue(result.isPresent());
+        assertSame(deletedItem, result.get());
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertEquals(AttributeValue.builder().s("pk").build(), request.key().partitionKeyValue());
@@ -85,6 +87,7 @@ class DeleteBuilderTest {
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertEquals(AttributeValue.builder().s("pk").build(), request.key().partitionKeyValue());
+        assertTrue(request.key().sortKeyValue().isPresent());
         assertEquals(AttributeValue.builder().s("sk").build(), request.key().sortKeyValue().get());
         assertNull(request.conditionExpression());
     }
@@ -164,10 +167,11 @@ class DeleteBuilderTest {
         DeleteBuilder<TestItem> builder = new DeleteBuilder<>(table, "pk", "sk", null);
 
         // When
-        TestItem result = builder.execute();
+        Optional<TestItem> result = builder.execute();
 
         // Then
-        assertSame(deletedItem, result);
+        assertTrue(result.isPresent());
+        assertSame(deletedItem, result.get());
     }
 
     @Test
@@ -188,10 +192,11 @@ class DeleteBuilderTest {
 
         // When
         builder.returnValues(ReturnValue.ALL_OLD);
-        TestItem result = builder.execute();
+        Optional<TestItem> result = builder.execute();
 
         // Then
-        assertSame(deletedItem, result);
+        assertTrue(result.isPresent());
+        assertSame(deletedItem, result.get());
         verify(dynamoDbClient).deleteItem(lowLevelRequestCaptor.capture());
         DeleteItemRequest request = lowLevelRequestCaptor.getValue();
         assertEquals("test-table", request.tableName());
@@ -208,10 +213,11 @@ class DeleteBuilderTest {
         DeleteBuilder<TestItem> builder = new DeleteBuilder<>(table, "pk", null, dynamoDbClient);
 
         // When
-        TestItem result = builder.execute();
+        Optional<TestItem> result = builder.execute();
 
         // Then
-        assertSame(deletedItem, result);
+        assertTrue(result.isPresent());
+        assertSame(deletedItem, result.get());
         verify(table).deleteItem(any(DeleteItemEnhancedRequest.class));
         verifyNoInteractions(dynamoDbClient);
     }
@@ -265,10 +271,10 @@ class DeleteBuilderTest {
 
         // When
         builder.returnValues(ReturnValue.NONE);
-        TestItem result = builder.execute();
+        Optional<TestItem> result = builder.execute();
 
         // Then
-        assertNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -309,7 +315,7 @@ class DeleteBuilderTest {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
         when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
-        when(tableMetadata.primarySortKey()).thenReturn(java.util.Optional.of("sk"));
+        when(tableMetadata.primarySortKey()).thenReturn(Optional.of("sk"));
 
         DeleteBuilder<TestItem> builder = new DeleteBuilder<>(table, "pk-val", "sk-val", dynamoDbClient);
 

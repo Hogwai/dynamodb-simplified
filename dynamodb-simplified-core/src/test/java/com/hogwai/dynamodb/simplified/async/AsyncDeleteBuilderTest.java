@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -63,10 +64,10 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNotNull(result);
+        assertTrue(result.isPresent());
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertEquals(AttributeValue.builder().s("pk").build(), request.key().partitionKeyValue());
@@ -83,13 +84,14 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", "sk", null);
 
         // When
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNotNull(result);
+        assertTrue(result.isPresent());
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertEquals(AttributeValue.builder().s("pk").build(), request.key().partitionKeyValue());
+        assertTrue(request.key().sortKeyValue().isPresent());
         assertEquals(AttributeValue.builder().s("sk").build(), request.key().sortKeyValue().get());
         assertNull(request.conditionExpression());
     }
@@ -104,10 +106,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.condition(c -> c.eq("status", "archived"));
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNotNull(result);
+        assertTrue(result.isPresent());
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertNotNull(request.conditionExpression());
@@ -129,10 +131,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.onlyIfExists("id");
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNotNull(result);
+        assertTrue(result.isPresent());
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertNotNull(request.conditionExpression());
@@ -151,10 +153,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.condition(c -> c.eq("color", "blue"));
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNotNull(result);
+        assertTrue(result.isPresent());
         verify(table).deleteItem(requestCaptor.capture());
         DeleteItemEnhancedRequest request = requestCaptor.getValue();
         assertNotNull(request.conditionExpression());
@@ -181,7 +183,7 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
-        CompletableFuture<TestItem> future = builder.execute();
+        CompletableFuture<Optional<TestItem>> future = builder.execute();
 
         // Then
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
@@ -200,7 +202,7 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
-        CompletableFuture<TestItem> future = builder.execute();
+        CompletableFuture<Optional<TestItem>> future = builder.execute();
 
         // Then
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
@@ -219,7 +221,7 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
 
         // When
-        CompletableFuture<TestItem> future = builder.execute();
+        CompletableFuture<Optional<TestItem>> future = builder.execute();
 
         // Then
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
@@ -248,10 +250,11 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.returnValues(ReturnValue.ALL_OLD);
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertSame(deletedItem, result);
+        assertTrue(result.isPresent());
+        assertSame(deletedItem, result.get());
         verify(dynamoDbAsyncClient).deleteItem(lowLevelRequestCaptor.capture());
         DeleteItemRequest request = lowLevelRequestCaptor.getValue();
         assertEquals("test-table", request.tableName());
@@ -268,10 +271,10 @@ class AsyncDeleteBuilderTest {
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, dynamoDbAsyncClient);
 
         // When
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNotNull(result);
+        assertTrue(result.isPresent());
         verify(table).deleteItem(any(DeleteItemEnhancedRequest.class));
         verifyNoInteractions(dynamoDbAsyncClient);
     }
@@ -326,10 +329,10 @@ class AsyncDeleteBuilderTest {
 
         // When
         builder.returnValues(ReturnValue.NONE);
-        TestItem result = builder.execute().join();
+        Optional<TestItem> result = builder.execute().join();
 
         // Then
-        assertNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -351,7 +354,7 @@ class AsyncDeleteBuilderTest {
         // When
         builder.returnValues(ReturnValue.ALL_OLD);
         builder.condition(c -> c.eq("status", "active"));
-        CompletableFuture<TestItem> future = builder.execute();
+        CompletableFuture<Optional<TestItem>> future = builder.execute();
 
         // Then
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
@@ -373,7 +376,7 @@ class AsyncDeleteBuilderTest {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
         when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
-        when(tableMetadata.primarySortKey()).thenReturn(java.util.Optional.of("sk"));
+        when(tableMetadata.primarySortKey()).thenReturn(Optional.of("sk"));
 
         AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk-val", "sk-val", dynamoDbAsyncClient);
 

@@ -5,6 +5,7 @@ import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -57,7 +58,7 @@ public class UpdateExpression {
      * @return this builder for chaining
      */
     @NonNull
-    public UpdateExpression set(@NonNull String attribute, @NonNull Object value) {
+    public UpdateExpression set(@NonNull String attribute, @Nullable Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
         setActions.add("%s = %s".formatted(nameKey, valueKey));

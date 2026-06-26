@@ -1,8 +1,10 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -53,7 +55,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncQueryBuilder<T> query() {
-        return new AsyncQueryBuilder<>(dynamoDbAsyncTable);
+        return new AsyncQueryBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
     // ============ Scan ============
@@ -65,7 +67,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncScanBuilder<T> scan() {
-        return new AsyncScanBuilder<>(dynamoDbAsyncTable);
+        return new AsyncScanBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
     // ============ Get Item ============
@@ -131,7 +133,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncPutBuilder<T> put(@NonNull T item) {
-        return new AsyncPutBuilder<>(dynamoDbAsyncTable, item);
+        return new AsyncPutBuilder<>(dynamoDbAsyncTable, item, dynamoDbAsyncClient);
     }
 
     /**
@@ -156,6 +158,44 @@ public class AsyncTable<T> {
     @NonNull
     public AsyncUpdateBuilder<T> update(@NonNull T item) {
         return new AsyncUpdateBuilder<>(dynamoDbAsyncTable, item, dynamoDbAsyncClient);
+    }
+
+    /**
+     * Starts building a partial update operation with an expression consumer.
+     * <p>
+     * This is a convenience shorthand for {@code update(item).update(consumer)}.
+     * The returned builder can be further configured before calling {@code execute()}.
+     *
+     * @param item               the item identifying the record to update (key fields only)
+     * @param expressionConsumer a consumer to configure the update expression (SET, REMOVE, ADD, DELETE)
+     * @return an async update builder for further configuration and execution
+     */
+    @NonNull
+    public AsyncUpdateBuilder<T> update(@NonNull T item, @NonNull Consumer<UpdateExpression> expressionConsumer) {
+        Objects.requireNonNull(expressionConsumer, "expressionConsumer must not be null");
+        return update(item).update(expressionConsumer);
+    }
+
+    /**
+     * Updates an item identified by partition and sort key using a partial update expression.
+     * <p>
+     * This avoids creating a dummy item object when the key is already known.
+     * Pass {@code null} for the sort key when the table has no sort key.
+     *
+     * @param partitionKey        the partition key value
+     * @param sortKey             the sort key value, or {@code null} if the table has no sort key
+     * @param expressionConsumer a consumer to build the update expression
+     * @return a {@link CompletableFuture} that completes when the update has been executed
+     */
+    @NonNull
+    public CompletableFuture<Void> update(@NonNull Object partitionKey,
+                                          @Nullable Object sortKey,
+                                          @NonNull Consumer<UpdateExpression> expressionConsumer) {
+        Objects.requireNonNull(expressionConsumer, "expressionConsumer must not be null");
+        return new AsyncUpdateBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient, partitionKey, sortKey)
+                .update(expressionConsumer)
+                .execute()
+                .thenApply(_ -> null);
     }
 
     /**
@@ -236,7 +276,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncIndex<T> index(@NonNull String indexName) {
-        return new AsyncIndex<>(dynamoDbAsyncTable.index(indexName));
+        return new AsyncIndex<>(dynamoDbAsyncTable.index(indexName), dynamoDbAsyncClient);
     }
 
     // ============ Batch Operations ============
@@ -258,7 +298,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public AsyncBatchWriteBuilder<T> batchWrite() {
-        return new AsyncBatchWriteBuilder<>(enhancedAsyncClient, dynamoDbAsyncTable);
+        return new AsyncBatchWriteBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
     // ============ Raw Access ============

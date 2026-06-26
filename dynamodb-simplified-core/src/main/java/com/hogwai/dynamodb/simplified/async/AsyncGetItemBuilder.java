@@ -1,13 +1,18 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 
 import java.util.HashMap;
@@ -23,6 +28,8 @@ import java.util.function.Consumer;
  * @param <T> the item type
  */
 public class AsyncGetItemBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(AsyncGetItemBuilder.class);
+
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final Object partitionKey;
@@ -86,10 +93,25 @@ public class AsyncGetItemBuilder<T> {
      */
     @NonNull
     public CompletableFuture<Optional<T>> execute() {
+        long start = System.nanoTime();
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
-            return executeWithProjection();
+            return executeWithProjection()
+                    .thenApply(result -> {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncGetItem on table '{}' completed in {}ms (with projection)",
+                                    table.tableName(), (System.nanoTime() - start) / 1_000_000);
+                        }
+                        return result;
+                    });
         }
-        return executeSimple();
+        return executeSimple()
+                .thenApply(result -> {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncGetItem on table '{}' completed in {}ms",
+                                table.tableName(), (System.nanoTime() - start) / 1_000_000);
+                    }
+                    return result;
+                });
     }
 
     private CompletableFuture<Optional<T>> executeSimple() {
@@ -103,7 +125,15 @@ public class AsyncGetItemBuilder<T> {
                 .consistentRead(consistentRead)
                 .build();
         return table.getItem(request)
-                .thenApply(Optional::ofNullable);
+                .handle((item, err) -> {
+                    if (err != null) {
+                        if (err instanceof DynamoDbException dde) {
+                            throw new OperationFailedException("GetItem", table.tableName(), dde);
+                        }
+                        throw new DynamoSimplifiedException("GetItem failed", err);
+                    }
+                    return Optional.ofNullable(item);
+                });
     }
 
     private CompletableFuture<Optional<T>> executeWithProjection() {
@@ -125,7 +155,13 @@ public class AsyncGetItemBuilder<T> {
                 .build();
 
         return dynamoDbAsyncClient.getItem(request)
-                .thenApply(response -> {
+                .handle((response, err) -> {
+                    if (err != null) {
+                        if (err instanceof DynamoDbException dde) {
+                            throw new OperationFailedException("GetItem", table.tableName(), dde);
+                        }
+                        throw new DynamoSimplifiedException("GetItem failed", err);
+                    }
                     if (!response.hasItem()) {
                         return Optional.empty();
                     }

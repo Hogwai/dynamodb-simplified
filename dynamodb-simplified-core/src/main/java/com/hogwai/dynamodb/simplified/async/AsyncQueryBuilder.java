@@ -1,12 +1,16 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.PageCollector;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -14,10 +18,15 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +48,12 @@ import java.util.function.Consumer;
  * @param <T> the type of the item
  */
 public class AsyncQueryBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(AsyncQueryBuilder.class);
+    private static final String CONDITION_JOINER = " AND ";
+
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncIndex<T> index;
+    private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private QueryConditional keyCondition;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
@@ -49,6 +62,16 @@ public class AsyncQueryBuilder<T> {
     private Map<String, AttributeValue> exclusiveStartKey;
     private Boolean consistentRead = false;
     private ReturnConsumedCapacity returnConsumedCapacity;
+    private Select select;
+
+    /**
+     * Describes the type of sort key comparison for a key condition expression.
+     */
+    enum KeyConditionOp { EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE }
+    private KeyConditionOp keyOp;
+    private Object pkValue;
+    private Object skValue;
+    private Object skValue2; // for BETWEEN only
 
     /**
      * Constructs a new {@code AsyncQueryBuilder} for the given async table.
@@ -56,8 +79,7 @@ public class AsyncQueryBuilder<T> {
      * @param table the async DynamoDB table
      */
     public AsyncQueryBuilder(@NonNull DynamoDbAsyncTable<T> table) {
-        this.table = table;
-        this.index = null;
+        this(table, null);
     }
 
     /**
@@ -66,8 +88,32 @@ public class AsyncQueryBuilder<T> {
      * @param index the async DynamoDB secondary index
      */
     public AsyncQueryBuilder(@NonNull DynamoDbAsyncIndex<T> index) {
+        this(index, null);
+    }
+
+    /**
+     * Constructs a new {@code AsyncQueryBuilder} for the given async table with a low-level client.
+     *
+     * @param table                the async DynamoDB table
+     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     */
+    public AsyncQueryBuilder(@NonNull DynamoDbAsyncTable<T> table, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
+        this.table = table;
+        this.index = null;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+    }
+
+    /**
+     * Constructs a new {@code AsyncQueryBuilder} for querying the given async secondary index
+     * with a low-level client.
+     *
+     * @param index                the async DynamoDB secondary index
+     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     */
+    public AsyncQueryBuilder(@NonNull DynamoDbAsyncIndex<T> index, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.table = null;
         this.index = index;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
     // ============ Key Conditions ============
@@ -78,7 +124,12 @@ public class AsyncQueryBuilder<T> {
      * @param pkValue the partition key value
      * @return this builder for chaining
      */
+    @SuppressWarnings("PMD.NullAssignment")
     public @NonNull AsyncQueryBuilder<T> partitionKey(@NonNull Object pkValue) {
+        this.pkValue = pkValue;
+        this.keyOp = KeyConditionOp.EQ;
+        this.skValue = null;
+        this.skValue2 = null;
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue)).build()
         );
@@ -94,6 +145,8 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyEquals(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -112,6 +165,9 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyBeginsWith(@NonNull Object pkValue, @NonNull String skPrefix) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.BEGINS_WITH;
+        this.skValue = skPrefix;
         this.keyCondition = QueryConditional.sortBeginsWith(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -132,6 +188,10 @@ public class AsyncQueryBuilder<T> {
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyBetween(
             @NonNull Object pkValue, @NonNull Object skLow, @NonNull Object skHigh) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.BETWEEN;
+        this.skValue = skLow;
+        this.skValue2 = skHigh;
         this.keyCondition = QueryConditional.sortBetween(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -154,6 +214,9 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyGreaterThan(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.GT;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThan(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -172,6 +235,9 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyGreaterThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.GE;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThanOrEqualTo(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -190,6 +256,9 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyLessThan(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.LT;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThan(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -208,6 +277,9 @@ public class AsyncQueryBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull AsyncQueryBuilder<T> partitionKeyAndSortKeyLessThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
+        this.partitionKey(pkValue);
+        this.keyOp = KeyConditionOp.LE;
+        this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThanOrEqualTo(
                 Key.builder()
                    .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
@@ -336,6 +408,18 @@ public class AsyncQueryBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the select parameter for the query, controlling which attributes are returned.
+     * Use {@link Select#COUNT} to request only the item count from the server.
+     *
+     * @param select the select parameter (nullable)
+     * @return this builder for chaining
+     */
+    public @NonNull AsyncQueryBuilder<T> select(@Nullable Select select) {
+        this.select = select;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
@@ -351,10 +435,22 @@ public class AsyncQueryBuilder<T> {
      */
     @NonNull
     public CompletableFuture<List<T>> executeAll() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
         return executeAsPages()
-                .thenApply(pages -> pages.stream()
-                        .flatMap(page -> page.items().stream())
-                        .toList());
+                .thenApply(pages -> {
+                    List<T> results = pages.stream()
+                            .flatMap(page -> page.items().stream())
+                            .toList();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncQuery on table '{}' returned {} items in {}ms",
+                                getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+                    }
+                    return results;
+                });
     }
 
     /**
@@ -366,12 +462,25 @@ public class AsyncQueryBuilder<T> {
      *         (may be {@code null} if no more pages)
      */
     public @NonNull CompletableFuture<PagedResult<T>> executeWithPagination() {
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
         return executeAsPages()
                 .thenApply(pages -> {
                     Iterator<Page<T>> iter = pages.iterator();
                     if (iter.hasNext()) {
                         Page<T> first = iter.next();
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncQuery on table '{}' returned {} items in {}ms (first page)",
+                                    getTableName(), first.items().size(), (System.nanoTime() - start) / 1_000_000);
+                        }
                         return new PagedResult<>(first.items(), first.lastEvaluatedKey());
+                    }
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncQuery on table '{}' returned 0 items in {}ms (first page)",
+                                getTableName(), (System.nanoTime() - start) / 1_000_000);
                     }
                     return new PagedResult<>(Collections.emptyList(), null);
                 });
@@ -385,28 +494,173 @@ public class AsyncQueryBuilder<T> {
      *         with the first item, or empty if no items match
      */
     public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
-        return executeAll().thenApply(items -> items.stream().findFirst());
+        if (select == Select.COUNT) {
+            return CompletableFuture.failedFuture(
+                new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
+        }
+        long start = System.nanoTime();
+        return executeAll().thenApply(items -> {
+            Optional<T> result = items.stream().findFirst();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("AsyncQuery on table '{}' returned first item in {}ms",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return result;
+        });
     }
 
     /**
      * Returns the total number of matching items asynchronously by iterating
      * all query result pages.
+     * <p>
+     * When a low-level {@link DynamoDbAsyncClient} is available, uses
+     * {@code Select.COUNT} server-side to avoid transferring item data.
+     * Falls back to the enhanced client page iteration otherwise.
      *
      * @return a {@link CompletableFuture} containing the total count of
      *         matching items
      */
     public @NonNull CompletableFuture<Long> count() {
+        long start = System.nanoTime();
+        if (dynamoDbAsyncClient != null) {
+            return countWithLowLevel(select != null ? select : Select.COUNT)
+                    .thenApply(result -> {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncQuery count on table '{}' returned {} items in {}ms",
+                                    getTableName(), result, (System.nanoTime() - start) / 1_000_000);
+                        }
+                        return result;
+                    });
+        }
         return executeAsPages()
                 .thenApply(pages -> {
                     long total = 0;
                     for (Page<T> page : pages) {
                         total += page.count();
                     }
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncQuery count on table '{}' returned {} items in {}ms",
+                                getTableName(), total, (System.nanoTime() - start) / 1_000_000);
+                    }
                     return total;
                 });
     }
 
+    // ============ Low-Level Count ============
+
+    private @NonNull CompletableFuture<Long> countWithLowLevel(Select select) {
+        String tableName = table != null ? table.tableName() : index.tableName();
+        Map<String, String> expressionNames = new HashMap<>();
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+
+        String keyConditionExpression = buildKeyConditionExpression(expressionNames, expressionValues);
+
+        QueryRequest.Builder requestBuilder = QueryRequest.builder()
+            .tableName(tableName)
+            .keyConditionExpression(keyConditionExpression)
+            .expressionAttributeNames(expressionNames)
+            .expressionAttributeValues(expressionValues)
+            .select(select);
+
+        applyFilterExpression(requestBuilder, expressionNames, expressionValues);
+        applyQueryOptions(requestBuilder);
+
+        if (index != null) {
+            requestBuilder.indexName(index.indexName());
+        }
+
+        return dynamoDbAsyncClient.query(requestBuilder.build())
+            .thenApply(r -> (long) r.count())
+            .exceptionally(e -> {
+                if (e instanceof DynamoDbException dde) {
+                    throw new OperationFailedException("Query", tableName, dde);
+                }
+                throw new DynamoSimplifiedException("Query failed", e);
+            });
+    }
+
+    private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
+        String pkName = table != null
+            ? table.tableSchema().tableMetadata().primaryPartitionKey()
+            : index.tableSchema().tableMetadata().primaryPartitionKey();
+
+        StringBuilder keyExpr = new StringBuilder();
+        String pkPlaceholder = "#pk";
+        expressionNames.put(pkPlaceholder, pkName);
+        String pkValPlaceholder = ":pk0";
+        expressionValues.put(pkValPlaceholder, AttributeValueConverter.toKeyAttributeValue(pkValue));
+        keyExpr.append(pkPlaceholder).append(" = ").append(pkValPlaceholder);
+
+        Optional<String> skName = table != null
+            ? table.tableSchema().tableMetadata().primarySortKey()
+            : index.tableSchema().tableMetadata().primarySortKey();
+
+        if (skValue != null && skName.isPresent()) {
+            String skPlaceholder = "#sk";
+            expressionNames.put(skPlaceholder, skName.get());
+            String skValPlaceholder = ":sk0";
+            expressionValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
+
+            switch (keyOp) {
+                case BEGINS_WITH ->
+                    keyExpr.append(CONDITION_JOINER).append("begins_with(").append(skPlaceholder).append(", ").append(skValPlaceholder).append(')');
+                case BETWEEN -> {
+                    String skValPlaceholder2 = ":sk1";
+                    expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" BETWEEN ").append(skValPlaceholder).append(CONDITION_JOINER).append(skValPlaceholder2);
+                }
+                case GT ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                case GE ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                case LT ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                case LE ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                case EQ ->
+                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+            }
+        }
+        return keyExpr.toString();
+    }
+
+    private void applyFilterExpression(QueryRequest.Builder requestBuilder, Map<String, String> keyNames, Map<String, AttributeValue> keyValues) {
+        if (filterExpression != null && !filterExpression.isEmpty()) {
+            requestBuilder.filterExpression(filterExpression.getExpression());
+            requestBuilder.expressionAttributeNames(mergeMaps(keyNames, filterExpression.getExpressionNames()));
+            requestBuilder.expressionAttributeValues(mergeMaps(keyValues, filterExpression.getExpressionValues()));
+        }
+    }
+
+    private void applyQueryOptions(QueryRequest.Builder requestBuilder) {
+        if (limit != null) {
+            requestBuilder.limit(limit);
+        }
+        if (exclusiveStartKey != null) {
+            requestBuilder.exclusiveStartKey(exclusiveStartKey);
+        }
+        if (consistentRead != null) {
+            requestBuilder.consistentRead(consistentRead);
+        }
+        if (scanIndexForward != null) {
+            requestBuilder.scanIndexForward(scanIndexForward);
+        }
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+    }
+
+    private static <K, V> Map<K, V> mergeMaps(Map<K, V> base, Map<K, V> override) {
+        Map<K, V> merged = new HashMap<>(base);
+        merged.putAll(override);
+        return merged;
+    }
+
     // ============ Internal ============
+
+    private String getTableName() {
+        return table != null ? table.tableName() : index.tableName();
+    }
 
     /**
      * Builds the request, executes it via the async table, and collects all
@@ -442,10 +696,18 @@ public class AsyncQueryBuilder<T> {
             requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
 
+        CompletableFuture<List<Page<T>>> result;
         if (index != null) {
-            return PageCollector.collectPages(index.query(requestBuilder.build()));
+            result = PageCollector.collectPages(index.query(requestBuilder.build()));
+        } else {
+            result = PageCollector.collectPages(table.query(requestBuilder.build()));
         }
-        return PageCollector.collectPages(table.query(requestBuilder.build()));
+        return result.exceptionally(e -> {
+            if (e instanceof DynamoDbException dde) {
+                throw new OperationFailedException("Query", getTableName(), dde);
+            }
+            throw new DynamoSimplifiedException("Query failed", e);
+        });
     }
 
 

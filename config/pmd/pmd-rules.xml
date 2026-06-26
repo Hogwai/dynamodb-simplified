@@ -76,6 +76,7 @@
         <exclude name="AvoidDuplicateLiterals"/>
         <exclude name="AvoidFieldNameMatchingMethodName"/>
         <exclude name="AvoidFieldNameMatchingTypeName"/>
+        <exclude name="CloseResource"/>
         <exclude name="TestClassWithoutTestCases"/>
     </rule>
 

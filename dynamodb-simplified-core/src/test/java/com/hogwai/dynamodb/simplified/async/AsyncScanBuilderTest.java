@@ -15,12 +15,17 @@ import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -353,4 +358,61 @@ class AsyncScanBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
     }
 
+    // ============ Low-Level Client Tests ============
+
+    @Mock
+    DynamoDbAsyncClient dynamoDbAsyncClient;
+
+    @Test
+    @DisplayName("count() with low-level client uses ScanRequest with Select.COUNT")
+    void count_withLowLevelClient() {
+        ScanResponse response = ScanResponse.builder().count(10).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .count()
+                .join();
+
+        assertEquals(10L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        assertEquals(Select.COUNT, captor.getValue().select());
+    }
+
+    @Test
+    @DisplayName("executeAll() with Select.COUNT returns failed future")
+    void executeAll_throwsWithSelectCount() {
+        CompletableFuture<List<TestItem>> future = new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeAll();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeWithPagination() with Select.COUNT returns failed future")
+    void executeWithPagination_throwsWithSelectCount() {
+        CompletableFuture<PagedResult<TestItem>> future = new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .executeWithPagination();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("count() does NOT fail when Select.COUNT is set (no client)")
+    void count_doesNotThrowWithSelectCount() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(emptyPublisher());
+
+        assertDoesNotThrow(() ->
+            new AsyncScanBuilder<>(table)
+                .select(Select.COUNT)
+                .count()
+                .join()
+        );
+    }
 }

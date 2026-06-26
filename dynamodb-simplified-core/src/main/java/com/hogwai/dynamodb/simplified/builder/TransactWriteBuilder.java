@@ -3,7 +3,10 @@ package com.hogwai.dynamodb.simplified.builder;
 import com.hogwai.dynamodb.simplified.Table;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
@@ -11,11 +14,14 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItem;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +39,8 @@ import java.util.function.Consumer;
  * the entire transaction is rejected.
  */
 public class TransactWriteBuilder {
+
+    private static final Logger LOG = Logging.getLogger(TransactWriteBuilder.class);
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient dynamoDbClient;
@@ -184,13 +192,22 @@ public class TransactWriteBuilder {
      * Otherwise, the enhanced DynamoDB client is used.
      */
     public void execute() {
+        long start = System.nanoTime();
         boolean hasExpressionOperation = operations.stream()
                 .anyMatch(op -> op.type() == Operation.Type.UPDATE_WITH_EXPRESSION);
 
         if (hasExpressionOperation) {
             executeLowLevel();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("TransactWrite (low-level) completed in {}ms ({} operations)",
+                        (System.nanoTime() - start) / 1_000_000, operations.size());
+            }
         } else {
             executeEnhanced();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("TransactWrite (enhanced) completed in {}ms ({} operations)",
+                        (System.nanoTime() - start) / 1_000_000, operations.size());
+            }
         }
     }
 
@@ -229,7 +246,13 @@ public class TransactWriteBuilder {
                 default -> throw new IllegalStateException("Unexpected operation type in enhanced path: " + op.type());
             }
         }
-        enhancedClient.transactWriteItems(requestBuilder.build());
+        try {
+            enhancedClient.transactWriteItems(requestBuilder.build());
+        } catch (TransactionCanceledException e) {
+            throw new TransactionFailedException(e);
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("TransactWrite", null, e);
+        }
     }
 
     private void executeLowLevel() {
@@ -237,8 +260,14 @@ public class TransactWriteBuilder {
         for (Operation op : operations) {
             items.add(buildTransactWriteItem(op));
         }
-        dynamoDbClient.transactWriteItems(
-                TransactWriteItemsRequest.builder().transactItems(items).build());
+        try {
+            dynamoDbClient.transactWriteItems(
+                    TransactWriteItemsRequest.builder().transactItems(items).build());
+        } catch (TransactionCanceledException e) {
+            throw new TransactionFailedException(e);
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("TransactWrite", null, e);
+        }
     }
 
     private TransactWriteItem buildTransactWriteItem(Operation op) {

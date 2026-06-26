@@ -354,8 +354,8 @@ class UpdateExpressionTest {
         UpdateExpression expr = UpdateExpression.builder()
                 .setNested("a.b[0].c", "value");
 
-        // addName("a") → #u0, addName("b[0]") is handled: attr="b", index="[0]"
-        // then addName("c") → #u2
+        // addName("a") -> #u0, addName("b[0]") is handled: attr="b", index="[0]"
+        // then addName("c") -> #u2
         // Result: #u0.#u1[0].#u2 = :u0
         assertEquals("SET #u0.#u1[0].#u2 = :u0", expr.getExpression());
         assertEquals(

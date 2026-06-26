@@ -174,12 +174,12 @@ class AsyncDynamoSimplifiedClientIT {
         table.putItem(p2).join();
 
         // TestPost has a sort key, so addKey requires both partition and sort key
-        List<TestPost> results = table.batchGet()
+        var results = table.batchGet()
                 .addKey("abg1", 1L)
                 .addKey("abg2", 1L)
                 .execute()
                 .join();
-        assertEquals(2, results.size());
+        assertEquals(2, results.getItems().size());
     }
 
     @Test
@@ -356,7 +356,8 @@ class AsyncDynamoSimplifiedClientIT {
                 .execute()
                 .join();
 
-        assertEquals("Matched", result.getTitle());
+        assertTrue(result.isPresent());
+        assertEquals("Matched", result.orElseThrow().getTitle());
     }
 
     @Test
@@ -512,19 +513,19 @@ class AsyncDynamoSimplifiedClientIT {
                 .execute()
                 .join();
 
-        assertNotNull(deleted);
-        assertEquals("ReturnValueTest", deleted.getTitle());
+        assertTrue(deleted.isPresent());
+        assertEquals("ReturnValueTest", deleted.orElseThrow().getTitle());
         assertFalse(table.getItem("arv1", 1L).join().isPresent());
     }
 
     @Test
     void deleteItemWithReturnValuesOnNonExistentKey() {
-        var deleted = table.delete("nonexistent-arv", 0L)
+        var result = table.delete("nonexistent-arv", 0L)
                 .returnValues(ReturnValue.ALL_OLD)
                 .execute()
                 .join();
 
-        assertNull(deleted);
+        assertTrue(result.isEmpty());
     }
 
     // ============ TransactWrite with UpdateExpression (low-level path) ============

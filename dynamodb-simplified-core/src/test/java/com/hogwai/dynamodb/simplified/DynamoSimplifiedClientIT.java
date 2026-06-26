@@ -146,13 +146,14 @@ class DynamoSimplifiedClientIT {
         var product = new Product("p4", "Original", 10.0, true, Set.of("a"), 5000L);
         table.putItem(product);
 
-        Product result = table.update(product)
+        var result = table.update(product)
                 .update(u -> u.set("price", 15.99).set("name", "Updated"))
                 .execute();
 
         // The low-level client returns ALL_NEW
-        assertEquals(15.99, result.getPrice(), 0.001);
-        assertEquals("Updated", result.getName());
+        assertTrue(result.isPresent());
+        assertEquals(15.99, result.orElseThrow().getPrice(), 0.001);
+        assertEquals("Updated", result.orElseThrow().getName());
 
         // Verify via get
         Optional<Product> found = table.getItem("p4");
@@ -214,11 +215,12 @@ class DynamoSimplifiedClientIT {
     void conditionalUpdateWithMatchingCondition() {
         table.putItem(new Product("p8", "MatchMe", 1.0, true, null, 11000L));
 
-        Product result = table.update(new Product("p8", "Matched", 2.0, true, null, 12000L))
+        var result = table.update(new Product("p8", "Matched", 2.0, true, null, 12000L))
                 .condition(c -> c.eq("name", "MatchMe"))
                 .execute();
 
-        assertEquals("Matched", result.getName());
+        assertTrue(result.isPresent());
+        assertEquals("Matched", result.orElseThrow().getName());
     }
 
     @Test
@@ -379,12 +381,12 @@ class DynamoSimplifiedClientIT {
         table.putItem(bg1);
         table.putItem(bg2);
 
-        List<Product> results = table.batchGet()
+        var results = table.batchGet()
                 .addKey("bg1")
                 .addKey("bg2")
                 .execute();
 
-        assertEquals(2, results.size());
+        assertEquals(2, results.getItems().size());
     }
 
     // ============ Transaction operations ============
@@ -454,23 +456,23 @@ class DynamoSimplifiedClientIT {
         var product = new Product("rv1", "ReturnValueTest", 5.0, true, Set.of("test"), 90000L);
         table.putItem(product);
 
-        Product deleted = table.delete("rv1")
+        var deleted = table.delete("rv1")
                 .returnValues(ReturnValue.ALL_OLD)
                 .execute();
 
-        assertNotNull(deleted);
-        assertEquals("ReturnValueTest", deleted.getName());
-        assertEquals(5.0, deleted.getPrice(), 0.001);
+        assertTrue(deleted.isPresent());
+        assertEquals("ReturnValueTest", deleted.orElseThrow().getName());
+        assertEquals(5.0, deleted.orElseThrow().getPrice(), 0.001);
         assertFalse(table.getItem("rv1").isPresent());
     }
 
     @Test
     void deleteItemWithReturnValuesOnNonExistentKey() {
-        Product deleted = table.delete("nonexistent-rv")
+        var deleted = table.delete("nonexistent-rv")
                 .returnValues(ReturnValue.ALL_OLD)
                 .execute();
 
-        assertNull(deleted);
+        assertTrue(deleted.isEmpty());
     }
 
     // ============ Execution Variants ============

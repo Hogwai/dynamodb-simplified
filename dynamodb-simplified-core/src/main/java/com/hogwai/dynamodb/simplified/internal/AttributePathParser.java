@@ -22,7 +22,7 @@ public final class AttributePathParser {
     /**
      * Parses a dot/bracket path into segments.
      * <p>
-     * Example: {@code "tags[0].name"} → {@code [("tags", "[0]"), ("name", null)]}
+     * Example: {@code "tags[0].name"} -> {@code [("tags", "[0]"), ("name", null)]}
      *
      * @param path the dotted attribute path
      * @return ordered list of path segments
@@ -49,7 +49,7 @@ public final class AttributePathParser {
      * (e.g., {@code [0]}) are appended when present. Segments are joined with
      * dots.
      * <p>
-     * Example: {@code "tags[0].name"} with resolver {@code s -> "#n0"} →
+     * Example: {@code "tags[0].name"} with resolver {@code s -> "#n0"} ->
      * {@code "#n0[0].\#p0"}
      *
      * @param path         the dotted attribute path

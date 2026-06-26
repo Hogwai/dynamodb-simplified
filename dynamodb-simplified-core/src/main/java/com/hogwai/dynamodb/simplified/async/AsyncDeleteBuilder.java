@@ -2,20 +2,25 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -26,6 +31,8 @@ import java.util.function.Consumer;
  * @param <T> the type of the item
  */
 public class AsyncDeleteBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(AsyncDeleteBuilder.class);
+
     private final DynamoDbAsyncTable<T> table;
     private final Object partitionKey;
     @Nullable
@@ -103,12 +110,20 @@ public class AsyncDeleteBuilder<T> {
     /**
      * Executes the delete operation and returns the deleted item.
      *
-     * @return a {@link CompletableFuture} containing the deleted item
+     * @return a {@link CompletableFuture} containing the deleted item, or empty
      */
     @NonNull
-    public CompletableFuture<T> execute() {
+    public CompletableFuture<Optional<T>> execute() {
+        long start = System.nanoTime();
         if (returnValues != null) {
-            return executeWithReturnValues();
+            return executeWithReturnValues()
+                    .thenApply(result -> {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("AsyncDelete on table '{}' completed in {}ms (with return values)",
+                                    table.tableName(), (System.nanoTime() - start) / 1_000_000);
+                        }
+                        return Optional.ofNullable(result);
+                    });
         }
 
         DeleteItemEnhancedRequest.Builder requestBuilder =
@@ -127,14 +142,30 @@ public class AsyncDeleteBuilder<T> {
 
         return table.deleteItem(requestBuilder.build())
                 .exceptionally(e -> {
-                    if (e instanceof ConditionalCheckFailedException ccf) {
-                        throw ConditionFailedException.fromSdk(ccf);
+                    throw wrapSdkException(e, table.tableName());
+                })
+                .thenApply(result -> {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("AsyncDelete on table '{}' completed in {}ms",
+                                table.tableName(), (System.nanoTime() - start) / 1_000_000);
                     }
-                    if (e instanceof RuntimeException re) {
-                        throw re;
-                    }
-                    throw new DynamoSimplifiedException(e);
+                    return Optional.ofNullable(result);
                 });
+    }
+
+    // ---- Exception handling helper ----
+
+    private RuntimeException wrapSdkException(Throwable e, String tableName) {
+        if (e instanceof ConditionalCheckFailedException ccf) {
+            throw ConditionFailedException.fromSdk(ccf);
+        }
+        if (e instanceof DynamoDbException dde) {
+            throw new OperationFailedException("DeleteItem", tableName, dde);
+        }
+        if (e instanceof RuntimeException re) {
+            throw re;
+        }
+        throw new DynamoSimplifiedException(e);
     }
 
     // ---- Low-level path for return values ----
@@ -162,13 +193,7 @@ public class AsyncDeleteBuilder<T> {
 
         return dynamoDbAsyncClient.deleteItem(requestBuilder.build())
                 .exceptionally(e -> {
-                    if (e instanceof ConditionalCheckFailedException ccf) {
-                        throw ConditionFailedException.fromSdk(ccf);
-                    }
-                    if (e instanceof RuntimeException re) {
-                        throw re;
-                    }
-                    throw new DynamoSimplifiedException(e);
+                    throw wrapSdkException(e, table.tableName());
                 })
                 .thenApply(response -> {
                     if (response.attributes() == null || response.attributes().isEmpty()) {

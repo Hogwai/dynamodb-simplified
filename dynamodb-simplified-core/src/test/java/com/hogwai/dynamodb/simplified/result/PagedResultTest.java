@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PagedResultTest {
 
     @Test
-    @DisplayName("empty items and null lastEvaluatedKey → isEmpty, size zero, no more pages")
+    @DisplayName("empty items and null lastEvaluatedKey -> isEmpty, size zero, no more pages")
     void emptyItems_nullLastKey() {
         PagedResult<String> result = new PagedResult<>(List.of(), null);
 
@@ -26,7 +26,7 @@ class PagedResultTest {
     }
 
     @Test
-    @DisplayName("single item and null lastEvaluatedKey → not empty, size 1, no more pages")
+    @DisplayName("single item and null lastEvaluatedKey -> not empty, size 1, no more pages")
     void singleItem_nullLastKey() {
         PagedResult<String> result = new PagedResult<>(List.of("item1"), null);
 
@@ -36,7 +36,7 @@ class PagedResultTest {
     }
 
     @Test
-    @DisplayName("multiple items with non-null lastEvaluatedKey → items returned, has more pages")
+    @DisplayName("multiple items with non-null lastEvaluatedKey -> items returned, has more pages")
     void multipleItems_nonNullLastKey() {
         List<String> items = List.of("item1", "item2", "item3");
         Map<String, AttributeValue> lastKey = Map.of(
@@ -54,7 +54,7 @@ class PagedResultTest {
     }
 
     @Test
-    @DisplayName("non-null but empty lastEvaluatedKey map → hasMorePages is false")
+    @DisplayName("non-null but empty lastEvaluatedKey map -> hasMorePages is false")
     void nonNullButEmptyLastKey() {
         PagedResult<String> result = new PagedResult<>(
                 List.of("item"),

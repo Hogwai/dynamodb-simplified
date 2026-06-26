@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.result.BatchGetResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,17 +105,16 @@ class BatchGetBuilderTest {
     // ============ execute, empty keys ============
 
     @Test
-    @DisplayName("execute with empty keys returns empty list and does not call batchGetItem")
+    @DisplayName("execute with empty keys returns empty result and does not call batchGetItem")
     void execute_emptyKeys_returnsEmptyList() {
         BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
 
-        List<TestItem> result = builder.execute();
+        BatchGetResult<TestItem> result = builder.execute();
 
-        assertTrue(result.isEmpty());
+        assertTrue(result.getItems().isEmpty());
+        assertFalse(result.hasUnprocessed());
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
-
-    // ============ execute, with keys ============
 
     // ============ consistentRead ============
 
@@ -173,9 +173,6 @@ class BatchGetBuilderTest {
         when(enhancedType.rawClass()).thenReturn(TestItem.class);
 
         // Mock table metadata (needed by ReadBatch.build() internally).
-        // The SDK's generateKeysAndAttributes lambda passes TableMetadata.primaryIndexName()
-        // (which returns "$PRIMARY_INDEX") as the index name to Key.keyMap(), so
-        // indexPartitionKey is called (not primaryPartitionKey).
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
         when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
@@ -190,10 +187,11 @@ class BatchGetBuilderTest {
         BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
         builder.addKey("pk");
 
-        List<TestItem> result = builder.execute();
+        BatchGetResult<TestItem> result = builder.execute();
 
-        assertEquals(1, result.size());
-        assertSame(expectedItem, result.getFirst());
+        assertEquals(1, result.getItems().size());
+        assertSame(expectedItem, result.getItems().getFirst());
+        assertFalse(result.hasUnprocessed());
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
@@ -224,6 +222,7 @@ class BatchGetBuilderTest {
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
         BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
         when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
         when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(mockResponse);
 
         TestItem expectedItem = new TestItem("result1");
@@ -265,6 +264,7 @@ class BatchGetBuilderTest {
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
         BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
         when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
         when(dynamoDbClient.batchGetItem(any(BatchGetItemRequest.class))).thenReturn(mockResponse);
 
         TestItem expectedItem = new TestItem("consumer-result");
@@ -276,6 +276,21 @@ class BatchGetBuilderTest {
         builder.execute();
 
         verify(dynamoDbClient).batchGetItem(any(BatchGetItemRequest.class));
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    // ============ limit validation ============
+
+    @Test
+    @DisplayName("execute with more than 100 keys throws IllegalArgumentException")
+    void execute_exceedsKeyLimit_throws() {
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        // Add 101 keys
+        for (int i = 0; i < 101; i++) {
+            builder.addKey("pk" + i);
+        }
+
+        assertThrows(IllegalArgumentException.class, builder::execute);
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 }

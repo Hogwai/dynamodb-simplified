@@ -1,18 +1,25 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -24,9 +31,13 @@ import java.util.stream.Stream;
  *
  * @param <T> the type of the item
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class ScanBuilder<T> {
+    private static final Logger LOG = Logging.getLogger(ScanBuilder.class);
+
     private final DynamoDbTable<T> table;
     private final DynamoDbIndex<T> index;
+    private final DynamoDbClient dynamoDbClient;
     private FilterExpression filterExpression;
     private ProjectionExpression projectionExpression;
     private Integer limit;
@@ -35,6 +46,7 @@ public class ScanBuilder<T> {
     private Integer segment;
     private Boolean consistentRead = false;
     private ReturnConsumedCapacity returnConsumedCapacity;
+    private Select select;
 
     /**
      * Constructs a new {@code ScanBuilder} for the given table.
@@ -42,8 +54,7 @@ public class ScanBuilder<T> {
      * @param table the DynamoDB table
      */
     public ScanBuilder(@NonNull DynamoDbTable<T> table) {
-        this.table = table;
-        this.index = null;
+        this(table, null);
     }
 
     /**
@@ -52,8 +63,31 @@ public class ScanBuilder<T> {
      * @param index the DynamoDB index
      */
     public ScanBuilder(@NonNull DynamoDbIndex<T> index) {
+        this(index, null);
+    }
+
+    /**
+     * Constructs a new {@code ScanBuilder} for the given table with a low-level client.
+     *
+     * @param table           the DynamoDB table
+     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     */
+    public ScanBuilder(@NonNull DynamoDbTable<T> table, @Nullable DynamoDbClient dynamoDbClient) {
+        this.table = table;
+        this.index = null;
+        this.dynamoDbClient = dynamoDbClient;
+    }
+
+    /**
+     * Constructs a new {@code ScanBuilder} for the given secondary index with a low-level client.
+     *
+     * @param index           the DynamoDB index
+     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     */
+    public ScanBuilder(@NonNull DynamoDbIndex<T> index, @Nullable DynamoDbClient dynamoDbClient) {
         this.table = null;
         this.index = index;
+        this.dynamoDbClient = dynamoDbClient;
     }
 
     // ============ Filter ============
@@ -171,6 +205,18 @@ public class ScanBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the select parameter for the scan, controlling which attributes are returned.
+     * Use {@link Select#COUNT} to request only the item count from the server.
+     *
+     * @param select the select parameter (nullable)
+     * @return this builder for chaining
+     */
+    public @NonNull ScanBuilder<T> select(@Nullable Select select) {
+        this.select = select;
+        return this;
+    }
+
     // ============ Execution ============
 
     /**
@@ -184,9 +230,22 @@ public class ScanBuilder<T> {
      */
     @NonNull
     public List<T> executeAll() {
-        return executeAsPages().stream()
-                               .flatMap(page -> page.items().stream())
-                               .toList();
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead.");
+        }
+        long start = System.nanoTime();
+        try {
+            List<T> results = executeAsPages().stream()
+                                   .flatMap(page -> page.items().stream())
+                                   .toList();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Scan on table '{}' returned {} items in {}ms",
+                        getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return results;
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Scan", getTableName(), e);
+        }
     }
 
     /**
@@ -195,7 +254,20 @@ public class ScanBuilder<T> {
      * @return an {@link Optional} containing the first item, or empty if no items match
      */
     public @NonNull Optional<T> executeAndGetFirst() {
-        return executeAll().stream().findFirst();
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead.");
+        }
+        long start = System.nanoTime();
+        try {
+            Optional<T> result = executeAll().stream().findFirst();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Scan on table '{}' returned first item in {}ms",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return result;
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Scan", getTableName(), e);
+        }
     }
 
     /**
@@ -207,8 +279,18 @@ public class ScanBuilder<T> {
      */
     @NonNull
     public Stream<T> executeStream() {
-        return executeAsPages().stream()
-                               .flatMap(page -> page.items().stream());
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead.");
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Scan stream on table '{}'", getTableName());
+        }
+        try {
+            return executeAsPages().stream()
+                                   .flatMap(page -> page.items().stream());
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Scan", getTableName(), e);
+        }
     }
 
     /**
@@ -219,28 +301,137 @@ public class ScanBuilder<T> {
      *         the last evaluated key (may be {@code null} if no more pages)
      */
     public @NonNull PagedResult<T> executeWithPagination() {
-        Iterator<Page<T>> pages = executeAsPages().iterator();
-        if (pages.hasNext()) {
-            Page<T> firstPage = pages.next();
-            return new PagedResult<>(
-                    firstPage.items(),
-                    firstPage.lastEvaluatedKey()
-            );
+        if (select == Select.COUNT) {
+            throw new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead.");
         }
-        return new PagedResult<>(Collections.emptyList(), null);
+        long start = System.nanoTime();
+        try {
+            Iterator<Page<T>> pages = executeAsPages().iterator();
+            if (pages.hasNext()) {
+                Page<T> firstPage = pages.next();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Scan on table '{}' returned {} items in {}ms (first page)",
+                            getTableName(), firstPage.items().size(), (System.nanoTime() - start) / 1_000_000);
+                }
+                return new PagedResult<>(
+                        firstPage.items(),
+                        firstPage.lastEvaluatedKey()
+                );
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Scan on table '{}' returned 0 items in {}ms (first page)",
+                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+            }
+            return new PagedResult<>(Collections.emptyList(), null);
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Scan", getTableName(), e);
+        }
     }
 
     /**
      * Returns the total number of items by iterating all scan result pages.
+     * <p>
+     * When a low-level {@link DynamoDbClient} is available, uses {@code Select.COUNT}
+     * server-side to avoid transferring item data. Falls back to the enhanced client
+     * page iteration otherwise.
      *
      * @return the total count of scanned items matching the filter
      */
     public long count() {
-        long total = 0;
-        for (Page<T> page : executeAsPages()) {
-            total += page.count();
+        long start = System.nanoTime();
+        try {
+            if (dynamoDbClient != null) {
+                long result = countWithLowLevel(select != null ? select : Select.COUNT);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Count on table '{}' returned {} items in {}ms",
+                            getTableName(), result, (System.nanoTime() - start) / 1_000_000);
+                }
+                return result;
+            }
+            long total = 0;
+            for (Page<T> page : executeAsPages()) {
+                total += page.count();
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Count on table '{}' returned {} items in {}ms",
+                        getTableName(), total, (System.nanoTime() - start) / 1_000_000);
+            }
+            return total;
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Scan", getTableName(), e);
         }
-        return total;
+    }
+
+    private long countWithLowLevel(Select select) {
+        ScanRequest request = buildCountRequest(select);
+        try {
+            return dynamoDbClient.scan(request).count();
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("Scan", request.tableName(), e);
+        }
+    }
+
+    private ScanRequest buildCountRequest(Select select) {
+        String tableName = table != null ? table.tableName() : index.tableName();
+        ScanRequest.Builder builder = ScanRequest.builder()
+            .tableName(tableName).select(select);
+        applyFilterIfPresent(builder);
+        applyLimitIfPresent(builder);
+        applyExclusiveStartKeyIfPresent(builder);
+        applyConsistentReadIfPresent(builder);
+        applyParallelScanIfPresent(builder);
+        applyReturnConsumedCapacityIfPresent(builder);
+        applyIndexNameIfPresent(builder);
+        return builder.build();
+    }
+
+    private void applyFilterIfPresent(ScanRequest.Builder builder) {
+        if (filterExpression != null && !filterExpression.isEmpty()) {
+            builder.filterExpression(filterExpression.getExpression());
+            builder.expressionAttributeNames(filterExpression.getExpressionNames());
+            builder.expressionAttributeValues(filterExpression.getExpressionValues());
+        }
+    }
+
+    private void applyLimitIfPresent(ScanRequest.Builder builder) {
+        if (limit != null) {
+            builder.limit(limit);
+        }
+    }
+
+    private void applyExclusiveStartKeyIfPresent(ScanRequest.Builder builder) {
+        if (exclusiveStartKey != null) {
+            builder.exclusiveStartKey(exclusiveStartKey);
+        }
+    }
+
+    private void applyConsistentReadIfPresent(ScanRequest.Builder builder) {
+        if (consistentRead != null) {
+            builder.consistentRead(consistentRead);
+        }
+    }
+
+    private void applyParallelScanIfPresent(ScanRequest.Builder builder) {
+        if (totalSegments != null && segment != null) {
+            builder.totalSegments(totalSegments);
+            builder.segment(segment);
+        }
+    }
+
+    private void applyReturnConsumedCapacityIfPresent(ScanRequest.Builder builder) {
+        if (returnConsumedCapacity != null) {
+            builder.returnConsumedCapacity(returnConsumedCapacity);
+        }
+    }
+
+    private void applyIndexNameIfPresent(ScanRequest.Builder builder) {
+        if (index != null) {
+            builder.indexName(index.indexName());
+        }
+    }
+
+    private String getTableName() {
+        return table != null ? table.tableName() : index.tableName();
     }
 
     private SdkIterable<Page<T>> executeAsPages() {

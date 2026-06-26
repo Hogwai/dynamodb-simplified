@@ -2,6 +2,8 @@ package com.hogwai.dynamodb.simplified;
 
 import org.jspecify.annotations.NonNull;
 
+import com.hogwai.dynamodb.simplified.builder.CrossTableBatchGetBuilder;
+import com.hogwai.dynamodb.simplified.builder.CrossTableBatchWriteBuilder;
 import com.hogwai.dynamodb.simplified.builder.TransactGetBuilder;
 import com.hogwai.dynamodb.simplified.builder.TransactWriteBuilder;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -11,6 +13,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
 import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -22,21 +27,24 @@ import java.util.function.Consumer;
  * for DynamoDB table operations. Wraps a {@link DynamoDbEnhancedClient} and a
  * {@link DynamoDbClient}.
  * </p>
+ * <p>
+ * Thread safety: this client is safe to use from multiple threads once created.
+ * The {@code table()} factory method may be called concurrently. Individual builders
+ * returned by {@code Table} methods are single-use and not thread-safe.
+ * </p>
  * <p>Usage:</p>
  * <pre>{@code
  * DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
  * Table<Post> posts = client.table("posts", Post.class);
  * posts.query().partitionKey("subreddit").execute();
  * }</pre>
- * <p>
- * This class is <b>not</b> thread-safe.
- * </p>
  *
  * @see Table
  * @see DynamoDbEnhancedClient
  * @see DynamoDbClient
  */
-public class DynamoSimplifiedClient {
+public class DynamoSimplifiedClient implements AutoCloseable {
+    private static final Logger LOG = LoggerFactory.getLogger(DynamoSimplifiedClient.class);
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient dynamoDbClient;
 
@@ -66,6 +74,9 @@ public class DynamoSimplifiedClient {
     @NonNull
     public static DynamoSimplifiedClient create() {
         DynamoDbClient client = DynamoDbClient.create();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("DynamoSimplifiedClient created");
+        }
         return new DynamoSimplifiedClient(
                 DynamoDbEnhancedClient.builder().dynamoDbClient(client).build(),
                 client);
@@ -81,6 +92,9 @@ public class DynamoSimplifiedClient {
      */
     @NonNull
     public static DynamoSimplifiedClient create(@NonNull DynamoDbClient client) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("DynamoSimplifiedClient created");
+        }
         return new DynamoSimplifiedClient(
                 DynamoDbEnhancedClient.builder().dynamoDbClient(client).build(),
                 client);
@@ -162,7 +176,7 @@ public class DynamoSimplifiedClient {
      */
     @NonNull
     public TransactGetBuilder transactGet() {
-        return new TransactGetBuilder(enhancedClient);
+        return new TransactGetBuilder(enhancedClient, dynamoDbClient);
     }
 
     /**
@@ -175,6 +189,28 @@ public class DynamoSimplifiedClient {
     @NonNull
     public TransactWriteBuilder transactWrite() {
         return new TransactWriteBuilder(enhancedClient, dynamoDbClient);
+    }
+
+    // ============ Cross-Table Batch Operations ============
+
+    /**
+     * Returns a cross-table batch get builder for retrieving items from multiple tables.
+     *
+     * @return a cross-table batch get builder
+     */
+    @NonNull
+    public CrossTableBatchGetBuilder batchGet() {
+        return new CrossTableBatchGetBuilder(dynamoDbClient);
+    }
+
+    /**
+     * Returns a cross-table batch write builder for putting/deleting items across multiple tables.
+     *
+     * @return a cross-table batch write builder
+     */
+    @NonNull
+    public CrossTableBatchWriteBuilder batchWrite() {
+        return new CrossTableBatchWriteBuilder(dynamoDbClient);
     }
 
     /**
@@ -223,5 +259,15 @@ public class DynamoSimplifiedClient {
     @NonNull
     public ExecuteStatementResponse executeStatement(@NonNull ExecuteStatementRequest request) {
         return dynamoDbClient.executeStatement(request);
+    }
+
+    /**
+     * Closes the underlying DynamoDB client, releasing any network resources.
+     * <p>
+     * After calling this method, the client instance is no longer usable.
+     */
+    @Override
+    public void close() {
+        dynamoDbClient.close();
     }
 }

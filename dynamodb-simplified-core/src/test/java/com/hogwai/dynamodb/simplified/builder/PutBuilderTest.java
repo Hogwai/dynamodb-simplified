@@ -9,13 +9,24 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
+
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PutBuilder")
@@ -24,8 +35,17 @@ class PutBuilderTest {
     @Mock
     private DynamoDbTable<TestItem> table;
 
+    @Mock
+    private DynamoDbClient dynamoDbClient;
+
+    @Mock
+    private TableSchema<TestItem> tableSchema;
+
     @Captor
     private ArgumentCaptor<PutItemEnhancedRequest<TestItem>> requestCaptor;
+
+    @Captor
+    private ArgumentCaptor<PutItemRequest> lowLevelRequestCaptor;
 
     static class TestItem {
         public String id;
@@ -40,7 +60,7 @@ class PutBuilderTest {
     void executeWithoutConditions() {
         // Given
         TestItem item = new TestItem("item-1");
-        PutBuilder<TestItem> builder = new PutBuilder<>(table, item);
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient);
 
         // When
         builder.execute();
@@ -50,6 +70,7 @@ class PutBuilderTest {
         PutItemEnhancedRequest<TestItem> request = requestCaptor.getValue();
         assertSame(item, request.item());
         assertNull(request.conditionExpression());
+        verifyNoInteractions(dynamoDbClient);
     }
 
     @Test
@@ -57,7 +78,7 @@ class PutBuilderTest {
     void executeWithConditionConsumer() {
         // Given
         TestItem item = new TestItem("item-1");
-        PutBuilder<TestItem> builder = new PutBuilder<>(table, item);
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient);
 
         // When
         builder.condition(c -> c.eq("status", "active"));
@@ -73,6 +94,7 @@ class PutBuilderTest {
         assertEquals("#n0 = :v0", condition.expression());
         assertEquals(Map.of("#n0", "status"), condition.expressionNames());
         assertEquals(Map.of(":v0", AttributeValue.builder().s("active").build()), condition.expressionValues());
+        verifyNoInteractions(dynamoDbClient);
     }
 
     @Test
@@ -80,7 +102,7 @@ class PutBuilderTest {
     void executeWithOnlyIfNotExists() {
         // Given
         TestItem item = new TestItem("item-1");
-        PutBuilder<TestItem> builder = new PutBuilder<>(table, item);
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient);
 
         // When
         builder.onlyIfNotExists("id");
@@ -96,29 +118,7 @@ class PutBuilderTest {
         assertEquals("attribute_not_exists(#n0)", condition.expression());
         assertEquals(Map.of("#n0", "id"), condition.expressionNames());
         assertTrue(condition.expressionValues().isEmpty());
-    }
-
-    @Test
-    @DisplayName("execute with condition consumer includes condition expression")
-    void executeWithConditionConsumerDirect() {
-        // Given
-        TestItem item = new TestItem("item-1");
-        PutBuilder<TestItem> builder = new PutBuilder<>(table, item);
-
-        // When
-        builder.condition(c -> c.eq("color", "blue"));
-        builder.execute();
-
-        // Then
-        verify(table).putItem(requestCaptor.capture());
-        PutItemEnhancedRequest<TestItem> request = requestCaptor.getValue();
-        assertSame(item, request.item());
-
-        Expression condition = request.conditionExpression();
-        assertNotNull(condition);
-        assertEquals("#n0 = :v0", condition.expression());
-        assertEquals(Map.of("#n0", "color"), condition.expressionNames());
-        assertEquals(Map.of(":v0", AttributeValue.builder().s("blue").build()), condition.expressionValues());
+        verifyNoInteractions(dynamoDbClient);
     }
 
     @Test
@@ -126,7 +126,7 @@ class PutBuilderTest {
     void executeWithExistsCondition() {
         // Given
         TestItem item = new TestItem("item-1");
-        PutBuilder<TestItem> builder = new PutBuilder<>(table, item);
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient);
 
         // When
         builder.condition(c -> c.exists("attr"));
@@ -142,5 +142,196 @@ class PutBuilderTest {
         assertEquals("attribute_exists(#n0)", condition.expression());
         assertEquals(Map.of("#n0", "attr"), condition.expressionNames());
         assertTrue(condition.expressionValues().isEmpty());
+        verifyNoInteractions(dynamoDbClient);
+    }
+
+    // ============ ReturnValues tests ============
+
+    @Test
+    @DisplayName("returnValues() returns itself for fluent chaining")
+    void returnValues_returnsItself() {
+        TestItem item = new TestItem("item-1");
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient);
+
+        assertSame(builder, builder.returnValues(ReturnValue.ALL_OLD));
+    }
+
+    @Test
+    @DisplayName("returnValues(null) routes to enhanced client (same as never called)")
+    void returnValues_null_usesEnhancedClient() {
+        TestItem item = new TestItem("item-1");
+        new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(null)
+                .execute();
+
+        verify(table).putItem(any(PutItemEnhancedRequest.class));
+        verifyNoInteractions(dynamoDbClient);
+    }
+
+    @Test
+    @DisplayName("with returnValues ALL_OLD uses low-level client")
+    void put_withReturnValuesAllOld_usesLowLevelClient() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(PutItemResponse.builder().build());
+
+        new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .execute();
+
+        verify(dynamoDbClient).putItem(lowLevelRequestCaptor.capture());
+        PutItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals("test-table", request.tableName());
+        assertEquals(ReturnValue.ALL_OLD, request.returnValues());
+        assertEquals(Map.of("id", AttributeValue.builder().s("item-1").build()), request.item());
+        verify(table, never()).putItem(any(PutItemEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("with returnValues and condition includes condition expression in low-level request")
+    void put_withReturnValues_conditionStillWorks() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(PutItemResponse.builder().build());
+
+        new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .condition(c -> c.eq("status", "active"))
+                .execute();
+
+        verify(dynamoDbClient).putItem(lowLevelRequestCaptor.capture());
+        PutItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals(ReturnValue.ALL_OLD, request.returnValues());
+        assertEquals("#n0 = :v0", request.conditionExpression());
+        assertEquals(Map.of("#n0", "status"), request.expressionAttributeNames());
+        assertEquals(
+                AttributeValue.builder().s("active").build(),
+                request.expressionAttributeValues().get(":v0"));
+        verify(table, never()).putItem(any(PutItemEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("with returnValues and failed condition throws ConditionFailedException")
+    void put_withReturnValues_failedCondition_throwsConditionFailedException() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
+
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(ReturnValue.ALL_OLD);
+
+        assertThrows(ConditionFailedException.class, builder::execute);
+    }
+
+    @Test
+    @DisplayName("without returnValues uses enhanced client even when low-level client is available")
+    void put_withoutReturnValues_usesEnhancedClient() {
+        TestItem item = new TestItem("item-1");
+
+        new PutBuilder<>(table, item, dynamoDbClient)
+                .execute();
+
+        verify(table).putItem(any(PutItemEnhancedRequest.class));
+        verifyNoInteractions(dynamoDbClient);
+    }
+
+    @Test
+    @DisplayName("enhanced path condition failure throws ConditionFailedException")
+    void execute_withConditionFailure_throwsConditionFailedException() {
+        TestItem item = new TestItem("item-1");
+        doThrow(ConditionalCheckFailedException.class)
+                .when(table).putItem(any(PutItemEnhancedRequest.class));
+
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient)
+                .condition(c -> c.eq("status", "active"));
+
+        assertThrows(ConditionFailedException.class, builder::execute);
+        verifyNoInteractions(dynamoDbClient);
+    }
+
+    // ============ executeReturning tests ============
+
+    @Test
+    @DisplayName("executeReturning with returnValues ALL_OLD returns the previous item")
+    void executeReturning_withReturnValuesAllOld_returnsItem() {
+        TestItem item = new TestItem("item-1");
+        TestItem previousItem = new TestItem("old-item");
+        Map<String, AttributeValue> itemMap = Map.of("id", AttributeValue.builder().s("old-item").build());
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(tableSchema.mapToItem(itemMap)).thenReturn(previousItem);
+        when(dynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(PutItemResponse.builder().attributes(itemMap).build());
+
+        Optional<TestItem> result = new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .executeReturning();
+
+        assertTrue(result.isPresent());
+        assertSame(previousItem, result.get());
+        verify(dynamoDbClient).putItem(lowLevelRequestCaptor.capture());
+        PutItemRequest request = lowLevelRequestCaptor.getValue();
+        assertEquals(ReturnValue.ALL_OLD, request.returnValues());
+    }
+
+    @Test
+    @DisplayName("executeReturning without returnValues returns empty")
+    void executeReturning_withoutReturnValues_returnsEmpty() {
+        TestItem item = new TestItem("item-1");
+
+        Optional<TestItem> result = new PutBuilder<>(table, item, dynamoDbClient)
+                .executeReturning();
+
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(dynamoDbClient);
+    }
+
+    @Test
+    @DisplayName("executeReturning with returnValues ALL_OLD and empty response returns empty")
+    void executeReturning_withReturnValuesAllOld_emptyResponse() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(PutItemResponse.builder().build());
+
+        Optional<TestItem> result = new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .executeReturning();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("executeReturning with failed condition throws ConditionFailedException")
+    void executeReturning_withFailedCondition_throwsConditionFailedException() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
+
+        PutBuilder<TestItem> builder = new PutBuilder<>(table, item, dynamoDbClient)
+                .returnValues(ReturnValue.ALL_OLD);
+
+        assertThrows(ConditionFailedException.class, builder::executeReturning);
     }
 }
