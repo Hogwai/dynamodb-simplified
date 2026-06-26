@@ -67,7 +67,9 @@ public class AsyncQueryBuilder<T> {
     /**
      * Describes the type of sort key comparison for a key condition expression.
      */
-    enum KeyConditionOp { EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE }
+    enum KeyConditionOp {
+        EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
+    }
     private KeyConditionOp keyOp;
     private Object pkValue;
     private Object skValue;
@@ -603,11 +605,16 @@ public class AsyncQueryBuilder<T> {
 
             switch (keyOp) {
                 case BEGINS_WITH ->
-                    keyExpr.append(CONDITION_JOINER).append("begins_with(").append(skPlaceholder).append(", ").append(skValPlaceholder).append(')');
+                    keyExpr.append(CONDITION_JOINER)
+                        .append("begins_with(").append(skPlaceholder).append(", ")
+                        .append(skValPlaceholder).append(')');
                 case BETWEEN -> {
                     String skValPlaceholder2 = ":sk1";
                     expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" BETWEEN ").append(skValPlaceholder).append(CONDITION_JOINER).append(skValPlaceholder2);
+                    keyExpr.append(CONDITION_JOINER)
+                        .append(skPlaceholder).append(" BETWEEN ")
+                        .append(skValPlaceholder).append(CONDITION_JOINER)
+                        .append(skValPlaceholder2);
                 }
                 case GT ->
                     keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
@@ -624,7 +631,11 @@ public class AsyncQueryBuilder<T> {
         return keyExpr.toString();
     }
 
-    private void applyFilterExpression(QueryRequest.Builder requestBuilder, Map<String, String> keyNames, Map<String, AttributeValue> keyValues) {
+    private void applyFilterExpression(
+        QueryRequest.Builder requestBuilder,
+        Map<String, String> keyNames,
+        Map<String, AttributeValue> keyValues
+    ) {
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(filterExpression.getExpression());
             requestBuilder.expressionAttributeNames(mergeMaps(keyNames, filterExpression.getExpressionNames()));

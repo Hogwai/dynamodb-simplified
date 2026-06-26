@@ -109,51 +109,147 @@ public final class ConditionExpression {
 
         // ============ Basic Comparisons ============
 
-        public @NonNull Builder eq(@NonNull String attr, @NonNull Object value) { delegate.eq(attr, value); return this; }
-        public @NonNull Builder ne(@NonNull String attr, @NonNull Object value) { delegate.ne(attr, value); return this; }
-        public @NonNull Builder lt(@NonNull String attr, @NonNull Object value) { delegate.lt(attr, value); return this; }
-        public @NonNull Builder le(@NonNull String attr, @NonNull Object value) { delegate.le(attr, value); return this; }
-        public @NonNull Builder gt(@NonNull String attr, @NonNull Object value) { delegate.gt(attr, value); return this; }
-        public @NonNull Builder ge(@NonNull String attr, @NonNull Object value) { delegate.ge(attr, value); return this; }
+        @NonNull
+        public Builder eq(@NonNull String attr, @NonNull Object value) {
+            delegate.eq(attr, value);
+            return this;
+        }
+        @NonNull
+        public Builder ne(@NonNull String attr, @NonNull Object value) {
+            delegate.ne(attr, value);
+            return this;
+        }
+        @NonNull
+        public Builder lt(@NonNull String attr, @NonNull Object value) {
+            delegate.lt(attr, value);
+            return this;
+        }
+        @NonNull
+        public Builder le(@NonNull String attr, @NonNull Object value) {
+            delegate.le(attr, value);
+            return this;
+        }
+        @NonNull
+        public Builder gt(@NonNull String attr, @NonNull Object value) {
+            delegate.gt(attr, value);
+            return this;
+        }
+        @NonNull
+        public Builder ge(@NonNull String attr, @NonNull Object value) {
+            delegate.ge(attr, value);
+            return this;
+        }
 
         // ============ String Operations ============
 
-        public @NonNull Builder beginsWith(@NonNull String attr, @NonNull String prefix) { delegate.beginsWith(attr, prefix); return this; }
-        public @NonNull Builder contains(@NonNull String attr, @NonNull Object value) { delegate.contains(attr, value); return this; }
+        @NonNull
+        public Builder beginsWith(@NonNull String attr, @NonNull String prefix) {
+            delegate.beginsWith(attr, prefix);
+            return this;
+        }
+        @NonNull
+        public Builder contains(@NonNull String attr, @NonNull Object value) {
+            delegate.contains(attr, value);
+            return this;
+        }
 
         // ============ Server-side SIZE Operations ============
 
-        public @NonNull Builder sizeEq(@NonNull String attr, int size) { delegate.sizeEq(attr, size); return this; }
-        public @NonNull Builder sizeLt(@NonNull String attr, int size) { delegate.sizeLt(attr, size); return this; }
-        public @NonNull Builder sizeLe(@NonNull String attr, int size) { delegate.sizeLe(attr, size); return this; }
-        public @NonNull Builder sizeGt(@NonNull String attr, int size) { delegate.sizeGt(attr, size); return this; }
-        public @NonNull Builder sizeGe(@NonNull String attr, int size) { delegate.sizeGe(attr, size); return this; }
-        public @NonNull Builder sizeBetween(@NonNull String attr, int min, int max) { delegate.sizeBetween(attr, min, max); return this; }
+        @NonNull
+        public Builder sizeEq(@NonNull String attr, int size) {
+            delegate.sizeEq(attr, size);
+            return this;
+        }
+        @NonNull
+        public Builder sizeLt(@NonNull String attr, int size) {
+            delegate.sizeLt(attr, size);
+            return this;
+        }
+        @NonNull
+        public Builder sizeLe(@NonNull String attr, int size) {
+            delegate.sizeLe(attr, size);
+            return this;
+        }
+        @NonNull
+        public Builder sizeGt(@NonNull String attr, int size) {
+            delegate.sizeGt(attr, size);
+            return this;
+        }
+        @NonNull
+        public Builder sizeGe(@NonNull String attr, int size) {
+            delegate.sizeGe(attr, size);
+            return this;
+        }
+        @NonNull
+        public Builder sizeBetween(@NonNull String attr, int min, int max) {
+            delegate.sizeBetween(attr, min, max);
+            return this;
+        }
 
         // ============ Attribute Existence ============
 
-        public @NonNull Builder exists(@NonNull String attr) { delegate.exists(attr); return this; }
-        public @NonNull Builder notExists(@NonNull String attr) { delegate.notExists(attr); return this; }
+        @NonNull
+        public Builder exists(@NonNull String attr) {
+            delegate.exists(attr);
+            return this;
+        }
+        @NonNull
+        public Builder notExists(@NonNull String attr) {
+            delegate.notExists(attr);
+            return this;
+        }
 
         // ============ Attribute Type ============
 
-        public @NonNull Builder attributeType(@NonNull String attr, FilterExpression.AttributeType type) { delegate.attributeType(attr, type); return this; }
+        @NonNull
+        public Builder attributeType(@NonNull String attr, FilterExpression.AttributeType type) {
+            delegate.attributeType(attr, type);
+            return this;
+        }
 
         // ============ BETWEEN, IN ============
 
-        public @NonNull Builder between(@NonNull String attr, @NonNull Object low, @NonNull Object high) { delegate.between(attr, low, high); return this; }
-        public @NonNull Builder in(@NonNull String attr, Object... values) { delegate.in(attr, values); return this; }
+        @NonNull
+        public Builder between(@NonNull String attr, @NonNull Object low, @NonNull Object high) {
+            delegate.between(attr, low, high);
+            return this;
+        }
+        @NonNull
+        public Builder in(@NonNull String attr, Object... values) {
+            delegate.in(attr, values);
+            return this;
+        }
 
         // ============ Logical ============
 
-        public @NonNull Builder and() { delegate.and(); return this; }
-        public @NonNull Builder or() { delegate.or(); return this; }
-        public @NonNull Builder not() { delegate.not(); return this; }
-        public @NonNull Builder group(@NonNull FilterExpression nested) { delegate.group(nested); return this; }
+        @NonNull
+        public Builder and() {
+            delegate.and();
+            return this;
+        }
+        @NonNull
+        public Builder or() {
+            delegate.or();
+            return this;
+        }
+        @NonNull
+        public Builder not() {
+            delegate.not();
+            return this;
+        }
+        @NonNull
+        public Builder group(@NonNull FilterExpression nested) {
+            delegate.group(nested);
+            return this;
+        }
 
         // ============ Nested ============
 
-        public @NonNull Builder nestedEq(@NonNull String path, @NonNull Object value) { delegate.nestedEq(path, value); return this; }
+        @NonNull
+        public Builder nestedEq(@NonNull String path, @NonNull Object value) {
+            delegate.nestedEq(path, value);
+            return this;
+        }
 
         // ============ Build ============
 

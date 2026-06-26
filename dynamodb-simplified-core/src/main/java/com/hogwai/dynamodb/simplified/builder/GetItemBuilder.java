@@ -113,11 +113,12 @@ public class GetItemBuilder<T> {
 
     private Optional<T> executeSimple() {
         AttributeValue partitionAttrValue = AttributeValueConverter.toKeyAttributeValue(partitionKey);
+        AttributeValue sortAttrValue = sortKey != null ? AttributeValueConverter.toKeyAttributeValue(sortKey) : null;
         GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
                                                                    .key(k -> {
                                                                        k.partitionValue(partitionAttrValue);
                                                                        if (sortKey != null) {
-                                                                           k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
+                                                                           k.sortValue(sortAttrValue);
                                                                        }
                                                                    })
                                                                   .consistentRead(consistentRead)
