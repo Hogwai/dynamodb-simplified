@@ -313,7 +313,7 @@ public class AsyncScanBuilder<T> {
 
     /**
      * Executes the scan asynchronously and returns the first matching item, if any.
-     * <p>Only the first page of results is loaded — subsequent pages are never fetched.</p>
+     * <p>Only the first page of results is loaded: subsequent pages are never fetched.</p>
      *
      * @return a {@link CompletableFuture} containing an {@link Optional}
      *         with the first item, or empty if no items match
