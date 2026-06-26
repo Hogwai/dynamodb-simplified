@@ -84,7 +84,7 @@ client.transactWrite()
 
 See the [Quickstart](quickstart.md) guide for a complete walkthrough.
 
-Looking for single-table design? See the [Single-Table Design Guide](superpowers/guides/single-table-design.md).
+Looking for single-table design? See the [Single-Table Design Guide](guides/single-table-design.md).
 
 ## API Reference
 
