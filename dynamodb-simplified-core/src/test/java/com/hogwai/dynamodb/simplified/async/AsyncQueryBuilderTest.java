@@ -145,8 +145,7 @@ class AsyncQueryBuilderTest {
 
         SdkPublisher<TestItem> publisher = new AsyncQueryBuilder<>(table)
                 .partitionKey("pk")
-                .executeStream()
-                .join();
+                .streamResults();
 
         assertNotNull(publisher);
         List<TestItem> collected = new ArrayList<>();
@@ -172,18 +171,6 @@ class AsyncQueryBuilderTest {
         assertEquals("a", collected.get(0).id);
         assertEquals("b", collected.get(1).id);
         verify(table).query(any(QueryEnhancedRequest.class));
-    }
-
-    @Test
-    @DisplayName("executeStream() with Select.COUNT returns failed future")
-    void executeStream_throwsWithSelectCount() {
-        CompletableFuture<SdkPublisher<TestItem>> future = new AsyncQueryBuilder<>(table)
-                .partitionKey("pk")
-                .select(Select.COUNT)
-                .executeStream();
-
-        CompletionException ex = assertThrows(CompletionException.class, future::join);
-        assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 
     @Test

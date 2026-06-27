@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 import java.util.List;
@@ -194,5 +197,32 @@ class BatchWriteBuilderTest {
 
         assertThrows(IllegalArgumentException.class, builder::execute);
         verifyNoInteractions(dynamoDbClient);
+    }
+
+    // ============ returnConsumedCapacity ============
+
+    @Test
+    @DisplayName("returnConsumedCapacity sets the value and returns self")
+    void returnConsumedCapacity_returnsSelf() {
+        BatchWriteBuilder<TestItem> builder = new BatchWriteBuilder<>(table, dynamoDbClient);
+        assertSame(builder, builder.returnConsumedCapacity(ReturnConsumedCapacity.TOTAL));
+    }
+
+    // ============ DynamoDbException Path ============
+
+    @Test
+    @DisplayName("execute wraps DynamoDbException in OperationFailedException")
+    void execute_wrapsDynamoDbException() {
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(table.tableName()).thenReturn("test_table");
+        when(tableSchema.itemToMap(any(TestItem.class), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item1").build()));
+        when(dynamoDbClient.batchWriteItem(any(BatchWriteItemRequest.class)))
+                .thenThrow(mock(DynamoDbException.class));
+
+        BatchWriteBuilder<TestItem> builder = new BatchWriteBuilder<>(table, dynamoDbClient);
+        builder.put(new TestItem("item1"));
+
+        assertThrows(OperationFailedException.class, builder::execute);
     }
 }

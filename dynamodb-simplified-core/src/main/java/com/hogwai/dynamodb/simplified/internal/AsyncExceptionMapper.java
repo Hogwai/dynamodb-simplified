@@ -14,6 +14,15 @@ import java.util.function.Function;
 /**
  * Centralized utility for consistent async exception mapping across all async builders.
  * <p>
+ * <b>Usage:</b> All async builder CompletableFuture chains MUST use
+ * {@code .exceptionally(AsyncExceptionMapper.handler("Operation", tableName))}
+ * instead of inline {@code .handle()} or {@code .exceptionally()} with
+ * {@code instanceof} checks. The centralized handler correctly unwraps
+ * {@link java.util.concurrent.CompletionException}, routes
+ * {@link DynamoDbException} → {@link OperationFailedException},
+ * {@link ConditionalCheckFailedException} → {@link ConditionFailedException},
+ * and wraps other throwables as {@link DynamoSimplifiedException}.
+ * <p>
  * Ensures every async builder wraps exceptions with the same semantics:
  * <ul>
  *   <li>{@link ConditionalCheckFailedException} → {@link ConditionFailedException}</li>

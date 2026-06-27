@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.DisplayName;
@@ -607,5 +608,74 @@ class ScanBuilderTest {
                         .select(Select.COUNT)
                         .count()
         );
+    }
+
+    // ============ Exception Paths ============
+
+    @Test
+    @DisplayName("executeAll wraps DynamoDbException in OperationFailedException")
+    void executeAll_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeAll);
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst wraps DynamoDbException in OperationFailedException")
+    void executeAndGetFirst_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeAndGetFirst);
+    }
+
+    @Test
+    @DisplayName("executeStream wraps DynamoDbException in OperationFailedException")
+    void executeStream_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeStream);
+    }
+
+    @Test
+    @DisplayName("executeWithPagination wraps DynamoDbException in OperationFailedException")
+    void executeWithPagination_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeWithPagination);
+    }
+
+    @Test
+    @DisplayName("count with enhanced client wraps DynamoDbException in OperationFailedException")
+    void count_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::count);
+    }
+
+    @Test
+    @DisplayName("count with low-level client wraps DynamoDbException in OperationFailedException")
+    void count_withLowLevel_wrapsDynamoDbException() {
+        when(dynamoDbClient.scan(any(ScanRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table, dynamoDbClient);
+        assertThrows(OperationFailedException.class, builder::count);
+    }
+
+    @Test
+    @DisplayName("executeAll with index uses table name from index for getTableName path")
+    void executeAll_withIndex_getTableName() {
+        Page<TestItem> page = mockPage(1, 1, null);
+        lenient().when(index.tableName()).thenReturn("index-table");
+        when(index.scan(any(ScanEnhancedRequest.class))).thenReturn(PageIterable.create(() -> List.of(page).iterator()));
+
+        List<TestItem> result = new ScanBuilder<>(index).executeAll();
+
+        assertEquals(1, result.size());
+        verify(index).scan(any(ScanEnhancedRequest.class));
     }
 }

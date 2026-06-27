@@ -1,5 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.entity.AsyncEntityTable;
+import com.hogwai.dynamodb.simplified.entity.Entity;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -77,6 +79,28 @@ class AsyncDynamoSimplifiedClientTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    /**
+     * A simple entity bean annotated with {@code @Entity} for entity table tests.
+     */
+    @Entity(discriminator = "DSC", table = "test-table")
+    @DynamoDbBean
+    public static class TestEntity {
+        private String pk;
+
+        @SuppressWarnings("checkstyle:RedundantModifier")
+        public TestEntity() {
+        }
+
+        @DynamoDbPartitionKey
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
         }
     }
 
@@ -323,5 +347,44 @@ class AsyncDynamoSimplifiedClientTest {
         ExecutionException ex = assertThrows(ExecutionException.class,
                 () -> client.listTables().get());
         assertSame(expected, ex.getCause());
+    }
+
+    // ============ Entity Table ============
+
+    @Test
+    @DisplayName("entityTable returns a non-null AsyncEntityTable")
+    void entityTable_returnsEntityTable() {
+        when(enhancedAsyncClient.table(any(String.class), any(TableSchema.class))).thenReturn(dynamoDbAsyncTable);
+
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        AsyncEntityTable<?> entityTable = client.entityTable(TestEntity.class);
+
+        assertNotNull(entityTable);
+    }
+
+    // ============ Cross-Table Batch Operations ============
+
+    @Test
+    @DisplayName("batchGet returns a non-null AsyncCrossTableBatchGetBuilder")
+    void batchGet_returnsBuilder() {
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        assertNotNull(client.batchGet());
+    }
+
+    @Test
+    @DisplayName("batchWrite returns a non-null AsyncCrossTableBatchWriteBuilder")
+    void batchWrite_returnsBuilder() {
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        assertNotNull(client.batchWrite());
+    }
+
+    // ============ Client Utilities ============
+
+    @Test
+    @DisplayName("close delegates to DynamoDbAsyncClient.close()")
+    void close_delegatesToDynamoDbAsyncClient() {
+        AsyncDynamoSimplifiedClient client = createClient(enhancedAsyncClient, dynamoDbAsyncClient);
+        client.close();
+        verify(dynamoDbAsyncClient).close();
     }
 }

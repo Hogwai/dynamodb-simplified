@@ -100,6 +100,11 @@ public class DeleteBuilder<T> {
      * @return this builder for chaining
      */
     public @NonNull DeleteBuilder<T> returnValues(@Nullable ReturnValue returnValues) {
+        if (returnValues != ReturnValue.NONE && dynamoDbClient == null) {
+            throw new IllegalStateException(
+                    "Return values require a low-level DynamoDbClient. " +
+                    "Use the 4-argument constructor or provide a non-null client.");
+        }
         this.returnValues = returnValues;
         return this;
     }

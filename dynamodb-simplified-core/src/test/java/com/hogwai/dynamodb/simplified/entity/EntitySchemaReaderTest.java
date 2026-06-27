@@ -3,6 +3,7 @@ package com.hogwai.dynamodb.simplified.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -20,7 +21,7 @@ class User {
         this.email = email;
     }
 
-    @KeyComponent(component = "PK", position = 0)
+    @KeyComponent(component = "PK")
     public String getUserId() {
         return userId;
     }
@@ -130,7 +131,7 @@ class EntitySchemaReaderTest {
             this.id = id;
         }
 
-        @KeyComponent(component = "PK", position = 0)
+        @KeyComponent(component = "PK")
         public String getType() {
             return type;
         }
@@ -198,5 +199,70 @@ class EntitySchemaReaderTest {
         EntitySchema<OrderEntity> schema = EntitySchemaReader.read(OrderEntity.class);
         String sk = schema.computeKey("SK", new OrderEntity("123", "2024-01-15"));
         assertThat(sk).isEqualTo("DATE#2024-01-15");
+    }
+
+    // ============ @KeyComponent on Fields Tests ============
+
+    @Entity(discriminator = "FLD", table = "field-test")
+    @KeyPrefix(component = "PK", value = "FLD")
+    static class FieldKeyEntity {
+        @KeyComponent(component = "PK")
+        private String id;
+        private String name;
+
+        public FieldKeyEntity() {
+        }
+
+        FieldKeyEntity(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    @Test
+    @DisplayName("readSchema with @KeyComponent on field builds schema from field annotation")
+    void readSchema_withFieldAnnotation_buildsSchema() {
+        EntitySchema<FieldKeyEntity> schema = EntitySchemaReader.read(FieldKeyEntity.class);
+        assertThat(schema.keyComponents()).containsExactly("PK");
+    }
+
+    @Test
+    @DisplayName("computeKey with @KeyComponent on field uses field-derived getter")
+    void computeKey_withFieldAnnotation_usesGetter() {
+        EntitySchema<FieldKeyEntity> schema = EntitySchemaReader.read(FieldKeyEntity.class);
+        String key = schema.computeKey("PK", new FieldKeyEntity("abc"));
+        assertThat(key).isEqualTo("FLD#abc");
+    }
+
+    @Entity(discriminator = "BAD", table = "bad")
+    static class FieldNoGetterEntity {
+        @KeyComponent(component = "PK")
+        private String id;
+
+        public FieldNoGetterEntity() {
+        }
+        // Intentionally no getId() getter
+    }
+
+    @Test
+    @DisplayName("readSchema with @KeyComponent on field without getter throws DynamoSimplifiedException")
+    void readSchema_withFieldAnnotation_noGetter_throws() {
+        assertThrows(DynamoSimplifiedException.class,
+                () -> EntitySchemaReader.read(FieldNoGetterEntity.class));
     }
 }
