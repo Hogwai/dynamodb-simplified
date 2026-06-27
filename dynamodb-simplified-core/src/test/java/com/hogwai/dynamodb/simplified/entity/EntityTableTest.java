@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +40,7 @@ class EntityTableTest {
             this.name = name;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        @DynamoDbPartitionKey
         public String getPk() {
             return pk;
         }
@@ -168,7 +170,7 @@ class EntityTableTest {
             this.typeId = typeId;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        @DynamoDbPartitionKey
         public String getPk() {
             return pk;
         }
@@ -177,7 +179,7 @@ class EntityTableTest {
             this.pk = pk;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+        @DynamoDbSortKey
         public String getSk() {
             return sk;
         }

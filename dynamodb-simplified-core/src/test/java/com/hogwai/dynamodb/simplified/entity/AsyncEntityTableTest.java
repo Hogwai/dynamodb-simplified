@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +45,7 @@ class AsyncEntityTableTest {
             this.name = name;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        @DynamoDbPartitionKey
         public String getPk() {
             return pk;
         }
@@ -212,7 +214,7 @@ class AsyncEntityTableTest {
             this.typeId = typeId;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        @DynamoDbPartitionKey
         public String getPk() {
             return pk;
         }
@@ -221,7 +223,7 @@ class AsyncEntityTableTest {
             this.pk = pk;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+        @DynamoDbSortKey
         public String getSk() {
             return sk;
         }
@@ -251,7 +253,7 @@ class AsyncEntityTableTest {
 
     @Test
     @DisplayName("put with sort key computes both PK and SK")
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     void put_withSortKey_shouldComputeBothKeys() {
         var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
         var mockAsyncTableWithSk = (AsyncTable<TestItemWithSk>) mock(AsyncTable.class);
@@ -269,7 +271,7 @@ class AsyncEntityTableTest {
 
     @Test
     @DisplayName("update with sort key computes both PK and SK")
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     void update_withSortKey_shouldComputeBothKeys() {
         var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
         var mockAsyncTableWithSk = (AsyncTable<TestItemWithSk>) mock(AsyncTable.class);
@@ -289,7 +291,7 @@ class AsyncEntityTableTest {
 
     @Test
     @DisplayName("deleteEntity with sort key uses delete with partition and sort key")
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     void deleteEntity_withSortKey_usesDeleteWithBothKeys() {
         var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
         var mockAsyncTableWithSk = (AsyncTable<TestItemWithSk>) mock(AsyncTable.class);
@@ -308,7 +310,7 @@ class AsyncEntityTableTest {
 
     @Test
     @DisplayName("deleteEntity with entity having only PK uses delete with partition key only")
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     void deleteEntity_withOnlyPk_usesDeleteWithPkOnly() {
         // Create an entity that has PK but no SK components — readSk returns null
         var entitySchema = EntitySchemaReader.read(TestUser.class);
@@ -327,7 +329,7 @@ class AsyncEntityTableTest {
 
     @Test
     @DisplayName("deleteEntity throws OperationFailedException when readPk fails")
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     void deleteEntity_whenReadPkFails_throwsOperationFailedException() {
         var entitySchema = EntitySchemaReader.read(TestUser.class);
         var mockAsyncTableForUser = (AsyncTable<TestUser>) mock(AsyncTable.class);
