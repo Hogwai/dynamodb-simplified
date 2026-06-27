@@ -1,6 +1,5 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -305,7 +304,7 @@ class AsyncGetItemBuilderTest {
     }
 
     @Test
-    @DisplayName("execute() wraps generic exception from simple path in DynamoSimplifiedException")
+    @DisplayName("execute() rethrows generic exception from simple path as-is")
     void execute_withSimplePath_whenGenericException() {
         when(table.getItem(any(GetItemEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("generic error")));
@@ -313,7 +312,7 @@ class AsyncGetItemBuilderTest {
         CompletableFuture<Optional<TestItem>> future = pkOnlyBuilder.execute();
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
-        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
+        assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 
     // ============ error handling - projection path ============
@@ -335,7 +334,7 @@ class AsyncGetItemBuilderTest {
     }
 
     @Test
-    @DisplayName("execute() with projection wraps generic exception in DynamoSimplifiedException")
+    @DisplayName("execute() with projection rethrows generic exception as-is")
     void execute_withProjection_whenGenericException() {
         mockTableSchema("id", null);
         when(dynamoDbAsyncClient.getItem(any(GetItemRequest.class)))
@@ -346,6 +345,6 @@ class AsyncGetItemBuilderTest {
                 .execute();
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
-        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
+        assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 }

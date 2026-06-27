@@ -187,7 +187,7 @@ class UpdateBuilderTest {
         when(table.keyFrom(any())).thenReturn(key);
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
-                .thenReturn(UpdateItemResponse.builder().attributes(Map.of()).build());
+                .thenReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build());
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -215,7 +215,7 @@ class UpdateBuilderTest {
         when(table.keyFrom(any())).thenReturn(key);
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
-                .thenReturn(UpdateItemResponse.builder().attributes(Map.of()).build());
+                .thenReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build());
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -283,7 +283,7 @@ class UpdateBuilderTest {
         when(table.keyFrom(any())).thenReturn(key);
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
-                .thenReturn(UpdateItemResponse.builder().attributes(Map.of()).build());
+                .thenReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build());
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -303,7 +303,7 @@ class UpdateBuilderTest {
         when(table.keyFrom(any())).thenReturn(key);
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
-                .thenReturn(UpdateItemResponse.builder().attributes(Map.of()).build());
+                .thenReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build());
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -334,7 +334,7 @@ class UpdateBuilderTest {
     @DisplayName("key-only constructor with expression performs partial update via low-level client")
     void execute_withKeyOnlyAndExpression_usesLowLevelClient() {
         TableSchema<TestItem> schema = mockSchema();
-        doReturn(UpdateItemResponse.builder().attributes(Map.of()).build())
+        doReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build())
                 .when(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
         when(schema.mapToItem(any())).thenReturn(resultItem);
         when(table.tableName()).thenReturn("test-table");
@@ -363,7 +363,7 @@ class UpdateBuilderTest {
         when(tableMetadata.primarySortKey()).thenReturn(Optional.of("sk"));
         when(schema.tableMetadata()).thenReturn(tableMetadata);
         when(table.tableSchema()).thenReturn(schema);
-        doReturn(UpdateItemResponse.builder().attributes(Map.of()).build())
+        doReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build())
                 .when(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
         when(schema.mapToItem(any())).thenReturn(resultItem);
         when(table.tableName()).thenReturn("test-table");
@@ -403,7 +403,7 @@ class UpdateBuilderTest {
     @DisplayName("key-only constructor with optimistic locking skips locking because item is null")
     void execute_withKeyOnlyAndOptimisticLocking_doesNotApplyLocking() {
         TableSchema<TestItem> schema = mockSchema();
-        doReturn(UpdateItemResponse.builder().attributes(Map.of()).build())
+        doReturn(UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build())
                 .when(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
         when(schema.mapToItem(any())).thenReturn(resultItem);
         when(table.tableName()).thenReturn("test-table");

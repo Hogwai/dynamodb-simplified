@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 
-@SuppressWarnings("PMD.NullAssignment")
+@SuppressWarnings({"PMD.NullAssignment", "PMD.CyclomaticComplexity"})
 public final class EntityQueryBuilder {
 
     private static final String CONDITION_JOINER = " AND ";
@@ -311,26 +311,30 @@ public final class EntityQueryBuilder {
             return 0L;
         }
 
-        Select originalSelect = select;
-        select = Select.COUNT;
-
+        Select effectiveSelect = select != null ? select : Select.COUNT;
         long total = 0;
-        Map<String, AttributeValue> startKey = null;
-
+        Map<String, AttributeValue> nextKey = null;
         do {
-            QueryRequest request = buildQueryRequest(startKey);
+            QueryRequest request = buildQueryRequest(nextKey, effectiveSelect);
             QueryResponse response = executeQuery(request);
+            nextKey = response.lastEvaluatedKey();
             total += response.count();
-            startKey = response.lastEvaluatedKey();
-        } while (startKey != null && !startKey.isEmpty());
-
-        select = originalSelect;
+        } while (hasNextPage(nextKey));
         return total;
     }
 
     // ============ Internal ============
 
+    private static boolean hasNextPage(@Nullable Map<String, AttributeValue> key) {
+        return key != null && !key.isEmpty();
+    }
+
     private QueryRequest buildQueryRequest(@Nullable Map<String, AttributeValue> exclusiveStartKey) {
+        return buildQueryRequest(exclusiveStartKey, null);
+    }
+
+    private QueryRequest buildQueryRequest(@Nullable Map<String, AttributeValue> exclusiveStartKey,
+                                            @Nullable Select selectOverride) {
         String pkAttrName = pkAttributeName != null ? pkAttributeName : "PK";
 
         StringBuilder keyConditionExpr = new StringBuilder("#pk = :pk");
@@ -351,7 +355,7 @@ public final class EntityQueryBuilder {
                 .expressionAttributeValues(exprAttrValues)
                 .filterExpression(filterExpr);
 
-        applyQueryOptions(requestBuilder, exclusiveStartKey);
+        applyQueryOptions(requestBuilder, exclusiveStartKey, selectOverride);
 
         return requestBuilder.build();
     }
@@ -417,7 +421,8 @@ public final class EntityQueryBuilder {
     }
 
     private void applyQueryOptions(QueryRequest.Builder builder,
-                                   @Nullable Map<String, AttributeValue> exclusiveStartKey) {
+                                    @Nullable Map<String, AttributeValue> exclusiveStartKey,
+                                    @Nullable Select selectOverride) {
         if (limit > 0) {
             builder.limit(limit);
         }
@@ -433,8 +438,9 @@ public final class EntityQueryBuilder {
         if (projectedAttributes != null && projectedAttributes.length > 0) {
             builder.projectionExpression(String.join(", ", projectedAttributes));
         }
-        if (select != null) {
-            builder.select(select);
+        Select effectiveSelect = selectOverride != null ? selectOverride : select;
+        if (effectiveSelect != null) {
+            builder.select(effectiveSelect);
         }
     }
 
