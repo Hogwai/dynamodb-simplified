@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.Versioned;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,8 @@ class UpdateBuilderTest {
     @Mock
     DynamoDbTable<TestItem> table;
     @Mock
+    DynamoDbTable<VersionedTestItem> versionedTable;
+    @Mock
     DynamoDbClient dynamoDbClient;
     @Mock
     TableSchema<TestItem> tableSchema;
@@ -51,6 +54,22 @@ class UpdateBuilderTest {
         public String id;
         public String name;
         public int version;
+    }
+
+    static class VersionedTestItem implements Versioned {
+        public String id;
+        public String name;
+        private Integer version = 1;
+
+        @Override
+        public Integer getVersion() {
+            return version;
+        }
+
+        @Override
+        public void setVersion(Integer version) {
+            this.version = version;
+        }
     }
 
     @BeforeEach
@@ -378,5 +397,65 @@ class UpdateBuilderTest {
         var testItem = new TestItem();
         UpdateBuilder<TestItem> builder = new UpdateBuilder<>(table, testItem, dynamoDbClient);
         assertSame(builder, builder.withOptimisticLocking());
+    }
+
+    @Test
+    @DisplayName("key-only constructor with optimistic locking skips locking because item is null")
+    void execute_withKeyOnlyAndOptimisticLocking_doesNotApplyLocking() {
+        TableSchema<TestItem> schema = mockSchema();
+        doReturn(UpdateItemResponse.builder().attributes(Map.of()).build())
+                .when(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
+        when(schema.mapToItem(any())).thenReturn(resultItem);
+        when(table.tableName()).thenReturn("test-table");
+
+        Optional<TestItem> actual = new UpdateBuilder<>(table, dynamoDbClient, "pk-val", null)
+                .withOptimisticLocking()
+                .update(u -> u.set("name", "new"))
+                .execute();
+
+        assertTrue(actual.isPresent());
+        assertSame(resultItem, actual.get());
+        verify(dynamoDbClient).updateItem(lowLevelRequestCaptor.capture());
+        UpdateItemRequest request = lowLevelRequestCaptor.getValue();
+        assertNull(request.conditionExpression(), "Optimistic locking should not apply when item is null");
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking on non-Versioned item skips version increment")
+    void execute_withOptimisticLockingAndNonVersionedItem_doesNotIncrementVersion() {
+        when(table.updateItem(any(UpdateItemEnhancedRequest.class))).thenReturn(resultItem);
+
+        new UpdateBuilder<>(table, item, dynamoDbClient)
+                .withOptimisticLocking()
+                .execute();
+
+        // item is not Versioned, so version should remain unchanged
+        assertEquals(1, item.version);
+        verify(table).updateItem(any(UpdateItemEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking merges version condition with existing condition")
+    void execute_withOptimisticLockingAndExistingCondition() {
+        VersionedTestItem versionedItem = new VersionedTestItem();
+        versionedItem.id = "123";
+        versionedItem.name = "original";
+        VersionedTestItem versionedResultItem = new VersionedTestItem();
+        versionedResultItem.id = "123";
+        versionedResultItem.name = "updated";
+
+        when(versionedTable.updateItem(any(UpdateItemEnhancedRequest.class))).thenReturn(versionedResultItem);
+
+        new UpdateBuilder<>(versionedTable, versionedItem, dynamoDbClient)
+                .withOptimisticLocking()
+                .condition(c -> c.exists("attr"))
+                .execute();
+
+        assertEquals(2, versionedItem.getVersion(), "Version should be incremented from 1 to 2");
+        ArgumentCaptor<UpdateItemEnhancedRequest<VersionedTestItem>> captor =
+                ArgumentCaptor.forClass(UpdateItemEnhancedRequest.class);
+        verify(versionedTable).updateItem(captor.capture());
+        assertNotNull(captor.getValue().conditionExpression(),
+                "Condition expression should be set (user condition merged with version check)");
     }
 }

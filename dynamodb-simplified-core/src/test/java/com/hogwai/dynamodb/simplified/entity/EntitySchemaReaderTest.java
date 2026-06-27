@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.entity;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,5 +73,130 @@ class EntitySchemaReaderTest {
     void keyComponents_shouldReturnComponentNames() {
         EntitySchema<User> schema = EntitySchemaReader.read(User.class);
         assertThat(schema.keyComponents()).containsExactly("PK");
+    }
+
+    // ============ Additional Branch Coverage Tests ============
+
+    @Entity(discriminator = "NOPREFIX", table = "myapp")
+    static class NoPrefixEntity {
+        private String id;
+
+        NoPrefixEntity() {
+        }
+
+        NoPrefixEntity(String id) {
+            this.id = id;
+        }
+
+        @KeyComponent(component = "PK")
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+    }
+
+    @Test
+    @DisplayName("computeKey without KeyPrefix returns key without prefix")
+    void computeKey_withoutPrefix_returnsKeyWithoutPrefix() {
+        EntitySchema<NoPrefixEntity> schema = EntitySchemaReader.read(NoPrefixEntity.class);
+        String key = schema.computeKey("PK", new NoPrefixEntity("abc123"));
+        // No prefix, just the value
+        assertThat(key).isEqualTo("abc123");
+    }
+
+    @Test
+    @DisplayName("computeKey with null component value skips null in key")
+    void computeKey_withNullComponentValue_appendsNothingForNull() {
+        EntitySchema<NoPrefixEntity> schema = EntitySchemaReader.read(NoPrefixEntity.class);
+        String key = schema.computeKey("PK", new NoPrefixEntity(null));
+        // Component value is null, so nothing is appended; no prefix, so empty string
+        assertThat(key).isEmpty();
+    }
+
+    @Entity(discriminator = "MULTI", table = "myapp")
+    @KeyPrefix(component = "PK", value = "ENT")
+    static class MultiKeyEntity {
+        private String type;
+        private String id;
+
+        MultiKeyEntity() {
+        }
+
+        MultiKeyEntity(String type, String id) {
+            this.type = type;
+            this.id = id;
+        }
+
+        @KeyComponent(component = "PK", position = 0)
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        @KeyComponent(component = "PK", position = 1)
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+    }
+
+    @Test
+    @DisplayName("computeKey with multiple components joins them with hash")
+    void computeKey_withMultipleComponents_joinsWithHash() {
+        EntitySchema<MultiKeyEntity> schema = EntitySchemaReader.read(MultiKeyEntity.class);
+        String key = schema.computeKey("PK", new MultiKeyEntity("USER", "abc"));
+        // Prefix + component0 + '#' + component1
+        assertThat(key).isEqualTo("ENT#USER#abc");
+    }
+
+    @Entity(discriminator = "ORDER", table = "myapp")
+    @KeyPrefix(component = "PK", value = "ORDER")
+    @KeyPrefix(component = "SK", value = "DATE")
+    static class OrderEntity {
+        private String orderId;
+        private String date;
+
+        OrderEntity() {
+        }
+
+        OrderEntity(String orderId, String date) {
+            this.orderId = orderId;
+            this.date = date;
+        }
+
+        @KeyComponent(component = "PK")
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public void setOrderId(String orderId) {
+            this.orderId = orderId;
+        }
+
+        @KeyComponent(component = "SK")
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+    }
+
+    @Test
+    @DisplayName("computeKey with SK prefix returns key with SK prefix")
+    void computeKey_withSkPrefix_returnsKeyWithPrefix() {
+        EntitySchema<OrderEntity> schema = EntitySchemaReader.read(OrderEntity.class);
+        String sk = schema.computeKey("SK", new OrderEntity("123", "2024-01-15"));
+        assertThat(sk).isEqualTo("DATE#2024-01-15");
     }
 }

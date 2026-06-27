@@ -734,6 +734,183 @@ class QueryBuilderTest {
         assertNotNull(captor.getValue().filterExpression());
     }
 
+    @Test
+    @DisplayName("count() with low-level client and sort key BETWEEN condition")
+    void count_withLowLevelClient_andSortKeyBetween() {
+        mockTableSchema("sk");
+        stubLowLevelQueryReturns(42);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKeyAndSortKeyBetween("pk", 1, 10)
+                .count();
+
+        assertEquals(42L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains("BETWEEN"));
+        assertTrue(request.keyConditionExpression().contains(":sk0"));
+        assertTrue(request.keyConditionExpression().contains(":sk1"));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key GreaterThan condition")
+    void count_withLowLevelClient_andSortKeyGreaterThan() {
+        mockTableSchema("sk");
+        stubLowLevelQueryReturns(7);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKeyAndSortKeyGreaterThan("pk", 5)
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" > "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key GreaterThanOrEqual condition")
+    void count_withLowLevelClient_andSortKeyGreaterThanOrEqual() {
+        mockTableSchema("sk");
+        stubLowLevelQueryReturns(7);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKeyAndSortKeyGreaterThanOrEqual("pk", 5)
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" >= "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key LessThan condition")
+    void count_withLowLevelClient_andSortKeyLessThan() {
+        mockTableSchema("sk");
+        stubLowLevelQueryReturns(7);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKeyAndSortKeyLessThan("pk", 5)
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" < "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key LessThanOrEqual condition")
+    void count_withLowLevelClient_andSortKeyLessThanOrEqual() {
+        mockTableSchema("sk");
+        stubLowLevelQueryReturns(7);
+
+        long total = new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKeyAndSortKeyLessThanOrEqual("pk", 5)
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" <= "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies limit option")
+    void count_withLowLevelAndLimit() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(5);
+
+        new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .limit(10)
+                .count();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals(10, captor.getValue().limit());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies exclusiveStartKey option")
+    void count_withLowLevelAndExclusiveStartKey() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(5);
+
+        new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .startFrom(Map.of("pk", attrVal("val")))
+                .count();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertNotNull(captor.getValue().exclusiveStartKey());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies scanIndexForward option")
+    void count_withLowLevelAndScanIndexForward() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(5);
+
+        new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .descending()
+                .count();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertFalse(captor.getValue().scanIndexForward());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies returnConsumedCapacity option")
+    void count_withLowLevelAndReturnConsumedCapacity() {
+        mockTableSchema(null);
+        stubLowLevelQueryReturns(5);
+
+        new QueryBuilder<>(table, dynamoDbClient)
+                .partitionKey("pkVal")
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .count();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client using index resolves table name from index")
+    void count_withLowLevelClient_usingIndex() {
+        lenient().when(index.tableSchema()).thenReturn(tableSchema);
+        lenient().when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+        lenient().when(index.tableName()).thenReturn("index-table");
+        stubLowLevelQueryReturns(7);
+
+        long total = new QueryBuilder<>(index, dynamoDbClient)
+                .partitionKey("pkVal")
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals("index-table", captor.getValue().tableName());
+    }
+
     // ============ Routing Guard Tests ============
 
     @Test

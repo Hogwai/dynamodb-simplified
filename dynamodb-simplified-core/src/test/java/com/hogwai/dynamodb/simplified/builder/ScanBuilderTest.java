@@ -461,6 +461,108 @@ class ScanBuilderTest {
         assertEquals(Select.COUNT, captor.getValue().select());
     }
 
+    @Test
+    @DisplayName("count() with low-level client applies limit option")
+    void count_withLowLevelAndLimit() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .limit(10)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals(10, captor.getValue().limit());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies exclusiveStartKey option")
+    void count_withLowLevelAndExclusiveStartKey() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .startFrom(Map.of("pk", attrVal("val")))
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertNotNull(captor.getValue().exclusiveStartKey());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and filter expression sets filter in request")
+    void count_withLowLevelAndFilterExpression() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .filter(c -> c.eq("status", "active"))
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertNotNull(captor.getValue().filterExpression());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies returnConsumedCapacity option")
+    void count_withLowLevelAndReturnConsumedCapacity() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client using index resolves table name from index")
+    void count_withLowLevel_usingIndex() {
+        lenient().when(index.tableName()).thenReturn("index-table");
+        stubLowLevelScanReturns(7);
+
+        long total = new ScanBuilder<>(index, dynamoDbClient)
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals("index-table", captor.getValue().tableName());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies parallel scan options")
+    void count_withLowLevel_parallelScan() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .parallelScan(4, 0)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        ScanRequest request = captor.getValue();
+        assertNotNull(request.totalSegments());
+        assertEquals(4, request.totalSegments().intValue());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies consistent read option")
+    void count_withLowLevel_consistentRead() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .consistentRead(true)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertTrue(captor.getValue().consistentRead());
+    }
+
     // ============ Routing Guard Tests ============
 
     @Test

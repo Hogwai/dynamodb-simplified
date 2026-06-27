@@ -422,4 +422,18 @@ class AsyncUpdateBuilderTest {
         CompletionException ex = assertThrows(CompletionException.class, result::join);
         assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
+
+    // ============ ReturnValues without expression guard (missed branch) ============
+
+    @Test
+    @DisplayName("returnValues without update expression throws IllegalStateException")
+    void returnValues_withoutExpression_throwsIllegalStateException() {
+        CompletableFuture<Optional<TestItem>> result = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+                .returnValues(ReturnValue.ALL_NEW)
+                .execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+        assertTrue(ex.getCause().getMessage().contains("ReturnValues is not supported for full-item replacement"));
+    }
 }

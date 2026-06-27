@@ -2,6 +2,8 @@ package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -385,5 +387,111 @@ class AsyncDeleteBuilderTest {
         expectedKey.put("pk", AttributeValue.builder().s("pk-val").build());
         expectedKey.put("sk", AttributeValue.builder().s("sk-val").build());
         assertEquals(expectedKey, request.key());
+    }
+
+    // ============ Missed branches: sort key schema present but no sort key provided ============
+
+    @Test
+    @DisplayName("returnValues with sort key in schema but no sort key provided builds pk-only key")
+    void returnValues_withSortKeySchemaButNoSortKey() {
+        Map<String, AttributeValue> itemMap = Map.of("pk", AttributeValue.builder().s("pk-val").build());
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(DeleteItemResponse.builder().attributes(itemMap).build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        when(tableMetadata.primarySortKey()).thenReturn(Optional.of("sk"));
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk-val", /* sortKey= */ null, dynamoDbAsyncClient);
+
+        builder.returnValues(ReturnValue.ALL_OLD);
+        builder.execute().join();
+
+        verify(dynamoDbAsyncClient).deleteItem(lowLevelRequestCaptor.capture());
+        DeleteItemRequest request = lowLevelRequestCaptor.getValue();
+        Map<String, AttributeValue> expectedKey = new HashMap<>();
+        expectedKey.put("pk", AttributeValue.builder().s("pk-val").build());
+        assertEquals(expectedKey, request.key());
+    }
+
+    @Test
+    @DisplayName("returnValues with DynamoDbException from low-level client wraps into OperationFailedException")
+    void returnValues_withDynamoDbException_throwsOperationFailedException() {
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        DynamoDbException.builder().message("Service error").build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk-val", null, dynamoDbAsyncClient);
+        builder.returnValues(ReturnValue.ALL_OLD);
+        CompletableFuture<Optional<TestItem>> future = builder.execute();
+
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(OperationFailedException.class, ex.getCause());
+    }
+
+    // ============ Missed branch: empty condition expression in returnValues path ============
+
+    @Test
+    @DisplayName("returnValues with empty condition expression does not include condition in low-level request")
+    void returnValues_withEmptyConditionExpression() {
+        Map<String, AttributeValue> itemMap = Map.of("pk", AttributeValue.builder().s("pk-val").build());
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(DeleteItemResponse.builder().attributes(itemMap).build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk-val", null, dynamoDbAsyncClient);
+        builder.returnValues(ReturnValue.ALL_OLD);
+        // ConditionExpression.builder().build() creates an empty condition expression
+        builder.condition(ConditionExpression.builder().build());
+        builder.execute().join();
+
+        verify(dynamoDbAsyncClient).deleteItem(lowLevelRequestCaptor.capture());
+        DeleteItemRequest request = lowLevelRequestCaptor.getValue();
+        assertNull(request.conditionExpression());
+    }
+
+    // ============ Missed branch: non-null empty response attributes ============
+
+    @Test
+    @DisplayName("returnValues with non-null empty response attributes returns empty")
+    void returnValues_withEmptyAttributes_returnsEmpty() {
+        when(dynamoDbAsyncClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        DeleteItemResponse.builder().attributes(Map.of()).build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk-val", null, dynamoDbAsyncClient);
+        builder.returnValues(ReturnValue.ALL_OLD);
+        Optional<TestItem> result = builder.execute().join();
+
+        assertTrue(result.isEmpty());
+    }
+
+    // ============ Missed branch: empty condition expression in enhanced path ============
+
+    @Test
+    @DisplayName("execute with empty condition expression does not include condition in enhanced request")
+    void execute_withEmptyConditionExpression() {
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(new TestItem()));
+        AsyncDeleteBuilder<TestItem> builder = new AsyncDeleteBuilder<>(table, "pk", null, null);
+        builder.condition(ConditionExpression.builder().build());
+        Optional<TestItem> result = builder.execute().join();
+
+        assertTrue(result.isPresent());
+        verify(table).deleteItem(requestCaptor.capture());
+        DeleteItemEnhancedRequest request = requestCaptor.getValue();
+        assertNull(request.conditionExpression());
     }
 }

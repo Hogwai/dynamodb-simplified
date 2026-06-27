@@ -2,7 +2,9 @@ package com.hogwai.dynamodb.simplified.entity;
 
 import com.hogwai.dynamodb.simplified.async.AsyncQueryBuilder;
 import com.hogwai.dynamodb.simplified.async.AsyncTable;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -13,6 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -188,5 +191,158 @@ class AsyncEntityTableTest {
         assertThat(user.getPk()).isEqualTo("USER#abc123");
         assertThat(result).isSameAs(updatedUser);
         verify(mockAsyncTable).updateItem(user);
+    }
+
+    // ============ SK Branch Coverage Tests ============
+
+    @Entity(discriminator = "ITEM", table = "myapp")
+    @KeyPrefix(component = "PK", value = "ITEM")
+    @KeyPrefix(component = "SK", value = "TYPE")
+    static class TestItemWithSk {
+        private String pk;
+        private String sk;
+        private String itemId;
+        private String typeId;
+
+        TestItemWithSk() {
+        }
+
+        TestItemWithSk(String itemId, String typeId) {
+            this.itemId = itemId;
+            this.typeId = typeId;
+        }
+
+        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
+        }
+
+        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
+        public String getSk() {
+            return sk;
+        }
+
+        public void setSk(String sk) {
+            this.sk = sk;
+        }
+
+        @KeyComponent(component = "PK")
+        public String getItemId() {
+            return itemId;
+        }
+
+        public void setItemId(String itemId) {
+            this.itemId = itemId;
+        }
+
+        @KeyComponent(component = "SK")
+        public String getTypeId() {
+            return typeId;
+        }
+
+        public void setTypeId(String typeId) {
+            this.typeId = typeId;
+        }
+    }
+
+    @Test
+    @DisplayName("put with sort key computes both PK and SK")
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void put_withSortKey_shouldComputeBothKeys() {
+        var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
+        var mockAsyncTableWithSk = (AsyncTable<TestItemWithSk>) mock(AsyncTable.class);
+        var tableWithSk = new AsyncDefaultEntityTable<>(mockAsyncTableWithSk, schemaWithSk);
+
+        TestItemWithSk item = new TestItemWithSk("item1", "gadget");
+        when(mockAsyncTableWithSk.putItem(item)).thenReturn(CompletableFuture.completedFuture(null));
+
+        tableWithSk.put(item).join();
+
+        assertThat(item.getPk()).isEqualTo("ITEM#item1");
+        assertThat(item.getSk()).isEqualTo("TYPE#gadget");
+        verify(mockAsyncTableWithSk).putItem(item);
+    }
+
+    @Test
+    @DisplayName("update with sort key computes both PK and SK")
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void update_withSortKey_shouldComputeBothKeys() {
+        var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
+        var mockAsyncTableWithSk = (AsyncTable<TestItemWithSk>) mock(AsyncTable.class);
+        var tableWithSk = new AsyncDefaultEntityTable<>(mockAsyncTableWithSk, schemaWithSk);
+
+        TestItemWithSk item = new TestItemWithSk("item2", "widget");
+        TestItemWithSk updated = new TestItemWithSk("item2", "widget");
+        when(mockAsyncTableWithSk.updateItem(item)).thenReturn(CompletableFuture.completedFuture(updated));
+
+        TestItemWithSk result = tableWithSk.update(item).join();
+
+        assertThat(item.getPk()).isEqualTo("ITEM#item2");
+        assertThat(item.getSk()).isEqualTo("TYPE#widget");
+        assertThat(result).isSameAs(updated);
+        verify(mockAsyncTableWithSk).updateItem(item);
+    }
+
+    @Test
+    @DisplayName("deleteEntity with sort key uses delete with partition and sort key")
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void deleteEntity_withSortKey_usesDeleteWithBothKeys() {
+        var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
+        var mockAsyncTableWithSk = (AsyncTable<TestItemWithSk>) mock(AsyncTable.class);
+        var tableWithSk = new AsyncDefaultEntityTable<>(mockAsyncTableWithSk, schemaWithSk);
+
+        TestItemWithSk item = new TestItemWithSk("item3", "gadget");
+        when(mockAsyncTableWithSk.deleteItem("ITEM#item3", "TYPE#gadget"))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        tableWithSk.deleteEntity(item).join();
+
+        assertThat(item.getPk()).isEqualTo("ITEM#item3");
+        assertThat(item.getSk()).isEqualTo("TYPE#gadget");
+        verify(mockAsyncTableWithSk).deleteItem("ITEM#item3", "TYPE#gadget");
+    }
+
+    @Test
+    @DisplayName("deleteEntity with entity having only PK uses delete with partition key only")
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void deleteEntity_withOnlyPk_usesDeleteWithPkOnly() {
+        // Create an entity that has PK but no SK components — readSk returns null
+        var entitySchema = EntitySchemaReader.read(TestUser.class);
+        var mockAsyncTableForUser = (AsyncTable<TestUser>) mock(AsyncTable.class);
+        var tableForUser = new AsyncDefaultEntityTable<>(mockAsyncTableForUser, entitySchema);
+
+        TestUser user = new TestUser("abc123", "Alice");
+        when(mockAsyncTableForUser.deleteItem("USER#abc123"))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        tableForUser.deleteEntity(user).join();
+
+        assertThat(user.getPk()).isEqualTo("USER#abc123");
+        verify(mockAsyncTableForUser).deleteItem("USER#abc123");
+    }
+
+    @Test
+    @DisplayName("deleteEntity throws OperationFailedException when readPk fails")
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void deleteEntity_whenReadPkFails_throwsOperationFailedException() {
+        var entitySchema = EntitySchemaReader.read(TestUser.class);
+        var mockAsyncTableForUser = (AsyncTable<TestUser>) mock(AsyncTable.class);
+        var tableForUser = new AsyncDefaultEntityTable<>(mockAsyncTableForUser, entitySchema);
+
+        // Create a broken entity whose pk getter throws
+        TestUser brokenUser = new TestUser("abc123", "Alice") {
+            @Override
+            public String getPk() {
+                throw new IllegalStateException("PK getter failed");
+            }
+        };
+
+        // readPk throws directly (not inside a CompletableFuture), so it propagates as-is
+        assertThrows(OperationFailedException.class,
+                () -> tableForUser.deleteEntity(brokenUser));
     }
 }

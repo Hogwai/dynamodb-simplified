@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 
 import java.util.HashMap;
@@ -247,5 +248,128 @@ class AsyncCrossTableBatchGetBuilderTest {
         AsyncCrossTableBatchGetBuilder builder = new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
 
         assertThrows(IllegalStateException.class, () -> builder.project("attr"));
+    }
+
+    // ============ buildCrossTableBatchGetResult — null responses ============
+
+    @Test
+    @DisplayName("execute handles null responses and unprocessedKeys from DynamoDB gracefully")
+    void execute_withNullResponsesAndUnprocessed_handlesGracefully() {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        // Mock response with unstubbed responses()/unprocessedKeys() → Mockito returns null by default
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        AsyncCrossTableBatchGetBuilder builder = new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
+        builder.addKey(asyncTable(), "pk1");
+
+        CrossTableBatchGetResult result = builder.execute().join();
+
+        assertFalse(result.hasUnprocessed());
+        assertTrue(result.getUnprocessedKeys().isEmpty());
+        verify(dynamoDbAsyncClient).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    // ============ buildTableKeysAndAttributes — multiple keys, same table ============
+
+    @Test
+    @DisplayName("execute with multiple keys for same table includes all keys in request")
+    void execute_multipleKeysSameTable_includesAllKeys() {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        Map<String, AttributeValue> item1 = Map.of("id", AttributeValue.builder().s("pk1").build());
+        Map<String, AttributeValue> item2 = Map.of("id", AttributeValue.builder().s("pk2").build());
+        responses.put("test_table", List.of(item1, item2));
+
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        AsyncCrossTableBatchGetBuilder builder = new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
+        builder.addKey(asyncTable(), "pk1");
+        builder.addKey(asyncTable(), "pk2");
+
+        builder.execute().join();
+
+        var captor = ArgumentCaptor.forClass(BatchGetItemRequest.class);
+        verify(dynamoDbAsyncClient).batchGetItem(captor.capture());
+
+        Map<String, KeysAndAttributes> requestItems = captor.getValue().requestItems();
+        assertEquals(1, requestItems.size());
+        assertEquals(2, requestItems.get("test_table").keys().size());
+    }
+
+    // ============ buildTableKeysAndAttributes — no projection ============
+
+    @Test
+    @DisplayName("execute without projection omits projectionExpression in request")
+    void execute_withoutProjection_projectionNotSet() {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        AsyncCrossTableBatchGetBuilder builder = new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
+        builder.addKey(asyncTable(), "pk1");
+
+        builder.execute().join();
+
+        var captor = ArgumentCaptor.forClass(BatchGetItemRequest.class);
+        verify(dynamoDbAsyncClient).batchGetItem(captor.capture());
+
+        Map<String, KeysAndAttributes> requestItems = captor.getValue().requestItems();
+        assertNull(requestItems.get("test_table").projectionExpression());
+    }
+
+    // ============ buildTableKeysAndAttributes — empty projection expression ============
+
+    @Test
+    @DisplayName("execute with empty projection expression omits projectionExpression in request")
+    void execute_withEmptyProjectionExpression_projectionNotSet() {
+        when(rawTable.tableName()).thenReturn("test_table");
+        when(rawTable.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
+        responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
+
+        BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
+        when(mockResponse.responses()).thenReturn(responses);
+        when(mockResponse.unprocessedKeys()).thenReturn(Map.of());
+        when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        AsyncCrossTableBatchGetBuilder builder = new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
+        builder.addKey(asyncTable(), "pk1");
+        builder.project();  // Empty projection expression (no attributes → isEmpty() == true)
+
+        builder.execute().join();
+
+        var captor = ArgumentCaptor.forClass(BatchGetItemRequest.class);
+        verify(dynamoDbAsyncClient).batchGetItem(captor.capture());
+
+        Map<String, KeysAndAttributes> requestItems = captor.getValue().requestItems();
+        assertNull(requestItems.get("test_table").projectionExpression());
     }
 }

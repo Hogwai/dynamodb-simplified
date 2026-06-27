@@ -1,6 +1,8 @@
 package com.hogwai.dynamodb.simplified.entity;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -10,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 
@@ -529,6 +532,159 @@ class EntityQueryBuilderTest {
     @Test
     void count_withoutPartitionKey_shouldThrow() {
         assertThrows(IllegalStateException.class, () -> builder.count());
+    }
+
+    // ============ Additional Branch Coverage Tests ============
+
+    @Test
+    @DisplayName("sort key condition with entity missing SK attribute skips sort key expression")
+    void sortKeyCondition_withEntityWithoutSk_skipsSortKeyExpression() {
+        // UserEntity has no SK attribute; sort key condition should be silently skipped
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class)
+                .sortKeyBeginsWith("IGNORED");
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        // Only the PK condition should be present, no sort key condition
+        assertThat(request.keyConditionExpression()).isEqualTo("#pk = :pk");
+    }
+
+    @Test
+    @DisplayName("limit sets limit parameter on QueryRequest")
+    void limit_setsLimitOnQueryRequest() {
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class)
+                .limit(10);
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.limit()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("project with empty array omits projection expression")
+    void project_withEmptyArray_omitsProjectionExpression() {
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class)
+                .project(); // empty varargs
+
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.execute();
+
+        verify(mockClient).query(requestCaptor.capture());
+        QueryRequest request = requestCaptor.getValue();
+        assertThat(request.projectionExpression()).isNull();
+    }
+
+    @Test
+    @DisplayName("execute skips items with missing discriminator attribute")
+    void execute_withItemMissingDiscriminator_skipsItem() {
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class);
+
+        // Item has no "_type" attribute
+        QueryResponse response = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "pk", AttributeValue.builder().s("USER#abc").build(),
+                        "userId", AttributeValue.builder().s("abc").build()
+                )))
+                .count(1)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        CrossEntityResult result = builder.execute();
+        // Item with missing discriminator should be skipped
+        assertThat(result.get(UserEntity.class)).isEmpty();
+        assertThat(result.isEmpty()).isTrue();
+    }
+
+    @Test
+    @DisplayName("execute skips items with unknown discriminator value")
+    void execute_withItemHavingUnknownDiscriminator_skipsItem() {
+        builder.partitionKey("PART#abc")
+                .includeEntity(UserEntity.class);
+
+        // Item has discriminator "UNKNOWN" that doesn't match any included schema
+        QueryResponse response = QueryResponse.builder()
+                .items(List.of(Map.of(
+                        "_type", AttributeValue.builder().s("UNKNOWN").build(),
+                        "pk", AttributeValue.builder().s("PART#abc").build()
+                )))
+                .count(1)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        CrossEntityResult result = builder.execute();
+        assertThat(result.get(UserEntity.class)).isEmpty();
+        assertThat(result.isEmpty()).isTrue();
+    }
+
+    @Test
+    @DisplayName("executeQuery wraps DynamoDbException in OperationFailedException")
+    void executeQuery_wrapsDynamoDbException() {
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class);
+
+        DynamoDbException dde = mock(DynamoDbException.class);
+        when(mockClient.query(any(QueryRequest.class))).thenThrow(dde);
+
+        assertThrows(OperationFailedException.class, () -> builder.execute());
+    }
+
+    @Test
+    @DisplayName("count with no included entities returns zero")
+    void count_withNoIncludedEntities_returnsZero() {
+        builder.partitionKey("ANY");
+        long result = builder.count();
+        assertThat(result).isZero();
+        verify(mockClient, never()).query(any(QueryRequest.class));
+    }
+
+    @Test
+    @DisplayName("executeAll with empty result page returns single empty page")
+    void executeAll_withEmptyResult_returnsSingleEmptyPage() {
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class);
+
+        QueryResponse emptyPage = QueryResponse.builder()
+                .items(List.of())
+                .count(0)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(emptyPage);
+
+        List<CrossEntityResult> pages = builder.executeAll();
+        assertThat(pages).hasSize(1);
+        assertThat(pages.getFirst().isEmpty()).isTrue();
+    }
+
+    @Test
+    @DisplayName("executeWithPagination with empty result returns empty page with no lastKey")
+    void executeWithPagination_withEmptyResult_returnsEmptyPage() {
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class);
+
+        QueryResponse emptyPage = QueryResponse.builder()
+                .items(List.of())
+                .count(0)
+                .build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(emptyPage);
+
+        CrossEntityResultWithPagination page = builder.executeWithPagination();
+        assertThat(page.getResult().isEmpty()).isTrue();
+        assertThat(page.hasMore()).isFalse();
     }
 
     // --- Test entity classes ---

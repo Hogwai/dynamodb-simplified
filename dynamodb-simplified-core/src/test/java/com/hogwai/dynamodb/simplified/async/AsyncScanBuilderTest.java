@@ -403,6 +403,135 @@ class AsyncScanBuilderTest {
     }
 
     @Test
+    @DisplayName("count() with low-level client propagates limit to ScanRequest")
+    void count_withLowLevelAndLimit() {
+        ScanResponse response = ScanResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .limit(10)
+                .count()
+                .join();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        assertEquals(10, captor.getValue().limit());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client propagates exclusiveStartKey to ScanRequest")
+    void count_withLowLevelAndExclusiveStartKey() {
+        ScanResponse response = ScanResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        Map<String, AttributeValue> startKey = Map.of("pk", AttributeValue.builder().s("val").build());
+
+        new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .startFrom(startKey)
+                .count()
+                .join();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        assertEquals(startKey, captor.getValue().exclusiveStartKey());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client propagates filter expression to ScanRequest")
+    void count_withLowLevelAndFilterExpression() {
+        ScanResponse response = ScanResponse.builder().count(3).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .filter(c -> c.eq("status", "active"))
+                .count()
+                .join();
+
+        assertEquals(3L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        ScanRequest request = captor.getValue();
+        assertEquals(Select.COUNT, request.select());
+        assertNotNull(request.filterExpression());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client propagates returnConsumedCapacity to ScanRequest")
+    void count_withLowLevelAndReturnConsumedCapacity() {
+        ScanResponse response = ScanResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .count()
+                .join();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client using index resolves table name from index")
+    void count_withLowLevel_usingIndex() {
+        when(index.tableName()).thenReturn("index-table");
+        ScanResponse response = ScanResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncScanBuilder<>(index, dynamoDbAsyncClient)
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        assertEquals("index-table", captor.getValue().tableName());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client propagates parallelScan totalSegments to ScanRequest")
+    void count_withLowLevel_parallelScan() {
+        ScanResponse response = ScanResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .parallelScan(4, 0)
+                .count()
+                .join();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        ScanRequest request = captor.getValue();
+        assertEquals(4, request.totalSegments());
+        assertEquals(0, request.segment());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client propagates consistentRead to ScanRequest")
+    void count_withLowLevel_consistentRead() {
+        ScanResponse response = ScanResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.scan(any(ScanRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncScanBuilder<>(table, dynamoDbAsyncClient)
+                .consistentRead(true)
+                .count()
+                .join();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbAsyncClient).scan(captor.capture());
+        assertTrue(captor.getValue().consistentRead());
+    }
+
+    @Test
     @DisplayName("executeAll() with Select.COUNT returns failed future")
     void executeAll_throwsWithSelectCount() {
         CompletableFuture<List<TestItem>> future = new AsyncScanBuilder<>(table)

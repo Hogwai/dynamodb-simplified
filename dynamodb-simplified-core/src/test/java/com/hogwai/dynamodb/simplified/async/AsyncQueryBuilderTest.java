@@ -638,6 +638,13 @@ class AsyncQueryBuilderTest {
         lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
     }
 
+    private void mockTableSchemaWithSortKey(String skName) {
+        lenient().when(table.tableSchema()).thenReturn(tableSchema);
+        lenient().when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.of(skName));
+    }
+
     @Test
     @DisplayName("count() with low-level client uses async QueryRequest with Select.COUNT")
     void count_withLowLevelClient() {
@@ -730,5 +737,241 @@ class AsyncQueryBuilderTest {
                 .join();
 
         assertEquals(5L, total);
+    }
+
+    // ============ Low-Level Client — Sort Key Conditions ============
+
+    @Test
+    @DisplayName("count() with low-level client and sort key BETWEEN condition")
+    void count_withLowLevelClient_andSortKeyBetween() {
+        mockTableSchemaWithSortKey("sk");
+        QueryResponse response = QueryResponse.builder().count(42).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKeyAndSortKeyBetween("pk", 1, 10)
+                .count()
+                .join();
+
+        assertEquals(42L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains("BETWEEN"));
+        assertTrue(request.keyConditionExpression().contains(":sk0"));
+        assertTrue(request.keyConditionExpression().contains(":sk1"));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key GreaterThan condition")
+    void count_withLowLevelClient_andSortKeyGreaterThan() {
+        mockTableSchemaWithSortKey("sk");
+        QueryResponse response = QueryResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKeyAndSortKeyGreaterThan("pk", 5)
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" > "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key GreaterThanOrEqual condition")
+    void count_withLowLevelClient_andSortKeyGreaterThanOrEqual() {
+        mockTableSchemaWithSortKey("sk");
+        QueryResponse response = QueryResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKeyAndSortKeyGreaterThanOrEqual("pk", 5)
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" >= "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key LessThan condition")
+    void count_withLowLevelClient_andSortKeyLessThan() {
+        mockTableSchemaWithSortKey("sk");
+        QueryResponse response = QueryResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKeyAndSortKeyLessThan("pk", 5)
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" < "));
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and sort key LessThanOrEqual condition")
+    void count_withLowLevelClient_andSortKeyLessThanOrEqual() {
+        mockTableSchemaWithSortKey("sk");
+        QueryResponse response = QueryResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKeyAndSortKeyLessThanOrEqual("pk", 5)
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        QueryRequest request = captor.getValue();
+        assertTrue(request.keyConditionExpression().contains(" <= "));
+    }
+
+    // ============ Low-Level Client — ApplyQueryOptions ============
+
+    @Test
+    @DisplayName("count() with low-level client applies limit option")
+    void count_withLowLevelClient_appliesLimit() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .limit(10)
+                .count()
+                .join();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertEquals(10, captor.getValue().limit());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies exclusiveStartKey option")
+    void count_withLowLevelClient_appliesExclusiveStartKey() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .startFrom(Map.of("pk", attrVal("val")))
+                .count()
+                .join();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertNotNull(captor.getValue().exclusiveStartKey());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies scanIndexForward option via descending()")
+    void count_withLowLevelClient_appliesScanIndexForward() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .descending()
+                .count()
+                .join();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertFalse(captor.getValue().scanIndexForward());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies returnConsumedCapacity option")
+    void count_withLowLevelClient_appliesReturnConsumedCapacity() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(5).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .count()
+                .join();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
+    }
+
+    // ============ Low-Level Client — Index Path ============
+
+    @Test
+    @DisplayName("count() with low-level client using index resolves table name from index")
+    void count_withLowLevelClient_usingIndex() {
+        lenient().when(index.tableSchema()).thenReturn(tableSchema);
+        lenient().when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+        lenient().when(tableMetadata.primarySortKey()).thenReturn(Optional.empty());
+        lenient().when(index.tableName()).thenReturn("index-table");
+        QueryResponse response = QueryResponse.builder().count(7).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(index, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .count()
+                .join();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertEquals("index-table", captor.getValue().tableName());
+    }
+
+    // ============ Low-Level Client — Filter Expression ============
+
+    @Test
+    @DisplayName("count() with low-level client and filter expression includes filter in low-level request")
+    void count_withLowLevelClient_withFilterExpression() {
+        mockTableSchema();
+        QueryResponse response = QueryResponse.builder().count(10).build();
+        when(dynamoDbAsyncClient.query(any(QueryRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+
+        long total = new AsyncQueryBuilder<>(table, dynamoDbAsyncClient)
+                .partitionKey("pkVal")
+                .filter(c -> c.eq("status", "active"))
+                .count()
+                .join();
+
+        assertEquals(10L, total);
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbAsyncClient).query(captor.capture());
+        assertNotNull(captor.getValue().filterExpression());
     }
 }
