@@ -48,8 +48,8 @@ public class AsyncBatchWriteBuilder<T> {
     /**
      * Constructs a new {@code AsyncBatchWriteBuilder}.
      *
-     * @param table                the async DynamoDB table
-     * @param dynamoDbAsyncClient  the low-level async DynamoDB client
+     * @param table               the async DynamoDB table
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client
      */
     AsyncBatchWriteBuilder(@NonNull DynamoDbAsyncTable<T> table,
                            @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
@@ -165,7 +165,7 @@ public class AsyncBatchWriteBuilder<T> {
                     backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
                     try {
                         Thread.sleep(backoff);
-                    } catch (InterruptedException _) {
+                    } catch (InterruptedException ignored) {
                         Thread.currentThread().interrupt();
                         return CompletableFuture.completedFuture(new BatchWriteResult(unprocessed));
                     }

@@ -10,26 +10,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
 import software.amazon.awssdk.core.async.SdkPublisher;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
-import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.Select;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -161,12 +149,23 @@ class AsyncQueryBuilderTest {
                 .join();
 
         assertNotNull(publisher);
-        List<TestItem> collected = new java.util.ArrayList<>();
+        List<TestItem> collected = new ArrayList<>();
         publisher.subscribe(new org.reactivestreams.Subscriber<>() {
-            @Override public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
-            @Override public void onNext(TestItem item) { collected.add(item); }
-            @Override public void onError(Throwable t) { /* not needed for this test scenario */ }
-            @Override public void onComplete() { /* not needed for this test scenario */ }
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(TestItem item) {
+                collected.add(item);
+            }
+
+            @Override
+            public void onError(Throwable t) { /* not needed for this test scenario */ }
+
+            @Override
+            public void onComplete() { /* not needed for this test scenario */ }
         });
         // Items are emitted synchronously from the mock publisher
         assertEquals(2, collected.size());

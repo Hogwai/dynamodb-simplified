@@ -8,9 +8,9 @@ import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.BatchGetResult;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -19,17 +19,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -69,8 +61,8 @@ public class AsyncBatchGetBuilder<T> {
     /**
      * Constructs a new {@code AsyncBatchGetBuilder} with a low-level client for projection support.
      *
-     * @param enhancedClient     the enhanced async DynamoDB client
-     * @param table              the async DynamoDB table
+     * @param enhancedClient      the enhanced async DynamoDB client
+     * @param table               the async DynamoDB table
      * @param dynamoDbAsyncClient the low-level async DynamoDB client (nullable, required for projection)
      */
     AsyncBatchGetBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient, @NonNull DynamoDbAsyncTable<T> table,
@@ -230,7 +222,7 @@ public class AsyncBatchGetBuilder<T> {
      * they are not automatically retried.
      *
      * @return a {@link CompletableFuture} containing a {@link PagedResult} with
-     *         items from the first response page
+     * items from the first response page
      */
     @NonNull
     public CompletableFuture<PagedResult<T>> executeWithPagination() {
@@ -359,7 +351,7 @@ public class AsyncBatchGetBuilder<T> {
         if (dynamoDbAsyncClient == null) {
             throw new IllegalStateException(
                     "Projection requires a low-level DynamoDbAsyncClient, but none was provided. " +
-                    "Use the three-argument constructor or obtain the builder via AsyncTable.");
+                            "Use the three-argument constructor or obtain the builder via AsyncTable.");
         }
 
         List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(keys.size());

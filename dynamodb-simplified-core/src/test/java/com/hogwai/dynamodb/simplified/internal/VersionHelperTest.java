@@ -1,17 +1,28 @@
 package com.hogwai.dynamodb.simplified.internal;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.hogwai.dynamodb.simplified.Versioned;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class VersionHelperTest {
 
     static class TestVersioned implements Versioned {
         private Integer version;
-        TestVersioned(Integer version) { this.version = version; }
-        @Override public Integer getVersion() { return version; }
-        @Override public void setVersion(Integer version) { this.version = version; }
+
+        TestVersioned(Integer version) {
+            this.version = version;
+        }
+
+        @Override
+        public Integer getVersion() {
+            return version;
+        }
+
+        @Override
+        public void setVersion(Integer version) {
+            this.version = version;
+        }
     }
 
     @Test

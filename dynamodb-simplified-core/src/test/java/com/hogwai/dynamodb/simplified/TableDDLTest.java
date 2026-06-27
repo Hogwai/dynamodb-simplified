@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,20 +11,12 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTimeToLiveRequest;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTimeToLiveResponse;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.dynamodb.model.TimeToLiveDescription;
-import software.amazon.awssdk.services.dynamodb.model.TimeToLiveSpecification;
-import software.amazon.awssdk.services.dynamodb.model.UpdateTimeToLiveRequest;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.function.Consumer;
 
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

@@ -18,11 +18,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
-import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
-import software.amazon.awssdk.services.dynamodb.model.Select;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -434,10 +430,10 @@ class AsyncScanBuilderTest {
         when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(emptyPublisher());
 
         assertDoesNotThrow(() ->
-            new AsyncScanBuilder<>(table)
-                .select(Select.COUNT)
-                .count()
-                .join()
+                new AsyncScanBuilder<>(table)
+                        .select(Select.COUNT)
+                        .count()
+                        .join()
         );
     }
 
@@ -494,10 +490,21 @@ class AsyncScanBuilderTest {
         assertNotNull(publisher);
         List<TestItem> collected = new java.util.ArrayList<>();
         publisher.subscribe(new Subscriber<>() {
-            @Override public void onSubscribe(Subscription s) { s.request(Long.MAX_VALUE); }
-            @Override public void onNext(TestItem item) { collected.add(item); }
-            @Override public void onError(Throwable t) { /* not needed for this test scenario */ }
-            @Override public void onComplete() { /* not needed for this test scenario */ }
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(TestItem item) {
+                collected.add(item);
+            }
+
+            @Override
+            public void onError(Throwable t) { /* not needed for this test scenario */ }
+
+            @Override
+            public void onComplete() { /* not needed for this test scenario */ }
         });
         // Items are emitted synchronously from the mock publisher
         assertEquals(2, collected.size());

@@ -28,13 +28,13 @@ public final class AttributeValueConverter {
             return AttributeValue.builder().nul(true).build();
         }
         return switch (value) {
-            case String s        -> AttributeValue.builder().s(s).build();
-            case Number n        -> AttributeValue.builder().n(n.toString()).build();
-            case Boolean b       -> AttributeValue.builder().bool(b).build();
-            case byte[] bytes    -> AttributeValue.builder().b(SdkBytes.fromByteArray(bytes)).build();
-            case List<?> list    -> toListAttributeValue(list);
-            case Set<?> set      -> toSetAttributeValue(set);
-            case Map<?, ?> map   -> toMapAttributeValue(map);
+            case String s -> AttributeValue.builder().s(s).build();
+            case Number n -> AttributeValue.builder().n(n.toString()).build();
+            case Boolean b -> AttributeValue.builder().bool(b).build();
+            case byte[] bytes -> AttributeValue.builder().b(SdkBytes.fromByteArray(bytes)).build();
+            case List<?> list -> toListAttributeValue(list);
+            case Set<?> set -> toSetAttributeValue(set);
+            case Map<?, ?> map -> toMapAttributeValue(map);
             default -> throw new IllegalArgumentException(
                     "Unsupported type: " + value.getClass().getName());
         };

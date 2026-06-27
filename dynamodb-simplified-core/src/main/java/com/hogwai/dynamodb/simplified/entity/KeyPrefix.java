@@ -1,6 +1,7 @@
 package com.hogwai.dynamodb.simplified.entity;
 
 import org.jspecify.annotations.NonNull;
+
 import java.lang.annotation.*;
 
 @Target(ElementType.TYPE)

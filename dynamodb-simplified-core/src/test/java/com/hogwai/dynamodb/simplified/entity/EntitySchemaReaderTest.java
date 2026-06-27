@@ -1,6 +1,7 @@
 package com.hogwai.dynamodb.simplified.entity;
 
 import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -10,7 +11,8 @@ class User {
     private String userId;
     private String email;
 
-    public User() {}
+    public User() {
+    }
 
     public User(String userId, String email) {
         this.userId = userId;
@@ -18,11 +20,21 @@ class User {
     }
 
     @KeyComponent(component = "PK", position = 0)
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public String getUserId() {
+        return userId;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }
 
 class EntitySchemaReaderTest {
@@ -53,7 +65,7 @@ class EntitySchemaReaderTest {
     @Test
     void readSchema_shouldRejectNonAnnotatedClass() {
         assertThrows(IllegalArgumentException.class,
-            () -> EntitySchemaReader.read(String.class));
+                () -> EntitySchemaReader.read(String.class));
     }
 
     @Test

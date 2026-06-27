@@ -162,8 +162,7 @@ The [API reference](https://hogwai.github.io/dynamodb-simplified/javadoc/index.h
 
 ## Requirements
 
-- Java 21+ (tested with Java 25)
-- AWS SDK v2 (2.29.52+)
+- Java 21+
 
 ---
 

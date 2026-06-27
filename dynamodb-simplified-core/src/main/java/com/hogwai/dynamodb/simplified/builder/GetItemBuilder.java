@@ -4,16 +4,15 @@ import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -91,7 +90,7 @@ public class GetItemBuilder<T> {
      * Executes the get operation and returns the item, if found.
      *
      * @return an {@link Optional} containing the item, or empty if no item
-     *         exists with the specified key
+     * exists with the specified key
      */
     public @NonNull Optional<T> execute() {
         long start = System.nanoTime();
@@ -115,14 +114,14 @@ public class GetItemBuilder<T> {
         AttributeValue partitionAttrValue = AttributeValueConverter.toKeyAttributeValue(partitionKey);
         AttributeValue sortAttrValue = sortKey != null ? AttributeValueConverter.toKeyAttributeValue(sortKey) : null;
         GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
-                                                                   .key(k -> {
-                                                                       k.partitionValue(partitionAttrValue);
-                                                                       if (sortKey != null) {
-                                                                           k.sortValue(sortAttrValue);
-                                                                       }
-                                                                   })
-                                                                  .consistentRead(consistentRead)
-                                                                  .build();
+                .key(k -> {
+                    k.partitionValue(partitionAttrValue);
+                    if (sortKey != null) {
+                        k.sortValue(sortAttrValue);
+                    }
+                })
+                .consistentRead(consistentRead)
+                .build();
         try {
             return Optional.ofNullable(table.getItem(request));
         } catch (DynamoDbException e) {

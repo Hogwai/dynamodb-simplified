@@ -89,7 +89,7 @@ public class AsyncGetItemBuilder<T> {
      * Executes the get operation and returns the item, if found.
      *
      * @return a {@link CompletableFuture} containing an {@link Optional} with the item,
-     *         or empty if no item exists with the specified key
+     * or empty if no item exists with the specified key
      */
     @NonNull
     public CompletableFuture<Optional<T>> execute() {

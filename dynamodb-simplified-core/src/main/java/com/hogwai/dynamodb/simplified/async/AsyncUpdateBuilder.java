@@ -151,18 +151,18 @@ public class AsyncUpdateBuilder<T> {
     public CompletableFuture<Optional<T>> execute() {
         if (!ignoreNulls && updateExpression != null && !updateExpression.isEmpty()) {
             return CompletableFuture.failedFuture(new IllegalStateException(
-                "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
-                + "Remove the ignoreNulls() call or use a full-item update instead."));
+                    "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
+                            + "Remove the ignoreNulls() call or use a full-item update instead."));
         }
         if (returnValues != null && !(updateExpression != null && !updateExpression.isEmpty())) {
             return CompletableFuture.failedFuture(new IllegalStateException(
-                "ReturnValues is not supported for full-item replacement. " +
-                "Use partial updates with update(expr -> ...) to configure ReturnValues."));
+                    "ReturnValues is not supported for full-item replacement. " +
+                            "Use partial updates with update(expr -> ...) to configure ReturnValues."));
         }
         if (item == null && !(updateExpression != null && !updateExpression.isEmpty())) {
             return CompletableFuture.failedFuture(new IllegalStateException(
-                "Key-only update requires a partial update expression. "
-                + "Use update(expr -> ...) to configure an update expression."));
+                    "Key-only update requires a partial update expression. "
+                            + "Use update(expr -> ...) to configure an update expression."));
         }
         long start = System.nanoTime();
         if (updateExpression != null && !updateExpression.isEmpty()) {
@@ -190,8 +190,8 @@ public class AsyncUpdateBuilder<T> {
     private CompletableFuture<T> executeWithFullItem() {
         UpdateItemEnhancedRequest.Builder<T> requestBuilder =
                 UpdateItemEnhancedRequest.builder((Class<T>) item.getClass())
-                                         .item(item)
-                                         .ignoreNullsMode(ignoreNulls ? IgnoreNullsMode.SCALAR_ONLY : IgnoreNullsMode.DEFAULT);
+                        .item(item)
+                        .ignoreNullsMode(ignoreNulls ? IgnoreNullsMode.SCALAR_ONLY : IgnoreNullsMode.DEFAULT);
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(

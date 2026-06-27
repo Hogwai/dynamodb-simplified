@@ -1,27 +1,22 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.Table;
-import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
-import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
-import software.amazon.awssdk.services.dynamodb.model.TransactWriteItem;
-import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +102,7 @@ public class TransactWriteBuilder {
      * @return this builder
      */
     public @NonNull <T> TransactWriteBuilder update(@NonNull Table<T> table, @NonNull T item,
-                                                     @NonNull Consumer<UpdateExpression> expressionConfigurator) {
+                                                    @NonNull Consumer<UpdateExpression> expressionConfigurator) {
         Objects.requireNonNull(expressionConfigurator);
         UpdateExpression expression = UpdateExpression.builder();
         expressionConfigurator.accept(expression);
@@ -156,7 +151,7 @@ public class TransactWriteBuilder {
      * @return this builder
      */
     public @NonNull <T> TransactWriteBuilder conditionCheck(@NonNull Table<T> table, @NonNull Object partitionKey,
-                                                             @NonNull Consumer<ConditionExpression.Builder> condition) {
+                                                            @NonNull Consumer<ConditionExpression.Builder> condition) {
         return conditionCheck(table, partitionKey, null, condition);
     }
 
@@ -171,8 +166,8 @@ public class TransactWriteBuilder {
      * @return this builder
      */
     public @NonNull <T> TransactWriteBuilder conditionCheck(@NonNull Table<T> table, @NonNull Object partitionKey,
-                                                             @Nullable Object sortKey,
-                                                             @NonNull Consumer<ConditionExpression.Builder> condition) {
+                                                            @Nullable Object sortKey,
+                                                            @NonNull Consumer<ConditionExpression.Builder> condition) {
         var builder = ConditionExpression.builder();
         condition.accept(builder);
         ConditionExpression conditionExpression = builder.build();

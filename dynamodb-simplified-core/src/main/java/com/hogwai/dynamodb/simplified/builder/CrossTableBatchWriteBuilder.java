@@ -12,17 +12,9 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Builds a cross-table batch write operation to put and delete items across multiple tables.
@@ -102,8 +94,8 @@ public class CrossTableBatchWriteBuilder {
      * @return this builder
      */
     public @NonNull <T> CrossTableBatchWriteBuilder delete(@NonNull Table<T> table,
-                                                            @NonNull Object partitionKey,
-                                                            @NonNull Object sortKey) {
+                                                           @NonNull Object partitionKey,
+                                                           @NonNull Object sortKey) {
         operations.add(new Operation(Operation.Type.DELETE, table, null, partitionKey, sortKey));
         return this;
     }
@@ -190,7 +182,7 @@ public class CrossTableBatchWriteBuilder {
         Map<String, List<WriteRequest>> requestMap = new HashMap<>();
         for (Operation op : operations) {
             String tableName = op.table().getRawTable().tableName();
-            List<WriteRequest> writes = requestMap.computeIfAbsent(tableName, _ -> new ArrayList<>());
+            List<WriteRequest> writes = requestMap.computeIfAbsent(tableName, ignored -> new ArrayList<>());
 
             switch (op.type()) {
                 case PUT -> {

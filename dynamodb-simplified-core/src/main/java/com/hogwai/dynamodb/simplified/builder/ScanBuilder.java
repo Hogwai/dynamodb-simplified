@@ -5,21 +5,16 @@ import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
-import software.amazon.awssdk.services.dynamodb.model.Select;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -69,8 +64,8 @@ public class ScanBuilder<T> {
     /**
      * Constructs a new {@code ScanBuilder} for the given table with a low-level client.
      *
-     * @param table           the DynamoDB table
-     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     * @param table          the DynamoDB table
+     * @param dynamoDbClient the low-level DynamoDB client (nullable)
      */
     public ScanBuilder(@NonNull DynamoDbTable<T> table, @Nullable DynamoDbClient dynamoDbClient) {
         this.table = table;
@@ -81,8 +76,8 @@ public class ScanBuilder<T> {
     /**
      * Constructs a new {@code ScanBuilder} for the given secondary index with a low-level client.
      *
-     * @param index           the DynamoDB index
-     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     * @param index          the DynamoDB index
+     * @param dynamoDbClient the low-level DynamoDB client (nullable)
      */
     public ScanBuilder(@NonNull DynamoDbIndex<T> index, @Nullable DynamoDbClient dynamoDbClient) {
         this.table = null;
@@ -259,8 +254,8 @@ public class ScanBuilder<T> {
         long start = System.nanoTime();
         try {
             List<T> results = executeAsPages().stream()
-                                   .flatMap(page -> page.items().stream())
-                                   .toList();
+                    .flatMap(page -> page.items().stream())
+                    .toList();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Scan on table '{}' returned {} items in {}ms",
                         getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
@@ -311,7 +306,7 @@ public class ScanBuilder<T> {
         }
         try {
             return executeAsPages().stream()
-                                   .flatMap(page -> page.items().stream());
+                    .flatMap(page -> page.items().stream());
         } catch (DynamoDbException e) {
             throw new OperationFailedException("Scan", getTableName(), e);
         }
@@ -322,7 +317,7 @@ public class ScanBuilder<T> {
      * the last evaluated key for pagination.
      *
      * @return a {@link PagedResult} containing the first page of items and
-     *         the last evaluated key (may be {@code null} if no more pages)
+     * the last evaluated key (may be {@code null} if no more pages)
      */
     public @NonNull PagedResult<T> executeWithPagination() {
         if (select == Select.COUNT) {
@@ -398,7 +393,7 @@ public class ScanBuilder<T> {
     private ScanRequest buildCountRequest(Select select) {
         String tableName = table != null ? table.tableName() : index.tableName();
         ScanRequest.Builder builder = ScanRequest.builder()
-            .tableName(tableName).select(select);
+                .tableName(tableName).select(select);
         applyFilterIfPresent(builder);
         applyLimitIfPresent(builder);
         applyExclusiveStartKeyIfPresent(builder);
@@ -469,7 +464,7 @@ public class ScanBuilder<T> {
 
     private ScanEnhancedRequest buildScanRequest() {
         ScanEnhancedRequest.Builder requestBuilder = ScanEnhancedRequest.builder()
-                                                                        .consistentRead(consistentRead);
+                .consistentRead(consistentRead);
 
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(

@@ -1,5 +1,5 @@
-import net.ltgt.gradle.errorprone.errorprone
 import net.ltgt.gradle.errorprone.CheckSeverity
+import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
     `java-library`
@@ -14,8 +14,8 @@ plugins {
 description = "Fluent wrapper for AWS DynamoDB Enhanced Client"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     withJavadocJar()
     withSourcesJar()
 }
@@ -74,7 +74,6 @@ pmd {
     ruleSetFiles = files("${rootProject.projectDir}/config/pmd/pmd-rules.xml")
     isConsoleOutput = true
 }
-
 
 
 // ---- Static Analysis: Checkstyle ----

@@ -8,25 +8,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
-import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.Select;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Collections;
-
 import java.util.List;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -749,34 +739,28 @@ class QueryBuilderTest {
     @Test
     @DisplayName("executeAll() throws when Select.COUNT is set")
     void executeAll_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new QueryBuilder<>(table)
+        var builder = new QueryBuilder<>(table)
                 .partitionKey("pk")
-                .select(Select.COUNT)
-                .executeAll()
-        );
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeAll);
     }
 
     @Test
     @DisplayName("executeStream() throws when Select.COUNT is set")
     void executeStream_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new QueryBuilder<>(table)
+        var builder = new QueryBuilder<>(table)
                 .partitionKey("pk")
-                .select(Select.COUNT)
-                .executeStream()
-        );
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeStream);
     }
 
     @Test
     @DisplayName("executeWithPagination() throws when Select.COUNT is set")
     void executeWithPagination_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new QueryBuilder<>(table)
+        var builder = new QueryBuilder<>(table)
                 .partitionKey("pk")
-                .select(Select.COUNT)
-                .executeWithPagination()
-        );
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeWithPagination);
     }
 
     @Test
@@ -816,10 +800,10 @@ class QueryBuilderTest {
         stubQueryReturns(page);
 
         assertDoesNotThrow(() ->
-            new QueryBuilder<>(table)
-                .partitionKey("pk")
-                .select(Select.COUNT)
-                .count()
+                new QueryBuilder<>(table)
+                        .partitionKey("pk")
+                        .select(Select.COUNT)
+                        .count()
         );
     }
 }

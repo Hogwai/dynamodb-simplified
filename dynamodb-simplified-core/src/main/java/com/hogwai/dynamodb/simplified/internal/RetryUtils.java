@@ -9,10 +9,14 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class RetryUtils {
 
-    /** Default base backoff in milliseconds for exponential retry. */
+    /**
+     * Default base backoff in milliseconds for exponential retry.
+     */
     public static final long DEFAULT_BASE_BACKOFF_MS = 100;
 
-    /** Default maximum number of retry attempts. */
+    /**
+     * Default maximum number of retry attempts.
+     */
     public static final int DEFAULT_MAX_RETRIES = 3;
 
     private RetryUtils() {
@@ -26,14 +30,14 @@ public final class RetryUtils {
      * @param attempt       the current retry attempt (0-based)
      * @param baseBackoffMs the base backoff in milliseconds
      * @return {@code true} if the sleep was interrupted (caller should abort retry),
-     *         {@code false} if the sleep completed normally
+     * {@code false} if the sleep completed normally
      */
     public static boolean sleepWithBackoff(int attempt, long baseBackoffMs) {
         long backoff = baseBackoffMs * (1L << attempt);
         backoff += ThreadLocalRandom.current().nextLong(baseBackoffMs);
         try {
             Thread.sleep(backoff);
-        } catch (InterruptedException _) {
+        } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
             return true;
         }

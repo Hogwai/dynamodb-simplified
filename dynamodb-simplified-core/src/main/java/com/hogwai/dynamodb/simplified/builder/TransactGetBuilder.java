@@ -16,12 +16,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.internal.DefaultDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactGetItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.Get;
-import software.amazon.awssdk.services.dynamodb.model.ItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.TransactGetItem;
-import software.amazon.awssdk.services.dynamodb.model.TransactGetItemsRequest;
-import software.amazon.awssdk.services.dynamodb.model.TransactGetItemsResponse;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -176,7 +171,7 @@ public class TransactGetBuilder {
                         .expressionAttributeNames(projection.getExpressionNames());
             }
 
-            transactItems.add(TransactGetItem.builder().get(_ -> getBuilder.build()).build());
+            transactItems.add(TransactGetItem.builder().get(ignored -> getBuilder.build()).build());
         }
 
         TransactGetItemsRequest request = TransactGetItemsRequest.builder()
@@ -193,8 +188,8 @@ public class TransactGetBuilder {
         List<Document> documents = new ArrayList<>(entries.size());
         for (ItemResponse itemResponse : response.responses()) {
             Document doc = itemResponse.hasItem()
-                ? DefaultDocument.create(itemResponse.item())
-                : DefaultDocument.create(java.util.Collections.emptyMap());
+                    ? DefaultDocument.create(itemResponse.item())
+                    : DefaultDocument.create(java.util.Collections.emptyMap());
             documents.add(doc);
         }
 
@@ -220,9 +215,9 @@ public class TransactGetBuilder {
 
 
     private record Entry<T>(DynamoDbTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            Entry(DynamoDbTable<T> table, Key key) {
-                this(table, key, null);
-            }
+        Entry(DynamoDbTable<T> table, Key key) {
+            this(table, key, null);
+        }
 
     }
 }

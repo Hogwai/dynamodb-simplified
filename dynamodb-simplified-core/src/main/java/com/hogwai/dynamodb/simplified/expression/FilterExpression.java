@@ -2,10 +2,9 @@ package com.hogwai.dynamodb.simplified.expression;
 
 import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import org.jspecify.annotations.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-
-import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -170,7 +169,7 @@ public class FilterExpression {
         if (value instanceof List || value instanceof Map || value instanceof Set) {
             throw new IllegalArgumentException(
                     "DynamoDB contains() does not support " + value.getClass().getSimpleName()
-                    + " values. Pass a scalar (String, Number, or byte[]) instead.");
+                            + " values. Pass a scalar (String, Number, or byte[]) instead.");
         }
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
@@ -539,25 +538,45 @@ public class FilterExpression {
      * {@link FilterExpression#attributeType(String, AttributeType)}.
      */
     public enum AttributeType {
-        /** String ({@code S}) */
+        /**
+         * String ({@code S})
+         */
         STRING("S"),
-        /** Number ({@code N}) */
+        /**
+         * Number ({@code N})
+         */
         NUMBER("N"),
-        /** Binary ({@code B}) */
+        /**
+         * Binary ({@code B})
+         */
         BINARY("B"),
-        /** String Set ({@code SS}) */
+        /**
+         * String Set ({@code SS})
+         */
         STRING_SET("SS"),
-        /** Number Set ({@code NS}) */
+        /**
+         * Number Set ({@code NS})
+         */
         NUMBER_SET("NS"),
-        /** Binary Set ({@code BS}) */
+        /**
+         * Binary Set ({@code BS})
+         */
         BINARY_SET("BS"),
-        /** Map ({@code M}) */
+        /**
+         * Map ({@code M})
+         */
         MAP("M"),
-        /** List ({@code L}) */
+        /**
+         * List ({@code L})
+         */
         LIST("L"),
-        /** Null ({@code NULL}) */
+        /**
+         * Null ({@code NULL})
+         */
         NULL("NULL"),
-        /** Boolean ({@code BOOL}) */
+        /**
+         * Boolean ({@code BOOL})
+         */
         BOOLEAN("BOOL");
 
         private final String code;

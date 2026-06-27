@@ -114,26 +114,31 @@ public final class ConditionExpression {
             delegate.eq(attr, value);
             return this;
         }
+
         @NonNull
         public Builder ne(@NonNull String attr, @NonNull Object value) {
             delegate.ne(attr, value);
             return this;
         }
+
         @NonNull
         public Builder lt(@NonNull String attr, @NonNull Object value) {
             delegate.lt(attr, value);
             return this;
         }
+
         @NonNull
         public Builder le(@NonNull String attr, @NonNull Object value) {
             delegate.le(attr, value);
             return this;
         }
+
         @NonNull
         public Builder gt(@NonNull String attr, @NonNull Object value) {
             delegate.gt(attr, value);
             return this;
         }
+
         @NonNull
         public Builder ge(@NonNull String attr, @NonNull Object value) {
             delegate.ge(attr, value);
@@ -147,6 +152,7 @@ public final class ConditionExpression {
             delegate.beginsWith(attr, prefix);
             return this;
         }
+
         @NonNull
         public Builder contains(@NonNull String attr, @NonNull Object value) {
             delegate.contains(attr, value);
@@ -160,26 +166,31 @@ public final class ConditionExpression {
             delegate.sizeEq(attr, size);
             return this;
         }
+
         @NonNull
         public Builder sizeLt(@NonNull String attr, int size) {
             delegate.sizeLt(attr, size);
             return this;
         }
+
         @NonNull
         public Builder sizeLe(@NonNull String attr, int size) {
             delegate.sizeLe(attr, size);
             return this;
         }
+
         @NonNull
         public Builder sizeGt(@NonNull String attr, int size) {
             delegate.sizeGt(attr, size);
             return this;
         }
+
         @NonNull
         public Builder sizeGe(@NonNull String attr, int size) {
             delegate.sizeGe(attr, size);
             return this;
         }
+
         @NonNull
         public Builder sizeBetween(@NonNull String attr, int min, int max) {
             delegate.sizeBetween(attr, min, max);
@@ -193,6 +204,7 @@ public final class ConditionExpression {
             delegate.exists(attr);
             return this;
         }
+
         @NonNull
         public Builder notExists(@NonNull String attr) {
             delegate.notExists(attr);
@@ -214,6 +226,7 @@ public final class ConditionExpression {
             delegate.between(attr, low, high);
             return this;
         }
+
         @NonNull
         public Builder in(@NonNull String attr, Object... values) {
             delegate.in(attr, values);
@@ -227,16 +240,19 @@ public final class ConditionExpression {
             delegate.and();
             return this;
         }
+
         @NonNull
         public Builder or() {
             delegate.or();
             return this;
         }
+
         @NonNull
         public Builder not() {
             delegate.not();
             return this;
         }
+
         /**
          * Wraps the given nested {@link ConditionExpression} in parentheses and
          * merges its expression attribute names and values into this builder.

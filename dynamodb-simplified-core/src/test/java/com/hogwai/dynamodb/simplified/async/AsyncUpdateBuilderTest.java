@@ -12,15 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.Optional;
@@ -31,19 +28,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AsyncUpdateBuilder")
 class AsyncUpdateBuilderTest {
 
-    @Mock DynamoDbAsyncTable<TestItem> table;
-    @Mock DynamoDbAsyncClient dynamoDbAsyncClient;
-    @Mock TableSchema<TestItem> tableSchema;
-    @Mock Key key;
+    @Mock
+    DynamoDbAsyncTable<TestItem> table;
+    @Mock
+    DynamoDbAsyncClient dynamoDbAsyncClient;
+    @Mock
+    TableSchema<TestItem> tableSchema;
+    @Mock
+    Key key;
 
-    @Captor ArgumentCaptor<UpdateItemEnhancedRequest<TestItem>> enhancedRequestCaptor;
-    @Captor ArgumentCaptor<UpdateItemRequest> lowLevelRequestCaptor;
+    @Captor
+    ArgumentCaptor<UpdateItemEnhancedRequest<TestItem>> enhancedRequestCaptor;
+    @Captor
+    ArgumentCaptor<UpdateItemRequest> lowLevelRequestCaptor;
 
     private TestItem item;
     private TestItem resultItem;

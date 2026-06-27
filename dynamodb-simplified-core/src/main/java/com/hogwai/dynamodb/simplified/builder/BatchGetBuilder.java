@@ -6,26 +6,17 @@ import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.RetryUtils;
 import com.hogwai.dynamodb.simplified.result.BatchGetResult;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -77,9 +68,9 @@ public class BatchGetBuilder<T> {
      */
     public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey, @NonNull Object sortKey) {
         keys.add(Key.builder()
-                     .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                     .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                     .build());
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
+                .build());
         return this;
     }
 

@@ -6,19 +6,13 @@ import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.VersionHelper;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
-
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.Optional;
@@ -43,9 +37,9 @@ public class PutBuilder<T> {
     /**
      * Constructs a new {@code PutBuilder} for the given table and item.
      *
-     * @param table           the DynamoDB table
-     * @param item            the item to put
-     * @param dynamoDbClient  the low-level DynamoDB client (required for return values)
+     * @param table          the DynamoDB table
+     * @param item           the item to put
+     * @param dynamoDbClient the low-level DynamoDB client (required for return values)
      */
     public PutBuilder(@NonNull DynamoDbTable<T> table, @NonNull T item,
                       @NonNull DynamoDbClient dynamoDbClient) {
@@ -173,7 +167,7 @@ public class PutBuilder<T> {
      * If no return value was configured, returns {@link Optional#empty()}.
      *
      * @return the previous item (if ReturnValue.ALL_OLD was set), or empty if
-     *         the item didn't previously exist or no return value was configured
+     * the item didn't previously exist or no return value was configured
      */
     @NonNull
     public Optional<T> executeReturning() {

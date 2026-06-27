@@ -5,19 +5,13 @@ import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
-
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,10 +37,10 @@ public class DeleteBuilder<T> {
     /**
      * Constructs a new {@code DeleteBuilder} for the given table and key.
      *
-     * @param table           the DynamoDB table
-     * @param partitionKey    the partition key value
-     * @param sortKey         the sort key value (may be {@code null} if the table has no sort key)
-     * @param dynamoDbClient  the low-level DynamoDB client (required for returnValues support)
+     * @param table          the DynamoDB table
+     * @param partitionKey   the partition key value
+     * @param sortKey        the sort key value (may be {@code null} if the table has no sort key)
+     * @param dynamoDbClient the low-level DynamoDB client (required for returnValues support)
      */
     public DeleteBuilder(@NonNull DynamoDbTable<T> table, @NonNull Object partitionKey,
                          @Nullable Object sortKey, @Nullable DynamoDbClient dynamoDbClient) {

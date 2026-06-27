@@ -6,11 +6,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
-import software.amazon.awssdk.services.dynamodb.model.Select;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 
@@ -376,28 +372,27 @@ public final class EntityQueryBuilder {
         exprAttrValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
 
         switch (keyOp) {
-            case BEGINS_WITH ->
-                keyConditionExpr.append(CONDITION_JOINER)
+            case BEGINS_WITH -> keyConditionExpr.append(CONDITION_JOINER)
                     .append("begins_with(").append(skPlaceholder).append(", ")
                     .append(skValPlaceholder).append(')');
             case BETWEEN -> {
                 String skValPlaceholder2 = ":sk1";
                 exprAttrValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
                 keyConditionExpr.append(CONDITION_JOINER)
-                    .append(skPlaceholder).append(" BETWEEN ")
-                    .append(skValPlaceholder).append(CONDITION_JOINER)
-                    .append(skValPlaceholder2);
+                        .append(skPlaceholder).append(" BETWEEN ")
+                        .append(skValPlaceholder).append(CONDITION_JOINER)
+                        .append(skValPlaceholder2);
             }
             case GT ->
-                keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
             case GE ->
-                keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
             case LT ->
-                keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
             case LE ->
-                keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
             case EQ ->
-                keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
         }
     }
 
@@ -422,7 +417,7 @@ public final class EntityQueryBuilder {
     }
 
     private void applyQueryOptions(QueryRequest.Builder builder,
-                                    @Nullable Map<String, AttributeValue> exclusiveStartKey) {
+                                   @Nullable Map<String, AttributeValue> exclusiveStartKey) {
         if (limit > 0) {
             builder.limit(limit);
         }

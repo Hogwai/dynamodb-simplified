@@ -55,7 +55,7 @@ public class AsyncTransactGetBuilder {
      * Constructs a new {@code AsyncTransactGetBuilder} with the low-level async client
      * for projection support.
      *
-     * @param enhancedClient   the enhanced async DynamoDB client
+     * @param enhancedClient      the enhanced async DynamoDB client
      * @param dynamoDbAsyncClient the low-level async DynamoDB client
      */
     public AsyncTransactGetBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient,
@@ -141,7 +141,7 @@ public class AsyncTransactGetBuilder {
      * the operation falls back to the low-level DynamoDB API to support attribute filtering.
      *
      * @return a {@link CompletableFuture} containing a {@link TransactGetResults} object
-     *         providing typed access to retrieved items
+     * providing typed access to retrieved items
      */
     @NonNull
     public CompletableFuture<TransactGetResults<DynamoDbAsyncTable<?>>> execute() {
@@ -152,8 +152,8 @@ public class AsyncTransactGetBuilder {
         if (hasProjection) {
             if (dynamoDbAsyncClient == null) {
                 return CompletableFuture.failedFuture(new IllegalStateException(
-                    "Projection expressions require a low-level DynamoDbAsyncClient. " +
-                    "Use AsyncDynamoSimplifiedClient.transactGet() to create an AsyncTransactGetBuilder."));
+                        "Projection expressions require a low-level DynamoDbAsyncClient. " +
+                                "Use AsyncDynamoSimplifiedClient.transactGet() to create an AsyncTransactGetBuilder."));
             }
             return executeLowLevel().thenApply(results -> {
                 if (LOG.isDebugEnabled()) {
@@ -196,8 +196,8 @@ public class AsyncTransactGetBuilder {
                     List<Document> documents = new ArrayList<>(entries.size());
                     for (ItemResponse itemResponse : response.responses()) {
                         Document doc = itemResponse.hasItem()
-                            ? DefaultDocument.create(itemResponse.item())
-                            : DefaultDocument.create(java.util.Collections.emptyMap());
+                                ? DefaultDocument.create(itemResponse.item())
+                                : DefaultDocument.create(java.util.Collections.emptyMap());
                         documents.add(doc);
                     }
                     List<DynamoDbAsyncTable<?>> tables = new ArrayList<>(entries.size());
@@ -223,7 +223,7 @@ public class AsyncTransactGetBuilder {
                         .expressionAttributeNames(projection.getExpressionNames());
             }
 
-            transactItems.add(TransactGetItem.builder().get(_ -> getBuilder.build()).build());
+            transactItems.add(TransactGetItem.builder().get(ignored -> getBuilder.build()).build());
         }
         return transactItems;
     }
@@ -242,9 +242,9 @@ public class AsyncTransactGetBuilder {
 
 
     private record Entry<T>(DynamoDbAsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-            Entry(DynamoDbAsyncTable<T> table, Key key) {
-                this(table, key, null);
-            }
+        Entry(DynamoDbAsyncTable<T> table, Key key) {
+            this(table, key, null);
+        }
 
     }
 }

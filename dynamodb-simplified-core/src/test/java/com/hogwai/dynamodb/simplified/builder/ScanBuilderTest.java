@@ -15,16 +15,11 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
-import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
-import software.amazon.awssdk.services.dynamodb.model.Select;
-
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +50,9 @@ class ScanBuilderTest {
         return AttributeValue.builder().s(s).build();
     }
 
-    /** Creates a PageIterable that iterates over the given pages. */
+    /**
+     * Creates a PageIterable that iterates over the given pages.
+     */
     @SafeVarargs
     private static PageIterable<TestItem> pageIterable(Page<TestItem>... pages) {
         return PageIterable.create(() -> List.of(pages).iterator());
@@ -74,7 +71,9 @@ class ScanBuilderTest {
         return page;
     }
 
-    /** Configures table.scan(any) to return the given PageIterable. */
+    /**
+     * Configures table.scan(any) to return the given PageIterable.
+     */
     private void stubScanReturns(PageIterable<TestItem> pages) {
         when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(pages);
     }
@@ -467,41 +466,33 @@ class ScanBuilderTest {
     @Test
     @DisplayName("executeAll() throws when Select.COUNT is set")
     void executeAll_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new ScanBuilder<>(table)
-                .select(Select.COUNT)
-                .executeAll()
-        );
+        var builder = new ScanBuilder<>(table)
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeAll);
     }
 
     @Test
     @DisplayName("executeStream() throws when Select.COUNT is set")
     void executeStream_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new ScanBuilder<>(table)
-                .select(Select.COUNT)
-                .executeStream()
-        );
+        var builder = new ScanBuilder<>(table)
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeStream);
     }
 
     @Test
     @DisplayName("executeWithPagination() throws when Select.COUNT is set")
     void executeWithPagination_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new ScanBuilder<>(table)
-                .select(Select.COUNT)
-                .executeWithPagination()
-        );
+        var builder = new ScanBuilder<>(table)
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeWithPagination);
     }
 
     @Test
     @DisplayName("executeAndGetFirst() throws when Select.COUNT is set")
     void executeAndGetFirst_throwsWithSelectCount() {
-        assertThrows(IllegalStateException.class, () ->
-            new ScanBuilder<>(table)
-                .select(Select.COUNT)
-                .executeAndGetFirst()
-        );
+        var builder = new ScanBuilder<>(table)
+                .select(Select.COUNT);
+        assertThrows(IllegalStateException.class, builder::executeAndGetFirst);
     }
 
     @Test
@@ -510,9 +501,9 @@ class ScanBuilderTest {
         stubScanReturns(pageIterable());
 
         assertDoesNotThrow(() ->
-            new ScanBuilder<>(table)
-                .select(Select.COUNT)
-                .count()
+                new ScanBuilder<>(table)
+                        .select(Select.COUNT)
+                        .count()
         );
     }
 }

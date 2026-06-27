@@ -42,7 +42,7 @@ public final class EntitySchemaReader {
                 }
             };
 
-            components.computeIfAbsent(kc.component(), _ -> new ArrayList<>())
+            components.computeIfAbsent(kc.component(), ignored -> new ArrayList<>())
                     .add(new EntitySchema.KeyComponentInfo(
                             kc.component(), kc.position(), attributeName, extractor));
         }

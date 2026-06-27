@@ -143,7 +143,7 @@ public class PostService {
                 sb.append(k).append("=").append(v.s() != null ? v.s() : v.n());
             });
             return Base64.getUrlEncoder().encodeToString(sb.toString().getBytes());
-        } catch (Exception _) {
+        } catch (Exception ignored) {
             return null;
         }
     }
@@ -162,7 +162,7 @@ public class PostService {
                 }
             }
             return result;
-        } catch (Exception _) {
+        } catch (Exception ignored) {
             return Collections.emptyMap();
         }
     }

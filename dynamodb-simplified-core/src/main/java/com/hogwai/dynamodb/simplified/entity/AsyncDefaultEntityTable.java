@@ -75,7 +75,7 @@ final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
         String setterName = "set" + name.substring(3);
         try {
             return clazz.getMethod(setterName, getter.getReturnType());
-        } catch (NoSuchMethodException _) {
+        } catch (NoSuchMethodException ignored) {
             return null;
         }
     }
@@ -126,19 +126,19 @@ final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
         }
         String sk = readSk(entity);
         if (sk != null) {
-            return asyncTable.deleteItem(pk, sk).thenApply(_ -> null);
+            return asyncTable.deleteItem(pk, sk).thenApply(ignored -> null);
         }
-        return asyncTable.deleteItem(pk).thenApply(_ -> null);
+        return asyncTable.deleteItem(pk).thenApply(ignored -> null);
     }
 
     @Override
     public @NonNull CompletableFuture<Void> delete(@NonNull Object partitionKey) {
-        return asyncTable.deleteItem(partitionKey).thenApply(_ -> null);
+        return asyncTable.deleteItem(partitionKey).thenApply(ignored -> null);
     }
 
     @Override
     public @NonNull CompletableFuture<Void> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return asyncTable.deleteItem(partitionKey, sortKey).thenApply(_ -> null);
+        return asyncTable.deleteItem(partitionKey, sortKey).thenApply(ignored -> null);
     }
 
     @Override
