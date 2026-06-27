@@ -1,10 +1,10 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
-import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
@@ -16,11 +16,8 @@ import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
-import software.amazon.awssdk.services.dynamodb.model.TransactWriteItem;
-import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -115,7 +112,7 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder update(@NonNull AsyncTable<T> table, @NonNull T item,
-                                                 @NonNull Consumer<UpdateExpression> expressionConfigurator) {
+                                                @NonNull Consumer<UpdateExpression> expressionConfigurator) {
         Objects.requireNonNull(expressionConfigurator);
         UpdateExpression expression = UpdateExpression.builder();
         expressionConfigurator.accept(expression);
@@ -183,8 +180,8 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder conditionCheck(@NonNull AsyncTable<T> table, @NonNull Object partitionKey,
-                                                         @Nullable Object sortKey,
-                                                         @NonNull Consumer<ConditionExpression.Builder> condition) {
+                                                        @Nullable Object sortKey,
+                                                        @NonNull Consumer<ConditionExpression.Builder> condition) {
         var builder = ConditionExpression.builder();
         condition.accept(builder);
         ConditionExpression conditionExpression = builder.build();
@@ -284,7 +281,7 @@ public class AsyncTransactWriteBuilder {
         }
         return dynamoDbAsyncClient.transactWriteItems(
                         TransactWriteItemsRequest.builder().transactItems(items).build())
-                .handle((_, e) -> {
+                .handle((ignored, e) -> {
                     if (e != null) {
                         if (e instanceof TransactionCanceledException tce) {
                             throw new TransactionFailedException(tce);

@@ -1,8 +1,8 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
-import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.PageCollector;
@@ -10,6 +10,7 @@ import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -17,19 +18,13 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.Select;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -70,6 +65,7 @@ public class AsyncQueryBuilder<T> {
     enum KeyConditionOp {
         EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
     }
+
     private KeyConditionOp keyOp;
     private @Nullable Object pkValue;
     private @Nullable Object skValue;
@@ -96,8 +92,8 @@ public class AsyncQueryBuilder<T> {
     /**
      * Constructs a new {@code AsyncQueryBuilder} for the given async table with a low-level client.
      *
-     * @param table                the async DynamoDB table
-     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     * @param table               the async DynamoDB table
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client (nullable)
      */
     public AsyncQueryBuilder(@NonNull DynamoDbAsyncTable<T> table, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.table = table;
@@ -109,8 +105,8 @@ public class AsyncQueryBuilder<T> {
      * Constructs a new {@code AsyncQueryBuilder} for querying the given async secondary index
      * with a low-level client.
      *
-     * @param index                the async DynamoDB secondary index
-     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     * @param index               the async DynamoDB secondary index
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client (nullable)
      */
     public AsyncQueryBuilder(@NonNull DynamoDbAsyncIndex<T> index, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.table = null;
@@ -151,9 +147,9 @@ public class AsyncQueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -172,9 +168,9 @@ public class AsyncQueryBuilder<T> {
         this.skValue = skPrefix;
         this.keyCondition = QueryConditional.sortBeginsWith(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(skPrefix)
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(skPrefix)
+                        .build()
         );
         return this;
     }
@@ -196,13 +192,13 @@ public class AsyncQueryBuilder<T> {
         this.skValue2 = skHigh;
         this.keyCondition = QueryConditional.sortBetween(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skLow))
-                   .build(),
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skLow))
+                        .build(),
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skHigh))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skHigh))
+                        .build()
         );
         return this;
     }
@@ -221,9 +217,9 @@ public class AsyncQueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThan(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -242,9 +238,9 @@ public class AsyncQueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThanOrEqualTo(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -263,9 +259,9 @@ public class AsyncQueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThan(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -284,9 +280,9 @@ public class AsyncQueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThanOrEqualTo(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -463,7 +459,7 @@ public class AsyncQueryBuilder<T> {
     public CompletableFuture<List<T>> executeAll() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead."));
         }
         long start = System.nanoTime();
         return executeAsPages()
@@ -484,13 +480,13 @@ public class AsyncQueryBuilder<T> {
      * results along with the last evaluated key for pagination.
      *
      * @return a {@link CompletableFuture} containing a {@link PagedResult}
-     *         with the first page of items and the last evaluated key
-     *         (may be {@code null} if no more pages)
+     * with the first page of items and the last evaluated key
+     * (may be {@code null} if no more pages)
      */
     public @NonNull CompletableFuture<PagedResult<T>> executeWithPagination() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead."));
         }
         long start = System.nanoTime();
         return executeAsPages()
@@ -517,12 +513,12 @@ public class AsyncQueryBuilder<T> {
      * if any.
      *
      * @return a {@link CompletableFuture} containing an {@link Optional}
-     *         with the first item, or empty if no items match
+     * with the first item, or empty if no items match
      */
     public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
         }
         long start = System.nanoTime();
         return executeWithPagination().thenApply(firstPage -> {
@@ -542,13 +538,13 @@ public class AsyncQueryBuilder<T> {
      * streams items one-by-one as each page is received from DynamoDB.
      *
      * @return a {@link CompletableFuture} containing an {@link SdkPublisher}
-     *         that emits query items
+     * that emits query items
      * @throws IllegalStateException if called with Select.COUNT
      */
     public @NonNull CompletableFuture<SdkPublisher<T>> executeStream() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("AsyncQuery stream on table '{}'", getTableName());
@@ -566,7 +562,7 @@ public class AsyncQueryBuilder<T> {
      * Falls back to the enhanced client page iteration otherwise.
      *
      * @return a {@link CompletableFuture} containing the total count of
-     *         matching items
+     * matching items
      */
     public @NonNull CompletableFuture<Long> count() {
         long start = System.nanoTime();
@@ -599,8 +595,8 @@ public class AsyncQueryBuilder<T> {
     private @NonNull CompletableFuture<Long> countWithLowLevel(Select select) {
         if (pkValue == null) {
             return CompletableFuture.failedFuture(
-                new IllegalStateException("Partition key value must be set before executing a query. "
-                        + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first."));
+                    new IllegalStateException("Partition key value must be set before executing a query. "
+                            + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first."));
         }
         String tableName = table != null ? table.tableName() : index.tableName();
         Map<String, String> expressionNames = new HashMap<>();
@@ -609,11 +605,11 @@ public class AsyncQueryBuilder<T> {
         String keyConditionExpression = buildKeyConditionExpression(expressionNames, expressionValues);
 
         QueryRequest.Builder requestBuilder = QueryRequest.builder()
-            .tableName(tableName)
-            .keyConditionExpression(keyConditionExpression)
-            .expressionAttributeNames(expressionNames)
-            .expressionAttributeValues(expressionValues)
-            .select(select);
+                .tableName(tableName)
+                .keyConditionExpression(keyConditionExpression)
+                .expressionAttributeNames(expressionNames)
+                .expressionAttributeValues(expressionValues)
+                .select(select);
 
         applyFilterExpression(requestBuilder, expressionNames, expressionValues);
         applyQueryOptions(requestBuilder);
@@ -623,14 +619,14 @@ public class AsyncQueryBuilder<T> {
         }
 
         return dynamoDbAsyncClient.query(requestBuilder.build())
-            .thenApply(r -> (long) r.count())
-            .exceptionally(AsyncExceptionMapper.handler("Query", tableName));
+                .thenApply(r -> (long) r.count())
+                .exceptionally(AsyncExceptionMapper.handler("Query", tableName));
     }
 
     private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
         String pkName = table != null
-            ? table.tableSchema().tableMetadata().primaryPartitionKey()
-            : index.tableSchema().tableMetadata().primaryPartitionKey();
+                ? table.tableSchema().tableMetadata().primaryPartitionKey()
+                : index.tableSchema().tableMetadata().primaryPartitionKey();
 
         StringBuilder keyExpr = new StringBuilder();
         String pkPlaceholder = "#pk";
@@ -640,8 +636,8 @@ public class AsyncQueryBuilder<T> {
         keyExpr.append(pkPlaceholder).append(" = ").append(pkValPlaceholder);
 
         Optional<String> skName = table != null
-            ? table.tableSchema().tableMetadata().primarySortKey()
-            : index.tableSchema().tableMetadata().primarySortKey();
+                ? table.tableSchema().tableMetadata().primarySortKey()
+                : index.tableSchema().tableMetadata().primarySortKey();
 
         if (skValue != null && skName.isPresent()) {
             String skPlaceholder = "#sk";
@@ -650,37 +646,36 @@ public class AsyncQueryBuilder<T> {
             expressionValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
 
             switch (keyOp) {
-                case BEGINS_WITH ->
-                    keyExpr.append(CONDITION_JOINER)
+                case BEGINS_WITH -> keyExpr.append(CONDITION_JOINER)
                         .append("begins_with(").append(skPlaceholder).append(", ")
                         .append(skValPlaceholder).append(')');
                 case BETWEEN -> {
                     String skValPlaceholder2 = ":sk1";
                     expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
                     keyExpr.append(CONDITION_JOINER)
-                        .append(skPlaceholder).append(" BETWEEN ")
-                        .append(skValPlaceholder).append(CONDITION_JOINER)
-                        .append(skValPlaceholder2);
+                            .append(skPlaceholder).append(" BETWEEN ")
+                            .append(skValPlaceholder).append(CONDITION_JOINER)
+                            .append(skValPlaceholder2);
                 }
                 case GT ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
                 case GE ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
                 case LT ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
                 case LE ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
                 case EQ ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
             }
         }
         return keyExpr.toString();
     }
 
     private void applyFilterExpression(
-        QueryRequest.Builder requestBuilder,
-        Map<String, String> keyNames,
-        Map<String, AttributeValue> keyValues
+            QueryRequest.Builder requestBuilder,
+            Map<String, String> keyNames,
+            Map<String, AttributeValue> keyValues
     ) {
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(filterExpression.getExpression());

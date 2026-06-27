@@ -6,6 +6,9 @@ import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -14,15 +17,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.Select;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -56,6 +51,7 @@ public class QueryBuilder<T> {
     enum KeyConditionOp {
         EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
     }
+
     private KeyConditionOp keyOp;
     private @Nullable Object pkValue;
     private @Nullable Object skValue;
@@ -82,8 +78,8 @@ public class QueryBuilder<T> {
     /**
      * Constructs a new {@code QueryBuilder} for the given table with a low-level client.
      *
-     * @param table           the DynamoDB table
-     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     * @param table          the DynamoDB table
+     * @param dynamoDbClient the low-level DynamoDB client (nullable)
      */
     public QueryBuilder(@NonNull DynamoDbTable<T> table, @Nullable DynamoDbClient dynamoDbClient) {
         this.table = table;
@@ -95,8 +91,8 @@ public class QueryBuilder<T> {
      * Constructs a new {@code QueryBuilder} for querying the given secondary index
      * with a low-level client.
      *
-     * @param index           the DynamoDB secondary index
-     * @param dynamoDbClient  the low-level DynamoDB client (nullable)
+     * @param index          the DynamoDB secondary index
+     * @param dynamoDbClient the low-level DynamoDB client (nullable)
      */
     public QueryBuilder(@NonNull DynamoDbIndex<T> index, @Nullable DynamoDbClient dynamoDbClient) {
         this.table = null;
@@ -137,9 +133,9 @@ public class QueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.keyEqualTo(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -158,9 +154,9 @@ public class QueryBuilder<T> {
         this.skValue = skPrefix;
         this.keyCondition = QueryConditional.sortBeginsWith(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(skPrefix)
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(skPrefix)
+                        .build()
         );
         return this;
     }
@@ -181,13 +177,13 @@ public class QueryBuilder<T> {
         this.skValue2 = skHigh;
         this.keyCondition = QueryConditional.sortBetween(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skLow))
-                   .build(),
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skLow))
+                        .build(),
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skHigh))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skHigh))
+                        .build()
         );
         return this;
     }
@@ -206,9 +202,9 @@ public class QueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThan(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -227,9 +223,9 @@ public class QueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortGreaterThanOrEqualTo(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -248,9 +244,9 @@ public class QueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThan(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -269,9 +265,9 @@ public class QueryBuilder<T> {
         this.skValue = skValue;
         this.keyCondition = QueryConditional.sortLessThanOrEqualTo(
                 Key.builder()
-                   .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                   .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                   .build()
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
+                        .build()
         );
         return this;
     }
@@ -427,8 +423,8 @@ public class QueryBuilder<T> {
         long start = System.nanoTime();
         try {
             List<T> results = executeAsPages().stream()
-                                   .flatMap(page -> page.items().stream())
-                                   .toList();
+                    .flatMap(page -> page.items().stream())
+                    .toList();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Query on table '{}' returned {} items in {}ms",
                         getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
@@ -456,7 +452,7 @@ public class QueryBuilder<T> {
         }
         try {
             return executeAsPages().stream()
-                                   .flatMap(page -> page.items().stream());
+                    .flatMap(page -> page.items().stream());
         } catch (DynamoDbException e) {
             throw new OperationFailedException("Query", getTableName(), e);
         }
@@ -467,7 +463,7 @@ public class QueryBuilder<T> {
      * the last evaluated key for pagination.
      *
      * @return a {@link PagedResult} containing the first page of items and
-     *         the last evaluated key (may be {@code null} if no more pages)
+     * the last evaluated key (may be {@code null} if no more pages)
      */
     public @NonNull PagedResult<T> executeWithPagination() {
         if (select == Select.COUNT) {
@@ -568,11 +564,11 @@ public class QueryBuilder<T> {
         String keyConditionExpression = buildKeyConditionExpression(expressionNames, expressionValues);
 
         QueryRequest.Builder requestBuilder = QueryRequest.builder()
-            .tableName(tableName)
-            .keyConditionExpression(keyConditionExpression)
-            .expressionAttributeNames(expressionNames)
-            .expressionAttributeValues(expressionValues)
-            .select(select);
+                .tableName(tableName)
+                .keyConditionExpression(keyConditionExpression)
+                .expressionAttributeNames(expressionNames)
+                .expressionAttributeValues(expressionValues)
+                .select(select);
 
         applyFilterExpression(requestBuilder, expressionNames, expressionValues);
         applyQueryOptions(requestBuilder);
@@ -590,8 +586,8 @@ public class QueryBuilder<T> {
 
     private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
         String pkName = table != null
-            ? table.tableSchema().tableMetadata().primaryPartitionKey()
-            : index.tableSchema().tableMetadata().primaryPartitionKey();
+                ? table.tableSchema().tableMetadata().primaryPartitionKey()
+                : index.tableSchema().tableMetadata().primaryPartitionKey();
 
         StringBuilder keyExpr = new StringBuilder();
         String pkPlaceholder = "#pk";
@@ -601,8 +597,8 @@ public class QueryBuilder<T> {
         keyExpr.append(pkPlaceholder).append(" = ").append(pkValPlaceholder);
 
         Optional<String> skName = table != null
-            ? table.tableSchema().tableMetadata().primarySortKey()
-            : index.tableSchema().tableMetadata().primarySortKey();
+                ? table.tableSchema().tableMetadata().primarySortKey()
+                : index.tableSchema().tableMetadata().primarySortKey();
 
         if (skValue != null && skName.isPresent()) {
             String skPlaceholder = "#sk";
@@ -611,37 +607,36 @@ public class QueryBuilder<T> {
             expressionValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
 
             switch (keyOp) {
-                case BEGINS_WITH ->
-                    keyExpr.append(CONDITION_JOINER)
+                case BEGINS_WITH -> keyExpr.append(CONDITION_JOINER)
                         .append("begins_with(").append(skPlaceholder).append(", ")
                         .append(skValPlaceholder).append(')');
                 case BETWEEN -> {
                     String skValPlaceholder2 = ":sk1";
                     expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
                     keyExpr.append(CONDITION_JOINER)
-                        .append(skPlaceholder).append(" BETWEEN ")
-                        .append(skValPlaceholder).append(CONDITION_JOINER)
-                        .append(skValPlaceholder2);
+                            .append(skPlaceholder).append(" BETWEEN ")
+                            .append(skValPlaceholder).append(CONDITION_JOINER)
+                            .append(skValPlaceholder2);
                 }
                 case GT ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
                 case GE ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
                 case LT ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
                 case LE ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
                 case EQ ->
-                    keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
             }
         }
         return keyExpr.toString();
     }
 
     private void applyFilterExpression(
-        QueryRequest.Builder requestBuilder,
-        Map<String, String> keyNames,
-        Map<String, AttributeValue> keyValues
+            QueryRequest.Builder requestBuilder,
+            Map<String, String> keyNames,
+            Map<String, AttributeValue> keyValues
     ) {
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(filterExpression.getExpression());
@@ -686,9 +681,9 @@ public class QueryBuilder<T> {
                     + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
         }
         QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
-                                                                           .queryConditional(keyCondition)
-                                                                          .scanIndexForward(scanIndexForward)
-                                                                          .consistentRead(consistentRead);
+                .queryConditional(keyCondition)
+                .scanIndexForward(scanIndexForward)
+                .consistentRead(consistentRead);
 
         if (filterExpression != null && !filterExpression.isEmpty()) {
             requestBuilder.filterExpression(

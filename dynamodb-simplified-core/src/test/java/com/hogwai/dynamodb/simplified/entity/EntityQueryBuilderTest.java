@@ -40,7 +40,7 @@ class EntityQueryBuilderTest {
     @Test
     void execute_shouldBuildCorrectRequest() {
         builder.partitionKey("USER#abc123")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         QueryResponse response = QueryResponse.builder()
                 .items(List.of(Map.of(
@@ -66,24 +66,24 @@ class EntityQueryBuilderTest {
     void execute_withMultipleEntityTypes_returnsGroupedResults() {
         QueryResponse response = QueryResponse.builder()
                 .items(List.of(
-                    Map.of(
-                        "_type", AttributeValue.builder().s("USER").build(),
-                        "pk", AttributeValue.builder().s("PART#abc").build(),
-                        "userId", AttributeValue.builder().s("abc").build()
-                    ),
-                    Map.of(
-                        "_type", AttributeValue.builder().s("POST").build(),
-                        "pk", AttributeValue.builder().s("PART#abc").build(),
-                        "postId", AttributeValue.builder().s("post1").build()
-                    )
+                        Map.of(
+                                "_type", AttributeValue.builder().s("USER").build(),
+                                "pk", AttributeValue.builder().s("PART#abc").build(),
+                                "userId", AttributeValue.builder().s("abc").build()
+                        ),
+                        Map.of(
+                                "_type", AttributeValue.builder().s("POST").build(),
+                                "pk", AttributeValue.builder().s("PART#abc").build(),
+                                "postId", AttributeValue.builder().s("post1").build()
+                        )
                 ))
                 .count(2)
                 .build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
 
         builder.partitionKey("PART#abc")
-               .includeEntity(UserEntity.class)
-               .includeEntity(PostEntity.class);
+                .includeEntity(UserEntity.class)
+                .includeEntity(PostEntity.class);
 
         CrossEntityResult result = builder.execute();
         assertThat(result.get(UserEntity.class)).hasSize(1);
@@ -107,7 +107,7 @@ class EntityQueryBuilderTest {
     @Test
     void execute_shouldIncludeDiscriminatorFilter() {
         builder.partitionKey("USER#xyz")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         QueryResponse response = QueryResponse.builder()
                 .items(List.of())
@@ -131,7 +131,7 @@ class EntityQueryBuilderTest {
         builder.partitionKey("PK").includeEntity(UserEntity.class);
 
         when(mockClient.query(any(QueryRequest.class)))
-            .thenReturn(QueryResponse.builder().items(List.of()).build());
+                .thenReturn(QueryResponse.builder().items(List.of()).build());
 
         CrossEntityResult result = builder.execute();
         assertThat(result.get(UserEntity.class)).isEmpty();
@@ -142,8 +142,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyBeginsWith_addsCorrectKeyConditionExpression() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyBeginsWith("PREFIX");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyBeginsWith("PREFIX");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -161,8 +161,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyEquals_addsEQKeyCondition() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyEquals("EXACT");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyEquals("EXACT");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -178,8 +178,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyBetween_addsBETWEENKeyCondition() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyBetween("A", "Z");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyBetween("A", "Z");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -196,8 +196,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyGreaterThan_addsGTKeyCondition() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyGreaterThan("THRESHOLD");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyGreaterThan("THRESHOLD");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -212,8 +212,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyGreaterThanOrEqual_addsGEKeyCondition() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyGreaterThanOrEqual("THRESHOLD");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyGreaterThanOrEqual("THRESHOLD");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -228,8 +228,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyLessThan_addsLTKeyCondition() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyLessThan("THRESHOLD");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyLessThan("THRESHOLD");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -244,8 +244,8 @@ class EntityQueryBuilderTest {
     @Test
     void sortKeyLessThanOrEqual_addsLEKeyCondition() {
         builder.partitionKey("USER#abc")
-               .includeEntity(EntityWithSk.class)
-               .sortKeyLessThanOrEqual("THRESHOLD");
+                .includeEntity(EntityWithSk.class)
+                .sortKeyLessThanOrEqual("THRESHOLD");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -275,7 +275,7 @@ class EntityQueryBuilderTest {
         when(mockClient.query(any(QueryRequest.class))).thenReturn(page1);
 
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         CrossEntityResultWithPagination result = builder.executeWithPagination();
         assertThat(result.getResult().get(UserEntity.class)).hasSize(1);
@@ -310,7 +310,7 @@ class EntityQueryBuilderTest {
                 .thenReturn(page1, page2);
 
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         List<CrossEntityResult> pages = builder.executeAll();
         assertThat(pages).hasSize(2);
@@ -335,7 +335,7 @@ class EntityQueryBuilderTest {
         when(mockClient.query(any(QueryRequest.class))).thenReturn(page1);
 
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         var result = builder.executeAndGetFirst();
         assertThat(result).isPresent();
@@ -352,7 +352,7 @@ class EntityQueryBuilderTest {
         when(mockClient.query(any(QueryRequest.class))).thenReturn(emptyPage);
 
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         var result = builder.executeAndGetFirst();
         assertThat(result).isEmpty();
@@ -376,7 +376,7 @@ class EntityQueryBuilderTest {
                 .thenReturn(page1, page2);
 
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         long count = builder.count();
         assertThat(count).isEqualTo(8);
@@ -388,8 +388,8 @@ class EntityQueryBuilderTest {
     @Test
     void project_addsProjectionExpressionToRequest() {
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class)
-               .project("userId", "email");
+                .includeEntity(UserEntity.class)
+                .project("userId", "email");
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -406,8 +406,8 @@ class EntityQueryBuilderTest {
     @Test
     void consistentRead_addsConsistentReadToRequest() {
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class)
-               .consistentRead(true);
+                .includeEntity(UserEntity.class)
+                .consistentRead(true);
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -422,8 +422,8 @@ class EntityQueryBuilderTest {
     @Test
     void consistentRead_false_setsConsistentReadToFalse() {
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class)
-               .consistentRead(false);
+                .includeEntity(UserEntity.class)
+                .consistentRead(false);
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -440,8 +440,8 @@ class EntityQueryBuilderTest {
     @Test
     void scanIndexForward_setsScanIndexForwardParameter() {
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class)
-               .scanIndexForward(false);
+                .includeEntity(UserEntity.class)
+                .scanIndexForward(false);
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -456,8 +456,8 @@ class EntityQueryBuilderTest {
     @Test
     void scanIndexForward_true_setsScanIndexForwardToTrue() {
         builder.partitionKey("USER#abc")
-               .includeEntity(UserEntity.class)
-               .scanIndexForward(true);
+                .includeEntity(UserEntity.class)
+                .scanIndexForward(true);
 
         QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
         when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
@@ -474,7 +474,7 @@ class EntityQueryBuilderTest {
     @Test
     void execute_usesCorrectPkAttributeNameFromAnnotation() {
         builder.partitionKey("USER#abc123")
-               .includeEntity(UserEntity.class);
+                .includeEntity(UserEntity.class);
 
         QueryResponse response = QueryResponse.builder()
                 .items(List.of(Map.of(
@@ -533,64 +533,85 @@ class EntityQueryBuilderTest {
 
     // --- Test entity classes ---
 
+    public static class BaseEntityWithPk {
+        protected String pk;
+
+        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
+        }
+    }
+
     @DynamoDbBean
     @Entity(discriminator = "USER", table = "myapp")
-    public static class UserEntity {
-        private String pk;
+    public static class UserEntity extends BaseEntityWithPk {
         private String userId;
 
+        @SuppressWarnings("PMD.CallSuperInConstructor")
         public UserEntity() {
             // default constructor required by DynamoDbBean
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
-        public String getPk() { return pk; }  // UserEntity partition key getter
-        public void setPk(String pk) { this.pk = pk; }  // UserEntity partition key setter
-
         @KeyComponent(component = "PK")
-        public String getUserId() { return userId; }
-        public void setUserId(String userId) { this.userId = userId; }
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
     }
 
     @DynamoDbBean
     @Entity(discriminator = "POST", table = "myapp")
-    public static class PostEntity {
-        private String pk;
+    public static class PostEntity extends BaseEntityWithPk {
         private String postId;
 
+        @SuppressWarnings("PMD.CallSuperInConstructor")
         public PostEntity() {
             // default constructor required by DynamoDbBean
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
-        public String getPk() { return pk; }  // PostEntity partition key getter
-        public void setPk(String pk) { this.pk = pk; }  // PostEntity partition key setter
-
         @KeyComponent(component = "PK")
-        public String getPostId() { return postId; }
-        public void setPostId(String postId) { this.postId = postId; }
+        public String getPostId() {
+            return postId;
+        }
+
+        public void setPostId(String postId) {
+            this.postId = postId;
+        }
     }
 
     @DynamoDbBean
     @Entity(discriminator = "ITEM", table = "myapp")
-    public static class EntityWithSk {
-        private String pk;
+    public static class EntityWithSk extends BaseEntityWithPk {
         private String sk;
 
+        @SuppressWarnings("PMD.CallSuperInConstructor")
         public EntityWithSk() {
             // default constructor required by DynamoDbBean
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
-        public String getPk() { return pk; }  // EntityWithSk partition key getter
-        public void setPk(String pk) { this.pk = pk; }  // EntityWithSk partition key setter
-
         @KeyComponent(component = "PK")
-        public String getPkComponent() { return pk; }
-        public void setPkComponent(String pk) { this.pk = pk; }
+        public String getPkComponent() {
+            return pk;
+        }
+
+        public void setPkComponent(String pk) {
+            this.pk = pk;
+        }
 
         @KeyComponent(component = "SK")
-        public String getSk() { return sk; }
-        public void setSk(String sk) { this.sk = sk; }
+        public String getSk() {
+            return sk;
+        }
+
+        public void setSk(String sk) {
+            this.sk = sk;
+        }
     }
 }

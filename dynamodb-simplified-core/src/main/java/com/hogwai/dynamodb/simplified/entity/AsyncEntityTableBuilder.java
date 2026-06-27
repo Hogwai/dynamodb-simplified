@@ -2,8 +2,8 @@ package com.hogwai.dynamodb.simplified.entity;
 
 import com.hogwai.dynamodb.simplified.async.AsyncTable;
 import org.jspecify.annotations.NonNull;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 

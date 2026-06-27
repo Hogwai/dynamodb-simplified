@@ -6,7 +6,8 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("ConditionExpression")
 class ConditionExpressionTest {
@@ -194,14 +195,6 @@ class ConditionExpressionTest {
     @Test
     @DisplayName("group wraps sub-expression in parentheses")
     void group() {
-        var inner = ConditionExpression.builder().eq("role", "admin").build();
-        var expr = ConditionExpression.builder().eq("status", "active").and().group(inner).build();
-        assertEquals("#n0 = :v0 AND (#n1 = :v1)", expr.getExpression());
-    }
-
-    @Test
-    @DisplayName("group accepts ConditionExpression directly")
-    void group_shouldAcceptConditionExpression() {
         var inner = ConditionExpression.builder().eq("role", "admin").build();
         var expr = ConditionExpression.builder().eq("status", "active").and().group(inner).build();
         assertEquals("#n0 = :v0 AND (#n1 = :v1)", expr.getExpression());

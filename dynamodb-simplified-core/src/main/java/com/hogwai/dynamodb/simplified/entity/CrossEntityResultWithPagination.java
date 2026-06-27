@@ -41,7 +41,7 @@ public final class CrossEntityResultWithPagination {
      * A return value of {@code null} or an empty map indicates no more pages.
      *
      * @return the last-evaluated key, or {@code null} / empty if this is the
-     *         last page
+     * last page
      */
     @Nullable
     public Map<String, AttributeValue> getLastEvaluatedKey() {
@@ -52,7 +52,7 @@ public final class CrossEntityResultWithPagination {
      * Returns whether there are more pages of results available.
      *
      * @return {@code true} if a subsequent request will yield more items,
-     *         {@code false} otherwise
+     * {@code false} otherwise
      */
     public boolean hasMore() {
         return lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty();

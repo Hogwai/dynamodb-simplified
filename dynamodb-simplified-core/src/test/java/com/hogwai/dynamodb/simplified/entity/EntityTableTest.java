@@ -30,7 +30,8 @@ class EntityTableTest {
         private String userId;
         private String name;
 
-        public TestUser() {}
+        public TestUser() {
+        }
 
         public TestUser(String userId, String name) {
             this.userId = userId;
@@ -38,15 +39,30 @@ class EntityTableTest {
         }
 
         @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
-        public String getPk() { return pk; }
-        public void setPk(String pk) { this.pk = pk; }
+        public String getPk() {
+            return pk;
+        }
 
-        @KeyComponent(component = "PK", position = 0)
-        public String getUserId() { return userId; }
-        public void setUserId(String userId) { this.userId = userId; }
+        public void setPk(String pk) {
+            this.pk = pk;
+        }
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
+        @KeyComponent(component = "PK"  )
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
     }
 
     @BeforeEach

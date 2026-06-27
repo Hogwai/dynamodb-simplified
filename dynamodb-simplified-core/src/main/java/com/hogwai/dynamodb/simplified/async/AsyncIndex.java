@@ -17,7 +17,9 @@ public class AsyncIndex<T> {
     private final DynamoDbAsyncIndex<T> dynamoDbAsyncIndex;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    /** Package-private constructor. */
+    /**
+     * Package-private constructor.
+     */
     AsyncIndex(@NonNull DynamoDbAsyncIndex<T> dynamoDbAsyncIndex) {
         this(dynamoDbAsyncIndex, null);
     }
@@ -25,8 +27,8 @@ public class AsyncIndex<T> {
     /**
      * Constructs a new {@code AsyncIndex} with a low-level async client.
      *
-     * @param dynamoDbAsyncIndex   the async DynamoDB index
-     * @param dynamoDbAsyncClient  the low-level async DynamoDB client (nullable)
+     * @param dynamoDbAsyncIndex  the async DynamoDB index
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client (nullable)
      */
     AsyncIndex(@NonNull DynamoDbAsyncIndex<T> dynamoDbAsyncIndex, @Nullable DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.dynamoDbAsyncIndex = dynamoDbAsyncIndex;

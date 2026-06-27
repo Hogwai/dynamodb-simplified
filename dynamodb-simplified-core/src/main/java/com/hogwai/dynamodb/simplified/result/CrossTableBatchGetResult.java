@@ -43,9 +43,9 @@ public final class CrossTableBatchGetResult implements Consumed {
     /**
      * Constructs a new {@code CrossTableBatchGetResult}.
      *
-     * @param responses       the raw response items per table name
-     * @param unprocessedKeys the unprocessed keys per table name
-     * @param tableSchemas    the table schemas per table name, for deserialization
+     * @param responses        the raw response items per table name
+     * @param unprocessedKeys  the unprocessed keys per table name
+     * @param tableSchemas     the table schemas per table name, for deserialization
      * @param consumedCapacity the consumed capacity, or {@code null}
      */
     public CrossTableBatchGetResult(

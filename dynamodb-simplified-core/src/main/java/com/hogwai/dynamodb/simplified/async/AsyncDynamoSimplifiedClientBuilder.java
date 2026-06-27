@@ -1,11 +1,11 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import java.util.Objects;
-
 import org.jspecify.annotations.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClientExtension;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+
+import java.util.Objects;
 
 /**
  * Builder for creating {@link AsyncDynamoSimplifiedClient} instances with
@@ -25,7 +25,9 @@ public class AsyncDynamoSimplifiedClientBuilder {
     private DynamoDbAsyncClient dynamoDbClient;
     private DynamoDbEnhancedClientExtension[] extensions;
 
-    /** Package-private constructor, called only from {@link AsyncDynamoSimplifiedClient#builder()}. */
+    /**
+     * Package-private constructor, called only from {@link AsyncDynamoSimplifiedClient#builder()}.
+     */
     AsyncDynamoSimplifiedClientBuilder() {
     }
 

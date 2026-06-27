@@ -1,6 +1,7 @@
 package com.hogwai.dynamodb.simplified.entity;
 
 import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Entity(discriminator = "TEST_USER", table = "test_table")
@@ -8,9 +9,13 @@ class TestEntity {
     private String userId;
 
     @KeyComponent(component = "PK")
-    public String getUserId() { return userId; }
+    public String getUserId() {
+        return userId;
+    }
 
-    public void setUserId(String userId) { this.userId = userId; }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 }
 
 @Entity(discriminator = "TEST_POST", table = "test_table")

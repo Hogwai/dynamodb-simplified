@@ -1,29 +1,24 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.Table;
 import com.hogwai.dynamodb.simplified.Versioned;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
-import com.hogwai.dynamodb.simplified.Table;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.VersionHelper;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,10 +49,10 @@ public class UpdateBuilder<T> {
     /**
      * Constructs a new {@code UpdateBuilder} for the given table and item.
      *
-     * @param table           the DynamoDB table
-     * @param item            the item to update (full replacement data, or
-     *                        a template object when used with {@link #update(Consumer)})
-     * @param dynamoDbClient  the low-level DynamoDB client (required for partial updates)
+     * @param table          the DynamoDB table
+     * @param item           the item to update (full replacement data, or
+     *                       a template object when used with {@link #update(Consumer)})
+     * @param dynamoDbClient the low-level DynamoDB client (required for partial updates)
      */
     public UpdateBuilder(@NonNull DynamoDbTable<T> table, @NonNull T item, @NonNull DynamoDbClient dynamoDbClient) {
         this.table = table;
@@ -71,7 +66,7 @@ public class UpdateBuilder<T> {
      * (and optionally sort) key values.
      */
     public UpdateBuilder(@NonNull DynamoDbTable<T> table, @NonNull DynamoDbClient dynamoDbClient,
-                  @NonNull Object partitionKey, @Nullable Object sortKey) {
+                         @NonNull Object partitionKey, @Nullable Object sortKey) {
         this.table = table;
         this.item = null;
         this.dynamoDbClient = dynamoDbClient;
@@ -204,8 +199,8 @@ public class UpdateBuilder<T> {
     public Optional<T> execute() {
         if (!ignoreNulls && updateExpression != null && !updateExpression.isEmpty()) {
             throw new IllegalStateException(
-                "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
-                + "Remove the ignoreNulls() call or use a full-item update instead.");
+                    "ignoreNulls(false) has no effect when using partial updates via update(Consumer). "
+                            + "Remove the ignoreNulls() call or use a full-item update instead.");
         }
         boolean hasExpression = hasUpdateExpression();
         applyOptimisticLocking();
@@ -232,13 +227,13 @@ public class UpdateBuilder<T> {
         boolean hasExpression = updateExpression != null && !updateExpression.isEmpty();
         if (returnValues != null && !hasExpression) {
             throw new IllegalStateException(
-                "ReturnValues is not supported for full-item replacement. "
-                + "Use partial updates with update(expr -> ...) to configure ReturnValues.");
+                    "ReturnValues is not supported for full-item replacement. "
+                            + "Use partial updates with update(expr -> ...) to configure ReturnValues.");
         }
         if (item == null && !hasExpression) {
             throw new IllegalStateException(
-                "Key-only update requires a partial update expression. "
-                + "Use update(expr -> ...) to configure an update expression.");
+                    "Key-only update requires a partial update expression. "
+                            + "Use update(expr -> ...) to configure an update expression.");
         }
         return hasExpression;
     }
@@ -249,8 +244,8 @@ public class UpdateBuilder<T> {
     private T executeWithFullItem() {
         UpdateItemEnhancedRequest.Builder<T> requestBuilder =
                 UpdateItemEnhancedRequest.builder((Class<T>) item.getClass())
-                                         .item(item)
-                                         .ignoreNullsMode(ignoreNulls ? IgnoreNullsMode.SCALAR_ONLY : IgnoreNullsMode.DEFAULT);
+                        .item(item)
+                        .ignoreNullsMode(ignoreNulls ? IgnoreNullsMode.SCALAR_ONLY : IgnoreNullsMode.DEFAULT);
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
             requestBuilder.conditionExpression(

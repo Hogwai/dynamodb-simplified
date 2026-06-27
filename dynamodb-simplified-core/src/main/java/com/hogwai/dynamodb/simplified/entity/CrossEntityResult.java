@@ -2,7 +2,9 @@ package com.hogwai.dynamodb.simplified.entity;
 
 import org.jspecify.annotations.NonNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public final class CrossEntityResult {
 

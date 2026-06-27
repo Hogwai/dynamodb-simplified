@@ -1,12 +1,12 @@
 package com.hogwai.dynamodb.simplified.expression;
 
 import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
+import org.jspecify.annotations.NonNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.annotations.NonNull;
-
 
 
 /**

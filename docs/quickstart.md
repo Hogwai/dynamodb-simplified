@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-- Java 17+
-- AWS SDK DynamoDB 2.29.52+
+- Java 21+
 - A running DynamoDB instance (local or AWS)
 
 ## Create a client

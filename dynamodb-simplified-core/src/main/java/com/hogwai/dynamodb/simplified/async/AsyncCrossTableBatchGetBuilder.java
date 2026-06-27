@@ -11,17 +11,9 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -44,7 +36,7 @@ public class AsyncCrossTableBatchGetBuilder {
     /**
      * Constructs a new {@code AsyncCrossTableBatchGetBuilder}.
      *
-     * @param dynamoDbAsyncClient  the low-level async DynamoDB client
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client
      */
     public AsyncCrossTableBatchGetBuilder(@NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
@@ -75,8 +67,8 @@ public class AsyncCrossTableBatchGetBuilder {
      */
     @NonNull
     public <T> AsyncCrossTableBatchGetBuilder addKey(@NonNull AsyncTable<T> table,
-                                                      @NonNull Object partitionKey,
-                                                      @NonNull Object sortKey) {
+                                                     @NonNull Object partitionKey,
+                                                     @NonNull Object sortKey) {
         entries.add(new Entry<>(table, buildKey(partitionKey, sortKey), null));
         return this;
     }
@@ -91,7 +83,7 @@ public class AsyncCrossTableBatchGetBuilder {
      */
     @NonNull
     public <T> AsyncCrossTableBatchGetBuilder addKeys(@NonNull AsyncTable<T> table,
-                                                       @NonNull Collection<?> partitionKeys) {
+                                                      @NonNull Collection<?> partitionKeys) {
         for (Object pk : partitionKeys) {
             entries.add(new Entry<>(table, buildKey(pk, null), null));
         }
@@ -188,7 +180,7 @@ public class AsyncCrossTableBatchGetBuilder {
         Map<String, List<Entry<?>>> entriesByTable = new HashMap<>();
         for (Entry<?> entry : entries) {
             String tableName = entry.table.getRawTable().tableName();
-            entriesByTable.computeIfAbsent(tableName, _ -> new ArrayList<>()).add(entry);
+            entriesByTable.computeIfAbsent(tableName, ignored -> new ArrayList<>()).add(entry);
         }
         return entriesByTable;
     }

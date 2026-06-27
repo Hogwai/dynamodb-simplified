@@ -71,7 +71,7 @@ final class DefaultEntityTable<T> implements EntityTable<T> {
         String setterName = "set" + name.substring(3);
         try {
             return clazz.getMethod(setterName, getter.getReturnType());
-        } catch (NoSuchMethodException _) {
+        } catch (NoSuchMethodException ignored) {
             return null;
         }
     }

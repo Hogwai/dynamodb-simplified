@@ -2,9 +2,8 @@ package com.hogwai.dynamodb.simplified.exception;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
-
 import software.amazon.awssdk.services.dynamodb.model.CancellationReason;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.io.Serial;
 import java.util.Collections;

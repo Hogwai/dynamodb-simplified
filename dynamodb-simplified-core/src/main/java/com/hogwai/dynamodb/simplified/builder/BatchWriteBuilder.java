@@ -5,17 +5,12 @@ import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import com.hogwai.dynamodb.simplified.internal.RetryUtils;
 import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
-
-import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,9 +83,9 @@ public class BatchWriteBuilder<T> {
      */
     public @NonNull BatchWriteBuilder<T> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
         keysToDelete.add(Key.builder()
-                             .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                             .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                             .build());
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
+                .build());
         return this;
     }
 

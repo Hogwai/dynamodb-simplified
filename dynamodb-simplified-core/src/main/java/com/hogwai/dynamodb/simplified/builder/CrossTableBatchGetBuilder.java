@@ -13,18 +13,9 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -78,8 +69,8 @@ public class CrossTableBatchGetBuilder {
      * @return this builder
      */
     public @NonNull <T> CrossTableBatchGetBuilder addKey(@NonNull Table<T> table,
-                                                          @NonNull Object partitionKey,
-                                                          @NonNull Object sortKey) {
+                                                         @NonNull Object partitionKey,
+                                                         @NonNull Object sortKey) {
         entries.add(new Entry<>(table, buildKey(partitionKey, sortKey), null));
         return this;
     }
@@ -93,7 +84,7 @@ public class CrossTableBatchGetBuilder {
      * @return this builder
      */
     public @NonNull <T> CrossTableBatchGetBuilder addKeys(@NonNull Table<T> table,
-                                                           @NonNull Collection<?> partitionKeys) {
+                                                          @NonNull Collection<?> partitionKeys) {
         for (Object pk : partitionKeys) {
             entries.add(new Entry<>(table, buildKey(pk, null), null));
         }
@@ -195,7 +186,7 @@ public class CrossTableBatchGetBuilder {
         Map<String, List<Entry<?>>> entriesByTable = new HashMap<>();
         for (Entry<?> entry : entries) {
             String tableName = entry.table.getRawTable().tableName();
-            entriesByTable.computeIfAbsent(tableName, _ -> new ArrayList<>()).add(entry);
+            entriesByTable.computeIfAbsent(tableName, ignored -> new ArrayList<>()).add(entry);
         }
         return entriesByTable;
     }
@@ -300,7 +291,7 @@ public class CrossTableBatchGetBuilder {
             return;
         }
         for (Map.Entry<String, List<Map<String, AttributeValue>>> entry : responses.entrySet()) {
-            allResponses.computeIfAbsent(entry.getKey(), _ -> new ArrayList<>())
+            allResponses.computeIfAbsent(entry.getKey(), ignored -> new ArrayList<>())
                     .addAll(entry.getValue());
         }
     }

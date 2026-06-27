@@ -1,6 +1,10 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.entity.AsyncEntityTable;
+import com.hogwai.dynamodb.simplified.entity.AsyncEntityTableBuilder;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
@@ -8,12 +12,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
 import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
-
-import com.hogwai.dynamodb.simplified.entity.AsyncEntityTable;
-import com.hogwai.dynamodb.simplified.entity.AsyncEntityTableBuilder;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +39,9 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
     private final DynamoDbEnhancedAsyncClient enhancedAsyncClient;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    /** Package-private constructor, used by create() and builder() methods. */
+    /**
+     * Package-private constructor, used by create() and builder() methods.
+     */
     AsyncDynamoSimplifiedClient(
             @NonNull DynamoDbEnhancedAsyncClient enhancedAsyncClient,
             @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {

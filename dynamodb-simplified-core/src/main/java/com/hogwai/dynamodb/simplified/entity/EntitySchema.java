@@ -3,7 +3,10 @@ package com.hogwai.dynamodb.simplified.entity;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 public final class EntitySchema<T> {

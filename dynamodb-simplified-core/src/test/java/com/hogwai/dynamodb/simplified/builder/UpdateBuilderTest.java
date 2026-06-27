@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,17 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
-
-import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.Optional;
@@ -30,19 +26,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UpdateBuilder")
 class UpdateBuilderTest {
 
-    @Mock DynamoDbTable<TestItem> table;
-    @Mock DynamoDbClient dynamoDbClient;
-    @Mock TableSchema<TestItem> tableSchema;
-    @Mock Key key;
+    @Mock
+    DynamoDbTable<TestItem> table;
+    @Mock
+    DynamoDbClient dynamoDbClient;
+    @Mock
+    TableSchema<TestItem> tableSchema;
+    @Mock
+    Key key;
 
-    @Captor ArgumentCaptor<UpdateItemEnhancedRequest<TestItem>> enhancedRequestCaptor;
-    @Captor ArgumentCaptor<UpdateItemRequest> lowLevelRequestCaptor;
+    @Captor
+    ArgumentCaptor<UpdateItemEnhancedRequest<TestItem>> enhancedRequestCaptor;
+    @Captor
+    ArgumentCaptor<UpdateItemRequest> lowLevelRequestCaptor;
 
     private TestItem item;
     private TestItem resultItem;
@@ -242,7 +242,7 @@ class UpdateBuilderTest {
     void ignoreNullsFalseWithPartialUpdateThrowsException() {
         var builder = new UpdateBuilder<>(table, item, dynamoDbClient);
         var updateBuilder = builder.update(u -> u.set("name", "updated"))
-                                   .ignoreNulls(false);
+                .ignoreNulls(false);
 
         assertThrows(IllegalStateException.class, updateBuilder::execute);
     }
@@ -375,8 +375,8 @@ class UpdateBuilderTest {
     @Test
     @DisplayName("withOptimisticLocking returns itself for fluent chaining")
     void withOptimisticLocking_returnsItself() {
-        var item = new TestItem();
-        UpdateBuilder<TestItem> builder = new UpdateBuilder<>(table, item, dynamoDbClient);
+        var testItem = new TestItem();
+        UpdateBuilder<TestItem> builder = new UpdateBuilder<>(table, testItem, dynamoDbClient);
         assertSame(builder, builder.withOptimisticLocking());
     }
 }

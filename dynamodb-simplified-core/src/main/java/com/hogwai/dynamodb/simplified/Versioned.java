@@ -8,9 +8,13 @@ package com.hogwai.dynamodb.simplified;
  * to prevent concurrent modification.
  */
 public interface Versioned {
-    /** Returns the current version. */
+    /**
+     * Returns the current version.
+     */
     Integer getVersion();
 
-    /** Sets the version (called by the library after successful write). */
+    /**
+     * Sets the version (called by the library after successful write).
+     */
     void setVersion(Integer version);
 }

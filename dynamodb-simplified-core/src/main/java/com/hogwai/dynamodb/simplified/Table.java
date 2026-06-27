@@ -1,29 +1,24 @@
 package com.hogwai.dynamodb.simplified;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import com.hogwai.dynamodb.simplified.builder.*;
-import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import java.util.function.Consumer;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTimeToLiveRequest;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.dynamodb.model.TimeToLiveDescription;
-import software.amazon.awssdk.services.dynamodb.model.UpdateTimeToLiveRequest;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Typed entry point for DynamoDB operations on a single table.
@@ -130,9 +125,9 @@ public class Table<T> {
     public Optional<T> getItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return Optional.ofNullable(
                 dynamoDbTable.getItem(Key.builder()
-                                 .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                                 .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                                 .build())
+                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                        .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
+                        .build())
         );
     }
 
@@ -199,8 +194,8 @@ public class Table<T> {
      * This avoids creating a dummy item object when the key is already known.
      * Pass {@code null} for the sort key when the table has no sort key.
      *
-     * @param partitionKey        the partition key value
-     * @param sortKey             the sort key value, or {@code null} if the table has no sort key
+     * @param partitionKey       the partition key value
+     * @param sortKey            the sort key value, or {@code null} if the table has no sort key
      * @param expressionConsumer a consumer to build the update expression
      */
     public void update(@NonNull Object partitionKey,
@@ -275,9 +270,9 @@ public class Table<T> {
     @Nullable
     public T deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return dynamoDbTable.deleteItem(Key.builder()
-                            .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                            .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                            .build());
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
+                .build());
     }
 
     // ============ Secondary Index ============
@@ -444,7 +439,7 @@ public class Table<T> {
         try {
             dynamoDbTable.describeTable();
             return true;
-        } catch (ResourceNotFoundException _) {
+        } catch (ResourceNotFoundException ignored) {
             return false;
         }
     }
@@ -501,8 +496,8 @@ public class Table<T> {
     public TimeToLiveDescription describeTtl() {
         try {
             return dynamoDbClient.describeTimeToLive(DescribeTimeToLiveRequest.builder()
-                    .tableName(dynamoDbTable.tableName())
-                    .build())
+                            .tableName(dynamoDbTable.tableName())
+                            .build())
                     .timeToLiveDescription();
         } catch (DynamoDbException e) {
             throw new OperationFailedException("DescribeTimeToLive", dynamoDbTable.tableName(), e);

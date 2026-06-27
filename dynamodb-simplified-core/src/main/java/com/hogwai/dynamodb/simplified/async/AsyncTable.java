@@ -1,28 +1,26 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import com.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.result.BatchWriteResult;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 import java.util.Objects;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.Consumer;
 
 /**
  * Typed async entry point for DynamoDB operations on a single table.
@@ -191,8 +189,8 @@ public class AsyncTable<T> {
      * This avoids creating a dummy item object when the key is already known.
      * Pass {@code null} for the sort key when the table has no sort key.
      *
-     * @param partitionKey        the partition key value
-     * @param sortKey             the sort key value, or {@code null} if the table has no sort key
+     * @param partitionKey       the partition key value
+     * @param sortKey            the sort key value, or {@code null} if the table has no sort key
      * @param expressionConsumer a consumer to build the update expression
      * @return a {@link CompletableFuture} that completes when the update has been executed
      */
@@ -204,7 +202,7 @@ public class AsyncTable<T> {
         return new AsyncUpdateBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient, partitionKey, sortKey)
                 .update(expressionConsumer)
                 .execute()
-                .thenApply(_ -> null);
+                .thenApply(ignored -> null);
     }
 
     /**
@@ -248,7 +246,7 @@ public class AsyncTable<T> {
      *
      * @param partitionKey the partition key value
      * @return a {@link CompletableFuture} that completes with the deleted item,
-     *         or {@code null} if no item with the given key exists
+     * or {@code null} if no item with the given key exists
      */
     @NonNull
     public CompletableFuture<T> deleteItem(@NonNull Object partitionKey) {
@@ -262,14 +260,14 @@ public class AsyncTable<T> {
      * @param partitionKey the partition key value
      * @param sortKey      the sort key value
      * @return a {@link CompletableFuture} that completes with the deleted item,
-     *         or {@code null} if no item with the given key exists
+     * or {@code null} if no item with the given key exists
      */
     @NonNull
     public CompletableFuture<T> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return dynamoDbAsyncTable.deleteItem(Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                        .build());
+                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
+                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
+                .build());
     }
 
     // ============ Secondary Index ============
@@ -440,7 +438,7 @@ public class AsyncTable<T> {
     @NonNull
     public CompletableFuture<Boolean> exists() {
         return dynamoDbAsyncTable.describeTable()
-                .handle((_, error) -> {
+                .handle((result, error) -> {
                     // Unwrap CompletionException to find the actual cause
                     Throwable actualError = error;
                     while (actualError instanceof CompletionException ce) {
@@ -448,7 +446,7 @@ public class AsyncTable<T> {
                     }
                     return switch (actualError) {
                         case null -> true;
-                        case ResourceNotFoundException _ -> false;
+                        case ResourceNotFoundException ignored -> false;
 
                         // AWS SDK exceptions are RuntimeExceptions, re-throw as-is
                         case RuntimeException re -> throw re;
@@ -474,7 +472,7 @@ public class AsyncTable<T> {
                             spec.enabled(true);
                         })
                         .build())
-                .<Void>thenApply(_ -> null)
+                .<Void>thenApply(ignored -> null)
                 .exceptionally(AsyncExceptionMapper.handler("UpdateTimeToLive", dynamoDbAsyncTable.tableName()));
     }
 
@@ -493,7 +491,7 @@ public class AsyncTable<T> {
                             spec.enabled(false);
                         })
                         .build())
-                .<Void>thenApply(_ -> null)
+                .<Void>thenApply(ignored -> null)
                 .exceptionally(AsyncExceptionMapper.handler("UpdateTimeToLive", dynamoDbAsyncTable.tableName()));
     }
 

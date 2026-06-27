@@ -2,10 +2,9 @@ package com.hogwai.dynamodb.simplified.expression;
 
 import com.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Duration;
 import java.time.Instant;

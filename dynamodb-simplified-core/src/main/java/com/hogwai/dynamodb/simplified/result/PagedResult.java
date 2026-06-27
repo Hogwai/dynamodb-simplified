@@ -1,10 +1,9 @@
 package com.hogwai.dynamodb.simplified.result;
 
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
-
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +30,7 @@ public final class PagedResult<T> implements Consumed {
     /**
      * Constructs a new {@code PagedResult} with no consumed capacity information.
      *
-     * @param items           the items in this page
+     * @param items            the items in this page
      * @param lastEvaluatedKey the last-evaluated key for pagination, or {@code null}
      */
     public PagedResult(@NonNull List<T> items,

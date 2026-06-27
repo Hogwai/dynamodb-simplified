@@ -11,14 +11,16 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TransactGetResults")
 class TransactGetResultsTest {
 
-    @Mock Document document;
-    @Mock DynamoDbTable<String> table;
+    @Mock
+    Document document;
+    @Mock
+    DynamoDbTable<String> table;
 
     @Test
     @DisplayName("get returns item from document when document is non-null")

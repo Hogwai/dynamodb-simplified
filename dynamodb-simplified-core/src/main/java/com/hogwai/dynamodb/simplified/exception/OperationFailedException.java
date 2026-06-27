@@ -28,8 +28,8 @@ public class OperationFailedException extends DynamoSimplifiedException {
      * @param cause     the SDK exception
      */
     public OperationFailedException(@NonNull String operation,
-                                     @Nullable String tableName,
-                                     @NonNull Throwable cause) {
+                                    @Nullable String tableName,
+                                    @NonNull Throwable cause) {
         super(buildMessage(operation, tableName, cause), cause);
     }
 
