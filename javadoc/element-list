@@ -1,0 +1,8 @@
+com.hogwai.dynamodb.simplified
+com.hogwai.dynamodb.simplified.async
+com.hogwai.dynamodb.simplified.builder
+com.hogwai.dynamodb.simplified.entity
+com.hogwai.dynamodb.simplified.exception
+com.hogwai.dynamodb.simplified.expression
+com.hogwai.dynamodb.simplified.internal
+com.hogwai.dynamodb.simplified.result
