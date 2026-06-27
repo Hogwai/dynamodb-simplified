@@ -139,7 +139,6 @@ class VersionHelperTest {
         assertTrue(condition.toSdkExpression().expression().contains("="));
     }
 
-    @SuppressWarnings("PMD.ImmutableField")
     static class VersionAnnotatedFieldNoNoArgConstructor {
         @Version
         private final Integer version;
