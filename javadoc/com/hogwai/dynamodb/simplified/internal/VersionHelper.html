@@ -57,7 +57,8 @@ loadScripts(document, 'script');</script>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
 <li><a href="#getVersion(java.lang.Object)" tabindex="0">getVersion(Object)</a></li>
-<li><a href="#incrementVersion(com.hogwai.dynamodb.simplified.Versioned)" tabindex="0">incrementVersion(Versioned)</a></li>
+<li><a href="#incrementVersion(java.lang.Object)" tabindex="0">incrementVersion(Object)</a></li>
+<li><a href="#isVersioned(T)" tabindex="0">isVersioned(T)</a></li>
 <li><a href="#buildCondition(java.lang.Object)" tabindex="0">buildCondition(Object)</a></li>
 </ol>
 </li>
@@ -103,9 +104,15 @@ loadScripts(document, 'script');</script>
 <div class="block">Returns the version from a potentially-versioned item.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#incrementVersion(com.hogwai.dynamodb.simplified.Versioned)" class="member-name-link">incrementVersion</a><wbr>(@NonNull <a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified">Versioned</a>&nbsp;item)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#incrementVersion(java.lang.Object)" class="member-name-link">incrementVersion</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;item)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Increments the version on a <a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> item.</div>
+<div class="block">Increments the version on a versioned item.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;T&gt;&nbsp;boolean</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#isVersioned(T)" class="member-name-link">isVersioned</a><wbr>(@NonNull T&nbsp;item)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Checks whether the given item is versioned, either by implementing
+<a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> or by having a field annotated with <a href="../entity/Version.html" title="annotation interface in com.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
 </div>
 </div>
 </div>
@@ -132,7 +139,7 @@ loadScripts(document, 'script');</script>
 <div class="block">Returns the version from a potentially-versioned item.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
-<dd><code>item</code> - the item (may implement Versioned)</dd>
+<dd><code>item</code> - the item (may implement Versioned or have a <a href="../entity/Version.html" title="annotation interface in com.hogwai.dynamodb.simplified.entity"><code>Version</code></a> field)</dd>
 <dt>Returns:</dt>
 <dd>the version, or null if the item is not versioned or version is null</dd>
 </dl>
@@ -140,14 +147,34 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="incrementVersion(com.hogwai.dynamodb.simplified.Versioned)">
+<section class="detail" id="incrementVersion(java.lang.Object)">
 <h3>incrementVersion</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">incrementVersion</span><wbr><span class="parameters">(@NonNull <a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified">Versioned</a>&nbsp;item)</span></div>
-<div class="block">Increments the version on a <a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> item.</div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">incrementVersion</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;item)</span></div>
+<div class="block">Increments the version on a versioned item.
+<p>
+Supports items implementing <a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> or having a field annotated with <a href="../entity/Version.html" title="annotation interface in com.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>item</code> - the item to update</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="isVersioned(T)">
+<h3 id="isVersioned(java.lang.Object)">isVersioned</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">isVersioned</span><wbr><span class="parameters">(@NonNull T&nbsp;item)</span></div>
+<div class="block">Checks whether the given item is versioned, either by implementing
+<a href="../Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> or by having a field annotated with <a href="../entity/Version.html" title="annotation interface in com.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
+<dl class="notes">
+<dt>Type Parameters:</dt>
+<dd><span id="isVersioned(T)-type-param-T"><code>T</code> - the item type</span></dd>
+<dt>Parameters:</dt>
+<dd><code>item</code> - the item to check</dd>
+<dt>Returns:</dt>
+<dd>true if the item is versioned</dd>
 </dl>
 </div>
 </section>

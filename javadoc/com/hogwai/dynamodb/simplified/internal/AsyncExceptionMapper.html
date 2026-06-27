@@ -77,6 +77,15 @@ loadScripts(document, 'script');</script>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
 <div class="block">Centralized utility for consistent async exception mapping across all async builders.
 <p>
+<b>Usage:</b> All async builder CompletableFuture chains MUST use
+<code>.exceptionally(AsyncExceptionMapper.handler("Operation", tableName))</code>
+instead of inline <code>.handle()</code> or <code>.exceptionally()</code> with
+<code>instanceof</code> checks. The centralized handler correctly unwraps
+<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletionException.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletionException</code></a>, routes
+<code>DynamoDbException</code> → <a href="../exception/OperationFailedException.html" title="class in com.hogwai.dynamodb.simplified.exception"><code>OperationFailedException</code></a>,
+<code>ConditionalCheckFailedException</code> → <a href="../exception/ConditionFailedException.html" title="class in com.hogwai.dynamodb.simplified.exception"><code>ConditionFailedException</code></a>,
+and wraps other throwables as <a href="../exception/DynamoSimplifiedException.html" title="class in com.hogwai.dynamodb.simplified.exception"><code>DynamoSimplifiedException</code></a>.
+<p>
 Ensures every async builder wraps exceptions with the same semantics:
 <ul>
   <li><code>ConditionalCheckFailedException</code> → <a href="../exception/ConditionFailedException.html" title="class in com.hogwai.dynamodb.simplified.exception"><code>ConditionFailedException</code></a></li>

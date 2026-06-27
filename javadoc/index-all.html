@@ -1213,10 +1213,6 @@ if any.</div>
 <dd>
 <div class="block">Executes a PartiQL statement against DynamoDB.</div>
 </dd>
-<dt><a href="com/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html#executeStream()" class="member-name-link">executeStream()</a> - Method in class com.hogwai.dynamodb.simplified.async.<a href="com/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" title="class in com.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a></dt>
-<dd>
-<div class="block">Returns a reactive publisher that lazily emits items as pages arrive.</div>
-</dd>
 <dt><a href="com/hogwai/dynamodb/simplified/async/AsyncScanBuilder.html#executeStream()" class="member-name-link">executeStream()</a> - Method in class com.hogwai.dynamodb.simplified.async.<a href="com/hogwai/dynamodb/simplified/async/AsyncScanBuilder.html" title="class in com.hogwai.dynamodb.simplified.async">AsyncScanBuilder</a></dt>
 <dd>
 <div class="block">Returns a reactive publisher that lazily emits items as pages arrive.</div>
@@ -1668,9 +1664,9 @@ full-item replacement.</div>
 given delta using an in-place arithmetic expression
 (<code>attr = attr + delta</code>).</div>
 </dd>
-<dt><a href="com/hogwai/dynamodb/simplified/internal/VersionHelper.html#incrementVersion(com.hogwai.dynamodb.simplified.Versioned)" class="member-name-link">incrementVersion(Versioned)</a> - Static method in class com.hogwai.dynamodb.simplified.internal.<a href="com/hogwai/dynamodb/simplified/internal/VersionHelper.html" title="class in com.hogwai.dynamodb.simplified.internal">VersionHelper</a></dt>
+<dt><a href="com/hogwai/dynamodb/simplified/internal/VersionHelper.html#incrementVersion(java.lang.Object)" class="member-name-link">incrementVersion(Object)</a> - Static method in class com.hogwai.dynamodb.simplified.internal.<a href="com/hogwai/dynamodb/simplified/internal/VersionHelper.html" title="class in com.hogwai.dynamodb.simplified.internal">VersionHelper</a></dt>
 <dd>
-<div class="block">Increments the version on a <a href="com/hogwai/dynamodb/simplified/Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> item.</div>
+<div class="block">Increments the version on a versioned item.</div>
 </dd>
 <dt><a href="com/hogwai/dynamodb/simplified/async/AsyncTable.html#index(java.lang.String)" class="member-name-link">index(String)</a> - Method in class com.hogwai.dynamodb.simplified.async.<a href="com/hogwai/dynamodb/simplified/async/AsyncTable.html" title="class in com.hogwai.dynamodb.simplified.async">AsyncTable</a></dt>
 <dd>
@@ -1730,6 +1726,11 @@ with a low-level client.</div>
 <dt><a href="com/hogwai/dynamodb/simplified/result/TransactGetResults.html#isEmpty()" class="member-name-link">isEmpty()</a> - Method in class com.hogwai.dynamodb.simplified.result.<a href="com/hogwai/dynamodb/simplified/result/TransactGetResults.html" title="class in com.hogwai.dynamodb.simplified.result">TransactGetResults</a></dt>
 <dd>
 <div class="block">Returns whether no items were requested.</div>
+</dd>
+<dt><a href="com/hogwai/dynamodb/simplified/internal/VersionHelper.html#isVersioned(T)" class="member-name-link">isVersioned(T)</a> - Static method in class com.hogwai.dynamodb.simplified.internal.<a href="com/hogwai/dynamodb/simplified/internal/VersionHelper.html" title="class in com.hogwai.dynamodb.simplified.internal">VersionHelper</a></dt>
+<dd>
+<div class="block">Checks whether the given item is versioned, either by implementing
+<a href="com/hogwai/dynamodb/simplified/Versioned.html" title="interface in com.hogwai.dynamodb.simplified"><code>Versioned</code></a> or by having a field annotated with <a href="com/hogwai/dynamodb/simplified/entity/Version.html" title="annotation interface in com.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
 </dd>
 <dt><a href="com/hogwai/dynamodb/simplified/result/BatchGetResult.html#items()" class="member-name-link">items()</a> - Method in class com.hogwai.dynamodb.simplified.result.<a href="com/hogwai/dynamodb/simplified/result/BatchGetResult.html" title="class in com.hogwai.dynamodb.simplified.result">BatchGetResult</a></dt>
 <dd>
@@ -2562,6 +2563,10 @@ is less than the given value.</div>
 <dt><a href="com/hogwai/dynamodb/simplified/builder/ScanBuilder.html#startFrom(java.util.Map)" class="member-name-link">startFrom(Map)</a> - Method in class com.hogwai.dynamodb.simplified.builder.<a href="com/hogwai/dynamodb/simplified/builder/ScanBuilder.html" title="class in com.hogwai.dynamodb.simplified.builder">ScanBuilder</a></dt>
 <dd>
 <div class="block">Sets the exclusive start key for paginated scans.</div>
+</dd>
+<dt><a href="com/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html#streamResults()" class="member-name-link">streamResults()</a> - Method in class com.hogwai.dynamodb.simplified.async.<a href="com/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" title="class in com.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a></dt>
+<dd>
+<div class="block">Returns a reactive publisher that streams query results lazily.</div>
 </dd>
 <dt><a href="com/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html#STRING" class="member-name-link">STRING</a> - Enum constant in enum class com.hogwai.dynamodb.simplified.expression.<a href="com/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html" title="enum class in com.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></dt>
 <dd>
