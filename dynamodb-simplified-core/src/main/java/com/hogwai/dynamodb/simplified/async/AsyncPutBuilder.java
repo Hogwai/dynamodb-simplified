@@ -1,8 +1,5 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.Logging;
@@ -174,24 +171,13 @@ public class AsyncPutBuilder<T> {
                     .expressionAttributeValues(conditionExpression.getExpressionValues());
         }
 
-        return dynamoDbAsyncClient.putItem(requestBuilder.build()).handle(this::mapPutItemResponse);
-    }
-
-    private @Nullable T mapPutItemResponse(PutItemResponse response, Throwable e) {
-        if (e != null) {
-            switch (e) {
-                case ConditionalCheckFailedException ccf -> throw ConditionFailedException.fromSdk(ccf);
-                case DynamoDbException dde -> throw new OperationFailedException("PutItem", table.tableName(), dde);
-                case RuntimeException re -> throw re;
-                default -> {
-                    // Swallowed intentionally; falls through to DynamoSimplifiedException below
-                }
-            }
-            throw new DynamoSimplifiedException(e);
-        }
-        if (response.attributes() == null || response.attributes().isEmpty()) {
-            return null;
-        }
-        return table.tableSchema().mapToItem(response.attributes());
+        return dynamoDbAsyncClient.putItem(requestBuilder.build())
+                .thenApply(response -> {
+                    if (response.attributes() == null || response.attributes().isEmpty()) {
+                        return null;
+                    }
+                    return table.tableSchema().mapToItem(response.attributes());
+                })
+                .exceptionally(AsyncExceptionMapper.handler("PutItem", table.tableName()));
     }
 }

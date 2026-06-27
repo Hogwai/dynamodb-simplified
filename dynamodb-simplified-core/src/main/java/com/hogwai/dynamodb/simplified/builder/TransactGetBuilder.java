@@ -161,17 +161,15 @@ public class TransactGetBuilder {
         List<TransactGetItem> transactItems = new ArrayList<>();
         for (Entry<?> entry : entries) {
             ProjectionExpression projection = entry.projectionExpression;
-            Get.Builder getBuilder = Get.builder()
-                    .tableName(entry.table.tableName())
-                    .key(entry.key.primaryKeyMap(entry.table.tableSchema()));
 
-            if (projection != null && !projection.isEmpty()) {
-                getBuilder
-                        .projectionExpression(projection.getExpression())
-                        .expressionAttributeNames(projection.getExpressionNames());
-            }
-
-            transactItems.add(TransactGetItem.builder().get(ignored -> getBuilder.build()).build());
+            transactItems.add(TransactGetItem.builder().get(b -> {
+                b.tableName(entry.table.tableName());
+                b.key(entry.key.primaryKeyMap(entry.table.tableSchema()));
+                if (projection != null && !projection.isEmpty()) {
+                    b.projectionExpression(projection.getExpression());
+                    b.expressionAttributeNames(projection.getExpressionNames());
+                }
+            }).build());
         }
 
         TransactGetItemsRequest request = TransactGetItemsRequest.builder()

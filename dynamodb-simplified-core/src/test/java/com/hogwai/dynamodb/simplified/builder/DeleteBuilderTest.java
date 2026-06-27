@@ -1,6 +1,8 @@
 package com.hogwai.dynamodb.simplified.builder;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import com.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -198,6 +200,15 @@ class DeleteBuilderTest {
     }
 
     @Test
+    @DisplayName("returnValues with ALL_OLD but no low-level client throws IllegalStateException")
+    void returnValues_withoutLowLevelClient_throws() {
+        DeleteBuilder<TestItem> builder = new DeleteBuilder<>(table, "pk", null, null);
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> builder.returnValues(ReturnValue.ALL_OLD));
+        assertTrue(ex.getMessage().contains("low-level DynamoDbClient"));
+    }
+
+    @Test
     @DisplayName("returnValues not set uses enhanced client path")
     void returnValues_none_usesEnhancedPath() {
         // Given
@@ -292,6 +303,46 @@ class DeleteBuilderTest {
         // Then
         ConditionFailedException ex = assertThrows(ConditionFailedException.class, builder::execute);
         assertTrue(ex.getMessage().startsWith("Conditional check failed:"));
+    }
+
+    @Test
+    @DisplayName("condition with ConditionExpression directly sets the condition")
+    void executeWithDirectConditionExpression() {
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class))).thenReturn(new TestItem());
+        var builder = new DeleteBuilder<>(table, "pk", null, null);
+        ConditionExpression expr = ConditionExpression.builder().eq("status", "active").build();
+        builder.condition(expr);
+        builder.execute();
+        verify(table).deleteItem(requestCaptor.capture());
+        assertNotNull(requestCaptor.getValue().conditionExpression());
+    }
+
+    @Test
+    @DisplayName("execute wraps DynamoDbException in OperationFailedException")
+    void execute_wrapsDynamoDbException() {
+        DynamoDbException sdkEx = mock(DynamoDbException.class);
+        when(sdkEx.getMessage()).thenReturn("db error");
+        when(table.deleteItem(any(DeleteItemEnhancedRequest.class))).thenThrow(sdkEx);
+        var builder = new DeleteBuilder<>(table, "pk", null, null);
+        OperationFailedException ex = assertThrows(OperationFailedException.class, builder::execute);
+        assertTrue(ex.getMessage().contains("DeleteItem"));
+    }
+
+    @Test
+    @DisplayName("execute with returnValues wraps DynamoDbException in OperationFailedException")
+    void execute_withReturnValues_wrapsDynamoDbException() {
+        DynamoDbException sdkEx = mock(DynamoDbException.class);
+        when(sdkEx.getMessage()).thenReturn("db error");
+        when(dynamoDbClient.deleteItem(any(DeleteItemRequest.class))).thenThrow(sdkEx);
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("pk");
+
+        var builder = new DeleteBuilder<>(table, "pk", null, dynamoDbClient);
+        builder.returnValues(ReturnValue.ALL_OLD);
+        OperationFailedException ex = assertThrows(OperationFailedException.class, builder::execute);
+        assertTrue(ex.getMessage().contains("DeleteItem"));
     }
 
     @Test

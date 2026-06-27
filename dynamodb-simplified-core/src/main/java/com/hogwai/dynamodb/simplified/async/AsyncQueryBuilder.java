@@ -532,25 +532,20 @@ public class AsyncQueryBuilder<T> {
     }
 
     /**
-     * Returns a reactive publisher that lazily emits items as pages arrive.
-     * <p>
-     * Unlike {@link #executeAll()} which loads all pages into memory, this method
-     * streams items one-by-one as each page is received from DynamoDB.
+     * Returns a reactive publisher that streams query results lazily.
      *
-     * @return a {@link CompletableFuture} containing an {@link SdkPublisher}
-     * that emits query items
+     * @return an {@link SdkPublisher} that emits query items
      * @throws IllegalStateException if called with Select.COUNT
      */
-    public @NonNull CompletableFuture<SdkPublisher<T>> executeStream() {
+    @NonNull
+    public SdkPublisher<T> streamResults() {
         if (select == Select.COUNT) {
-            return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
+            throw new IllegalStateException("Cannot call streamResults() with Select.COUNT. Use count() instead.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("AsyncQuery stream on table '{}'", getTableName());
         }
-        return CompletableFuture.completedFuture(
-                buildPagePublisher().flatMapIterable(Page::items));
+        return buildPagePublisher().flatMapIterable(Page::items);
     }
 
     /**

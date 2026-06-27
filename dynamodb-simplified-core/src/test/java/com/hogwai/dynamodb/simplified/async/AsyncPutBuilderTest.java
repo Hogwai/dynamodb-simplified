@@ -1,6 +1,8 @@
 package com.hogwai.dynamodb.simplified.async;
 
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -344,5 +346,65 @@ class AsyncPutBuilderTest {
 
         CompletionException ex = assertThrows(CompletionException.class, result::join);
         assertInstanceOf(ConditionFailedException.class, ex.getCause());
+    }
+
+    // ============ mapPutItemResponse missing branches (DynamoDbException, rethrow, checked) ============
+
+    @Test
+    @DisplayName("executeReturning with DynamoDbException wraps into OperationFailedException")
+    void executeReturning_withDynamoDbException_throwsOperationFailedException() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbAsyncClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        DynamoDbException.builder().message("Service error").build()));
+
+        CompletableFuture<Optional<TestItem>> result = new AsyncPutBuilder<>(table, item, dynamoDbAsyncClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .executeReturning();
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(OperationFailedException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeReturning with RuntimeException rethrows as-is")
+    void executeReturning_withRuntimeException_rethrows() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbAsyncClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("runtime error")));
+
+        CompletableFuture<Optional<TestItem>> result = new AsyncPutBuilder<>(table, item, dynamoDbAsyncClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .executeReturning();
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeReturning with checked exception wraps into DynamoSimplifiedException")
+    void executeReturning_withCheckedException_throwsDynamoSimplifiedException() {
+        TestItem item = new TestItem("item-1");
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemToMap(any(), anyBoolean()))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("item-1").build()));
+        when(dynamoDbAsyncClient.putItem(any(PutItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(new Exception("checked exception")));
+
+        CompletableFuture<Optional<TestItem>> result = new AsyncPutBuilder<>(table, item, dynamoDbAsyncClient)
+                .returnValues(ReturnValue.ALL_OLD)
+                .executeReturning();
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
     }
 }

@@ -196,7 +196,7 @@ class AsyncUpdateBuilderTest {
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(
-                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+                        UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build()));
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -226,7 +226,7 @@ class AsyncUpdateBuilderTest {
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(
-                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+                        UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build()));
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -304,7 +304,7 @@ class AsyncUpdateBuilderTest {
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(
-                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+                        UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build()));
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -326,7 +326,7 @@ class AsyncUpdateBuilderTest {
         when(key.primaryKeyMap(any())).thenReturn(Map.of("id", AttributeValue.builder().s("123").build()));
         when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(
-                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+                        UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build()));
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.mapToItem(any())).thenReturn(resultItem);
 
@@ -369,7 +369,7 @@ class AsyncUpdateBuilderTest {
         TableSchema<TestItem> schema = mockSchema(null);
         when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(
-                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+                        UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build()));
         when(schema.mapToItem(any())).thenReturn(resultItem);
         when(table.tableName()).thenReturn("test-table");
 
@@ -395,7 +395,7 @@ class AsyncUpdateBuilderTest {
         TableSchema<TestItem> schema = mockSchema("sk");
         when(dynamoDbAsyncClient.updateItem(any(UpdateItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(
-                        UpdateItemResponse.builder().attributes(Map.of()).build()));
+                        UpdateItemResponse.builder().attributes(Map.of("id", AttributeValue.builder().s("123").build())).build()));
         when(schema.mapToItem(any())).thenReturn(resultItem);
         when(table.tableName()).thenReturn("test-table");
 
@@ -421,5 +421,19 @@ class AsyncUpdateBuilderTest {
         CompletableFuture<Optional<TestItem>> result = builder.execute();
         CompletionException ex = assertThrows(CompletionException.class, result::join);
         assertInstanceOf(IllegalStateException.class, ex.getCause());
+    }
+
+    // ============ ReturnValues without expression guard (missed branch) ============
+
+    @Test
+    @DisplayName("returnValues without update expression throws IllegalStateException")
+    void returnValues_withoutExpression_throwsIllegalStateException() {
+        CompletableFuture<Optional<TestItem>> result = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+                .returnValues(ReturnValue.ALL_NEW)
+                .execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+        assertTrue(ex.getCause().getMessage().contains("ReturnValues is not supported for full-item replacement"));
     }
 }

@@ -1,8 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import com.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import com.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import com.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
@@ -12,7 +11,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 
 import java.util.HashMap;
@@ -125,15 +123,8 @@ public class AsyncGetItemBuilder<T> {
                 .consistentRead(consistentRead)
                 .build();
         return table.getItem(request)
-                .handle((item, err) -> {
-                    if (err != null) {
-                        if (err instanceof DynamoDbException dde) {
-                            throw new OperationFailedException("GetItem", table.tableName(), dde);
-                        }
-                        throw new DynamoSimplifiedException("GetItem failed", err);
-                    }
-                    return Optional.ofNullable(item);
-                });
+                .thenApply(Optional::ofNullable)
+                .exceptionally(AsyncExceptionMapper.handler("GetItem", table.tableName()));
     }
 
     private CompletableFuture<Optional<T>> executeWithProjection() {
@@ -155,18 +146,13 @@ public class AsyncGetItemBuilder<T> {
                 .build();
 
         return dynamoDbAsyncClient.getItem(request)
-                .handle((response, err) -> {
-                    if (err != null) {
-                        if (err instanceof DynamoDbException dde) {
-                            throw new OperationFailedException("GetItem", table.tableName(), dde);
-                        }
-                        throw new DynamoSimplifiedException("GetItem failed", err);
-                    }
+                .thenApply(response -> {
                     if (!response.hasItem()) {
-                        return Optional.empty();
+                        return Optional.<T>empty();
                     }
                     return Optional.of(table.tableSchema().mapToItem(response.item()));
-                });
+                })
+                .exceptionally(AsyncExceptionMapper.handler("GetItem", table.tableName()));
     }
 
 

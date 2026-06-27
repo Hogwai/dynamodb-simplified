@@ -1,6 +1,8 @@
 package com.hogwai.dynamodb.simplified;
 
 import com.hogwai.dynamodb.simplified.builder.QueryBuilder;
+import com.hogwai.dynamodb.simplified.entity.Entity;
+import com.hogwai.dynamodb.simplified.entity.EntityTable;
 import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,6 +77,28 @@ class DynamoSimplifiedClientTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    /**
+     * A simple entity bean annotated with {@code @Entity} for entity table tests.
+     */
+    @Entity(discriminator = "DSC", table = "test-table")
+    @DynamoDbBean
+    public static class TestEntity {
+        private String pk;
+
+        @SuppressWarnings("checkstyle:RedundantModifier")
+        public TestEntity() {
+        }
+
+        @DynamoDbPartitionKey
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
         }
     }
 
@@ -242,5 +266,51 @@ class DynamoSimplifiedClientTest {
         DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
         assertThrows(NullPointerException.class,
                 () -> client.table("test-table", TestItem.class, null));
+    }
+
+    // ============ Entity Table ============
+
+    @Test
+    @DisplayName("entityTable returns a non-null EntityTable")
+    void entityTable_returnsEntityTable() {
+        when(enhancedClient.table(any(String.class), any(TableSchema.class))).thenReturn(dynamoDbTable);
+
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        EntityTable<?> entityTable = client.entityTable(TestEntity.class);
+
+        assertNotNull(entityTable);
+    }
+
+    // ============ Cross-Table Batch Operations ============
+
+    @Test
+    @DisplayName("batchGet returns a non-null CrossTableBatchGetBuilder")
+    void batchGet_returnsBuilder() {
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        assertNotNull(client.batchGet());
+    }
+
+    @Test
+    @DisplayName("batchWrite returns a non-null CrossTableBatchWriteBuilder")
+    void batchWrite_returnsBuilder() {
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        assertNotNull(client.batchWrite());
+    }
+
+    // ============ Client Utilities ============
+
+    @Test
+    @DisplayName("getDynamoDbClient returns the injected DynamoDbClient")
+    void getDynamoDbClient() {
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        assertSame(dynamoDbClient, client.getDynamoDbClient());
+    }
+
+    @Test
+    @DisplayName("close delegates to DynamoDbClient.close()")
+    void close_delegatesToDynamoDbClient() {
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        client.close();
+        verify(dynamoDbClient).close();
     }
 }

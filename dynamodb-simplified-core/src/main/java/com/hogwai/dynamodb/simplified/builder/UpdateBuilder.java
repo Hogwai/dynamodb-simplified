@@ -296,6 +296,9 @@ public class UpdateBuilder<T> {
             throw new OperationFailedException("UpdateItem", table.tableName(), e);
         }
 
+        if (result == null || result.isEmpty()) {
+            return null;
+        }
         return table.tableSchema().mapToItem(result);
     }
 

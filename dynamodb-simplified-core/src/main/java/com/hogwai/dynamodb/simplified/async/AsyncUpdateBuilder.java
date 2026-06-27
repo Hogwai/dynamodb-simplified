@@ -230,7 +230,13 @@ public class AsyncUpdateBuilder<T> {
 
         return dynamoDbAsyncClient.updateItem(requestBuilder.build())
                 .exceptionally(AsyncExceptionMapper.handler("UpdateItem", table.tableName()))
-                .thenApply(response -> table.tableSchema().mapToItem(response.attributes()));
+                .thenApply(response -> {
+                    Map<String, AttributeValue> attrs = response.attributes();
+                    if (attrs == null || attrs.isEmpty()) {
+                        return null;
+                    }
+                    return table.tableSchema().mapToItem(attrs);
+                });
     }
 
     // ---- Key extraction from item ----

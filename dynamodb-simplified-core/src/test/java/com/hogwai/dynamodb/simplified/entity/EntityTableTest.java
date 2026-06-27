@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +40,7 @@ class EntityTableTest {
             this.name = name;
         }
 
-        @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
+        @DynamoDbPartitionKey
         public String getPk() {
             return pk;
         }
@@ -147,5 +149,89 @@ class EntityTableTest {
         when(mockTable.getItem("NONEXISTENT")).thenReturn(Optional.empty());
         TestUser result = entityTable.get("NONEXISTENT");
         assertThat(result).isNull();
+    }
+
+    // ============ SK Branch Coverage Tests ============
+
+    @Entity(discriminator = "ITEM", table = "myapp")
+    @KeyPrefix(component = "PK", value = "ITEM")
+    @KeyPrefix(component = "SK", value = "TYPE")
+    static class TestItemWithSk {
+        private String pk;
+        private String sk;
+        private String itemId;
+        private String typeId;
+
+        TestItemWithSk() {
+        }
+
+        TestItemWithSk(String itemId, String typeId) {
+            this.itemId = itemId;
+            this.typeId = typeId;
+        }
+
+        @DynamoDbPartitionKey
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
+        }
+
+        @DynamoDbSortKey
+        public String getSk() {
+            return sk;
+        }
+
+        public void setSk(String sk) {
+            this.sk = sk;
+        }
+
+        @KeyComponent(component = "PK")
+        public String getItemId() {
+            return itemId;
+        }
+
+        public void setItemId(String itemId) {
+            this.itemId = itemId;
+        }
+
+        @KeyComponent(component = "SK")
+        public String getTypeId() {
+            return typeId;
+        }
+
+        public void setTypeId(String typeId) {
+            this.typeId = typeId;
+        }
+    }
+
+    @Test
+    void put_withSortKey_shouldComputeBothKeys() {
+        var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
+        var mockTableWithSk = mock(Table.class);
+        var tableWithSk = new DefaultEntityTable<>(mockTableWithSk, schemaWithSk);
+
+        TestItemWithSk item = new TestItemWithSk("item1", "gadget");
+        tableWithSk.put(item);
+
+        assertThat(item.getPk()).isEqualTo("ITEM#item1");
+        assertThat(item.getSk()).isEqualTo("TYPE#gadget");
+        verify(mockTableWithSk).putItem(item);
+    }
+
+    @Test
+    void update_withSortKey_shouldComputeBothKeys() {
+        var schemaWithSk = EntitySchemaReader.read(TestItemWithSk.class);
+        var mockTableWithSk = mock(Table.class);
+        var tableWithSk = new DefaultEntityTable<>(mockTableWithSk, schemaWithSk);
+
+        TestItemWithSk item = new TestItemWithSk("item2", "widget");
+        tableWithSk.update(item);
+
+        assertThat(item.getPk()).isEqualTo("ITEM#item2");
+        assertThat(item.getSk()).isEqualTo("TYPE#widget");
+        verify(mockTableWithSk).updateItem(item);
     }
 }

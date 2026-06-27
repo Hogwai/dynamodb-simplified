@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.Versioned;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ class PutBuilderTest {
     private DynamoDbTable<TestItem> table;
 
     @Mock
+    private DynamoDbTable<VersionedTestItem> versionedTable;
+
+    @Mock
     private DynamoDbClient dynamoDbClient;
 
     @Mock
@@ -47,6 +51,26 @@ class PutBuilderTest {
 
         TestItem(String id) {
             this.id = id;
+        }
+    }
+
+    static class VersionedTestItem implements Versioned {
+        public String id;
+        private Integer version;
+
+        VersionedTestItem(String id) {
+            this.id = id;
+            this.version = 1;
+        }
+
+        @Override
+        public Integer getVersion() {
+            return version;
+        }
+
+        @Override
+        public void setVersion(Integer version) {
+            this.version = version;
         }
     }
 
@@ -350,5 +374,21 @@ class PutBuilderTest {
                 .returnValues(ReturnValue.ALL_OLD);
 
         assertThrows(ConditionFailedException.class, builder::executeReturning);
+    }
+
+    // ============ Optimistic locking with existing condition ============
+
+    @Test
+    @DisplayName("withOptimisticLocking merges version condition with existing condition")
+    void execute_withOptimisticLockingAndExistingCondition() {
+        VersionedTestItem versionedItem = new VersionedTestItem("item-1");
+
+        new PutBuilder<>(versionedTable, versionedItem, dynamoDbClient)
+                .withOptimisticLocking()
+                .condition(c -> c.exists("attr"))
+                .execute();
+
+        assertEquals(2, versionedItem.getVersion(), "Version should be incremented from 1 to 2");
+        verify(versionedTable).putItem(any(PutItemEnhancedRequest.class));
     }
 }

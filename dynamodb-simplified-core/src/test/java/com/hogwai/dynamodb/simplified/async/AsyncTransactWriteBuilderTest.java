@@ -1,5 +1,7 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.CancellationReason;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
 import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsResponse;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
@@ -286,5 +289,83 @@ class AsyncTransactWriteBuilderTest {
         var tfe = (TransactionFailedException) ex.getCause();
         assertEquals(1, tfe.getCancellationReasons().size());
         assertNull(tfe.getCancellationReason(0));
+    }
+
+    // ============ Enhanced path exception wrapping (missed branches) ============
+
+    @Test
+    @DisplayName("executeEnhanced wraps DynamoDbException into OperationFailedException")
+    void executeEnhanced_wrapsDynamoDbException() throws Exception {
+        when(enhancedClient.transactWriteItems(any(TransactWriteItemsEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        DynamoDbException.builder().message("Service unavailable").build()));
+
+        TestItem item = new TestItem("item-1");
+        AsyncTable<TestItem> tableWrapper = createAsyncTable(table);
+        AsyncTransactWriteBuilder builder = new AsyncTransactWriteBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.put(tableWrapper, item);
+
+        CompletableFuture<Void> future = builder.execute();
+        var ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(OperationFailedException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeEnhanced wraps generic exception into DynamoSimplifiedException")
+    void executeEnhanced_wrapsGenericException() throws Exception {
+        when(enhancedClient.transactWriteItems(any(TransactWriteItemsEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("unexpected")));
+
+        TestItem item = new TestItem("item-1");
+        AsyncTable<TestItem> tableWrapper = createAsyncTable(table);
+        AsyncTransactWriteBuilder builder = new AsyncTransactWriteBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.put(tableWrapper, item);
+
+        CompletableFuture<Void> future = builder.execute();
+        var ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
+    }
+
+    // ============ Low-level path exception wrapping (missed branches) ============
+
+    @Test
+    @DisplayName("executeLowLevel wraps DynamoDbException into OperationFailedException")
+    void executeLowLevel_wrapsDynamoDbException() throws Exception {
+        when(dynamoDbAsyncClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        DynamoDbException.builder().message("Service error").build()));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(mock(TableSchema.class));
+
+        TestItem item = new TestItem("item-1");
+        AsyncTable<TestItem> tableWrapper = createAsyncTable(table);
+        AsyncTransactWriteBuilder builder = new AsyncTransactWriteBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.update(tableWrapper, item, expr -> expr.set("status", "active"));
+
+        CompletableFuture<Void> future = builder.execute();
+        var ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(OperationFailedException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("executeLowLevel wraps generic exception into DynamoSimplifiedException")
+    void executeLowLevel_wrapsGenericException() throws Exception {
+        when(dynamoDbAsyncClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("oops")));
+        when(table.tableName()).thenReturn("test-table");
+        when(table.tableSchema()).thenReturn(mock(TableSchema.class));
+
+        TestItem item = new TestItem("item-1");
+        AsyncTable<TestItem> tableWrapper = createAsyncTable(table);
+        AsyncTransactWriteBuilder builder = new AsyncTransactWriteBuilder(enhancedClient, dynamoDbAsyncClient);
+
+        builder.update(tableWrapper, item, expr -> expr.set("status", "active"));
+
+        CompletableFuture<Void> future = builder.execute();
+        var ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
     }
 }

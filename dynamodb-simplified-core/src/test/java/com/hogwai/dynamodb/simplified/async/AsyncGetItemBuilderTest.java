@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,12 +15,14 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -244,5 +247,104 @@ class AsyncGetItemBuilderTest {
         GetItemEnhancedRequest request = captor.getValue();
 
         assertTrue(request.consistentRead());
+    }
+
+    // ============ projection with sort key ============
+
+    @Test
+    @DisplayName("execute() with projection and sort key includes sort key in low-level key map")
+    void execute_withProjectionAndSortKey_includesSortKey() {
+        TestItem expected = new TestItem("pk-value", "proj-sk-item");
+        Map<String, AttributeValue> itemMap = Map.of(
+                "id", AttributeValue.builder().s("pk-value").build(),
+                "sk", AttributeValue.builder().s("sk-value").build(),
+                "name", AttributeValue.builder().s("proj-sk-item").build()
+        );
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        when(tableMetadata.primaryPartitionKey()).thenReturn("id");
+        when(tableMetadata.primarySortKey()).thenReturn(Optional.of("sk"));
+        when(table.tableName()).thenReturn("test-table");
+        when(dynamoDbAsyncClient.getItem(any(GetItemRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        GetItemResponse.builder().item(itemMap).build()));
+        when(tableSchema.mapToItem(itemMap)).thenReturn(expected);
+
+        Optional<TestItem> result = pkSkBuilder
+                .project("name")
+                .execute()
+                .join();
+
+        assertTrue(result.isPresent());
+        assertSame(expected, result.get());
+
+        ArgumentCaptor<GetItemRequest> captor = ArgumentCaptor.forClass(GetItemRequest.class);
+        verify(dynamoDbAsyncClient).getItem(captor.capture());
+        GetItemRequest request = captor.getValue();
+
+        assertNotNull(request.key());
+        assertEquals(2, request.key().size());
+        assertEquals(AttributeValue.builder().s("pk-value").build(), request.key().get("id"));
+        assertEquals(AttributeValue.builder().s("sk-value").build(), request.key().get("sk"));
+    }
+
+    // ============ error handling - simple path ============
+
+    @Test
+    @DisplayName("execute() wraps DynamoDbException from simple path in OperationFailedException")
+    void execute_withSimplePath_whenDynamoDbException() {
+        DynamoDbException dde = mock(DynamoDbException.class);
+        when(table.getItem(any(GetItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(dde));
+
+        CompletableFuture<Optional<TestItem>> future = pkOnlyBuilder.execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(OperationFailedException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("execute() rethrows generic exception from simple path as-is")
+    void execute_withSimplePath_whenGenericException() {
+        when(table.getItem(any(GetItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("generic error")));
+
+        CompletableFuture<Optional<TestItem>> future = pkOnlyBuilder.execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(RuntimeException.class, ex.getCause());
+    }
+
+    // ============ error handling - projection path ============
+
+    @Test
+    @DisplayName("execute() with projection wraps DynamoDbException in OperationFailedException")
+    void execute_withProjection_whenDynamoDbException() {
+        mockTableSchema("id", null);
+        DynamoDbException dde = mock(DynamoDbException.class);
+        when(dynamoDbAsyncClient.getItem(any(GetItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(dde));
+
+        CompletableFuture<Optional<TestItem>> future = pkOnlyBuilder
+                .project("name")
+                .execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(OperationFailedException.class, ex.getCause());
+    }
+
+    @Test
+    @DisplayName("execute() with projection rethrows generic exception as-is")
+    void execute_withProjection_whenGenericException() {
+        mockTableSchema("id", null);
+        when(dynamoDbAsyncClient.getItem(any(GetItemRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("generic error")));
+
+        CompletableFuture<Optional<TestItem>> future = pkOnlyBuilder
+                .project("name")
+                .execute();
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 }

@@ -25,6 +25,9 @@ import java.util.Optional;
  */
 final class DefaultEntityTable<T> implements EntityTable<T> {
 
+    private static final String PARTITION_KEY_COMPONENT = "PK";
+    private static final String SORT_KEY_COMPONENT = "SK";
+
     private final Table<T> table;
     private final EntitySchema<T> schema;
 
@@ -48,19 +51,12 @@ final class DefaultEntityTable<T> implements EntityTable<T> {
                 skGetter = m;
             }
         }
-        this.pkSetter = findSetter(clazz, pkGetter);
-        this.skSetter = findSetter(clazz, skGetter);
-
-        if (this.pkSetter == null) {
-            throw new IllegalArgumentException(
-                    "Entity class " + clazz.getName()
-                            + " must have a @DynamoDbPartitionKey-annotated getter with a corresponding setter. "
-                            + "The setter is required for automatic composite key computation.");
-        }
+        this.pkSetter = findSetterFromGetter(clazz, pkGetter);
+        this.skSetter = findSetterFromGetter(clazz, skGetter);
     }
 
     @SuppressWarnings("NullAway")
-    private static <T> Method findSetter(Class<T> clazz, Method getter) {
+    private static Method findSetterFromGetter(Class<?> clazz, Method getter) {
         if (getter == null) {
             return null;
         }
@@ -72,6 +68,14 @@ final class DefaultEntityTable<T> implements EntityTable<T> {
         try {
             return clazz.getMethod(setterName, getter.getReturnType());
         } catch (NoSuchMethodException ignored) {
+            return null;
+        }
+    }
+
+    private static Method findSetter(Class<?> clazz, String name) {
+        try {
+            return clazz.getMethod(name, String.class);
+        } catch (NoSuchMethodException e) {
             return null;
         }
     }
@@ -129,13 +133,22 @@ final class DefaultEntityTable<T> implements EntityTable<T> {
     }
 
     private void computeAndSetKeys(T entity) {
-        String pk = schema.computeKey("PK", entity);
-        if (pk != null) {
-            setValue(entity, pkSetter, pk);
-        }
-        String sk = schema.computeKey("SK", entity);
-        if (sk != null && skSetter != null) {
-            setValue(entity, skSetter, sk);
+        for (String component : schema.keyComponents()) {
+            String value = schema.computeKey(component, entity);
+            if (value == null) {
+                continue;
+            }
+            Method setter;
+            if (PARTITION_KEY_COMPONENT.equals(component)) {
+                setter = pkSetter;
+            } else if (SORT_KEY_COMPONENT.equals(component)) {
+                setter = skSetter;
+            } else {
+                setter = findSetter(entity.getClass(), "set" + component);
+            }
+            if (setter != null) {
+                setValue(entity, setter, value);
+            }
         }
     }
 

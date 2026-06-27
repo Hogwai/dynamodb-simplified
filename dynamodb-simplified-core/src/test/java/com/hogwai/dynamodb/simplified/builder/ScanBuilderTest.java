@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified.builder;
 
+import com.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import com.hogwai.dynamodb.simplified.expression.FilterExpression;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.DisplayName;
@@ -461,6 +462,108 @@ class ScanBuilderTest {
         assertEquals(Select.COUNT, captor.getValue().select());
     }
 
+    @Test
+    @DisplayName("count() with low-level client applies limit option")
+    void count_withLowLevelAndLimit() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .limit(10)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals(10, captor.getValue().limit());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies exclusiveStartKey option")
+    void count_withLowLevelAndExclusiveStartKey() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .startFrom(Map.of("pk", attrVal("val")))
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertNotNull(captor.getValue().exclusiveStartKey());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client and filter expression sets filter in request")
+    void count_withLowLevelAndFilterExpression() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .filter(c -> c.eq("status", "active"))
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertNotNull(captor.getValue().filterExpression());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies returnConsumedCapacity option")
+    void count_withLowLevelAndReturnConsumedCapacity() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client using index resolves table name from index")
+    void count_withLowLevel_usingIndex() {
+        lenient().when(index.tableName()).thenReturn("index-table");
+        stubLowLevelScanReturns(7);
+
+        long total = new ScanBuilder<>(index, dynamoDbClient)
+                .count();
+
+        assertEquals(7L, total);
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertEquals("index-table", captor.getValue().tableName());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies parallel scan options")
+    void count_withLowLevel_parallelScan() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .parallelScan(4, 0)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        ScanRequest request = captor.getValue();
+        assertNotNull(request.totalSegments());
+        assertEquals(4, request.totalSegments().intValue());
+    }
+
+    @Test
+    @DisplayName("count() with low-level client applies consistent read option")
+    void count_withLowLevel_consistentRead() {
+        stubLowLevelScanReturns(5);
+
+        new ScanBuilder<>(table, dynamoDbClient)
+                .consistentRead(true)
+                .count();
+
+        ArgumentCaptor<ScanRequest> captor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(dynamoDbClient).scan(captor.capture());
+        assertTrue(captor.getValue().consistentRead());
+    }
+
     // ============ Routing Guard Tests ============
 
     @Test
@@ -505,5 +608,74 @@ class ScanBuilderTest {
                         .select(Select.COUNT)
                         .count()
         );
+    }
+
+    // ============ Exception Paths ============
+
+    @Test
+    @DisplayName("executeAll wraps DynamoDbException in OperationFailedException")
+    void executeAll_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeAll);
+    }
+
+    @Test
+    @DisplayName("executeAndGetFirst wraps DynamoDbException in OperationFailedException")
+    void executeAndGetFirst_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeAndGetFirst);
+    }
+
+    @Test
+    @DisplayName("executeStream wraps DynamoDbException in OperationFailedException")
+    void executeStream_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeStream);
+    }
+
+    @Test
+    @DisplayName("executeWithPagination wraps DynamoDbException in OperationFailedException")
+    void executeWithPagination_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::executeWithPagination);
+    }
+
+    @Test
+    @DisplayName("count with enhanced client wraps DynamoDbException in OperationFailedException")
+    void count_wrapsDynamoDbException() {
+        when(table.scan(any(ScanEnhancedRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table);
+        assertThrows(OperationFailedException.class, builder::count);
+    }
+
+    @Test
+    @DisplayName("count with low-level client wraps DynamoDbException in OperationFailedException")
+    void count_withLowLevel_wrapsDynamoDbException() {
+        when(dynamoDbClient.scan(any(ScanRequest.class))).thenThrow(mock(DynamoDbException.class));
+
+        var builder = new ScanBuilder<>(table, dynamoDbClient);
+        assertThrows(OperationFailedException.class, builder::count);
+    }
+
+    @Test
+    @DisplayName("executeAll with index uses table name from index for getTableName path")
+    void executeAll_withIndex_getTableName() {
+        Page<TestItem> page = mockPage(1, 1, null);
+        lenient().when(index.tableName()).thenReturn("index-table");
+        when(index.scan(any(ScanEnhancedRequest.class))).thenReturn(PageIterable.create(() -> List.of(page).iterator()));
+
+        List<TestItem> result = new ScanBuilder<>(index).executeAll();
+
+        assertEquals(1, result.size());
+        verify(index).scan(any(ScanEnhancedRequest.class));
     }
 }

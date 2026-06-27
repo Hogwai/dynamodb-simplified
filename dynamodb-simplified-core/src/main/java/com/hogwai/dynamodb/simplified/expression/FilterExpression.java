@@ -396,6 +396,9 @@ public class FilterExpression {
      */
     @NonNull
     public FilterExpression group(@NonNull FilterExpression nested) {
+        if (nested.isEmpty()) {
+            return this;
+        }
         // Re-key nested placeholders to avoid collision
         int nameOffset = nameCounter;
         int valueOffset = valueCounter;

@@ -4,6 +4,7 @@ import com.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.jspecify.annotations.NonNull;
 
 import java.beans.Introspector;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.UnaryOperator;
@@ -47,6 +48,9 @@ public final class EntitySchemaReader {
                             kc.component(), kc.position(), attributeName, extractor));
         }
 
+        // Also scan fields for @KeyComponent (annotation targets FIELD too)
+        scanFieldsForKeyComponents(clazz, components);
+
         // Sort each component list by position
         for (List<EntitySchema.KeyComponentInfo> list : components.values()) {
             list.sort(Comparator.comparingInt(EntitySchema.KeyComponentInfo::position));
@@ -72,5 +76,41 @@ public final class EntitySchemaReader {
                 entityAnn.table(),
                 components,
                 prefixes);
+    }
+
+    private static <T> void scanFieldsForKeyComponents(Class<T> clazz,
+            Map<String, List<EntitySchema.KeyComponentInfo>> components) {
+        for (Field field : clazz.getDeclaredFields()) {
+            KeyComponent kc = field.getAnnotation(KeyComponent.class);
+            if (kc == null) {
+                continue;
+            }
+
+            String attributeName = field.getName();
+
+            String getterName = "get" + Character.toUpperCase(field.getName().charAt(0))
+                    + field.getName().substring(1);
+            Method getter;
+            try {
+                getter = clazz.getMethod(getterName);
+            } catch (NoSuchMethodException e) {
+                throw new DynamoSimplifiedException(
+                        "No getter method '" + getterName + "' found for key component field '"
+                                + field.getName() + "' in " + clazz.getName(), e);
+            }
+
+            UnaryOperator<Object> extractor = entity -> {
+                try {
+                    return getter.invoke(entity);
+                } catch (Exception e) {
+                    throw new DynamoSimplifiedException("Failed to extract key component '"
+                            + attributeName + "' from " + entity, e);
+                }
+            };
+
+            components.computeIfAbsent(kc.component(), ignored -> new ArrayList<>())
+                    .add(new EntitySchema.KeyComponentInfo(
+                            kc.component(), kc.position(), attributeName, extractor));
+        }
     }
 }

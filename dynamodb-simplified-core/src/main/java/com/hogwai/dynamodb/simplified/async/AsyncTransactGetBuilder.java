@@ -15,7 +15,6 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.internal.DefaultDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactGetItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.Get;
 import software.amazon.awssdk.services.dynamodb.model.ItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.TransactGetItem;
 import software.amazon.awssdk.services.dynamodb.model.TransactGetItemsRequest;
@@ -213,17 +212,15 @@ public class AsyncTransactGetBuilder {
         List<TransactGetItem> transactItems = new ArrayList<>();
         for (Entry<?> entry : entries) {
             ProjectionExpression projection = entry.projectionExpression;
-            Get.Builder getBuilder = Get.builder()
-                    .tableName(entry.table.tableName())
-                    .key(entry.key.primaryKeyMap(entry.table.tableSchema()));
 
-            if (projection != null && !projection.isEmpty()) {
-                getBuilder
-                        .projectionExpression(projection.getExpression())
-                        .expressionAttributeNames(projection.getExpressionNames());
-            }
-
-            transactItems.add(TransactGetItem.builder().get(ignored -> getBuilder.build()).build());
+            transactItems.add(TransactGetItem.builder().get(b -> {
+                b.tableName(entry.table.tableName());
+                b.key(entry.key.primaryKeyMap(entry.table.tableSchema()));
+                if (projection != null && !projection.isEmpty()) {
+                    b.projectionExpression(projection.getExpression());
+                    b.expressionAttributeNames(projection.getExpressionNames());
+                }
+            }).build());
         }
         return transactItems;
     }
