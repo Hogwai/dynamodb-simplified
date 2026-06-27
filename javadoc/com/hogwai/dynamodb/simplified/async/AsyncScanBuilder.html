@@ -523,8 +523,8 @@ results along with the last evaluated key for pagination.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing a <a href="../result/PagedResult.html" title="class in com.hogwai.dynamodb.simplified.result"><code>PagedResult</code></a>
-        with the first page of items and the last evaluated key
-        (may be <code>null</code> if no more pages)</dd>
+with the first page of items and the last evaluated key
+(may be <code>null</code> if no more pages)</dd>
 </dl>
 </div>
 </section>
@@ -539,7 +539,7 @@ results along with the last evaluated key for pagination.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing an <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link"><code>Optional</code></a>
-        with the first item, or empty if no items match</dd>
+with the first item, or empty if no items match</dd>
 </dl>
 </div>
 </section>
@@ -556,7 +556,7 @@ streams items one-by-one as each page is received from DynamoDB.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing an <code>SdkPublisher</code>
-        that emits scan items</dd>
+that emits scan items</dd>
 <dt>Throws:</dt>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/IllegalStateException.html" title="class or interface in java.lang" class="external-link">IllegalStateException</a></code> - if called with Select.COUNT</dd>
 </dl>
@@ -577,7 +577,7 @@ Falls back to the enhanced client page iteration otherwise.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing the total count of
-        scanned items matching the filter</dd>
+scanned items matching the filter</dd>
 </dl>
 </div>
 </section>
