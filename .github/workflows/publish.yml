@@ -31,19 +31,11 @@ jobs:
         run: chmod +x gradlew
 
       - name: Publish to Maven Central
-        run: ./gradlew :dynamodb-simplified-core:publish
+        run: ./gradlew :dynamodb-simplified-core:publish :dynamodb-simplified-core:jreleaserDeploy
         env:
-          # Maven Central credentials (ORG_GRADLE_PROJECT_* prefix makes them visible to project.findProperty)
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-          # GPG signing
+          # GPG signing (used by Gradle signing plugin during publish)
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-
-      - name: Close and upload staging repository to Central Portal
-        run: |
-          TOKEN="${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}"
-          B64_TOKEN=$(echo -n "$TOKEN" | base64 -w0)
-          curl -s -X POST \
-            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/dev.hogwai?publishing_type=automatic" \
-            -H "Authorization: Bearer $B64_TOKEN"
+          # JReleaser Maven Central Portal credentials
+          JRELEASER_MAVENCENTRAL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          JRELEASER_MAVENCENTRAL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
