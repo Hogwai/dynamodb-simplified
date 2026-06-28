@@ -55,6 +55,14 @@ public class TransactWriteBuilder {
         }
     }
 
+    /**
+     * Constructs a transactional write builder.
+     * <p>
+     * Typically obtained via {@link com.hogwai.dynamodb.simplified.DynamoSimplifiedClient#transactWrite()}.
+     *
+     * @param enhancedClient the enhanced DynamoDB client
+     * @param dynamoDbClient the low-level DynamoDB client (used for expression-based update fallback)
+     */
     public TransactWriteBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;
         this.dynamoDbClient = dynamoDbClient;

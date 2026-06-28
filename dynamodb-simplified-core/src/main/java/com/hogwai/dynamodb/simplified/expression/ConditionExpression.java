@@ -105,40 +105,87 @@ public final class ConditionExpression {
      * capability while maintaining a distinct type.
      */
     public static final class Builder {
+
+        /** Creates a new condition expression builder. */
+        public Builder() {
+        }
+
         private final FilterExpression delegate = FilterExpression.builder();
 
         // ============ Basic Comparisons ============
 
+        /**
+         * Adds an equality condition: {@code attr = value}.
+         *
+         * @param attr  the attribute name
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder eq(@NonNull String attr, @NonNull Object value) {
             delegate.eq(attr, value);
             return this;
         }
 
+        /**
+         * Adds a not-equal condition: {@code attr <> value}.
+         *
+         * @param attr  the attribute name
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder ne(@NonNull String attr, @NonNull Object value) {
             delegate.ne(attr, value);
             return this;
         }
 
+        /**
+         * Adds a less-than condition: {@code attr < value}.
+         *
+         * @param attr  the attribute name
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder lt(@NonNull String attr, @NonNull Object value) {
             delegate.lt(attr, value);
             return this;
         }
 
+        /**
+         * Adds a less-than-or-equal condition: {@code attr <= value}.
+         *
+         * @param attr  the attribute name
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder le(@NonNull String attr, @NonNull Object value) {
             delegate.le(attr, value);
             return this;
         }
 
+        /**
+         * Adds a greater-than condition: {@code attr > value}.
+         *
+         * @param attr  the attribute name
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder gt(@NonNull String attr, @NonNull Object value) {
             delegate.gt(attr, value);
             return this;
         }
 
+        /**
+         * Adds a greater-than-or-equal condition: {@code attr >= value}.
+         *
+         * @param attr  the attribute name
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder ge(@NonNull String attr, @NonNull Object value) {
             delegate.ge(attr, value);
@@ -147,12 +194,26 @@ public final class ConditionExpression {
 
         // ============ String Operations ============
 
+        /**
+         * Adds a {@code begins_with} condition: the attribute value starts with the given prefix.
+         *
+         * @param attr   the attribute name
+         * @param prefix the prefix to match
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder beginsWith(@NonNull String attr, @NonNull String prefix) {
             delegate.beginsWith(attr, prefix);
             return this;
         }
 
+        /**
+         * Adds a {@code contains} condition: the attribute value contains the given value.
+         *
+         * @param attr  the attribute name
+         * @param value the value to search for within the attribute
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder contains(@NonNull String attr, @NonNull Object value) {
             delegate.contains(attr, value);
@@ -161,36 +222,79 @@ public final class ConditionExpression {
 
         // ============ Server-side SIZE Operations ============
 
+        /**
+         * Adds a condition on the server-side size of the attribute value: {@code size(attr) = value}.
+         *
+         * @param attr the attribute name
+         * @param size the expected size
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder sizeEq(@NonNull String attr, int size) {
             delegate.sizeEq(attr, size);
             return this;
         }
 
+        /**
+         * Adds a condition: {@code size(attr) < value}.
+         *
+         * @param attr the attribute name
+         * @param size the size threshold
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder sizeLt(@NonNull String attr, int size) {
             delegate.sizeLt(attr, size);
             return this;
         }
 
+        /**
+         * Adds a condition: {@code size(attr) <= value}.
+         *
+         * @param attr the attribute name
+         * @param size the size threshold
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder sizeLe(@NonNull String attr, int size) {
             delegate.sizeLe(attr, size);
             return this;
         }
 
+        /**
+         * Adds a condition: {@code size(attr) > value}.
+         *
+         * @param attr the attribute name
+         * @param size the size threshold
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder sizeGt(@NonNull String attr, int size) {
             delegate.sizeGt(attr, size);
             return this;
         }
 
+        /**
+         * Adds a condition: {@code size(attr) >= value}.
+         *
+         * @param attr the attribute name
+         * @param size the size threshold
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder sizeGe(@NonNull String attr, int size) {
             delegate.sizeGe(attr, size);
             return this;
         }
 
+        /**
+         * Adds a condition: {@code size(attr) BETWEEN min AND max}.
+         *
+         * @param attr the attribute name
+         * @param min  the minimum size (inclusive)
+         * @param max  the maximum size (inclusive)
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder sizeBetween(@NonNull String attr, int min, int max) {
             delegate.sizeBetween(attr, min, max);
@@ -199,12 +303,24 @@ public final class ConditionExpression {
 
         // ============ Attribute Existence ============
 
+        /**
+         * Adds a condition that the attribute must exist (not null).
+         *
+         * @param attr the attribute name
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder exists(@NonNull String attr) {
             delegate.exists(attr);
             return this;
         }
 
+        /**
+         * Adds a condition that the attribute must not exist (is null or absent).
+         *
+         * @param attr the attribute name
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder notExists(@NonNull String attr) {
             delegate.notExists(attr);
@@ -213,6 +329,13 @@ public final class ConditionExpression {
 
         // ============ Attribute Type ============
 
+        /**
+         * Adds a condition checking the attribute's DynamoDB type using {@code attribute_type}.
+         *
+         * @param attr the attribute name
+         * @param type the expected DynamoDB attribute type
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder attributeType(@NonNull String attr, FilterExpression.AttributeType type) {
             delegate.attributeType(attr, type);
@@ -221,12 +344,27 @@ public final class ConditionExpression {
 
         // ============ BETWEEN, IN ============
 
+        /**
+         * Adds a BETWEEN condition: {@code attr BETWEEN low AND high}.
+         *
+         * @param attr the attribute name
+         * @param low  the lower bound (inclusive)
+         * @param high the upper bound (inclusive)
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder between(@NonNull String attr, @NonNull Object low, @NonNull Object high) {
             delegate.between(attr, low, high);
             return this;
         }
 
+        /**
+         * Adds an IN condition: {@code attr IN (value1, value2, ...)}.
+         *
+         * @param attr   the attribute name
+         * @param values the set of values to test against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder in(@NonNull String attr, Object... values) {
             delegate.in(attr, values);
@@ -235,18 +373,33 @@ public final class ConditionExpression {
 
         // ============ Logical ============
 
+        /**
+         * Adds a logical AND between the previously added condition and the next one.
+         *
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder and() {
             delegate.and();
             return this;
         }
 
+        /**
+         * Adds a logical OR between the previously added condition and the next one.
+         *
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder or() {
             delegate.or();
             return this;
         }
 
+        /**
+         * Adds a logical NOT to negate the previously added condition.
+         *
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder not() {
             delegate.not();
@@ -269,6 +422,14 @@ public final class ConditionExpression {
 
         // ============ Nested ============
 
+        /**
+         * Adds an equality condition on a nested attribute path (e.g. {@code "address.city"}).
+         * The path is automatically expanded with expression attribute names for each segment.
+         *
+         * @param path  the dotted nested attribute path
+         * @param value the value to compare against
+         * @return this builder for chaining
+         */
         @NonNull
         public Builder nestedEq(@NonNull String path, @NonNull Object value) {
             delegate.nestedEq(path, value);

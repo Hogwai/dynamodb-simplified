@@ -21,6 +21,9 @@ public final class AttributeValueConverter {
 
     /**
      * Converts any supported Java type to an AttributeValue.
+     *
+     * @param value the value to convert (may be {@code null})
+     * @return the corresponding DynamoDB AttributeValue
      */
     @NonNull
     public static AttributeValue toAttributeValue(@Nullable Object value) {
@@ -43,6 +46,10 @@ public final class AttributeValueConverter {
     /**
      * Converts a partition key or sort key value to an AttributeValue.
      * DynamoDB keys allow only String, Number, and Binary.
+     *
+     * @param value the key value to convert
+     * @return the corresponding DynamoDB AttributeValue
+     * @throws IllegalArgumentException if the value is {@code null} or an unsupported type
      */
     @NonNull
     public static AttributeValue toKeyAttributeValue(@Nullable Object value) {

@@ -22,6 +22,10 @@ public final class PageCollector {
 
     /**
      * Subscribes to a page publisher and collects all pages into a CompletableFuture list.
+     *
+     * @param <T>       the page item type
+     * @param publisher the page publisher to subscribe to
+     * @return a CompletableFuture that completes with the full list of collected pages
      */
     public static <T> CompletableFuture<List<Page<T>>> collectPages(SdkPublisher<Page<T>> publisher) {
         return collectPages(publisher, DEFAULT_PREFETCH_LIMIT);

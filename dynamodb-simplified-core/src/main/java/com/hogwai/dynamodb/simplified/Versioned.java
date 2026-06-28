@@ -10,11 +10,15 @@ package com.hogwai.dynamodb.simplified;
 public interface Versioned {
     /**
      * Returns the current version.
+     *
+     * @return the current version number
      */
     Integer getVersion();
 
     /**
      * Sets the version (called by the library after successful write).
+     *
+     * @param version the new version number
      */
     void setVersion(Integer version);
 }

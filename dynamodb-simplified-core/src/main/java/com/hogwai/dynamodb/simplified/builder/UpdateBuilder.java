@@ -64,6 +64,11 @@ public class UpdateBuilder<T> {
      * Key-only constructor for use from {@link Table} convenience methods.
      * Skips the item parameter and builds the key map directly from partition
      * (and optionally sort) key values.
+     *
+     * @param table          the DynamoDB table
+     * @param dynamoDbClient the low-level DynamoDB client (required for partial updates)
+     * @param partitionKey   the partition key value
+     * @param sortKey        the sort key value, or {@code null} if the table has no sort key
      */
     public UpdateBuilder(@NonNull DynamoDbTable<T> table, @NonNull DynamoDbClient dynamoDbClient,
                          @NonNull Object partitionKey, @Nullable Object sortKey) {

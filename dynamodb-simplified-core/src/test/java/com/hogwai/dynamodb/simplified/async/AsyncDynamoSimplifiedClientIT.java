@@ -1,6 +1,6 @@
 package com.hogwai.dynamodb.simplified.async;
 
-import com.hogwai.dynamodb.simplified.TestPost;
+import com.hogwai.dynamodb.simplified.bean.TestPost;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.GenericContainer;

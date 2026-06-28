@@ -58,6 +58,13 @@ public class ProjectionExpression {
         return this;
     }
 
+    /**
+     * Includes a nested attribute path in the projection (e.g. {@code "address.city"}).
+     * Each path segment is mapped to an expression attribute name placeholder.
+     *
+     * @param path the dotted nested attribute path
+     * @return this builder for chaining
+     */
     @NonNull
     public ProjectionExpression includeNested(@NonNull String path) {
         String nameKey = addNestedName(path);
@@ -66,6 +73,13 @@ public class ProjectionExpression {
         return this;
     }
 
+    /**
+     * Includes a specific list element in the projection (e.g. {@code "items[0]}).
+     *
+     * @param attribute the attribute name
+     * @param index     the zero-based element index
+     * @return this builder for chaining
+     */
     @NonNull
     public ProjectionExpression includeListElement(@NonNull String attribute, int index) {
         String nameKey = addName(attribute);

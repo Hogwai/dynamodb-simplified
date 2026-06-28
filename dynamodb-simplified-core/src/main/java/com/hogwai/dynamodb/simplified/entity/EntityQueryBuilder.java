@@ -10,6 +10,15 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 
+/**
+ * Builds and executes cross-entity queries across multiple entity types
+ * sharing a single DynamoDB table (single-table design).
+ * <p>
+ * Supports partition key filtering, sort key conditions, discriminator-based
+ * entity filtering, pagination, and projection.
+ *
+ * @see com.hogwai.dynamodb.simplified.entity.EntityTable#query(Object)
+ */
 @SuppressWarnings({"PMD.NullAssignment", "PMD.CyclomaticComplexity"})
 public final class EntityQueryBuilder {
 
@@ -67,6 +76,13 @@ public final class EntityQueryBuilder {
         this.discriminatorAttribute = discriminatorAttribute;
     }
 
+    /**
+     * Sets the partition key value for the query.
+     * Resets any previously configured sort key condition.
+     *
+     * @param partitionKey the partition key value
+     * @return this builder for chaining
+     */
     @NonNull
     public EntityQueryBuilder partitionKey(@NonNull Object partitionKey) {
         this.partitionKey = partitionKey;
@@ -76,18 +92,38 @@ public final class EntityQueryBuilder {
         return this;
     }
 
+    /**
+     * Limits the number of items returned per page.
+     *
+     * @param limit the maximum number of items per page
+     * @return this builder for chaining
+     */
     @NonNull
     public EntityQueryBuilder limit(int limit) {
         this.limit = limit;
         return this;
     }
 
+    /**
+     * Includes an entity type in the cross-entity query results.
+     * Items matching the entity's discriminator value will be deserialized
+     * into the given entity class.
+     *
+     * @param entityClass the entity class to include
+     * @return this builder for chaining
+     */
     @NonNull
     public EntityQueryBuilder includeEntity(@NonNull Class<?> entityClass) {
         EntitySchema<?> schema = EntitySchemaReader.read(entityClass);
         return includeEntity(schema);
     }
 
+    /**
+     * Includes an entity type using a pre-built {@link EntitySchema}.
+     *
+     * @param schema the entity schema to include
+     * @return this builder for chaining
+     */
     @NonNull
     public EntityQueryBuilder includeEntity(@NonNull EntitySchema<?> schema) {
         if (pkAttributeName == null) {
@@ -101,6 +137,9 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key begins with the given prefix.
+     *
+     * @param value the prefix value
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyBeginsWith(@NonNull Object value) {
@@ -112,6 +151,9 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key equals the given value.
+     *
+     * @param value the value to match
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyEquals(@NonNull Object value) {
@@ -123,6 +165,10 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key is between the given values (inclusive).
+     *
+     * @param from the lower bound (inclusive)
+     * @param to   the upper bound (inclusive)
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyBetween(@NonNull Object from, @NonNull Object to) {
@@ -134,6 +180,9 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key is strictly greater than the given value.
+     *
+     * @param value the threshold value
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyGreaterThan(@NonNull Object value) {
@@ -145,6 +194,9 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key is greater than or equal to the given value.
+     *
+     * @param value the threshold value
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyGreaterThanOrEqual(@NonNull Object value) {
@@ -156,6 +208,9 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key is strictly less than the given value.
+     *
+     * @param value the threshold value
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyLessThan(@NonNull Object value) {
@@ -167,6 +222,9 @@ public final class EntityQueryBuilder {
 
     /**
      * Adds a sort key condition: sort key is less than or equal to the given value.
+     *
+     * @param value the threshold value
+     * @return this builder for chaining
      */
     @NonNull
     public EntityQueryBuilder sortKeyLessThanOrEqual(@NonNull Object value) {
@@ -220,6 +278,12 @@ public final class EntityQueryBuilder {
 
     // ============ Execution ============
 
+    /**
+     * Executes the query and returns all matching items grouped by entity type.
+     *
+     * @return a {@link CrossEntityResult} containing items mapped by entity class
+     * @throws IllegalStateException if the partition key has not been set
+     */
     @NonNull
     public CrossEntityResult execute() {
         if (partitionKey == null) {

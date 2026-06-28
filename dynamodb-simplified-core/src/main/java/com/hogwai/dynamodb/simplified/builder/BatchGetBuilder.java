@@ -41,6 +41,15 @@ public class BatchGetBuilder<T> {
     private ProjectionExpression projectionExpression;
     private ReturnConsumedCapacity returnConsumedCapacity;
 
+    /**
+     * Constructs a batch get builder for the given table.
+     * <p>
+     * Typically obtained via {@link com.hogwai.dynamodb.simplified.Table#batchGet()}.
+     *
+     * @param enhancedClient the enhanced DynamoDB client
+     * @param table          the typed DynamoDB table
+     * @param dynamoDbClient the low-level DynamoDB client (used for projection fallback)
+     */
     public BatchGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbTable<T> table,
                            @NonNull DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;

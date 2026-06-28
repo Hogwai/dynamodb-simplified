@@ -34,6 +34,16 @@ public class Table<T> {
     private final DynamoDbTable<T> dynamoDbTable;
     private final DynamoDbClient dynamoDbClient;
 
+    /**
+     * Constructs a typed table wrapper.
+     * <p>
+     * Typically obtained via {@link DynamoSimplifiedClient#table(String, Class)}
+     * rather than constructed directly.
+     *
+     * @param enhancedClient the enhanced DynamoDB client
+     * @param dynamoDbTable  the typed enhanced DynamoDB table
+     * @param dynamoDbClient the low-level DynamoDB client (used for fallback operations)
+     */
     public Table(DynamoDbEnhancedClient enhancedClient, DynamoDbTable<T> dynamoDbTable, DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;
         this.dynamoDbTable = dynamoDbTable;

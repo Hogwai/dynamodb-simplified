@@ -9,11 +9,26 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
+/**
+ * Reads {@link Entity @Entity} and {@link KeyComponent @KeyComponent}
+ * annotations from a class and produces an {@link EntitySchema}.
+ * <p>
+ * Scans both methods and fields for {@code @KeyComponent} annotations
+ * and collects {@link KeyPrefix @KeyPrefix} values.
+ */
 public final class EntitySchemaReader {
 
     private EntitySchemaReader() {
     }
 
+    /**
+     * Reads the entity schema from an {@code @Entity}-annotated class.
+     *
+     * @param <T>   the entity type
+     * @param clazz the entity class to scan
+     * @return the parsed entity schema
+     * @throws IllegalArgumentException if the class is not annotated with {@code @Entity}
+     */
     public static @NonNull <T> EntitySchema<T> read(@NonNull Class<T> clazz) {
         Entity entityAnn = clazz.getAnnotation(Entity.class);
         if (entityAnn == null) {

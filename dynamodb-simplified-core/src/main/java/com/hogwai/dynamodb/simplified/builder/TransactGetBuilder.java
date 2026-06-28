@@ -42,6 +42,14 @@ public class TransactGetBuilder {
     private final DynamoDbClient dynamoDbClient;
     private final List<Entry<?>> entries = new ArrayList<>();
 
+    /**
+     * Constructs a transactional get builder.
+     * <p>
+     * Typically obtained via {@link com.hogwai.dynamodb.simplified.DynamoSimplifiedClient#transactGet()}.
+     *
+     * @param enhancedClient the enhanced DynamoDB client
+     * @param dynamoDbClient the low-level DynamoDB client (used for projection fallback)
+     */
     public TransactGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbClient dynamoDbClient) {
         this.enhancedClient = enhancedClient;
         this.dynamoDbClient = dynamoDbClient;

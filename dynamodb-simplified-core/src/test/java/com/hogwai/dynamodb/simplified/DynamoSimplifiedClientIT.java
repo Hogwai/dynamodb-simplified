@@ -1,5 +1,6 @@
 package com.hogwai.dynamodb.simplified;
 
+import com.hogwai.dynamodb.simplified.bean.Product;
 import com.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import com.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.*;

@@ -13,6 +13,8 @@ import java.util.List;
  * Provides positional access to retrieved items. Items are returned in the same order
  * as they were added to the builder. A position may yield {@code null} if the item
  * does not exist in DynamoDB.
+ *
+ * @param <T> the mapped table resource type
  */
 public class TransactGetResults<T extends MappedTableResource<?>> {
 

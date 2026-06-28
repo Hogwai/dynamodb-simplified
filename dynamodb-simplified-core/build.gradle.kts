@@ -44,6 +44,10 @@ dependencies {
     testRuntimeOnly("ch.qos.logback:logback-classic:${project.findProperty("versionLogback")}")
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 tasks.named<Test>("test") {
     useJUnitPlatform {
         excludeTags("integration")

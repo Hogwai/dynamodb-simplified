@@ -26,6 +26,7 @@ public class TransactionFailedException extends DynamoSimplifiedException {
 
     private static final String NONE_CODE = "None";
 
+    /** The per-operation cancellation reasons, one per transaction action. */
     private final List<String> cancellationReasons;
 
     /**

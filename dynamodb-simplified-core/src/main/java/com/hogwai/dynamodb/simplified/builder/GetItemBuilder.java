@@ -38,9 +38,10 @@ public class GetItemBuilder<T> {
     /**
      * Constructs a new {@code GetItemBuilder} for the given table and key.
      *
-     * @param table        the DynamoDB table
-     * @param partitionKey the partition key value
-     * @param sortKey      the sort key value (may be {@code null} if the table has no sort key)
+     * @param table          the DynamoDB table
+     * @param partitionKey   the partition key value
+     * @param sortKey        the sort key value (may be {@code null} if the table has no sort key)
+     * @param dynamoDbClient the low-level DynamoDB client (used for projection fallback)
      */
     public GetItemBuilder(@NonNull DynamoDbTable<T> table, @NonNull Object partitionKey,
                           @Nullable Object sortKey, @NonNull DynamoDbClient dynamoDbClient) {

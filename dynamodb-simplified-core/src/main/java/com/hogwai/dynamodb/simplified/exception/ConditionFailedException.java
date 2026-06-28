@@ -16,10 +16,21 @@ public class ConditionFailedException extends DynamoSimplifiedException {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Constructs a new condition failed exception with the specified detail message.
+     *
+     * @param message the detail message
+     */
     public ConditionFailedException(@Nullable String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new condition failed exception with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause   the cause (typically a {@link ConditionalCheckFailedException})
+     */
     public ConditionFailedException(@Nullable String message, @Nullable Throwable cause) {
         super(message, cause);
     }
@@ -27,6 +38,9 @@ public class ConditionFailedException extends DynamoSimplifiedException {
     /**
      * Creates a ConditionFailedException from an SDK
      * {@link ConditionalCheckFailedException}.
+     *
+     * @param cause the SDK condition check failure exception
+     * @return a new ConditionFailedException wrapping the cause
      */
     public static ConditionFailedException fromSdk(ConditionalCheckFailedException cause) {
         return new ConditionFailedException(

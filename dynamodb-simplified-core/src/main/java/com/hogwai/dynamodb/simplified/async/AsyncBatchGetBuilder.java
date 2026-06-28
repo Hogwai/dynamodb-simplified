@@ -38,6 +38,7 @@ public class AsyncBatchGetBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(AsyncBatchGetBuilder.class);
     private static final int MAX_BATCH_SIZE = 100;
+    /** The DynamoDB API name for logging/metrics. */
     public static final String BATCH_GET_ITEM = "BatchGetItem";
 
     private final DynamoDbEnhancedAsyncClient enhancedClient;
