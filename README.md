@@ -10,6 +10,31 @@ A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces 
 
 ---
 
+## Installation
+
+Add the dependency to your project:
+
+```kotlin
+// Gradle (Kotlin DSL)
+implementation("dev.hogwai:dynamodb-simplified-core:0.1.0")
+```
+
+```groovy
+// Gradle (Groovy)
+implementation 'dev.hogwai:dynamodb-simplified-core:0.1.0'
+```
+
+```xml
+<!-- Maven -->
+<dependency>
+    <groupId>dev.hogwai</groupId>
+    <artifactId>dynamodb-simplified-core</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+---
+
 ## Comparison
 
 ### dynamodb-enhanced
