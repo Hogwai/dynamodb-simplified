@@ -10,7 +10,9 @@ A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces 
 
 ---
 
-### Vanilla AWS SDK
+## Comparison
+
+### dynamodb-enhanced
 
 ```java
 Map<String, String> expressionNames = new HashMap<>();
@@ -41,7 +43,7 @@ List<Post> posts = table.query(request)
     .collect(Collectors.toList());
 ```
 
-### With DynamoDB Simplified
+### dynamodb-simplified
 
 ```java
 List<Post> posts = table.query()
