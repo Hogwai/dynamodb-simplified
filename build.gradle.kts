@@ -1,6 +1,6 @@
 plugins {
     id("io.micronaut.application") version "4.6.1" apply false
-    id("com.gradleup.shadow") version "8.3.11" apply false
+    id("com.gradleup.shadow") version "9.4.3" apply false
     id("io.micronaut.aot") version "4.6.1" apply false
 }
 
