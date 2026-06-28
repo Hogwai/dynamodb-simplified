@@ -1,8 +1,8 @@
-com.hogwai.dynamodb.simplified
-com.hogwai.dynamodb.simplified.async
-com.hogwai.dynamodb.simplified.builder
-com.hogwai.dynamodb.simplified.entity
-com.hogwai.dynamodb.simplified.exception
-com.hogwai.dynamodb.simplified.expression
-com.hogwai.dynamodb.simplified.internal
-com.hogwai.dynamodb.simplified.result
+dev.hogwai.dynamodb.simplified
+dev.hogwai.dynamodb.simplified.async
+dev.hogwai.dynamodb.simplified.builder
+dev.hogwai.dynamodb.simplified.entity
+dev.hogwai.dynamodb.simplified.exception
+dev.hogwai.dynamodb.simplified.expression
+dev.hogwai.dynamodb.simplified.internal
+dev.hogwai.dynamodb.simplified.result

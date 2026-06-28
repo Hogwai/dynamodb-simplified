@@ -1611,7 +1611,7 @@
 <hr />
 <h2 id="defining-entities">Defining Entities</h2>
 <h3 id="basic-entity-partition-key-only">Basic Entity (Partition Key Only)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">com.hogwai.dynamodb.simplified.entity.*</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">dev.hogwai.dynamodb.simplified.entity.*</span><span class="p">;</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean</span><span class="p">;</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey</span><span class="p">;</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
@@ -1801,7 +1801,7 @@
 <h2 id="cross-entity-queries">Cross-Entity Queries</h2>
 <p>Cross-entity queries retrieve multiple entity types from the same partition key in a single DynamoDB query. The library builds an <code>OR</code>-based filter expression for the discriminator attribute and maps each result to its entity type.</p>
 <h3 id="using-entityquerybuilder">Using EntityQueryBuilder</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">com.hogwai.dynamodb.simplified.entity.*</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">dev.hogwai.dynamodb.simplified.entity.*</span><span class="p">;</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">EntityQueryBuilder</span><span class="w"> </span><span class="n">query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">EntityQueryBuilder</span><span class="p">(</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="n">dynamoDbClient</span><span class="p">,</span><span class="w">     </span><span class="c1">// the low-level DynamoDbClient</span>
@@ -1928,9 +1928,9 @@
 <hr />
 <h2 id="complete-example">Complete Example</h2>
 <p>Below is a full example using single-table design with User and Post entities, sync and async operations, and a cross-entity query.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">com.hogwai.dynamodb.simplified.DynamoSimplifiedClient</span><span class="p">;</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">com.hogwai.dynamodb.simplified.EntityTable</span><span class="p">;</span>
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">com.hogwai.dynamodb.simplified.entity.*</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">dev.hogwai.dynamodb.simplified.DynamoSimplifiedClient</span><span class="p">;</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">dev.hogwai.dynamodb.simplified.EntityTable</span><span class="p">;</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">dev.hogwai.dynamodb.simplified.entity.*</span><span class="p">;</span>
 <a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*</span><span class="p">;</span>
 <a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>
 <a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="c1">// ---- Entity Definitions ----</span>
