@@ -1,0 +1,278 @@
+package dev.hogwai.dynamodb.simplified.async;
+
+import dev.hogwai.dynamodb.simplified.entity.AsyncEntityTable;
+import dev.hogwai.dynamodb.simplified.entity.AsyncEntityTableBuilder;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
+import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
+import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+
+/**
+ * Async entry point for the DynamoDB Simplified library.
+ * <p>
+ * Provides factory methods to create an async client and access typed {@link AsyncTable}
+ * instances for DynamoDB table operations. Wraps a {@link DynamoDbEnhancedAsyncClient}
+ * and a {@link DynamoDbAsyncClient}.
+ * </p>
+ * <p>
+ * Thread safety: this client is safe to use from multiple threads once created.
+ * The {@code table()} factory method may be called concurrently. Individual builders
+ * returned by {@code AsyncTable} methods are single-use and not thread-safe.
+ * </p>
+ *
+ * @see AsyncTable
+ * @see DynamoDbEnhancedAsyncClient
+ * @see DynamoDbAsyncClient
+ */
+public class AsyncDynamoSimplifiedClient implements AutoCloseable {
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncDynamoSimplifiedClient.class);
+    private final DynamoDbEnhancedAsyncClient enhancedAsyncClient;
+    private final DynamoDbAsyncClient dynamoDbAsyncClient;
+
+    /**
+     * Package-private constructor, used by create() and builder() methods.
+     */
+    AsyncDynamoSimplifiedClient(
+            @NonNull DynamoDbEnhancedAsyncClient enhancedAsyncClient,
+            @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        this.enhancedAsyncClient = enhancedAsyncClient;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+    }
+
+    /**
+     * Creates an {@code AsyncDynamoSimplifiedClient} with default AWS credentials and region.
+     *
+     * @return a new instance
+     */
+    @NonNull
+    public static AsyncDynamoSimplifiedClient create() {
+        DynamoDbAsyncClient client = DynamoDbAsyncClient.create();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncDynamoSimplifiedClient created");
+        }
+        try {
+            return new AsyncDynamoSimplifiedClient(
+                    DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(client).build(),
+                    client);
+        } catch (RuntimeException e) {
+            client.close();
+            throw e;
+        }
+    }
+
+    /**
+     * Creates an {@code AsyncDynamoSimplifiedClient} with a custom {@link DynamoDbAsyncClient}.
+     *
+     * @param client the async DynamoDB client to use
+     * @return a new instance
+     */
+    @NonNull
+    public static AsyncDynamoSimplifiedClient create(@NonNull DynamoDbAsyncClient client) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("AsyncDynamoSimplifiedClient created");
+        }
+        return new AsyncDynamoSimplifiedClient(
+                DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(client).build(),
+                client);
+    }
+
+    /**
+     * Returns a builder for creating an {@link AsyncDynamoSimplifiedClient} with
+     * extensions and a custom DynamoDB async client.
+     *
+     * @return a new builder instance
+     */
+    @NonNull
+    public static AsyncDynamoSimplifiedClientBuilder builder() {
+        return new AsyncDynamoSimplifiedClientBuilder();
+    }
+
+    /**
+     * Returns a typed {@link AsyncTable} for the given table name and item class.
+     *
+     * @param tableName the name of the DynamoDB table
+     * @param itemClass the class of items stored in the table
+     * @param <T>       the item type
+     * @return an {@code AsyncTable<T>} for the specified table
+     */
+    @NonNull
+    public <T> AsyncTable<T> table(@NonNull String tableName, @NonNull Class<T> itemClass) {
+        TableSchema<T> schema = TableSchema.fromBean(itemClass);
+        return new AsyncTable<>(enhancedAsyncClient, enhancedAsyncClient.table(tableName, schema), dynamoDbAsyncClient);
+    }
+
+    /**
+     * Returns a typed {@link AsyncTable} for the given table name and custom schema.
+     *
+     * @param tableName the name of the DynamoDB table
+     * @param schema    the table schema defining item mapping
+     * @param <T>       the item type
+     * @return an {@code AsyncTable<T>} for the specified table
+     */
+    @NonNull
+    public <T> AsyncTable<T> table(@NonNull String tableName, @NonNull TableSchema<T> schema) {
+        return new AsyncTable<>(enhancedAsyncClient, enhancedAsyncClient.table(tableName, schema), dynamoDbAsyncClient);
+    }
+
+    /**
+     * Returns a typed {@link AsyncTable} for the given table name and item class,
+     * using a {@link StaticTableSchema} configured by the provided consumer.
+     * <p>
+     * This is useful when you want to define the table schema programmatically
+     * rather than using annotations.
+     *
+     * @param tableName    the name of the DynamoDB table
+     * @param itemClass    the class of items stored in the table
+     * @param configurator a consumer to configure the {@link StaticTableSchema.Builder}
+     * @param <T>          the item type
+     * @return an {@code AsyncTable<T>} for the specified table
+     */
+    @NonNull
+    public <T> AsyncTable<T> table(@NonNull String tableName, @NonNull Class<T> itemClass,
+                                   @NonNull Consumer<StaticTableSchema.Builder<T>> configurator) {
+        StaticTableSchema.Builder<T> builder = StaticTableSchema.builder(itemClass);
+        configurator.accept(builder);
+        TableSchema<T> schema = builder.build();
+        return table(tableName, schema);
+    }
+
+    // ============ Single-Table / Entity Operations ============
+
+    /**
+     * Returns an {@link AsyncEntityTable} for the given entity class, enabling
+     * single-table design with auto-computed composite keys and discriminator
+     * filtering.
+     * <p>
+     * The entity class must be annotated with
+     * {@link dev.hogwai.dynamodb.simplified.entity.Entity @Entity}.
+     * Key components are defined via
+     * {@link dev.hogwai.dynamodb.simplified.entity.KeyComponent @KeyComponent}
+     * and automatically composed into the table's partition/sort keys before
+     * every put and update operation. Queries are automatically filtered by
+     * the entity's discriminator value.
+     *
+     * @param entityClass the entity class annotated with {@code @Entity}
+     * @param <T>         the entity type
+     * @return an {@code AsyncEntityTable<T>} for single-table design
+     */
+    @NonNull
+    public <T> AsyncEntityTable<T> entityTable(@NonNull Class<T> entityClass) {
+        return new AsyncEntityTableBuilder<>(entityClass)
+                .dynamoDbAsyncClient(dynamoDbAsyncClient)
+                .enhancedAsyncClient(enhancedAsyncClient)
+                .build();
+    }
+
+    // ============ Transaction Operations ============
+
+    /**
+     * Starts building an async transactional read operation across one or more tables.
+     * <p>
+     * All items are read atomically in a single all-or-nothing transaction.
+     *
+     * @return an {@link AsyncTransactGetBuilder} for configuring and executing the transaction
+     */
+    @NonNull
+    public AsyncTransactGetBuilder transactGet() {
+        return new AsyncTransactGetBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
+    }
+
+    /**
+     * Starts building an async transactional write operation across one or more tables.
+     * <p>
+     * All put, update, delete, and condition check actions are applied atomically.
+     *
+     * @return an {@link AsyncTransactWriteBuilder} for configuring and executing the transaction
+     */
+    @NonNull
+    public AsyncTransactWriteBuilder transactWrite() {
+        return new AsyncTransactWriteBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
+    }
+
+    // ============ Cross-Table Batch Operations ============
+
+    /**
+     * Returns an async cross-table batch get builder for retrieving items from multiple tables.
+     *
+     * @return an async cross-table batch get builder
+     */
+    @NonNull
+    public AsyncCrossTableBatchGetBuilder batchGet() {
+        return new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
+    }
+
+    /**
+     * Returns an async cross-table batch write builder for putting/deleting items across multiple tables.
+     *
+     * @return an async cross-table batch write builder
+     */
+    @NonNull
+    public AsyncCrossTableBatchWriteBuilder batchWrite() {
+        return new AsyncCrossTableBatchWriteBuilder(dynamoDbAsyncClient);
+    }
+
+    /**
+     * Returns the underlying {@link DynamoDbEnhancedAsyncClient}.
+     *
+     * @return the enhanced async DynamoDB client
+     */
+    @NonNull
+    public DynamoDbEnhancedAsyncClient getEnhancedClient() {
+        return enhancedAsyncClient;
+    }
+
+    /**
+     * Returns the underlying {@link DynamoDbAsyncClient}.
+     *
+     * @return the DynamoDB async client
+     */
+    @NonNull
+    public DynamoDbAsyncClient getDynamoDbClient() {
+        return dynamoDbAsyncClient;
+    }
+
+    /**
+     * Lists all DynamoDB tables asynchronously.
+     *
+     * @return a {@link CompletableFuture} containing a list of table names
+     */
+    @NonNull
+    public CompletableFuture<List<String>> listTables() {
+        return dynamoDbAsyncClient.listTables()
+                .thenApply(ListTablesResponse::tableNames);
+    }
+
+    /**
+     * Executes a PartiQL statement against DynamoDB asynchronously.
+     * <p>
+     * This is a passthrough to the underlying low-level
+     * {@link DynamoDbAsyncClient#executeStatement(ExecuteStatementRequest)}.
+     *
+     * @param request the PartiQL request to execute
+     * @return a {@link CompletableFuture} containing the response
+     */
+    @NonNull
+    public CompletableFuture<ExecuteStatementResponse> executeStatement(@NonNull ExecuteStatementRequest request) {
+        return dynamoDbAsyncClient.executeStatement(request);
+    }
+
+    /**
+     * Closes the underlying DynamoDB async clients, releasing any network resources.
+     * <p>
+     * After calling this method, the client instance is no longer usable.
+     */
+    @Override
+    public void close() {
+        dynamoDbAsyncClient.close();
+    }
+}

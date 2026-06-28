@@ -1,5 +1,5 @@
 applicationType: default
-defaultPackage: com.hogwai
+defaultPackage: dev.hogwai
 testFramework: junit
 sourceLanguage: java
 buildTool: gradle_kotlin
