@@ -96,7 +96,7 @@ class AsyncBatchGetBuilderTest {
         when(tableSchema.itemType()).thenReturn(enhancedType);
         when(enhancedType.rawClass()).thenReturn(TestItem.class);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
     }
 
     // ============ addKey ============
@@ -334,7 +334,7 @@ class AsyncBatchGetBuilderTest {
     void execute_withProjection_usesLowLevelPath() {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("testTable");
 
         TestItem expectedItem = new TestItem("item1");
@@ -385,7 +385,7 @@ class AsyncBatchGetBuilderTest {
     void execute_withProjection_includesProjectionExpression() {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("testTable");
 
         TestItem expectedItem = new TestItem("item1");
@@ -476,7 +476,7 @@ class AsyncBatchGetBuilderTest {
     void execute_withProjection_withConsistentRead() {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("testTable");
 
         TestItem expectedItem = new TestItem("item1");
@@ -508,7 +508,7 @@ class AsyncBatchGetBuilderTest {
     void execute_withProjection_withReturnConsumedCapacity() {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("testTable");
 
         TestItem expectedItem = new TestItem("item1");
@@ -537,7 +537,7 @@ class AsyncBatchGetBuilderTest {
     void execute_withProjection_whenUnprocessedKeysIsNull() {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("testTable");
 
         TestItem expectedItem = new TestItem("item1");

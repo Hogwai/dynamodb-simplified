@@ -135,7 +135,7 @@ class CrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         // Mock low-level response
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
@@ -171,7 +171,7 @@ class CrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
@@ -209,7 +209,7 @@ class CrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
@@ -251,7 +251,7 @@ class CrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         // Mock low-level response
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
@@ -314,7 +314,7 @@ class CrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         // First response: 1 item + 1 unprocessed key
         Map<String, List<Map<String, AttributeValue>>> firstResponses = new HashMap<>();
@@ -363,7 +363,7 @@ class CrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         // All responses return no items but always have unprocessed keys
         Map<String, List<Map<String, AttributeValue>>> emptyResponses = new HashMap<>();

@@ -39,3 +39,11 @@ jobs:
           # GPG signing
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+
+      - name: Close and upload staging repository to Central Portal
+        run: |
+          TOKEN="${{ secrets.SONATYPE_USERNAME }}:${{ secrets.SONATYPE_PASSWORD }}"
+          B64_TOKEN=$(echo -n "$TOKEN" | base64 -w0)
+          curl -s -X POST \
+            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/dev.hogwai?publishing_type=automatic" \
+            -H "Authorization: Bearer $B64_TOKEN"
