@@ -1,0 +1,81 @@
+package dev.hogwai.dynamodb.simplified;
+
+import org.jspecify.annotations.NonNull;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClientExtension;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+import java.util.Objects;
+
+/**
+ * Builder for creating {@link DynamoSimplifiedClient} instances with
+ * a custom DynamoDB client and/or {@link DynamoDbEnhancedClientExtension extensions}.
+ *
+ * <p>Use {@link DynamoSimplifiedClient#builder()} to obtain an instance.</p>
+ *
+ * <pre>{@code
+ * DynamoSimplifiedClient client = DynamoSimplifiedClient.builder()
+ *     .dynamoDbClient(customClient)
+ *     .extensions(myExtension)
+ *     .build();
+ * }</pre>
+ */
+public class DynamoSimplifiedClientBuilder {
+
+    private DynamoDbClient dynamoDbClient;
+    private DynamoDbEnhancedClientExtension[] extensions;
+
+    /**
+     * Package-private constructor, called only from {@link DynamoSimplifiedClient#builder()}.
+     */
+    DynamoSimplifiedClientBuilder() {
+    }
+
+    /**
+     * Sets a custom DynamoDB client.
+     * <p>If not set, a default {@link DynamoDbClient#create()} will be used.</p>
+     *
+     * @param client the DynamoDB client to use
+     * @return this builder
+     */
+    @NonNull
+    public DynamoSimplifiedClientBuilder dynamoDbClient(@NonNull DynamoDbClient client) {
+        this.dynamoDbClient = Objects.requireNonNull(client, "client must not be null");
+        return this;
+    }
+
+    /**
+     * Sets one or more extensions for the {@link DynamoDbEnhancedClient}.
+     *
+     * @param extensions the extensions to register
+     * @return this builder
+     */
+    @NonNull
+    public DynamoSimplifiedClientBuilder extensions(@NonNull DynamoDbEnhancedClientExtension... extensions) {
+        this.extensions = Objects.requireNonNull(extensions, "extensions must not be null");
+        return this;
+    }
+
+    /**
+     * Builds the {@link DynamoSimplifiedClient} with the configured client and extensions.
+     *
+     * @return a new {@code DynamoSimplifiedClient} instance
+     */
+    @NonNull
+    public DynamoSimplifiedClient build() {
+        boolean created = this.dynamoDbClient == null;
+        DynamoDbClient client = created ? DynamoDbClient.create() : this.dynamoDbClient;
+        DynamoDbEnhancedClient.Builder enhancedBuilder = DynamoDbEnhancedClient.builder().dynamoDbClient(client);
+        if (extensions != null && extensions.length > 0) {
+            enhancedBuilder = enhancedBuilder.extensions(extensions);
+        }
+        try {
+            return new DynamoSimplifiedClient(enhancedBuilder.build(), client);
+        } catch (RuntimeException e) {
+            if (created) {
+                client.close();
+            }
+            throw e;
+        }
+    }
+}

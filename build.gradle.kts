@@ -6,7 +6,7 @@ plugins {
 
 val libraryVersion = "0.1.0"
 
-group = "com.hogwai"
+group = "dev.hogwai"
 version = libraryVersion
 
 subprojects {

@@ -32,7 +32,7 @@ dependencies {
 }
 
 application {
-    mainClass = "com.hogwai.Application"
+    mainClass = "dev.hogwai.Application"
 }
 
 micronaut {
@@ -40,7 +40,7 @@ micronaut {
     testRuntime("junit5")
     processing {
         incremental(true)
-        annotations("com.hogwai.*")
+        annotations("dev.hogwai.*")
     }
     aot {
         optimizeServiceLoading = false
