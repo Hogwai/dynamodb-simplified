@@ -1,5 +1,11 @@
 # DynamoDB Simplified
 
+[![Maven Central](https://img.shields.io/maven-central/v/dev.hogwai/dynamodb-simplified-core)](https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core)
+[![CI](https://github.com/hogwai/dynamodb-simplified/actions/workflows/ci.yml/badge.svg)](https://github.com/hogwai/dynamodb-simplified/actions/workflows/ci.yml)
+[![Java](https://img.shields.io/badge/Java-21%2B-orange)](https://adoptium.net/)
+[![Javadoc](https://img.shields.io/badge/docs-javadoc-blue)](https://hogwai.github.io/dynamodb-simplified/javadoc/)
+[![License](https://img.shields.io/github/license/hogwai/dynamodb-simplified)](LICENSE)
+
 A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
 
 ---
