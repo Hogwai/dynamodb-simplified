@@ -156,7 +156,7 @@ class AsyncCrossTableBatchWriteBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         BatchWriteItemResponse mockResponse = mock(BatchWriteItemResponse.class);
         when(mockResponse.unprocessedItems()).thenReturn(Map.of());

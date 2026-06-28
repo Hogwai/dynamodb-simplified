@@ -130,7 +130,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         Map<String, AttributeValue> itemMap = Map.of("id", AttributeValue.builder().s("pk1").build());
@@ -161,7 +161,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
@@ -228,7 +228,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         when(dynamoDbAsyncClient.batchGetItem(any(BatchGetItemRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("batch get failed")));
@@ -258,7 +258,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         // Mock response with unstubbed responses()/unprocessedKeys() → Mockito returns null by default
         BatchGetItemResponse mockResponse = mock(BatchGetItemResponse.class);
@@ -283,7 +283,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         Map<String, AttributeValue> item1 = Map.of("id", AttributeValue.builder().s("pk1").build());
@@ -318,7 +318,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));
@@ -349,7 +349,7 @@ class AsyncCrossTableBatchGetBuilderTest {
         when(rawTable.tableName()).thenReturn("test_table");
         when(rawTable.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         Map<String, List<Map<String, AttributeValue>>> responses = new HashMap<>();
         responses.put("test_table", List.of(Map.of("id", AttributeValue.builder().s("pk1").build())));

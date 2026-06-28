@@ -1,5 +1,6 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
 import net.ltgt.gradle.errorprone.errorprone
+import org.jreleaser.model.Active
 
 plugins {
     `java-library`
@@ -9,6 +10,7 @@ plugins {
     pmd
     checkstyle
     id("net.ltgt.errorprone") // version from settings.gradle.kts pluginManagement
+    id("org.jreleaser")
 }
 
 description = "Fluent wrapper for AWS DynamoDB Enhanced Client"
@@ -38,7 +40,7 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter:${project.findProperty("versionMockito")}")
     testImplementation(platform("org.testcontainers:testcontainers-bom:${project.findProperty("versionTestcontainersBom")}"))
     testImplementation("org.testcontainers:testcontainers")
-    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:${project.findProperty("versionJunitPlatformLauncher")}")
     testRuntimeOnly("ch.qos.logback:logback-classic:${project.findProperty("versionLogback")}")
@@ -165,12 +167,8 @@ publishing {
 
     repositories {
         maven {
-            name = "MavenCentral"
-            url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
-            credentials {
-                username = project.findProperty("sonatypeUsername") as String?
-                password = project.findProperty("sonatypePassword") as String?
-            }
+            name = "stagingDeploy"
+            url = uri(layout.buildDirectory.dir("staging-deploy").get().asFile.toURI())
         }
     }
 }
@@ -181,4 +179,32 @@ signing {
         System.getenv("SIGNING_PASSWORD") ?: ""
     )
     sign(publishing.publications["mavenJava"])
+}
+
+jreleaser {
+    gitRootSearch = true
+    deploy {
+        maven {
+            mavenCentral {
+                create("sonatype") {
+                    active.set(Active.ALWAYS)
+                    url.set("https://central.sonatype.com/api/v1/publisher")
+                    stagingRepositories.add("build/staging-deploy")
+                    // Credentials from env vars at deploy time in CI:
+                    //   JRELEASER_MAVENCENTRAL_SONATYPE_USERNAME
+                    //   JRELEASER_MAVENCENTRAL_SONATYPE_PASSWORD
+                    // Artifacts already signed by Gradle signing plugin; JReleaser just deploys
+                    sign.set(false)
+                    checksums.set(true)
+                    sourceJar.set(true)
+                    javadocJar.set(true)
+                    verifyPom.set(true)
+                }
+            }
+        }
+    }
+}
+
+tasks.named("jreleaserDeploy") {
+    dependsOn("publish")
 }

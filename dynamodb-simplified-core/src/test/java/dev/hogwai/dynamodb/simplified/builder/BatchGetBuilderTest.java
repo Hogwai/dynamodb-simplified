@@ -166,7 +166,7 @@ class BatchGetBuilderTest {
 
         // Mock table metadata (needed by ReadBatch.build() internally).
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
 
         // Mock the batch get result page -> page iteration -> results
         BatchGetResultPageIterable resultPageIterable = mock(BatchGetResultPageIterable.class);
@@ -207,7 +207,7 @@ class BatchGetBuilderTest {
         // Mock the table schema so addKey works (index partition key lookup)
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("test_table");
 
         // Mock low-level response
@@ -249,7 +249,7 @@ class BatchGetBuilderTest {
         // Mock table schema chain
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("test_table");
 
         // Mock low-level response
@@ -298,7 +298,7 @@ class BatchGetBuilderTest {
         when(tableSchema.itemType()).thenReturn(enhancedType);
         when(enhancedType.rawClass()).thenReturn(TestItem.class);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("test_table");
 
         // Enhanced client first call: 1 item returned, 1 key unprocessed
@@ -344,7 +344,7 @@ class BatchGetBuilderTest {
     void execute_withUnprocessedKeys_projectionPath_retries() {
         when(table.tableSchema()).thenReturn(tableSchema);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("test_table");
 
         // First low-level call: returns 1 item + unprocessed keys
@@ -396,7 +396,7 @@ class BatchGetBuilderTest {
         when(tableSchema.itemType()).thenReturn(enhancedType);
         when(enhancedType.rawClass()).thenReturn(TestItem.class);
         when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
-        when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
         when(table.tableName()).thenReturn("test_table");
 
         // Enhanced page returns 0 items with 1 unprocessed key

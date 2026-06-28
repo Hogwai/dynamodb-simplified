@@ -14,5 +14,6 @@ pluginManagement {
         id("io.micronaut.minimal.application") version props.getProperty("versionMicronautPlugins")
         id("com.gradleup.shadow") version props.getProperty("versionShadow")
         id("io.micronaut.aot") version props.getProperty("versionMicronautPlugins")
+        id("org.jreleaser") version props.getProperty("versionJreleaser")
     }
 }
