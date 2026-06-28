@@ -32,7 +32,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Javadoc
-        run: ./gradlew :dynamodb-simplified-core:javadoc
+        run: ./gradlew javadoc
 
       - name: Build MkDocs site
         run: mkdocs build
@@ -40,7 +40,7 @@ jobs:
       - name: Copy Javadoc into site
         run: |
           mkdir -p site/javadoc
-          cp -r dynamodb-simplified-core/build/docs/javadoc/* site/javadoc/
+          cp -r build/docs/javadoc/* site/javadoc/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

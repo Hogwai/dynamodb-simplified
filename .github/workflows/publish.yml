@@ -31,7 +31,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Publish to Maven Central
-        run: ./gradlew :dynamodb-simplified-core:publish :dynamodb-simplified-core:jreleaserDeploy
+        run: ./gradlew publish jreleaserDeploy
         env:
           # GPG signing (used by Gradle signing plugin during publish)
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
