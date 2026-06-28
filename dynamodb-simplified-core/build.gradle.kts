@@ -44,6 +44,10 @@ dependencies {
     testRuntimeOnly("ch.qos.logback:logback-classic:${project.findProperty("versionLogback")}")
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 tasks.named<Test>("test") {
     useJUnitPlatform {
         excludeTags("integration")
@@ -161,7 +165,8 @@ publishing {
 
     repositories {
         maven {
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            name = "MavenCentral"
+            url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
             credentials {
                 username = project.findProperty("sonatypeUsername") as String?
                 password = project.findProperty("sonatypePassword") as String?

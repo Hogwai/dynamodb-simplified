@@ -1,6 +1,31 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group AWS SDK v2 BOM + dynamodb + dynamodb-enhanced into one PR",
+      "groupName": "AWS SDK v2",
+      "groupSlug": "aws-sdk-v2",
+      "matchPackageNames": ["software.amazon.awssdk:{/,}**"]
+    },
+    {
+      "description": "Group Testcontainers into one PR",
+      "groupName": "Testcontainers",
+      "groupSlug": "testcontainers",
+      "matchPackageNames": ["org.testcontainers:{/,}**"]
+    },
+    {
+      "description": "Group Mockito into one PR",
+      "groupName": "Mockito",
+      "groupSlug": "mockito",
+      "matchPackageNames": ["org.mockito:{/,}**"]
+    },
+    {
+      "description": "Update Gradle wrapper only when needed",
+      "matchPackageNames": ["gradle"],
+      "groupName": "Gradle",
+      "groupSlug": "gradle"
+    }
   ]
 }

@@ -129,7 +129,7 @@ You rarely interact with `EntitySchema` directly — `EntityTable` and `EntityQu
 ### Basic Entity (Partition Key Only)
 
 ```java
-import com.hogwai.dynamodb.simplified.entity.*;
+import dev.hogwai.dynamodb.simplified.entity.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
@@ -321,7 +321,7 @@ Cross-entity queries retrieve multiple entity types from the same partition key 
 ### Using EntityQueryBuilder
 
 ```java
-import com.hogwai.dynamodb.simplified.entity.*;
+import dev.hogwai.dynamodb.simplified.entity.*;
 
 EntityQueryBuilder query = new EntityQueryBuilder(
     dynamoDbClient,     // the low-level DynamoDbClient
@@ -490,9 +490,9 @@ EntityQueryBuilder query = new EntityQueryBuilder(
 Below is a full example using single-table design with User and Post entities, sync and async operations, and a cross-entity query.
 
 ```java
-import com.hogwai.dynamodb.simplified.DynamoSimplifiedClient;
-import com.hogwai.dynamodb.simplified.EntityTable;
-import com.hogwai.dynamodb.simplified.entity.*;
+import dev.hogwai.dynamodb.simplified.DynamoSimplifiedClient;
+import dev.hogwai.dynamodb.simplified.EntityTable;
+import dev.hogwai.dynamodb.simplified.entity.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 // ---- Entity Definitions ----
