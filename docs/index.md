@@ -1,5 +1,7 @@
 # DynamoDB Simplified
 
+[![Maven Central](https://img.shields.io/maven-central/v/dev.hogwai/dynamodb-simplified-core)](https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core)
+
 A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
 
 ## Why?
