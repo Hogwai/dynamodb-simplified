@@ -214,12 +214,17 @@ dynamodb-simplified/
 │       ├── internal/                      # AttributeValueConverter
 │       └── result/                        # PagedResult, TransactGetResults, BatchGetResults
 │
-├── dynamodb-simplified-demo/     # example Micronaut application
-│   └── build.gradle.kts
-│
 ├── build.gradle.kts              # root project
 └── settings.gradle.kts
 ```
+
+---
+
+## Demo applications
+
+Example applications using the library are available in a separate repository:
+
+[dynamodb-simplified-demo](https://github.com/Hogwai/dynamodb-simplified-demo)
 
 ---
 
