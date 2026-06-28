@@ -201,21 +201,18 @@ The [API reference](https://hogwai.github.io/dynamodb-simplified/javadoc/index.h
 
 ```
 dynamodb-simplified/
-├── dynamodb-simplified-core/    # the library (pure Java, zero framework deps)
-│   ├── build.gradle.kts
-│   └── src/main/java/com/hogwai/dynamodb/simplified/
-│       ├── DynamoSimplifiedClient.java    # entry point, factory methods
-│       ├── Table.java                     # fluent table operations
-│       ├── async/                         # AsyncDynamoSimplifiedClient, AsyncTable, async builders
-│       ├── builder/                       # QueryBuilder, PutBuilder, TransactWriteBuilder, etc.
-│       ├── exception/                     # DynamoSimplifiedException, ConditionFailedException
-│       ├── entity/                        # @Entity, @KeyComponent, EntityTable, EntityQueryBuilder
-│       ├── expression/                    # FilterExpression, UpdateExpression, ProjectionExpression
-│       ├── internal/                      # AttributeValueConverter
-│       └── result/                        # PagedResult, TransactGetResults, BatchGetResults
-│
-├── build.gradle.kts              # root project
-└── settings.gradle.kts
+├── build.gradle.kts              # build config
+├── settings.gradle.kts
+├── src/main/java/dev/hogwai/dynamodb/simplified/
+│   ├── DynamoSimplifiedClient.java    # entry point, factory methods
+│   ├── Table.java                     # fluent table operations
+│   ├── async/                         # AsyncDynamoSimplifiedClient, AsyncTable, async builders
+│   ├── builder/                       # QueryBuilder, PutBuilder, TransactWriteBuilder, etc.
+│   ├── exception/                     # DynamoSimplifiedException, ConditionFailedException
+│   ├── entity/                        # @Entity, @KeyComponent, EntityTable, EntityQueryBuilder
+│   ├── expression/                    # FilterExpression, UpdateExpression, ProjectionExpression
+│   ├── internal/                      # AttributeValueConverter
+│   └── result/                        # PagedResult, TransactGetResults, BatchGetResults
 ```
 
 ---

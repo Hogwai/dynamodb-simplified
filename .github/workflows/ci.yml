@@ -38,5 +38,5 @@ jobs:
         with:
           name: test-reports
           path: |
-            dynamodb-simplified-core/build/reports/tests/
-            dynamodb-simplified-core/build/reports/jacoco/
+            build/reports/tests/
+            build/reports/jacoco/

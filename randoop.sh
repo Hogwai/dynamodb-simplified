@@ -12,8 +12,7 @@ Options:
   --time-limit=N        Seconds to generate tests (default: 60)
   --output-limit=N      Max tests to output (default: 100000)
   --output-dir=PATH     Output directory (default: build/randoop-output)
-  --module=NAME         Gradle module to test (default: dynamodb-simplified-core)
-  --test-jar=PATH       Path to the JAR under test (default: auto from module build)
+  --test-jar=PATH       Path to the JAR under test (default: auto from build)
   --classlist=PATH      File listing classes to test (default: test all from JAR)
   --randoop-jar=PATH    Path to randoop-all JAR (default: /tmp/randoop-all-4.3.4.jar)
   --help, -h            Show this help
@@ -22,7 +21,6 @@ Any arguments after -- are passed through to Randoop.
 
 Examples:
   ./$(basename "$0") --time-limit=120
-  ./$(basename "$0") --module=dynamodb-simplified-demo --time-limit=30
   ./$(basename "$0") --time-limit=10 -- --npe-on-non-null-input=ERROR
 EOF
 }
@@ -35,7 +33,7 @@ RANDOOP_JAR="${RANDOOP_JAR:-/tmp/randoop-all-4.3.4.jar}"
 TIME_LIMIT=60
 OUTPUT_LIMIT=100000
 OUTPUT_DIR="build/randoop-output"
-MODULE="dynamodb-simplified-core"
+MODULE=""
 TEST_JAR=""
 CLASSLIST=""
 
@@ -48,8 +46,8 @@ while [[ $# -gt 0 ]]; do
     --output-limit)     OUTPUT_LIMIT="$2"; shift 2 ;;
     --output-dir=*)     OUTPUT_DIR="${1#*=}"; shift ;;
     --output-dir)       OUTPUT_DIR="$2"; shift 2 ;;
-    --module=*)         MODULE="${1#*=}"; shift ;;
-    --module)           MODULE="$2"; shift 2 ;;
+    --module=*)         echo "Warning: --module is deprecated (single-module project)"; MODULE="${1#*=}"; shift ;;
+    --module)           echo "Warning: --module is deprecated (single-module project)"; MODULE="$2"; shift 2 ;;
     --test-jar=*)       TEST_JAR="${1#*=}"; shift ;;
     --test-jar)         TEST_JAR="$2"; shift 2 ;;
     --classlist=*)      CLASSLIST="${1#*=}"; shift ;;
@@ -71,9 +69,9 @@ fi
 
 # ---- Build module JAR if needed --------------------------------------------
 if [ -z "$TEST_JAR" ]; then
-  echo ">>> Building $MODULE..."
-  ./gradlew :"$MODULE":jar -q
-  TEST_JAR="$(find "$MODULE/build/libs" -name "$MODULE-*.jar" ! -name "*-sources*" ! -name "*-javadoc*" | head -1)"
+  echo ">>> Building project..."
+  ./gradlew jar -q
+  TEST_JAR="$(find "build/libs" -name "dynamodb-simplified-core-*.jar" ! -name "*-sources*" ! -name "*-javadoc*" | head -1)"
   if [ -z "$TEST_JAR" ]; then
     echo "Error: No JAR found for module $MODULE"
     exit 1

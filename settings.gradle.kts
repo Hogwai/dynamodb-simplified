@@ -1,7 +1,5 @@
 rootProject.name = "dynamodb-simplified"
 
-include("dynamodb-simplified-core")
-
 pluginManagement {
     val props = java.util.Properties()
     props.load(java.io.FileInputStream("gradle.properties"))
