@@ -8,7 +8,7 @@ The AWS DynamoDB SDK is powerful but verbose. Simple operations require dozens o
 
 **DynamoDB Simplified** provides a fluent, intuitive API that lets you focus on *what* you want to do, not *how* to do it.
 
-### Vanilla SDK (40+ lines)
+### dynamodb-enhanced
 
 ```java
 Map<String, String> expressionNames = new HashMap<>();
@@ -28,7 +28,7 @@ QueryEnhancedRequest request = QueryEnhancedRequest.builder()
 table.query(request).items().forEach(item -> { ... });
 ```
 
-### With DynamoDB Simplified (5 lines)
+### dynamodb-simplified
 
 ```java
 table.query()
