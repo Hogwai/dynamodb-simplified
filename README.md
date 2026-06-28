@@ -1,7 +1,5 @@
 # DynamoDB Simplified
 
-> **⚠ Pre-release (v0.1.0)**: Not yet available on Maven Central. Clone and build locally to try it out.
-
 A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
 
 ---
