@@ -63,18 +63,134 @@ loadScripts(document, 'script');</script>
 <h2 title="dev.hogwai.*">dev.hogwai.*</h2>
 <ul class="block-list">
 <li>
-<div class="caption"><span>dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder&lt;T&gt;</a></span></div>
+<div class="caption"><span>dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></span></div>
 <div class="summary-table three-column-summary">
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Constant Field</div>
 <div class="table-header col-last">Value</div>
-<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.async.AsyncBatchGetBuilder.BATCH_GET_ITEM">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html#BATCH_GET_ITEM">BATCH_GET_ITEM</a></code></div>
-<div class="col-last even-row-color"><code>"BatchGetItem"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits.BASE_BACKOFF_MS">public&nbsp;static&nbsp;final&nbsp;long</code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#BASE_BACKOFF_MS">BASE_BACKOFF_MS</a></code></div>
+<div class="col-last even-row-color"><code>100L</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits.BATCH_GET_MAX_SIZE">public&nbsp;static&nbsp;final&nbsp;int</code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#BATCH_GET_MAX_SIZE">BATCH_GET_MAX_SIZE</a></code></div>
+<div class="col-last odd-row-color"><code>100</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits.BATCH_WRITE_MAX_SIZE">public&nbsp;static&nbsp;final&nbsp;int</code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#BATCH_WRITE_MAX_SIZE">BATCH_WRITE_MAX_SIZE</a></code></div>
+<div class="col-last even-row-color"><code>25</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits.MAX_RETRIES">public&nbsp;static&nbsp;final&nbsp;int</code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#MAX_RETRIES">MAX_RETRIES</a></code></div>
+<div class="col-last odd-row-color"><code>3</code></div>
 </div>
 </li>
-</ul>
-<ul class="block-list">
+<li>
+<div class="caption"><span>dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Constant Field</div>
+<div class="table-header col-last">Value</div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.AND">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#AND">AND</a></code></div>
+<div class="col-last even-row-color"><code>" AND "</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.ATTRIBUTE_EXISTS">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#ATTRIBUTE_EXISTS">ATTRIBUTE_EXISTS</a></code></div>
+<div class="col-last odd-row-color"><code>"attribute_exists("</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.ATTRIBUTE_NOT_EXISTS">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#ATTRIBUTE_NOT_EXISTS">ATTRIBUTE_NOT_EXISTS</a></code></div>
+<div class="col-last even-row-color"><code>"attribute_not_exists("</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.BEGINS_WITH">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#BEGINS_WITH">BEGINS_WITH</a></code></div>
+<div class="col-last odd-row-color"><code>"begins_with("</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.CONTAINS">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#CONTAINS">CONTAINS</a></code></div>
+<div class="col-last even-row-color"><code>"contains("</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.DT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#DT">DT</a></code></div>
+<div class="col-last odd-row-color"><code>"#dt"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.GE">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#GE">GE</a></code></div>
+<div class="col-last even-row-color"><code>" &gt;= "</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.IF_NOT_EXISTS">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#IF_NOT_EXISTS">IF_NOT_EXISTS</a></code></div>
+<div class="col-last odd-row-color"><code>"if_not_exists("</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.LE">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#LE">LE</a></code></div>
+<div class="col-last even-row-color"><code>" &lt;= "</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.LIST_APPEND">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#LIST_APPEND">LIST_APPEND</a></code></div>
+<div class="col-last odd-row-color"><code>"list_append("</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.OR">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#OR">OR</a></code></div>
+<div class="col-last even-row-color"><code>" OR "</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.PK">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#PK">PK</a></code></div>
+<div class="col-last odd-row-color"><code>"#pk"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.PK_COMPONENT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#PK_COMPONENT">PK_COMPONENT</a></code></div>
+<div class="col-last even-row-color"><code>"PK"</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.PK_VAL">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#PK_VAL">PK_VAL</a></code></div>
+<div class="col-last odd-row-color"><code>":pk0"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.SIZE">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SIZE">SIZE</a></code></div>
+<div class="col-last even-row-color"><code>"size("</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.SK">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK">SK</a></code></div>
+<div class="col-last odd-row-color"><code>"#sk"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.SK_COMPONENT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK_COMPONENT">SK_COMPONENT</a></code></div>
+<div class="col-last even-row-color"><code>"SK"</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.SK_VAL0">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK_VAL0">SK_VAL0</a></code></div>
+<div class="col-last odd-row-color"><code>":sk0"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.SK_VAL1">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK_VAL1">SK_VAL1</a></code></div>
+<div class="col-last even-row-color"><code>":sk1"</code></div>
+</div>
+</li>
+<li>
+<div class="caption"><span>dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Constant Field</div>
+<div class="table-header col-last">Value</div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.BATCH_GET_SIZE_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#BATCH_GET_SIZE_FMT">BATCH_GET_SIZE_FMT</a></code></div>
+<div class="col-last even-row-color"><code>"BatchGet supports a maximum of %d keys per request, but %d were provided"</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.BATCH_WRITE_SIZE_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#BATCH_WRITE_SIZE_FMT">BATCH_WRITE_SIZE_FMT</a></code></div>
+<div class="col-last odd-row-color"><code>"BatchWrite supports a maximum of %d items per request, but %d were provided"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.CROSS_TABLE_BATCH_GET_SIZE_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#CROSS_TABLE_BATCH_GET_SIZE_FMT">CROSS_TABLE_BATCH_GET_SIZE_FMT</a></code></div>
+<div class="col-last even-row-color"><code>"CrossTable batch get supports a maximum of %d keys per request, but %d were provided"</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.CROSS_TABLE_BATCH_WRITE_SIZE_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#CROSS_TABLE_BATCH_WRITE_SIZE_FMT">CROSS_TABLE_BATCH_WRITE_SIZE_FMT</a></code></div>
+<div class="col-last odd-row-color"><code>"CrossTable batch write supports a maximum of %d items per request, but %d were provided"</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT">CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT</a></code></div>
+<div class="col-last even-row-color"><code>"CrossTable transact write supports a maximum of %d items per request, but %d were provided"</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.NO_CROSS_TABLE_BATCH_GET_KEYS">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#NO_CROSS_TABLE_BATCH_GET_KEYS">NO_CROSS_TABLE_BATCH_GET_KEYS</a></code></div>
+<div class="col-last odd-row-color"><code>"No entries have been added. Call addKey() or addKeys() first."</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.NO_TRANSACT_GET_ITEMS">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#NO_TRANSACT_GET_ITEMS">NO_TRANSACT_GET_ITEMS</a></code></div>
+<div class="col-last even-row-color"><code>"No items have been added. Call addGetItem() first."</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.PK_NOT_SET">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#PK_NOT_SET">PK_NOT_SET</a></code></div>
+<div class="col-last odd-row-color"><code>"Partition key value must be set before executing a query. Call partitionKey(), partitionKeyBeginsWith(), or a similar method first."</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC">PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC</a></code></div>
+<div class="col-last even-row-color"><code>"Projection requires a low-level DynamoDbAsyncClient, but none was provided. Use the three-argument constructor or obtain the builder via AsyncTable."</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_SYNC">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_SYNC">PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_SYNC</a></code></div>
+<div class="col-last odd-row-color"><code>"Projection requires a low-level DynamoDbClient, but none was provided. Use the three-argument constructor or obtain the builder via Table."</code></div>
+<div class="col-first even-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.SELECT_COUNT_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#SELECT_COUNT_FMT">SELECT_COUNT_FMT</a></code></div>
+<div class="col-last even-row-color"><code>"Cannot call %s with Select.COUNT. Use count() instead."</code></div>
+<div class="col-first odd-row-color"><code id="dev.hogwai.dynamodb.simplified.internal.Messages.UNEXPECTED_OPERATION_TYPE_FMT">public&nbsp;static&nbsp;final&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#UNEXPECTED_OPERATION_TYPE_FMT">UNEXPECTED_OPERATION_TYPE_FMT</a></code></div>
+<div class="col-last odd-row-color"><code>"Unexpected operation type in enhanced path: %s"</code></div>
+</div>
+</li>
 <li>
 <div class="caption"><span>dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/RetryUtils.html" title="class in dev.hogwai.dynamodb.simplified.internal">RetryUtils</a></span></div>
 <div class="summary-table three-column-summary">

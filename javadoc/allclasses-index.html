@@ -209,6 +209,14 @@ fails because the condition is not met.</div>
 <div class="block">A fluent builder for deleting an item from a DynamoDB table by its key,
 with an optional condition expression.</div>
 </div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Shared constants for DynamoDB resource limits and retry configuration.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab3">
+<div class="block">DynamoDB API operation names used for logging and error reporting.</div>
+</div>
 <div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Entry point for the DynamoDB Simplified library.</div>
@@ -253,39 +261,48 @@ annotations from a class and produces an <a href="dev/hogwai/dynamodb/simplified
 <div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builder for creating <a href="dev/hogwai/dynamodb/simplified/entity/EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity"><code>EntityTable</code></a> instances for single-table design.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Shared constants for DynamoDB expression syntax: placeholder names,
+logical operators, and function names.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Fluent builder for constructing DynamoDB filter and condition expressions.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab3">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab3">
 <div class="block">Represents a DynamoDB attribute type for use with
 <a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html#attributeType(java.lang.String,dev.hogwai.dynamodb.simplified.expression.FilterExpression.AttributeType)"><code>FilterExpression.attributeType(String, AttributeType)</code></a>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/GetItemBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">GetItemBuilder&lt;T&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/GetItemBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">GetItemBuilder&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">A fluent builder for retrieving an item from a DynamoDB table by its key,
 with optional projection and consistent read settings.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/Index.html" title="class in dev.hogwai.dynamodb.simplified.builder">Index&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/Index.html" title="class in dev.hogwai.dynamodb.simplified.builder">Index&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Typed wrapper for a DynamoDB secondary index (GSI or LSI).</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="dev/hogwai/dynamodb/simplified/entity/KeyComponent.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">KeyComponent</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="dev/hogwai/dynamodb/simplified/entity/KeyComponent.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">KeyComponent</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Marks a field or getter method as contributing to a composite key component.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="dev/hogwai/dynamodb/simplified/entity/KeyPrefix.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">KeyPrefix</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="dev/hogwai/dynamodb/simplified/entity/KeyPrefix.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">KeyPrefix</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Sets a static prefix for a composite key component.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="dev/hogwai/dynamodb/simplified/entity/KeyPrefix.Container.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">KeyPrefix.Container</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="dev/hogwai/dynamodb/simplified/entity/KeyPrefix.Container.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">KeyPrefix.Container</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Container annotation for repeatable <a href="dev/hogwai/dynamodb/simplified/entity/KeyPrefix.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>@KeyPrefix</code></a>.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Logging.html" title="class in dev.hogwai.dynamodb.simplified.internal">Logging</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Logging.html" title="class in dev.hogwai.dynamodb.simplified.internal">Logging</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Centralized SLF4J logger factory for the DynamoDB Simplified library.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Shared error and validation messages used across builders.</div>
 </div>
 <div class="col-first even-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/OperationFailedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">OperationFailedException</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab5">

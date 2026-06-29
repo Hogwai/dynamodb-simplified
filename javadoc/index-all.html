@@ -130,6 +130,10 @@ attribute.</div>
 <dd>
 <div class="block">Appends an <code>AND</code> logical operator to combine two filter conditions.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#AND" class="member-name-link">AND</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">AND operator with surrounding spaces.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/UpdateExpression.html#appendToList(java.lang.String,java.util.List)" class="member-name-link">appendToList(String, List)</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/UpdateExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">UpdateExpression</a></dt>
 <dd>
 <div class="block">Adds a <code>SET</code> action that appends a list of values to an existing
@@ -288,6 +292,14 @@ and condition check actions atomically across one or more tables.</div>
 <dd>
 <div class="block">Async fluent builder for updating an item in a DynamoDB table.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#ATTRIBUTE_EXISTS" class="member-name-link">ATTRIBUTE_EXISTS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>attribute_exists(path)</code> function name.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#ATTRIBUTE_NOT_EXISTS" class="member-name-link">ATTRIBUTE_NOT_EXISTS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>attribute_not_exists(path)</code> function name.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.KeyComponentInfo.html#attributeName()" class="member-name-link">attributeName()</a> - Method in record class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.KeyComponentInfo.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchema.KeyComponentInfo</a></dt>
 <dd>
 <div class="block">Returns the value of the <a href="./dev/hogwai/dynamodb/simplified/entity/EntitySchema.KeyComponentInfo.html#param-attributeName"><code>attributeName</code></a> record component.</div>
@@ -312,9 +324,29 @@ specified attribute is of the given DynamoDB type.</div>
 </dl>
 <h2 class="title" id="I:B">B</h2>
 <dl class="index">
-<dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html#BATCH_GET_ITEM" class="member-name-link">BATCH_GET_ITEM</a> - Static variable in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a></dt>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#BASE_BACKOFF_MS" class="member-name-link">BASE_BACKOFF_MS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></dt>
 <dd>
-<div class="block">The DynamoDB API name for logging/metrics.</div>
+<div class="block">Default base backoff delay in milliseconds.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#BATCH_GET_ITEM" class="member-name-link">BATCH_GET_ITEM</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#BATCH_GET_MAX_SIZE" class="member-name-link">BATCH_GET_MAX_SIZE</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></dt>
+<dd>
+<div class="block">Maximum items per batch get request (DynamoDB hard limit).</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#BATCH_GET_SIZE_FMT" class="member-name-link">BATCH_GET_SIZE_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "BatchGet supports a maximum of %d keys per request, but %d were provided"</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#BATCH_WRITE_ITEM" class="member-name-link">BATCH_WRITE_ITEM</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#BATCH_WRITE_MAX_SIZE" class="member-name-link">BATCH_WRITE_MAX_SIZE</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></dt>
+<dd>
+<div class="block">Maximum items per batch write request (DynamoDB hard limit).</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#BATCH_WRITE_SIZE_FMT" class="member-name-link">BATCH_WRITE_SIZE_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "BatchWrite supports a maximum of %d items per request, but %d were provided"</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html#batchGet()" class="member-name-link">batchGet()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a></dt>
 <dd>
@@ -387,6 +419,10 @@ specified attribute is of the given DynamoDB type.</div>
 <dt><a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html#%3Cinit%3E(java.util.Map,software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity)" class="member-name-link">BatchWriteResult(Map, ConsumedCapacity)</a> - Constructor for class dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchWriteResult</a></dt>
 <dd>
 <div class="block">Constructs a new <code>BatchWriteResult</code>.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#BEGINS_WITH" class="member-name-link">BEGINS_WITH</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>begins_with(path, substr)</code> function name.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html#beginsWith(java.lang.String,java.lang.String)" class="member-name-link">beginsWith(String, String)</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></dt>
 <dd>
@@ -678,6 +714,10 @@ or the operation does not support capacity tracking.</div>
 attribute value contains the given substring (for strings) or element
 (for sets).</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#CONTAINS" class="member-name-link">CONTAINS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>contains(path, operand)</code> function name.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html#count()" class="member-name-link">count()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a></dt>
 <dd>
 <div class="block">Returns the total number of matching items asynchronously by iterating
@@ -740,6 +780,18 @@ using <code>Select.COUNT</code> server-side to avoid transferring item data.</di
 <dt><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html#create(software.amazon.awssdk.services.dynamodb.DynamoDbClient)" class="member-name-link">create(DynamoDbClient)</a> - Static method in class dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a></dt>
 <dd>
 <div class="block">Creates a <code>DynamoSimplifiedClient</code> with a custom <code>DynamoDbClient</code>.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#CROSS_TABLE_BATCH_GET_SIZE_FMT" class="member-name-link">CROSS_TABLE_BATCH_GET_SIZE_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "CrossTable batch get supports a maximum of %d keys per request, but %d were provided"</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#CROSS_TABLE_BATCH_WRITE_SIZE_FMT" class="member-name-link">CROSS_TABLE_BATCH_WRITE_SIZE_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "CrossTable batch write supports a maximum of %d items per request, but %d were provided"</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT" class="member-name-link">CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "CrossTable transact write supports a maximum of %d items per request, but %d were provided"</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResult</a> - Class in <a href="dev/hogwai/dynamodb/simplified/entity/package-summary.html">dev.hogwai.dynamodb.simplified.entity</a></dt>
 <dd>
@@ -894,6 +946,8 @@ given delta using an in-place arithmetic expression
 <dd>
 <div class="block">Starts building a delete operation by partition and sort key with optional conditions.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#DELETE_ITEM" class="member-name-link">DELETE_ITEM</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/builder/DeleteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">DeleteBuilder&lt;T&gt;</a> - Class in <a href="dev/hogwai/dynamodb/simplified/builder/package-summary.html">dev.hogwai.dynamodb.simplified.builder</a></dt>
 <dd>
 <div class="block">A fluent builder for deleting an item from a DynamoDB table by its key,
@@ -947,6 +1001,8 @@ throughput settings, and indexes.</div>
 <div class="block">Returns information about the DynamoDB table, including its status, schema,
 throughput settings, and indexes.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#DESCRIBE_TIME_TO_LIVE" class="member-name-link">DESCRIBE_TIME_TO_LIVE</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html#describeTtl()" class="member-name-link">describeTtl()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable</a></dt>
 <dd>
 <div class="block">Describes the current TTL configuration for this table.</div>
@@ -1011,6 +1067,10 @@ throughput settings, and indexes.</div>
 <dd>
 <div class="block">Returns the attribute name used to store the discriminator value.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#DT" class="member-name-link">DT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Discriminator expression attribute name placeholder.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/AsyncEntityTableBuilder.html#dynamoDbAsyncClient(software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient)" class="member-name-link">dynamoDbAsyncClient(DynamoDbAsyncClient)</a> - Method in class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/AsyncEntityTableBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">AsyncEntityTableBuilder</a></dt>
 <dd>
 <div class="block">Sets the low-level <code>DynamoDbAsyncClient</code> to use.</div>
@@ -1026,6 +1086,14 @@ throughput settings, and indexes.</div>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/EntityTableBuilder.html#dynamoDbClient(software.amazon.awssdk.services.dynamodb.DynamoDbClient)" class="member-name-link">dynamoDbClient(DynamoDbClient)</a> - Method in class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntityTableBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityTableBuilder</a></dt>
 <dd>
 <div class="block">Sets the low-level <code>DynamoDbClient</code> to use.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a> - Class in <a href="dev/hogwai/dynamodb/simplified/internal/package-summary.html">dev.hogwai.dynamodb.simplified.internal</a></dt>
+<dd>
+<div class="block">Shared constants for DynamoDB resource limits and retry configuration.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" class="type-name-link" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a> - Enum Class in <a href="dev/hogwai/dynamodb/simplified/internal/package-summary.html">dev.hogwai.dynamodb.simplified.internal</a></dt>
+<dd>
+<div class="block">DynamoDB API operation names used for logging and error reporting.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a> - Class in <a href="dev/hogwai/dynamodb/simplified/package-summary.html">dev.hogwai.dynamodb.simplified</a></dt>
 <dd>
@@ -1075,6 +1143,12 @@ a custom DynamoDB client and/or <code>extensions</code>.</div>
 <dd>
 <div class="block">Marks a class as an entity type for single-table DynamoDB designs.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#ENTITY_DELETE" class="member-name-link">ENTITY_DELETE</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#ENTITY_PUT" class="member-name-link">ENTITY_PUT</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#ENTITY_QUERY" class="member-name-link">ENTITY_QUERY</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.html#entityClass()" class="member-name-link">entityClass()</a> - Method in class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchema</a></dt>
 <dd>
 <div class="block">Returns the entity class.</div>
@@ -1345,6 +1419,11 @@ pagination metadata.</div>
 <div class="block">Adds an <code>attribute_exists</code> condition that checks whether the
 specified attribute is present on the item.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a> - Class in <a href="dev/hogwai/dynamodb/simplified/internal/package-summary.html">dev.hogwai.dynamodb.simplified.internal</a></dt>
+<dd>
+<div class="block">Shared constants for DynamoDB expression syntax: placeholder names,
+logical operators, and function names.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientBuilder.html#extensions(software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClientExtension...)" class="member-name-link">extensions(DynamoDbEnhancedClientExtension...)</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientBuilder</a></dt>
 <dd>
 <div class="block">Sets one or more extensions for the <code>DynamoDbEnhancedAsyncClient</code>.</div>
@@ -1434,6 +1513,8 @@ typed API use.</div>
 <dd>
 <div class="block">Adds a greater-than-or-equal condition: <code>attribute &gt;= value</code>.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#GE" class="member-name-link">GE</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/result/TransactGetResults.html#get(int)" class="member-name-link">get(int)</a> - Method in class dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/TransactGetResults.html" title="class in dev.hogwai.dynamodb.simplified.result">TransactGetResults</a></dt>
 <dd>
 <div class="block">Returns the item at the given position in the original builder order.</div>
@@ -1474,6 +1555,8 @@ typed API use.</div>
 <dd>
 <div class="block">Starts building a get operation by partition and sort key.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#GET_ITEM" class="member-name-link">GET_ITEM</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResult.html#getAll()" class="member-name-link">getAll()</a> - Method in class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResult.html" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResult</a></dt>
 <dd>
 <div class="block">Returns the raw map of entity class to item lists.</div>
@@ -1614,6 +1697,10 @@ with optional projection and consistent read settings.</div>
 <dd>
 <div class="block">Obtains an SLF4J <code>Logger</code> for the given class.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#getOperationName()" class="member-name-link">getOperationName()</a> - Method in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>
+<div class="block">Returns the DynamoDB API operation name string.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html#getProjectedAttributes()" class="member-name-link">getProjectedAttributes()</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a></dt>
 <dd>
 <div class="block">Returns the raw attribute paths as they were added by the user.</div>
@@ -1715,6 +1802,10 @@ merges its expression attribute names and values into this builder.</div>
 </dl>
 <h2 class="title" id="I:I">I</h2>
 <dl class="index">
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#IF_NOT_EXISTS" class="member-name-link">IF_NOT_EXISTS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>if_not_exists(path, default)</code> function name.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncUpdateBuilder.html#ignoreNulls(boolean)" class="member-name-link">ignoreNulls(boolean)</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncUpdateBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder</a></dt>
 <dd>
 <div class="block">Controls whether null-valued attributes in the item are ignored during
@@ -1880,6 +1971,8 @@ with a low-level client.</div>
 <dd>
 <div class="block">Adds a less-than-or-equal condition: <code>attribute &lt;= value</code>.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#LE" class="member-name-link">LE</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html#limit(int)" class="member-name-link">limit(int)</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a></dt>
 <dd>
 <div class="block">Limits the number of items evaluated per page.</div>
@@ -1903,6 +1996,10 @@ with a low-level client.</div>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html#LIST" class="member-name-link">LIST</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></dt>
 <dd>
 <div class="block">List (<code>L</code>)</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#LIST_APPEND" class="member-name-link">LIST_APPEND</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>list_append(list1, list2)</code> function name.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html#listTables()" class="member-name-link">listTables()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a></dt>
 <dd>
@@ -1936,6 +2033,14 @@ with a low-level client.</div>
 <div class="block">Wraps a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link"><code>Throwable</code></a> from a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html#exceptionally(java.util.function.Function)" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture.exceptionally(Function)</code></a>
 handler into the appropriate <a href="dev/hogwai/dynamodb/simplified/exception/DynamoSimplifiedException.html" title="class in dev.hogwai.dynamodb.simplified.exception"><code>DynamoSimplifiedException</code></a> subtype.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html#MAX_RETRIES" class="member-name-link">MAX_RETRIES</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></dt>
+<dd>
+<div class="block">Default number of retry attempts for batch operations.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a> - Class in <a href="dev/hogwai/dynamodb/simplified/internal/package-summary.html">dev.hogwai.dynamodb.simplified.internal</a></dt>
+<dd>
+<div class="block">Shared error and validation messages used across builders.</div>
+</dd>
 </dl>
 <h2 class="title" id="I:N">N</h2>
 <dl class="index">
@@ -1959,6 +2064,14 @@ handler into the appropriate <a href="dev/hogwai/dynamodb/simplified/exception/D
 <dd>
 <div class="block">Adds an equality condition on a nested attribute path (e.g.,
 <code>address.city</code>).</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#NO_CROSS_TABLE_BATCH_GET_KEYS" class="member-name-link">NO_CROSS_TABLE_BATCH_GET_KEYS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Message when no keys added to cross-table batch get.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#NO_TRANSACT_GET_ITEMS" class="member-name-link">NO_TRANSACT_GET_ITEMS</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Message when no items added to transact get.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html#not()" class="member-name-link">not()</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></dt>
 <dd>
@@ -2027,6 +2140,10 @@ on an item with the same key for the put to succeed.</div>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html#or()" class="member-name-link">or()</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></dt>
 <dd>
 <div class="block">Appends an <code>OR</code> logical operator to combine two filter conditions.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#OR" class="member-name-link">OR</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">OR operator with surrounding spaces.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:P">P</h2>
@@ -2151,6 +2268,22 @@ or equal to the given value within the specified partition.</div>
 <dt><a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html#%3Cinit%3E(java.lang.String,java.lang.String)" class="member-name-link">PathSegment(String, String)</a> - Constructor for record class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html" title="class in dev.hogwai.dynamodb.simplified.internal">PathSegment</a></dt>
 <dd>
 <div class="block">Creates an instance of a <code>PathSegment</code> record class.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#PK" class="member-name-link">PK</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Partition key expression attribute name placeholder.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#PK_COMPONENT" class="member-name-link">PK_COMPONENT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Entity key component name for partition key (<code>@KeyComponent(component = "PK")</code>).</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#PK_NOT_SET" class="member-name-link">PK_NOT_SET</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Message when partition key is not set before executing a query.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#PK_VAL" class="member-name-link">PK_VAL</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Partition key expression attribute value placeholder.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.KeyComponentInfo.html#position()" class="member-name-link">position()</a> - Method in record class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.KeyComponentInfo.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchema.KeyComponentInfo</a></dt>
 <dd>
@@ -2281,6 +2414,14 @@ via a consumer.</div>
 <div class="block">Restricts the returned attributes for the most recently added item
 using a <a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a> builder consumer.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC" class="member-name-link">PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Message when projection requires a low-level async client but none provided.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_SYNC" class="member-name-link">PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_SYNC</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Message when projection requires a low-level client but none provided.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a> - Class in <a href="dev/hogwai/dynamodb/simplified/expression/package-summary.html">dev.hogwai.dynamodb.simplified.expression</a></dt>
 <dd>
 <div class="block">Fluent builder for constructing DynamoDB projection expressions as part of
@@ -2326,6 +2467,8 @@ the DynamoDB Simplified library.</div>
 <dd>
 <div class="block">Adds a put action to insert or replace an item.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#PUT_ITEM" class="member-name-link">PUT_ITEM</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html#putAll(java.util.Collection)" class="member-name-link">putAll(Collection)</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable</a></dt>
 <dd>
 <div class="block">Puts all items in a single async batch write operation.</div>
@@ -2378,6 +2521,8 @@ with an optional condition expression.</div>
 <dd>
 <div class="block">Queries items sharing this partition key, auto-filtering by discriminator.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#QUERY" class="member-name-link">QUERY</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/builder/QueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">QueryBuilder&lt;T&gt;</a> - Class in <a href="dev/hogwai/dynamodb/simplified/builder/package-summary.html">dev.hogwai.dynamodb.simplified.builder</a></dt>
 <dd>
 <div class="block">A fluent builder for querying items in a DynamoDB table or index.</div>
@@ -2515,6 +2660,8 @@ by index (e.g., <code>myList[2]</code>).</div>
 <dd>
 <div class="block">Starts building a scan operation.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#SCAN" class="member-name-link">SCAN</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/builder/ScanBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">ScanBuilder&lt;T&gt;</a> - Class in <a href="dev/hogwai/dynamodb/simplified/builder/package-summary.html">dev.hogwai.dynamodb.simplified.builder</a></dt>
 <dd>
 <div class="block">A fluent builder for scanning a DynamoDB table with optional filter, projection,
@@ -2564,6 +2711,10 @@ parallel scan segments, and pagination.</div>
 <dd>
 <div class="block">Sets the select parameter for the scan, controlling which attributes are returned.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#SELECT_COUNT_FMT" class="member-name-link">SELECT_COUNT_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "Cannot call %s with Select.COUNT.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/UpdateExpression.html#set(java.lang.String,java.lang.Object)" class="member-name-link">set(String, Object)</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/UpdateExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">UpdateExpression</a></dt>
 <dd>
 <div class="block">Adds a <code>SET</code> action that assigns the given value to the specified
@@ -2600,6 +2751,10 @@ path (dot-separated), such as <code>address.city</code>.</div>
 <dt><a href="dev/hogwai/dynamodb/simplified/result/TransactGetResults.html#size()" class="member-name-link">size()</a> - Method in class dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/TransactGetResults.html" title="class in dev.hogwai.dynamodb.simplified.result">TransactGetResults</a></dt>
 <dd>
 <div class="block">Returns the number of items requested in the transaction.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SIZE" class="member-name-link">SIZE</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block"><code>size(path)</code> function name.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html#sizeBetween(java.lang.String,int,int)" class="member-name-link">sizeBetween(String, int, int)</a> - Method in class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></dt>
 <dd>
@@ -2654,6 +2809,22 @@ is less than or equal to the given value.</div>
 <dd>
 <div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
 is less than the given value.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK" class="member-name-link">SK</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Sort key expression attribute name placeholder.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK_COMPONENT" class="member-name-link">SK_COMPONENT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Entity key component name for sort key (<code>@KeyComponent(component = "SK")</code>).</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK_VAL0" class="member-name-link">SK_VAL0</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Sort key (lower bound) expression attribute value placeholder.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html#SK_VAL1" class="member-name-link">SK_VAL1</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></dt>
+<dd>
+<div class="block">Sort key (upper bound) expression attribute value placeholder.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/internal/RetryUtils.html#sleepWithBackoff(int)" class="member-name-link">sleepWithBackoff(int)</a> - Static method in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/RetryUtils.html" title="class in dev.hogwai.dynamodb.simplified.internal">RetryUtils</a></dt>
 <dd>
@@ -2802,10 +2973,16 @@ with enhanced client request builders.</div>
 <dd>
 <div class="block">Returns a string representation of this record class.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#toString()" class="member-name-link">toString()</a> - Method in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html#toString()" class="member-name-link">toString()</a> - Method in record class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html" title="class in dev.hogwai.dynamodb.simplified.internal">PathSegment</a></dt>
 <dd>
 <div class="block">Returns a string representation of this record class.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#TRANSACT_GET" class="member-name-link">TRANSACT_GET</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#TRANSACT_WRITE" class="member-name-link">TRANSACT_WRITE</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html#transactGet()" class="member-name-link">transactGet()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a></dt>
 <dd>
 <div class="block">Starts building an async transactional read operation across one or more tables.</div>
@@ -2863,6 +3040,10 @@ and condition check actions atomically across one or more tables.</div>
 </dl>
 <h2 class="title" id="I:U">U</h2>
 <dl class="index">
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html#UNEXPECTED_OPERATION_TYPE_FMT" class="member-name-link">UNEXPECTED_OPERATION_TYPE_FMT</a> - Static variable in class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></dt>
+<dd>
+<div class="block">Template: "Unexpected operation type in enhanced path: %s"</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html#unprocessedItems()" class="member-name-link">unprocessedItems()</a> - Method in class dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchWriteResult</a></dt>
 <dd>
 <div class="block">Returns the unprocessed items, keyed by table name.</div>
@@ -2933,6 +3114,10 @@ attribute modifications.</div>
 <dd>
 <div class="block">Defines a partial update expression (<code>SET</code>, <code>REMOVE</code>, <code>ADD</code>, <code>DELETE</code>).</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#UPDATE_ITEM" class="member-name-link">UPDATE_ITEM</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#UPDATE_TIME_TO_LIVE" class="member-name-link">UPDATE_TIME_TO_LIVE</a> - Enum constant in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/builder/UpdateBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">UpdateBuilder&lt;T&gt;</a> - Class in <a href="dev/hogwai/dynamodb/simplified/builder/package-summary.html">dev.hogwai.dynamodb.simplified.builder</a></dt>
 <dd>
 <div class="block">A fluent builder for updating an item in a DynamoDB table.</div>
@@ -2973,7 +3158,16 @@ DynamoDB Simplified library.</div>
 <dd>
 <div class="block">Returns the enum constant of this class with the specified name.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#valueOf(java.lang.String)" class="member-name-link">valueOf(String)</a> - Static method in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this class with the specified name.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html#values()" class="member-name-link">values()</a> - Static method in enum class dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum class, in
+the order they are declared.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html#values()" class="member-name-link">values()</a> - Static method in enum class dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum class, in
 the order they are declared.</div>
