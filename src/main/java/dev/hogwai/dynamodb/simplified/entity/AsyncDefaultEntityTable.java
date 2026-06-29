@@ -2,6 +2,8 @@ package dev.hogwai.dynamodb.simplified.entity;
 
 import dev.hogwai.dynamodb.simplified.async.AsyncTable;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -25,8 +27,7 @@ import java.util.concurrent.CompletableFuture;
  */
 final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
 
-    private static final String PARTITION_KEY_COMPONENT = "PK";
-    private static final String SORT_KEY_COMPONENT = "SK";
+    private static final String FALLBACK_TABLE = "entity";
 
     private final AsyncTable<T> asyncTable;
     private final EntitySchema<T> schema;
@@ -158,9 +159,9 @@ final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
                 continue;
             }
             Method setter;
-            if (PARTITION_KEY_COMPONENT.equals(component)) {
+            if (ExpressionConstants.PK_COMPONENT.equals(component)) {
                 setter = pkSetter;
-            } else if (SORT_KEY_COMPONENT.equals(component)) {
+            } else if (ExpressionConstants.SK_COMPONENT.equals(component)) {
                 setter = skSetter;
             } else {
                 setter = findSetter(entity.getClass(), "set" + component);
@@ -178,7 +179,7 @@ final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
                 Object value = pkGetter.invoke(entity);
                 return value != null ? value.toString() : null;
             } catch (Exception e) {
-                throw new OperationFailedException("EntityDelete", "entity", e);
+                throw new OperationFailedException(DynamoDbOperations.ENTITY_DELETE.getOperationName(), FALLBACK_TABLE, e);
             }
         }
         return null;
@@ -191,7 +192,7 @@ final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
                 Object value = skGetter.invoke(entity);
                 return value != null ? value.toString() : null;
             } catch (Exception e) {
-                throw new OperationFailedException("EntityDelete", "entity", e);
+                throw new OperationFailedException(DynamoDbOperations.ENTITY_DELETE.getOperationName(), FALLBACK_TABLE, e);
             }
         }
         return null;
@@ -202,7 +203,7 @@ final class AsyncDefaultEntityTable<T> implements AsyncEntityTable<T> {
             try {
                 setter.invoke(entity, value);
             } catch (Exception e) {
-                throw new OperationFailedException("EntityPut", "entity", e);
+                throw new OperationFailedException(DynamoDbOperations.ENTITY_PUT.getOperationName(), FALLBACK_TABLE, e);
             }
         }
     }

@@ -6,7 +6,9 @@ import dev.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -258,7 +260,7 @@ public class AsyncTransactWriteBuilder {
                                 }
                             }).conditionExpression(expression));
                 }
-                default -> throw new IllegalStateException("Unexpected operation type in enhanced path: " + op.type());
+                default -> throw new IllegalStateException(Messages.UNEXPECTED_OPERATION_TYPE_FMT.formatted(op.type()));
             }
         }
         return enhancedClient.transactWriteItems(requestBuilder.build())
@@ -267,7 +269,7 @@ public class AsyncTransactWriteBuilder {
                         throw new TransactionFailedException(tce);
                     }
                     if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException("TransactWrite", null, dde);
+                        throw new OperationFailedException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, dde);
                     }
                     throw new DynamoSimplifiedException("Async transaction failed", e);
                 });
@@ -287,7 +289,7 @@ public class AsyncTransactWriteBuilder {
                             throw new TransactionFailedException(tce);
                         }
                         if (e instanceof DynamoDbException dde) {
-                            throw new OperationFailedException("TransactWrite", null, dde);
+                            throw new OperationFailedException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, dde);
                         }
                         throw new DynamoSimplifiedException("Async transaction failed", e);
                     }

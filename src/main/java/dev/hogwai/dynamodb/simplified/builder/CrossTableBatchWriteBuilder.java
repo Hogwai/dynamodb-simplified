@@ -3,7 +3,10 @@ package dev.hogwai.dynamodb.simplified.builder;
 import dev.hogwai.dynamodb.simplified.Table;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchWriteResult;
 import org.jspecify.annotations.NonNull;
@@ -29,9 +32,7 @@ import java.util.*;
 public class CrossTableBatchWriteBuilder {
 
     private static final Logger LOG = Logging.getLogger(CrossTableBatchWriteBuilder.class);
-    private static final int MAX_BATCH_SIZE = 25;
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_BACKOFF_MS = 100;
+
 
     private final DynamoDbClient dynamoDbClient;
     private final List<Operation> operations = new ArrayList<>();
@@ -127,10 +128,9 @@ public class CrossTableBatchWriteBuilder {
             return new CrossTableBatchWriteResult(Map.of());
         }
 
-        if (operations.size() > MAX_BATCH_SIZE) {
+        if (operations.size() > DynamoDbLimits.BATCH_WRITE_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "CrossTable batch write supports a maximum of " + MAX_BATCH_SIZE
-                            + " items per request, but " + operations.size() + " were provided");
+                    Messages.CROSS_TABLE_BATCH_WRITE_SIZE_FMT.formatted(DynamoDbLimits.BATCH_WRITE_MAX_SIZE, operations.size()));
         }
 
         Map<String, List<WriteRequest>> requestItems = buildRequestItems();
@@ -155,13 +155,13 @@ public class CrossTableBatchWriteBuilder {
                 var response = dynamoDbClient.batchWriteItem(batchRequestBuilder.build());
                 unprocessed = response.unprocessedItems();
             } catch (DynamoDbException e) {
-                throw new OperationFailedException("BatchWriteItem", null, e);
+                throw new OperationFailedException(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), null, e);
             }
             if (unprocessed == null || unprocessed.isEmpty()) {
                 return new CrossTableBatchWriteResult(Map.of());
             }
 
-            if (attempt >= MAX_RETRIES) {
+            if (attempt >= DynamoDbLimits.MAX_RETRIES) {
                 return new CrossTableBatchWriteResult(unprocessed);
             }
 
@@ -174,7 +174,7 @@ public class CrossTableBatchWriteBuilder {
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
+        return RetryUtils.sleepWithBackoff(attempt, DynamoDbLimits.BASE_BACKOFF_MS);
     }
 
     @SuppressWarnings({"unchecked"})

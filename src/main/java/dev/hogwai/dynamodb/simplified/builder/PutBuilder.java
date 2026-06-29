@@ -4,6 +4,7 @@ import dev.hogwai.dynamodb.simplified.Versioned;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import dev.hogwai.dynamodb.simplified.internal.VersionHelper;
 import org.jspecify.annotations.NonNull;
@@ -151,7 +152,7 @@ public class PutBuilder<T> {
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("PutItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName(), e);
         }
         incrementVersion();
         if (LOG.isDebugEnabled()) {
@@ -234,7 +235,7 @@ public class PutBuilder<T> {
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("PutItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 }

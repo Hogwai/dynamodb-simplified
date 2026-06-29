@@ -4,6 +4,7 @@ import dev.hogwai.dynamodb.simplified.builder.*;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -472,7 +473,7 @@ public class Table<T> {
                     })
                     .build());
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("UpdateTimeToLive", dynamoDbTable.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.UPDATE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         }
     }
 
@@ -492,7 +493,7 @@ public class Table<T> {
                     })
                     .build());
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("UpdateTimeToLive", dynamoDbTable.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.UPDATE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         }
     }
 
@@ -510,7 +511,7 @@ public class Table<T> {
                             .build())
                     .timeToLiveDescription();
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("DescribeTimeToLive", dynamoDbTable.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.DESCRIBE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         }
     }
 

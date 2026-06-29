@@ -3,6 +3,7 @@ package dev.hogwai.dynamodb.simplified.async;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -137,7 +138,7 @@ public class AsyncDeleteBuilder<T> {
         }
 
         return table.deleteItem(requestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("DeleteItem", table.tableName()))
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName()))
                 .thenApply(result -> {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("AsyncDelete on table '{}' completed in {}ms",
@@ -171,7 +172,7 @@ public class AsyncDeleteBuilder<T> {
         }
 
         return dynamoDbAsyncClient.deleteItem(requestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("DeleteItem", table.tableName()))
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName()))
                 .thenApply(response -> {
                     if (response.attributes() == null || response.attributes().isEmpty()) {
                         return null;

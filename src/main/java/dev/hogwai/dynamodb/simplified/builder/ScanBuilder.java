@@ -3,7 +3,9 @@ package dev.hogwai.dynamodb.simplified.builder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.FilterExpression;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -249,7 +251,7 @@ public class ScanBuilder<T> {
     @NonNull
     public List<T> executeAll() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAll"));
         }
         long start = System.nanoTime();
         try {
@@ -262,7 +264,7 @@ public class ScanBuilder<T> {
             }
             return results;
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Scan", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.SCAN.getOperationName(), getTableName(), e);
         }
     }
 
@@ -273,7 +275,7 @@ public class ScanBuilder<T> {
      */
     public @NonNull Optional<T> executeAndGetFirst() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAndGetFirst"));
         }
         long start = System.nanoTime();
         try {
@@ -285,7 +287,7 @@ public class ScanBuilder<T> {
             }
             return result;
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Scan", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.SCAN.getOperationName(), getTableName(), e);
         }
     }
 
@@ -299,7 +301,7 @@ public class ScanBuilder<T> {
     @NonNull
     public Stream<T> executeStream() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeStream"));
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Scan stream on table '{}'", getTableName());
@@ -308,7 +310,7 @@ public class ScanBuilder<T> {
             return executeAsPages().stream()
                     .flatMap(page -> page.items().stream());
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Scan", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.SCAN.getOperationName(), getTableName(), e);
         }
     }
 
@@ -321,7 +323,7 @@ public class ScanBuilder<T> {
      */
     public @NonNull PagedResult<T> executeWithPagination() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeWithPagination"));
         }
         long start = System.nanoTime();
         try {
@@ -343,7 +345,7 @@ public class ScanBuilder<T> {
             }
             return new PagedResult<>(Collections.emptyList(), null);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Scan", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.SCAN.getOperationName(), getTableName(), e);
         }
     }
 
@@ -377,7 +379,7 @@ public class ScanBuilder<T> {
             }
             return total;
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Scan", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.SCAN.getOperationName(), getTableName(), e);
         }
     }
 
@@ -386,7 +388,7 @@ public class ScanBuilder<T> {
         try {
             return dynamoDbClient.scan(request).count();
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Scan", request.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.SCAN.getOperationName(), request.tableName(), e);
         }
     }
 

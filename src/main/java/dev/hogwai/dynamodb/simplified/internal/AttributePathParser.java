@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 /**
  * Parses nested attribute paths like {@code address.city} and {@code tags[0].name}.
@@ -15,6 +16,8 @@ import java.util.function.UnaryOperator;
  * placeholders) differs per expression type and stays in each class.
  */
 public final class AttributePathParser {
+
+    private static final Pattern DOT_PATTERN = Pattern.compile("\\.");
 
     private AttributePathParser() {
     }
@@ -28,7 +31,7 @@ public final class AttributePathParser {
      * @return ordered list of path segments
      */
     public static List<PathSegment> parse(String path) {
-        String[] parts = path.split("\\.");
+        String[] parts = DOT_PATTERN.split(path);
         List<PathSegment> segments = new ArrayList<>();
         for (String part : parts) {
             if (part.contains("[")) {

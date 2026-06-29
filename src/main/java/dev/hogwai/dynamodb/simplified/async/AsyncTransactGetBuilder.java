@@ -3,7 +3,9 @@ package dev.hogwai.dynamodb.simplified.async;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.TransactGetResults;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -105,7 +107,7 @@ public class AsyncTransactGetBuilder {
     @NonNull
     public AsyncTransactGetBuilder project(@NonNull String... attributes) {
         if (entries.isEmpty()) {
-            throw new IllegalStateException("No items have been added. Call addGetItem() first.");
+            throw new IllegalStateException(Messages.NO_TRANSACT_GET_ITEMS);
         }
         ProjectionExpression expression = ProjectionExpression.builder().include(attributes);
         Entry<?> lastEntry = entries.removeLast();
@@ -124,7 +126,7 @@ public class AsyncTransactGetBuilder {
     @NonNull
     public AsyncTransactGetBuilder project(@NonNull Consumer<ProjectionExpression> consumer) {
         if (entries.isEmpty()) {
-            throw new IllegalStateException("No items have been added. Call addGetItem() first.");
+            throw new IllegalStateException(Messages.NO_TRANSACT_GET_ITEMS);
         }
         ProjectionExpression expression = ProjectionExpression.builder();
         consumer.accept(expression);
@@ -180,7 +182,7 @@ public class AsyncTransactGetBuilder {
                     }
                     return new TransactGetResults<>(documents, tables);
                 })
-                .exceptionally(AsyncExceptionMapper.handler("TransactGet", null));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.TRANSACT_GET.getOperationName(), null));
     }
 
     private CompletableFuture<TransactGetResults<DynamoDbAsyncTable<?>>> executeLowLevel() {
@@ -205,7 +207,7 @@ public class AsyncTransactGetBuilder {
                     }
                     return new TransactGetResults<>(documents, tables);
                 })
-                .exceptionally(AsyncExceptionMapper.handler("TransactGet", null));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.TRANSACT_GET.getOperationName(), null));
     }
 
     private List<TransactGetItem> buildTransactItems() {

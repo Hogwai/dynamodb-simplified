@@ -3,7 +3,9 @@ package dev.hogwai.dynamodb.simplified.async;
 import dev.hogwai.dynamodb.simplified.expression.FilterExpression;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.internal.PageCollector;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
@@ -262,7 +264,7 @@ public class AsyncScanBuilder<T> {
     public @NonNull CompletableFuture<List<T>> executeAll() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAll()")));
         }
         long start = System.nanoTime();
         return executeAsPages()
@@ -289,7 +291,7 @@ public class AsyncScanBuilder<T> {
     public @NonNull CompletableFuture<PagedResult<T>> executeWithPagination() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeWithPagination()")));
         }
         long start = System.nanoTime();
         return executeAsPages()
@@ -321,7 +323,7 @@ public class AsyncScanBuilder<T> {
     public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAndGetFirst()")));
         }
         long start = System.nanoTime();
         return executeWithPagination().thenApply(firstPage -> {
@@ -347,7 +349,7 @@ public class AsyncScanBuilder<T> {
     public @NonNull CompletableFuture<SdkPublisher<T>> executeStream() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeStream()")));
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("AsyncScan stream on table '{}'", getTableName());
@@ -456,7 +458,7 @@ public class AsyncScanBuilder<T> {
         ScanRequest request = buildCountRequest(select);
         return dynamoDbAsyncClient.scan(request)
                 .thenApply(r -> (long) r.count())
-                .exceptionally(AsyncExceptionMapper.handler("Scan", request.tableName()));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.SCAN.getOperationName(), request.tableName()));
     }
 
     // ============ Internal ============
@@ -489,7 +491,7 @@ public class AsyncScanBuilder<T> {
             Objects.requireNonNull(table, "table must not be null");
             result = PageCollector.collectPages(table.scan(request));
         }
-        return result.exceptionally(AsyncExceptionMapper.handler("Scan", getTableName()));
+        return result.exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.SCAN.getOperationName(), getTableName()));
     }
 
     private ScanEnhancedRequest buildScanRequest() {

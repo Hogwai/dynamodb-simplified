@@ -4,7 +4,10 @@ import dev.hogwai.dynamodb.simplified.Table;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchGetResult;
 import org.jspecify.annotations.NonNull;
@@ -28,9 +31,7 @@ import java.util.function.Consumer;
 public class CrossTableBatchGetBuilder {
 
     private static final Logger LOG = Logging.getLogger(CrossTableBatchGetBuilder.class);
-    private static final int MAX_BATCH_SIZE = 100;
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_BACKOFF_MS = 100;
+
 
     private final DynamoDbClient dynamoDbClient;
     private final List<Entry<?>> entries = new ArrayList<>();
@@ -103,7 +104,7 @@ public class CrossTableBatchGetBuilder {
      */
     public @NonNull CrossTableBatchGetBuilder project(@NonNull String... attributes) {
         if (entries.isEmpty()) {
-            throw new IllegalStateException("No entries have been added. Call addKey() or addKeys() first.");
+            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
         }
         ProjectionExpression expression = ProjectionExpression.builder().include(attributes);
         Entry<?> lastEntry = entries.removeLast();
@@ -121,7 +122,7 @@ public class CrossTableBatchGetBuilder {
      */
     public @NonNull CrossTableBatchGetBuilder project(@NonNull Consumer<ProjectionExpression> consumer) {
         if (entries.isEmpty()) {
-            throw new IllegalStateException("No entries have been added. Call addKey() or addKeys() first.");
+            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
         }
         ProjectionExpression expression = ProjectionExpression.builder();
         consumer.accept(expression);
@@ -169,10 +170,9 @@ public class CrossTableBatchGetBuilder {
             return new CrossTableBatchGetResult(Map.of(), Map.of(), Map.of());
         }
 
-        if (entries.size() > MAX_BATCH_SIZE) {
+        if (entries.size() > DynamoDbLimits.BATCH_GET_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "CrossTable batch get supports a maximum of " + MAX_BATCH_SIZE
-                            + " keys per request, but " + entries.size() + " were provided");
+                    Messages.CROSS_TABLE_BATCH_GET_SIZE_FMT.formatted(DynamoDbLimits.BATCH_GET_MAX_SIZE, entries.size()));
         }
 
         Map<String, List<Entry<?>>> entriesByTable = groupEntriesByTable();
@@ -236,7 +236,7 @@ public class CrossTableBatchGetBuilder {
             }
             return dynamoDbClient.batchGetItem(requestBuilder.build());
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("BatchGetItem", null, e);
+            throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), null, e);
         }
     }
 
@@ -263,7 +263,7 @@ public class CrossTableBatchGetBuilder {
                 return new CrossTableBatchGetResult(allResponses, Map.of(), tableSchemas);
             }
 
-            if (attempt >= MAX_RETRIES) {
+            if (attempt >= DynamoDbLimits.MAX_RETRIES) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("CrossTable batch get exhausted retries, {} unprocessed keys remain",
                             unprocessed.values().stream().mapToInt(ka -> ka.keys().size()).sum());
@@ -280,7 +280,7 @@ public class CrossTableBatchGetBuilder {
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
+        return RetryUtils.sleepWithBackoff(attempt, DynamoDbLimits.BASE_BACKOFF_MS);
     }
 
     private static void accumulateItems(

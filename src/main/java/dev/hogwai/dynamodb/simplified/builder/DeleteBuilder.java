@@ -4,6 +4,7 @@ import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -149,7 +150,7 @@ public class DeleteBuilder<T> {
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("DeleteItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
@@ -185,7 +186,7 @@ public class DeleteBuilder<T> {
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("DeleteItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 

@@ -2,7 +2,10 @@ package dev.hogwai.dynamodb.simplified.async;
 
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -30,9 +33,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AsyncCrossTableBatchWriteBuilder {
 
     private static final Logger LOG = Logging.getLogger(AsyncCrossTableBatchWriteBuilder.class);
-    private static final int MAX_BATCH_SIZE = 25;
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_BACKOFF_MS = 100;
 
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<Operation> operations = new ArrayList<>();
@@ -132,10 +132,9 @@ public class AsyncCrossTableBatchWriteBuilder {
             return CompletableFuture.completedFuture(new CrossTableBatchWriteResult(Map.of()));
         }
 
-        if (operations.size() > MAX_BATCH_SIZE) {
+        if (operations.size() > DynamoDbLimits.BATCH_WRITE_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "CrossTable batch write supports a maximum of " + MAX_BATCH_SIZE
-                            + " items per request, but " + operations.size() + " were provided");
+                    Messages.CROSS_TABLE_BATCH_WRITE_SIZE_FMT.formatted(DynamoDbLimits.BATCH_WRITE_MAX_SIZE, operations.size()));
         }
 
         Map<String, List<WriteRequest>> requestItems = buildRequestItems();
@@ -149,7 +148,7 @@ public class AsyncCrossTableBatchWriteBuilder {
             batchRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
         return dynamoDbAsyncClient.batchWriteItem(batchRequestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("BatchWriteItem", null))
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), null))
                 .thenCompose(response -> {
                     Map<String, List<WriteRequest>> unprocessed = response.unprocessedItems();
                     if (unprocessed == null || unprocessed.isEmpty()) {
@@ -159,11 +158,11 @@ public class AsyncCrossTableBatchWriteBuilder {
                         }
                         return CompletableFuture.completedFuture(new CrossTableBatchWriteResult(Map.of()));
                     }
-                    if (attempt >= MAX_RETRIES) {
+                    if (attempt >= DynamoDbLimits.MAX_RETRIES) {
                         return CompletableFuture.completedFuture(new CrossTableBatchWriteResult(unprocessed));
                     }
-                    long backoff = BASE_BACKOFF_MS * (1L << attempt);
-                    backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
+                    long backoff = DynamoDbLimits.BASE_BACKOFF_MS * (1L << attempt);
+                    backoff += ThreadLocalRandom.current().nextLong(DynamoDbLimits.BASE_BACKOFF_MS);
                     try {
                         Thread.sleep(backoff);
                     } catch (InterruptedException ignored) {
