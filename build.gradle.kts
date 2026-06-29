@@ -13,10 +13,7 @@ plugins {
     id("org.jreleaser")
 }
 
-val libraryVersion = "0.1.0"
-
 group = "dev.hogwai"
-version = libraryVersion
 description = "Fluent wrapper for AWS DynamoDB Enhanced Client"
 
 repositories {
