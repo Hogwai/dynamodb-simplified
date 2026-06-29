@@ -2,7 +2,10 @@ package dev.hogwai.dynamodb.simplified.async;
 
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -35,9 +38,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class AsyncBatchWriteBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(AsyncBatchWriteBuilder.class);
-    private static final int MAX_BATCH_SIZE = 25;
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_BACKOFF_MS = 100;
 
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
@@ -126,9 +126,9 @@ public class AsyncBatchWriteBuilder<T> {
         }
 
         int totalItems = itemsToPut.size() + keysToDelete.size();
-        if (totalItems > MAX_BATCH_SIZE) {
+        if (totalItems > DynamoDbLimits.BATCH_WRITE_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "BatchWrite supports a maximum of " + MAX_BATCH_SIZE + " items per request, but " + totalItems + " were provided");
+                    Messages.BATCH_WRITE_SIZE_FMT.formatted(DynamoDbLimits.BATCH_WRITE_MAX_SIZE, totalItems));
         }
 
         if (dynamoDbAsyncClient == null) {
@@ -147,7 +147,7 @@ public class AsyncBatchWriteBuilder<T> {
             batchRequestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
         return dynamoDbAsyncClient.batchWriteItem(batchRequestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("BatchWriteItem", table.tableName()))
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), table.tableName()))
                 .thenCompose(response -> {
                     Map<String, List<WriteRequest>> unprocessed = response.unprocessedItems();
                     if (unprocessed == null || unprocessed.isEmpty()) {
@@ -158,11 +158,11 @@ public class AsyncBatchWriteBuilder<T> {
                         }
                         return CompletableFuture.completedFuture(new BatchWriteResult(Map.of()));
                     }
-                    if (attempt >= MAX_RETRIES) {
+                    if (attempt >= DynamoDbLimits.MAX_RETRIES) {
                         return CompletableFuture.completedFuture(new BatchWriteResult(unprocessed));
                     }
-                    long backoff = BASE_BACKOFF_MS * (1L << attempt);
-                    backoff += ThreadLocalRandom.current().nextLong(BASE_BACKOFF_MS);
+                    long backoff = DynamoDbLimits.BASE_BACKOFF_MS * (1L << attempt);
+                    backoff += ThreadLocalRandom.current().nextLong(DynamoDbLimits.BASE_BACKOFF_MS);
                     try {
                         Thread.sleep(backoff);
                     } catch (InterruptedException ignored) {

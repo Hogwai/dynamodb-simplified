@@ -4,6 +4,7 @@ import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -200,7 +201,7 @@ public class AsyncUpdateBuilder<T> {
         }
 
         return table.updateItem(requestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("UpdateItem", table.tableName()));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName()));
     }
 
     // ---- Partial update via low-level async client ----
@@ -229,7 +230,7 @@ public class AsyncUpdateBuilder<T> {
         }
 
         return dynamoDbAsyncClient.updateItem(requestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("UpdateItem", table.tableName()))
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName()))
                 .thenApply(response -> {
                     Map<String, AttributeValue> attrs = response.attributes();
                     if (attrs == null || attrs.isEmpty()) {

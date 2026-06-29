@@ -2,6 +2,7 @@ package dev.hogwai.dynamodb.simplified.expression;
 
 import dev.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -84,7 +85,7 @@ public class UpdateExpression {
     public UpdateExpression setIfNotExists(@NonNull String attribute, @NonNull Object value) {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
-        setActions.add("%s = if_not_exists(%s, %s)".formatted(nameKey, nameKey, valueKey));
+        setActions.add("%s = %s%s, %s)".formatted(nameKey, ExpressionConstants.IF_NOT_EXISTS, nameKey, valueKey));
         return this;
     }
 
@@ -136,7 +137,7 @@ public class UpdateExpression {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         String emptyListKey = addValue(AttributeValue.builder().l(Collections.emptyList()).build());
-        setActions.add("%s = list_append(if_not_exists(%s, %s), %s)".formatted(nameKey, nameKey, emptyListKey, valueKey));
+        setActions.add("%s = %s%s%s, %s), %s)".formatted(nameKey, ExpressionConstants.LIST_APPEND, ExpressionConstants.IF_NOT_EXISTS, nameKey, emptyListKey, valueKey));
         return this;
     }
 
@@ -154,8 +155,8 @@ public class UpdateExpression {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         String emptyListKey = addValue(AttributeValue.builder().l(Collections.emptyList()).build());
-        setActions.add("%s = list_append(%s, if_not_exists(%s, %s))".formatted(
-                nameKey, valueKey, nameKey, emptyListKey));
+        setActions.add("%s = %s%s, %s%s, %s))".formatted(
+                nameKey, ExpressionConstants.LIST_APPEND, valueKey, ExpressionConstants.IF_NOT_EXISTS, nameKey, emptyListKey));
         return this;
     }
 

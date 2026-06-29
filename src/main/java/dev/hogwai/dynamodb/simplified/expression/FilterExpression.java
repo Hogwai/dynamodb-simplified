@@ -2,6 +2,7 @@ package dev.hogwai.dynamodb.simplified.expression;
 
 import dev.hogwai.dynamodb.simplified.internal.AttributePathParser;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import org.jspecify.annotations.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -32,6 +33,9 @@ public class FilterExpression {
     private final StringBuilder expression = new StringBuilder();
     private final Map<String, String> expressionNames = new HashMap<>();
     private final Map<String, AttributeValue> expressionValues = new HashMap<>();
+    private static final Pattern NAME_INDEX_PATTERN = Pattern.compile("#n(\\d+)");
+    private static final Pattern VALUE_INDEX_PATTERN = Pattern.compile(":v(\\d+)");
+
     private int nameCounter = 0;
     private int valueCounter = 0;
 
@@ -151,7 +155,7 @@ public class FilterExpression {
     public FilterExpression beginsWith(@NonNull String attribute, @NonNull String prefix) {
         String nameKey = addName(attribute);
         String valueKey = addValue(AttributeValue.builder().s(prefix).build());
-        appendToExpression("begins_with(%s, %s)".formatted(nameKey, valueKey));
+        appendToExpression(ExpressionConstants.BEGINS_WITH + "%s, %s)".formatted(nameKey, valueKey));
         return this;
     }
 
@@ -173,7 +177,7 @@ public class FilterExpression {
         }
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(value));
-        appendToExpression("contains(%s, %s)".formatted(nameKey, valueKey));
+        appendToExpression(ExpressionConstants.CONTAINS + "%s, %s)".formatted(nameKey, valueKey));
         return this;
     }
 
@@ -274,7 +278,7 @@ public class FilterExpression {
     @NonNull
     public FilterExpression exists(@NonNull String attribute) {
         String nameKey = addName(attribute);
-        appendToExpression("attribute_exists(%s)".formatted(nameKey));
+        appendToExpression(ExpressionConstants.ATTRIBUTE_EXISTS + "%s)".formatted(nameKey));
         return this;
     }
 
@@ -288,7 +292,7 @@ public class FilterExpression {
     @NonNull
     public FilterExpression notExists(@NonNull String attribute) {
         String nameKey = addName(attribute);
-        appendToExpression("attribute_not_exists(%s)".formatted(nameKey));
+        appendToExpression(ExpressionConstants.ATTRIBUTE_NOT_EXISTS + "%s)".formatted(nameKey));
         return this;
     }
 
@@ -360,7 +364,7 @@ public class FilterExpression {
      */
     @NonNull
     public FilterExpression and() {
-        expression.append(" AND ");
+        expression.append(ExpressionConstants.AND);
         return this;
     }
 
@@ -371,7 +375,7 @@ public class FilterExpression {
      */
     @NonNull
     public FilterExpression or() {
-        expression.append(" OR ");
+        expression.append(ExpressionConstants.OR);
         return this;
     }
 
@@ -399,7 +403,6 @@ public class FilterExpression {
         if (nested.isEmpty()) {
             return this;
         }
-        // Re-key nested placeholders to avoid collision
         int nameOffset = nameCounter;
         int valueOffset = valueCounter;
         Map<String, String> rekeyedNames = new HashMap<>();
@@ -416,12 +419,10 @@ public class FilterExpression {
             rekeyedValues.put(newKey, v);
             valueCounter++;
         });
-        // Rebuild nested expression string with new keys
-        // Use regex to safely handle multi-digit indices (e.g., #n10 contains #n1)
-        String rekeyedExpr = Pattern.compile("#n(\\d+)")
+        String rekeyedExpr = NAME_INDEX_PATTERN
                 .matcher(nested.expression.toString())
                 .replaceAll(mr -> "#n" + (nameOffset + Integer.parseInt(mr.group(1))));
-        rekeyedExpr = Pattern.compile(":v(\\d+)")
+        rekeyedExpr = VALUE_INDEX_PATTERN
                 .matcher(rekeyedExpr)
                 .replaceAll(mr -> ":v" + (valueOffset + Integer.parseInt(mr.group(1))));
         this.expressionNames.putAll(rekeyedNames);

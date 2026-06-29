@@ -2,6 +2,7 @@ package dev.hogwai.dynamodb.simplified.async;
 
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -130,7 +131,7 @@ public class AsyncPutBuilder<T> {
         }
 
         return table.putItem(requestBuilder.build())
-                .exceptionally(AsyncExceptionMapper.handler("PutItem", table.tableName()))
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName()))
                 .thenRun(() -> {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("AsyncPut on table '{}' completed in {}ms",
@@ -178,6 +179,6 @@ public class AsyncPutBuilder<T> {
                     }
                     return table.tableSchema().mapToItem(response.attributes());
                 })
-                .exceptionally(AsyncExceptionMapper.handler("PutItem", table.tableName()));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName()));
     }
 }

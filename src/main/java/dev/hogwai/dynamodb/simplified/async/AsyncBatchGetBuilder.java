@@ -4,7 +4,10 @@ import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.BatchGetResult;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
@@ -37,9 +40,6 @@ import java.util.function.Consumer;
 public class AsyncBatchGetBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(AsyncBatchGetBuilder.class);
-    private static final int MAX_BATCH_SIZE = 100;
-    /** The DynamoDB API name for logging/metrics. */
-    public static final String BATCH_GET_ITEM = "BatchGetItem";
 
     private final DynamoDbEnhancedAsyncClient enhancedClient;
     private final DynamoDbAsyncTable<T> table;
@@ -186,9 +186,9 @@ public class AsyncBatchGetBuilder<T> {
             return CompletableFuture.completedFuture(new BatchGetResult<>(List.of(), Map.of()));
         }
 
-        if (keys.size() > MAX_BATCH_SIZE) {
+        if (keys.size() > DynamoDbLimits.BATCH_GET_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "BatchGet supports a maximum of " + MAX_BATCH_SIZE + " keys per request, but " + keys.size() + " were provided");
+                    Messages.BATCH_GET_SIZE_FMT.formatted(DynamoDbLimits.BATCH_GET_MAX_SIZE, keys.size()));
         }
 
         if (projectionExpression != null && !projectionExpression.isEmpty()) {
@@ -265,7 +265,7 @@ public class AsyncBatchGetBuilder<T> {
             public void onError(Throwable t) {
                 if (t instanceof DynamoDbException dde) {
                     resultFuture.completeExceptionally(
-                            new OperationFailedException(BATCH_GET_ITEM, table.tableName(), dde));
+                            new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), dde));
                 } else {
                     resultFuture.completeExceptionally(t);
                 }
@@ -330,7 +330,7 @@ public class AsyncBatchGetBuilder<T> {
         }
         if (t instanceof DynamoDbException dde) {
             resultFuture.completeExceptionally(
-                    new OperationFailedException(BATCH_GET_ITEM, table.tableName(), dde));
+                    new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), dde));
         } else {
             resultFuture.completeExceptionally(t);
         }
@@ -350,9 +350,7 @@ public class AsyncBatchGetBuilder<T> {
     private CompletableFuture<BatchGetResult<T>> executeWithProjection() {
         String tableName = table.tableName();
         if (dynamoDbAsyncClient == null) {
-            throw new IllegalStateException(
-                    "Projection requires a low-level DynamoDbAsyncClient, but none was provided. " +
-                            "Use the three-argument constructor or obtain the builder via AsyncTable.");
+            throw new IllegalStateException(Messages.PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC);
         }
 
         List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(keys.size());
@@ -389,7 +387,7 @@ public class AsyncBatchGetBuilder<T> {
                     }
                     return new BatchGetResult<>(results, unprocessed != null ? unprocessed : Map.of());
                 })
-                .exceptionally(AsyncExceptionMapper.handler(BATCH_GET_ITEM, tableName));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tableName));
     }
 
     private ReadBatch buildReadBatch() {

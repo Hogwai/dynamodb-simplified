@@ -4,7 +4,10 @@ import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.FilterExpression;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -33,7 +36,7 @@ import java.util.stream.Stream;
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public class QueryBuilder<T> {
     private static final Logger LOG = Logging.getLogger(QueryBuilder.class);
-    private static final String CONDITION_JOINER = " AND ";
+    private static final String CONDITION_JOINER = ExpressionConstants.AND;
 
     private final DynamoDbTable<T> table;
     private final DynamoDbIndex<T> index;
@@ -418,7 +421,7 @@ public class QueryBuilder<T> {
     @NonNull
     public List<T> executeAll() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAll"));
         }
         long start = System.nanoTime();
         try {
@@ -431,7 +434,7 @@ public class QueryBuilder<T> {
             }
             return results;
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Query", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
         }
     }
 
@@ -445,7 +448,7 @@ public class QueryBuilder<T> {
     @NonNull
     public Stream<T> executeStream() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeStream() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeStream"));
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Query stream on table '{}'", getTableName());
@@ -454,7 +457,7 @@ public class QueryBuilder<T> {
             return executeAsPages().stream()
                     .flatMap(page -> page.items().stream());
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Query", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
         }
     }
 
@@ -467,7 +470,7 @@ public class QueryBuilder<T> {
      */
     public @NonNull PagedResult<T> executeWithPagination() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeWithPagination"));
         }
         long start = System.nanoTime();
         try {
@@ -489,7 +492,7 @@ public class QueryBuilder<T> {
             }
             return new PagedResult<>(Collections.emptyList(), null);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Query", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
         }
     }
 
@@ -500,7 +503,7 @@ public class QueryBuilder<T> {
      */
     public @NonNull Optional<T> executeAndGetFirst() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAndGetFirst"));
         }
         long start = System.nanoTime();
         try {
@@ -512,7 +515,7 @@ public class QueryBuilder<T> {
             }
             return result;
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Query", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
         }
     }
 
@@ -546,7 +549,7 @@ public class QueryBuilder<T> {
             }
             return total;
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Query", getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
         }
     }
 
@@ -554,8 +557,7 @@ public class QueryBuilder<T> {
 
     private long countWithLowLevel(Select select) {
         if (pkValue == null) {
-            throw new IllegalStateException("Partition key value must be set before executing a query. "
-                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+            throw new IllegalStateException(Messages.PK_NOT_SET);
         }
         String tableName = getTableName();
         Map<String, String> expressionNames = new HashMap<>();
@@ -580,7 +582,7 @@ public class QueryBuilder<T> {
         try {
             return dynamoDbClient.query(requestBuilder.build()).count();
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("Query", tableName, e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName, e);
         }
     }
 
@@ -590,44 +592,41 @@ public class QueryBuilder<T> {
                 : index.tableSchema().tableMetadata().primaryPartitionKey();
 
         StringBuilder keyExpr = new StringBuilder();
-        String pkPlaceholder = "#pk";
-        expressionNames.put(pkPlaceholder, pkName);
-        String pkValPlaceholder = ":pk0";
-        expressionValues.put(pkValPlaceholder, AttributeValueConverter.toKeyAttributeValue(pkValue));
-        keyExpr.append(pkPlaceholder).append(" = ").append(pkValPlaceholder);
+        expressionNames.put(ExpressionConstants.PK, pkName);
+        expressionValues.put(ExpressionConstants.PK_VAL, AttributeValueConverter.toKeyAttributeValue(pkValue));
+        keyExpr.append(ExpressionConstants.PK).append(" = ").append(ExpressionConstants.PK_VAL);
 
         Optional<String> skName = table != null
                 ? table.tableSchema().tableMetadata().primarySortKey()
                 : index.tableSchema().tableMetadata().primarySortKey();
 
         if (skValue != null && skName.isPresent()) {
-            String skPlaceholder = "#sk";
-            expressionNames.put(skPlaceholder, skName.get());
-            String skValPlaceholder = ":sk0";
-            expressionValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
+            expressionNames.put(ExpressionConstants.SK, skName.get());
+            expressionValues.put(ExpressionConstants.SK_VAL0, AttributeValueConverter.toKeyAttributeValue(skValue));
 
             switch (keyOp) {
                 case BEGINS_WITH -> keyExpr.append(CONDITION_JOINER)
-                        .append("begins_with(").append(skPlaceholder).append(", ")
-                        .append(skValPlaceholder).append(')');
+                        .append(ExpressionConstants.BEGINS_WITH).append(ExpressionConstants.SK).append(", ")
+                        .append(ExpressionConstants.SK_VAL0).append(')');
                 case BETWEEN -> {
-                    String skValPlaceholder2 = ":sk1";
-                    expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
+                    expressionValues.put(ExpressionConstants.SK_VAL1, AttributeValueConverter.toKeyAttributeValue(skValue2));
                     keyExpr.append(CONDITION_JOINER)
-                            .append(skPlaceholder).append(" BETWEEN ")
-                            .append(skValPlaceholder).append(CONDITION_JOINER)
-                            .append(skValPlaceholder2);
+                            .append(ExpressionConstants.SK).append(" BETWEEN ")
+                            .append(ExpressionConstants.SK_VAL0).append(CONDITION_JOINER)
+                            .append(ExpressionConstants.SK_VAL1);
                 }
                 case GT ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK).append(" > ").append(ExpressionConstants.SK_VAL0);
                 case GE ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK)
+                                .append(ExpressionConstants.GE).append(ExpressionConstants.SK_VAL0);
                 case LT ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK).append(" < ").append(ExpressionConstants.SK_VAL0);
                 case LE ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK)
+                                .append(ExpressionConstants.LE).append(ExpressionConstants.SK_VAL0);
                 case EQ ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK).append(" = ").append(ExpressionConstants.SK_VAL0);
             }
         }
         return keyExpr.toString();
@@ -677,8 +676,7 @@ public class QueryBuilder<T> {
 
     private SdkIterable<Page<T>> executeAsPages() {
         if (pkValue == null) {
-            throw new IllegalStateException("Partition key value must be set before executing a query. "
-                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+            throw new IllegalStateException(Messages.PK_NOT_SET);
         }
         QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
                 .queryConditional(keyCondition)

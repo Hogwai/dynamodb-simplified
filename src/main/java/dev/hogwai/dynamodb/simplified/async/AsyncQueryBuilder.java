@@ -4,7 +4,10 @@ import dev.hogwai.dynamodb.simplified.expression.FilterExpression;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.internal.PageCollector;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
@@ -44,7 +47,6 @@ import java.util.function.Consumer;
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public class AsyncQueryBuilder<T> {
     private static final Logger LOG = Logging.getLogger(AsyncQueryBuilder.class);
-    private static final String CONDITION_JOINER = " AND ";
 
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncIndex<T> index;
@@ -459,7 +461,7 @@ public class AsyncQueryBuilder<T> {
     public CompletableFuture<List<T>> executeAll() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeAll() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAll()")));
         }
         long start = System.nanoTime();
         return executeAsPages()
@@ -486,7 +488,7 @@ public class AsyncQueryBuilder<T> {
     public @NonNull CompletableFuture<PagedResult<T>> executeWithPagination() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeWithPagination() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeWithPagination()")));
         }
         long start = System.nanoTime();
         return executeAsPages()
@@ -518,7 +520,7 @@ public class AsyncQueryBuilder<T> {
     public @NonNull CompletableFuture<Optional<T>> executeAndGetFirst() {
         if (select == Select.COUNT) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Cannot call executeAndGetFirst() with Select.COUNT. Use count() instead."));
+                    new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeAndGetFirst()")));
         }
         long start = System.nanoTime();
         return executeWithPagination().thenApply(firstPage -> {
@@ -540,7 +542,7 @@ public class AsyncQueryBuilder<T> {
     @NonNull
     public SdkPublisher<T> streamResults() {
         if (select == Select.COUNT) {
-            throw new IllegalStateException("Cannot call streamResults() with Select.COUNT. Use count() instead.");
+            throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("streamResults()"));
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("AsyncQuery stream on table '{}'", getTableName());
@@ -590,8 +592,7 @@ public class AsyncQueryBuilder<T> {
     private @NonNull CompletableFuture<Long> countWithLowLevel(Select select) {
         if (pkValue == null) {
             return CompletableFuture.failedFuture(
-                    new IllegalStateException("Partition key value must be set before executing a query. "
-                            + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first."));
+                    new IllegalStateException(Messages.PK_NOT_SET));
         }
         String tableName = table != null ? table.tableName() : index.tableName();
         Map<String, String> expressionNames = new HashMap<>();
@@ -615,7 +616,7 @@ public class AsyncQueryBuilder<T> {
 
         return dynamoDbAsyncClient.query(requestBuilder.build())
                 .thenApply(r -> (long) r.count())
-                .exceptionally(AsyncExceptionMapper.handler("Query", tableName));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.QUERY.getOperationName(), tableName));
     }
 
     private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
@@ -624,9 +625,9 @@ public class AsyncQueryBuilder<T> {
                 : index.tableSchema().tableMetadata().primaryPartitionKey();
 
         StringBuilder keyExpr = new StringBuilder();
-        String pkPlaceholder = "#pk";
+        String pkPlaceholder = ExpressionConstants.PK;
         expressionNames.put(pkPlaceholder, pkName);
-        String pkValPlaceholder = ":pk0";
+        String pkValPlaceholder = ExpressionConstants.PK_VAL;
         expressionValues.put(pkValPlaceholder, AttributeValueConverter.toKeyAttributeValue(pkValue));
         keyExpr.append(pkPlaceholder).append(" = ").append(pkValPlaceholder);
 
@@ -635,33 +636,35 @@ public class AsyncQueryBuilder<T> {
                 : index.tableSchema().tableMetadata().primarySortKey();
 
         if (skValue != null && skName.isPresent()) {
-            String skPlaceholder = "#sk";
+            String skPlaceholder = ExpressionConstants.SK;
             expressionNames.put(skPlaceholder, skName.get());
-            String skValPlaceholder = ":sk0";
+            String skValPlaceholder = ExpressionConstants.SK_VAL0;
             expressionValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
 
             switch (keyOp) {
-                case BEGINS_WITH -> keyExpr.append(CONDITION_JOINER)
-                        .append("begins_with(").append(skPlaceholder).append(", ")
+                case BEGINS_WITH -> keyExpr.append(ExpressionConstants.AND)
+                        .append(ExpressionConstants.BEGINS_WITH).append(skPlaceholder).append(", ")
                         .append(skValPlaceholder).append(')');
                 case BETWEEN -> {
-                    String skValPlaceholder2 = ":sk1";
+                    String skValPlaceholder2 = ExpressionConstants.SK_VAL1;
                     expressionValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
-                    keyExpr.append(CONDITION_JOINER)
+                    keyExpr.append(ExpressionConstants.AND)
                             .append(skPlaceholder).append(" BETWEEN ")
-                            .append(skValPlaceholder).append(CONDITION_JOINER)
+                            .append(skValPlaceholder).append(ExpressionConstants.AND)
                             .append(skValPlaceholder2);
                 }
                 case GT ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                        keyExpr.append(ExpressionConstants.AND).append(skPlaceholder).append(" > ").append(skValPlaceholder);
                 case GE ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                        keyExpr.append(ExpressionConstants.AND).append(skPlaceholder)
+                                .append(ExpressionConstants.GE).append(skValPlaceholder);
                 case LT ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                        keyExpr.append(ExpressionConstants.AND).append(skPlaceholder).append(" < ").append(skValPlaceholder);
                 case LE ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                        keyExpr.append(ExpressionConstants.AND).append(skPlaceholder)
+                                .append(ExpressionConstants.LE).append(skValPlaceholder);
                 case EQ ->
-                        keyExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+                        keyExpr.append(ExpressionConstants.AND).append(skPlaceholder).append(" = ").append(skValPlaceholder);
             }
         }
         return keyExpr.toString();
@@ -711,8 +714,7 @@ public class AsyncQueryBuilder<T> {
 
     private void requirePartitionKey() {
         if (pkValue == null) {
-            throw new IllegalStateException("Partition key value must be set before executing a query. "
-                    + "Call partitionKey(), partitionKeyBeginsWith(), or a similar method first.");
+            throw new IllegalStateException(Messages.PK_NOT_SET);
         }
     }
 

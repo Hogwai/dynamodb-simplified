@@ -3,6 +3,7 @@ package dev.hogwai.dynamodb.simplified.async;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -124,7 +125,7 @@ public class AsyncGetItemBuilder<T> {
                 .build();
         return table.getItem(request)
                 .thenApply(Optional::ofNullable)
-                .exceptionally(AsyncExceptionMapper.handler("GetItem", table.tableName()));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName()));
     }
 
     private CompletableFuture<Optional<T>> executeWithProjection() {
@@ -152,7 +153,7 @@ public class AsyncGetItemBuilder<T> {
                     }
                     return Optional.of(table.tableSchema().mapToItem(response.item()));
                 })
-                .exceptionally(AsyncExceptionMapper.handler("GetItem", table.tableName()));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName()));
     }
 
 

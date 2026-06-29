@@ -3,6 +3,7 @@ package dev.hogwai.dynamodb.simplified.builder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -126,7 +127,7 @@ public class GetItemBuilder<T> {
         try {
             return Optional.ofNullable(table.getItem(request));
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("GetItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
@@ -153,7 +154,7 @@ public class GetItemBuilder<T> {
             T item = response.hasItem() ? table.tableSchema().mapToItem(response.item()) : null;
             return Optional.ofNullable(item);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("GetItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 

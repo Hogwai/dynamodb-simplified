@@ -3,7 +3,10 @@ package dev.hogwai.dynamodb.simplified.builder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
 import dev.hogwai.dynamodb.simplified.result.BatchGetResult;
 import org.jspecify.annotations.NonNull;
@@ -29,9 +32,7 @@ import java.util.function.Consumer;
 public class BatchGetBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(BatchGetBuilder.class);
-    private static final int MAX_BATCH_SIZE = 100;
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_BACKOFF_MS = 100;
+
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<T> table;
@@ -158,9 +159,9 @@ public class BatchGetBuilder<T> {
             return new BatchGetResult<>(List.of(), Map.of());
         }
 
-        if (keys.size() > MAX_BATCH_SIZE) {
+        if (keys.size() > DynamoDbLimits.BATCH_GET_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "BatchGet supports a maximum of " + MAX_BATCH_SIZE + " keys per request, but " + keys.size() + " were provided");
+                    Messages.BATCH_GET_SIZE_FMT.formatted(DynamoDbLimits.BATCH_GET_MAX_SIZE, keys.size()));
         }
 
         long start = System.nanoTime();
@@ -222,7 +223,7 @@ public class BatchGetBuilder<T> {
                 }
             }
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("BatchGetItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), e);
         }
 
         return new BatchGetResult<>(allItems, allUnprocessed);
@@ -234,7 +235,7 @@ public class BatchGetBuilder<T> {
 
         int attempt = 0;
         while (unprocessed != null && !unprocessed.isEmpty()) {
-            if (attempt >= MAX_RETRIES) {
+            if (attempt >= DynamoDbLimits.MAX_RETRIES) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("BatchGet on table '{}' exhausted retries, {} unprocessed keys remain",
                             table.tableName(), unprocessed.size());
@@ -244,7 +245,7 @@ public class BatchGetBuilder<T> {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("BatchGet on table '{}' has {} unprocessed keys, retrying (attempt {}/{})",
-                        table.tableName(), unprocessed.size(), attempt + 1, MAX_RETRIES);
+                        table.tableName(), unprocessed.size(), attempt + 1, DynamoDbLimits.MAX_RETRIES);
             }
 
             if (sleepWithBackoff(attempt)) {
@@ -277,12 +278,12 @@ public class BatchGetBuilder<T> {
             }
             return response.unprocessedKeys();
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("BatchGetItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
+        return RetryUtils.sleepWithBackoff(attempt, DynamoDbLimits.BASE_BACKOFF_MS);
     }
 
     private BatchGetResult<T> executeWithProjection() {
@@ -317,7 +318,7 @@ public class BatchGetBuilder<T> {
                     .getOrDefault(tableName, List.of());
             unprocessed = response.unprocessedKeys();
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("BatchGetItem", tableName, e);
+            throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tableName, e);
         }
         List<T> results = new ArrayList<>(items.size());
         for (Map<String, AttributeValue> item : items) {

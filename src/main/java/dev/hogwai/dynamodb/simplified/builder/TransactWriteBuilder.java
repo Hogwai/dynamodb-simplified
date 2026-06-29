@@ -6,7 +6,9 @@ import dev.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -246,7 +248,7 @@ public class TransactWriteBuilder {
                                 }
                             }).conditionExpression(expression));
                 }
-                default -> throw new IllegalStateException("Unexpected operation type in enhanced path: " + op.type());
+                default -> throw new IllegalStateException(Messages.UNEXPECTED_OPERATION_TYPE_FMT.formatted(op.type()));
             }
         }
         try {
@@ -254,7 +256,7 @@ public class TransactWriteBuilder {
         } catch (TransactionCanceledException e) {
             throw new TransactionFailedException(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("TransactWrite", null, e);
+            throw new OperationFailedException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, e);
         }
     }
 
@@ -269,7 +271,7 @@ public class TransactWriteBuilder {
         } catch (TransactionCanceledException e) {
             throw new TransactionFailedException(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("TransactWrite", null, e);
+            throw new OperationFailedException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, e);
         }
     }
 

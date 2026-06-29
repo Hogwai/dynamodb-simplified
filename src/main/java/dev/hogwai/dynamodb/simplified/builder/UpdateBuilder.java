@@ -7,6 +7,7 @@ import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import dev.hogwai.dynamodb.simplified.internal.VersionHelper;
 import org.jspecify.annotations.NonNull;
@@ -263,7 +264,7 @@ public class UpdateBuilder<T> {
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("UpdateItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
@@ -298,7 +299,7 @@ public class UpdateBuilder<T> {
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("UpdateItem", table.tableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName(), e);
         }
 
         if (result == null || result.isEmpty()) {

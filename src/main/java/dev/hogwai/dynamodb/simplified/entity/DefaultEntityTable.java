@@ -2,6 +2,8 @@ package dev.hogwai.dynamodb.simplified.entity;
 
 import dev.hogwai.dynamodb.simplified.Table;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -25,8 +27,7 @@ import java.util.Optional;
  */
 final class DefaultEntityTable<T> implements EntityTable<T> {
 
-    private static final String PARTITION_KEY_COMPONENT = "PK";
-    private static final String SORT_KEY_COMPONENT = "SK";
+    private static final String FALLBACK_TABLE = "entity";
 
     private final Table<T> table;
     private final EntitySchema<T> schema;
@@ -139,9 +140,9 @@ final class DefaultEntityTable<T> implements EntityTable<T> {
                 continue;
             }
             Method setter;
-            if (PARTITION_KEY_COMPONENT.equals(component)) {
+            if (ExpressionConstants.PK_COMPONENT.equals(component)) {
                 setter = pkSetter;
-            } else if (SORT_KEY_COMPONENT.equals(component)) {
+            } else if (ExpressionConstants.SK_COMPONENT.equals(component)) {
                 setter = skSetter;
             } else {
                 setter = findSetter(entity.getClass(), "set" + component);
@@ -157,7 +158,7 @@ final class DefaultEntityTable<T> implements EntityTable<T> {
             try {
                 setter.invoke(entity, value);
             } catch (Exception e) {
-                throw new OperationFailedException("EntityPut", "entity", e);
+                throw new OperationFailedException(DynamoDbOperations.ENTITY_PUT.getOperationName(), FALLBACK_TABLE, e);
             }
         }
     }

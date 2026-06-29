@@ -2,7 +2,10 @@ package dev.hogwai.dynamodb.simplified.builder;
 
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
@@ -30,9 +33,7 @@ import java.util.Objects;
 public class BatchWriteBuilder<T> {
 
     private static final Logger LOG = Logging.getLogger(BatchWriteBuilder.class);
-    private static final int MAX_BATCH_SIZE = 25;
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_BACKOFF_MS = 100;
+
 
     private final DynamoDbTable<T> table;
     private final DynamoDbClient dynamoDbClient;
@@ -118,9 +119,9 @@ public class BatchWriteBuilder<T> {
         }
 
         int totalItems = itemsToPut.size() + keysToDelete.size();
-        if (totalItems > MAX_BATCH_SIZE) {
+        if (totalItems > DynamoDbLimits.BATCH_WRITE_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "BatchWrite supports a maximum of " + MAX_BATCH_SIZE + " items per request, but " + totalItems + " were provided");
+                    Messages.BATCH_WRITE_SIZE_FMT.formatted(DynamoDbLimits.BATCH_WRITE_MAX_SIZE, totalItems));
         }
 
         Map<String, List<WriteRequest>> requestItems = buildRequestItems();
@@ -146,13 +147,13 @@ public class BatchWriteBuilder<T> {
                 var response = dynamoDbClient.batchWriteItem(batchRequestBuilder.build());
                 unprocessed = response.unprocessedItems();
             } catch (DynamoDbException e) {
-                throw new OperationFailedException("BatchWriteItem", table.tableName(), e);
+                throw new OperationFailedException(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), table.tableName(), e);
             }
             if (unprocessed == null || unprocessed.isEmpty()) {
                 return new BatchWriteResult(Map.of());
             }
 
-            if (attempt >= MAX_RETRIES) {
+            if (attempt >= DynamoDbLimits.MAX_RETRIES) {
                 return new BatchWriteResult(unprocessed);
             }
 
@@ -165,7 +166,7 @@ public class BatchWriteBuilder<T> {
     }
 
     private boolean sleepWithBackoff(int attempt) {
-        return RetryUtils.sleepWithBackoff(attempt, BASE_BACKOFF_MS);
+        return RetryUtils.sleepWithBackoff(attempt, DynamoDbLimits.BASE_BACKOFF_MS);
     }
 
     private Map<String, List<WriteRequest>> buildRequestItems() {

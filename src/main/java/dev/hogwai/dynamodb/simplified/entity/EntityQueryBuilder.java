@@ -2,6 +2,8 @@ package dev.hogwai.dynamodb.simplified.entity;
 
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
+import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -22,7 +24,7 @@ import java.util.*;
 @SuppressWarnings({"PMD.NullAssignment", "PMD.CyclomaticComplexity"})
 public final class EntityQueryBuilder {
 
-    private static final String CONDITION_JOINER = " AND ";
+    private static final String CONDITION_JOINER = ExpressionConstants.AND;
 
     private final DynamoDbClient dynamoDbClient;
     private final String tableName;
@@ -399,14 +401,14 @@ public final class EntityQueryBuilder {
 
     private QueryRequest buildQueryRequest(@Nullable Map<String, AttributeValue> exclusiveStartKey,
                                             @Nullable Select selectOverride) {
-        String pkAttrName = pkAttributeName != null ? pkAttributeName : "PK";
+        String pkAttrName = pkAttributeName != null ? pkAttributeName : ExpressionConstants.PK_COMPONENT;
 
-        StringBuilder keyConditionExpr = new StringBuilder("#pk = :pk");
+        StringBuilder keyConditionExpr = new StringBuilder(ExpressionConstants.PK).append(" = :pk");
 
         Map<String, String> exprAttrNames = new HashMap<>();
         Map<String, AttributeValue> exprAttrValues = new HashMap<>();
 
-        exprAttrNames.put("#pk", pkAttrName);
+        exprAttrNames.put(ExpressionConstants.PK, pkAttrName);
         exprAttrValues.put(":pk", AttributeValue.builder().s(partitionKey.toString()).build());
 
         appendSortKeyCondition(keyConditionExpr, exprAttrNames, exprAttrValues);
@@ -434,17 +436,17 @@ public final class EntityQueryBuilder {
         if (skAttrName == null) {
             return;
         }
-        String skPlaceholder = "#sk";
+        String skPlaceholder = ExpressionConstants.SK;
         exprAttrNames.put(skPlaceholder, skAttrName);
-        String skValPlaceholder = ":sk0";
+        String skValPlaceholder = ExpressionConstants.SK_VAL0;
         exprAttrValues.put(skValPlaceholder, AttributeValueConverter.toKeyAttributeValue(skValue));
 
         switch (keyOp) {
             case BEGINS_WITH -> keyConditionExpr.append(CONDITION_JOINER)
-                    .append("begins_with(").append(skPlaceholder).append(", ")
+                    .append(ExpressionConstants.BEGINS_WITH).append(skPlaceholder).append(", ")
                     .append(skValPlaceholder).append(')');
             case BETWEEN -> {
-                String skValPlaceholder2 = ":sk1";
+                String skValPlaceholder2 = ExpressionConstants.SK_VAL1;
                 exprAttrValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
                 keyConditionExpr.append(CONDITION_JOINER)
                         .append(skPlaceholder).append(" BETWEEN ")
@@ -454,11 +456,11 @@ public final class EntityQueryBuilder {
             case GT ->
                     keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
             case GE ->
-                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" >= ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.GE).append(skValPlaceholder);
             case LT ->
                     keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
             case LE ->
-                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" <= ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.LE).append(skValPlaceholder);
             case EQ ->
                     keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
         }
@@ -474,13 +476,13 @@ public final class EntityQueryBuilder {
             String valueKey = ":v" + i;
             i++;
             if (!first) {
-                filterExpr.append(" OR ");
+                filterExpr.append(ExpressionConstants.OR);
             }
-            filterExpr.append("#dt = ").append(valueKey);
+            filterExpr.append(ExpressionConstants.DT).append(" = ").append(valueKey);
             exprAttrValues.put(valueKey, AttributeValue.builder().s(schema.discriminator()).build());
             first = false;
         }
-        exprAttrNames.put("#dt", discriminatorAttribute);
+        exprAttrNames.put(ExpressionConstants.DT, discriminatorAttribute);
         return filterExpr.toString();
     }
 
@@ -512,7 +514,7 @@ public final class EntityQueryBuilder {
         try {
             return dynamoDbClient.query(request);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException("EntityQuery", tableName, e);
+            throw new OperationFailedException(DynamoDbOperations.ENTITY_QUERY.getOperationName(), tableName, e);
         }
     }
 
@@ -521,11 +523,11 @@ public final class EntityQueryBuilder {
      * {@code @KeyComponent(component = "PK")} annotation.
      */
     private static String findPkAttributeName(EntitySchema<?> schema) {
-        List<EntitySchema.KeyComponentInfo> pkComponents = schema.getKeyComponentInfo("PK");
+        List<EntitySchema.KeyComponentInfo> pkComponents = schema.getKeyComponentInfo(ExpressionConstants.PK_COMPONENT);
         if (pkComponents != null && !pkComponents.isEmpty()) {
             return pkComponents.getFirst().attributeName();
         }
-        return "PK";
+        return ExpressionConstants.PK_COMPONENT;
     }
 
     /**
@@ -535,7 +537,7 @@ public final class EntityQueryBuilder {
     @Nullable
     private String findSkAttributeName() {
         for (EntitySchema<?> schema : includedSchemas) {
-            List<EntitySchema.KeyComponentInfo> skComponents = schema.getKeyComponentInfo("SK");
+            List<EntitySchema.KeyComponentInfo> skComponents = schema.getKeyComponentInfo(ExpressionConstants.SK_COMPONENT);
             if (skComponents != null && !skComponents.isEmpty()) {
                 return skComponents.getFirst().attributeName();
             }

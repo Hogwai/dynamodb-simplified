@@ -3,7 +3,10 @@ package dev.hogwai.dynamodb.simplified.async;
 import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
+import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
+import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchGetResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -27,7 +30,6 @@ import java.util.function.Consumer;
 public class AsyncCrossTableBatchGetBuilder {
 
     private static final Logger LOG = Logging.getLogger(AsyncCrossTableBatchGetBuilder.class);
-    private static final int MAX_BATCH_SIZE = 100;
 
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final List<Entry<?>> entries = new ArrayList<>();
@@ -101,7 +103,7 @@ public class AsyncCrossTableBatchGetBuilder {
     @NonNull
     public AsyncCrossTableBatchGetBuilder project(@NonNull String... attributes) {
         if (entries.isEmpty()) {
-            throw new IllegalStateException("No entries have been added. Call addKey() or addKeys() first.");
+            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
         }
         ProjectionExpression expression = ProjectionExpression.builder().include(attributes);
         Entry<?> lastEntry = entries.removeLast();
@@ -120,7 +122,7 @@ public class AsyncCrossTableBatchGetBuilder {
     @NonNull
     public AsyncCrossTableBatchGetBuilder project(@NonNull Consumer<ProjectionExpression> consumer) {
         if (entries.isEmpty()) {
-            throw new IllegalStateException("No entries have been added. Call addKey() or addKeys() first.");
+            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
         }
         ProjectionExpression expression = ProjectionExpression.builder();
         consumer.accept(expression);
@@ -157,10 +159,9 @@ public class AsyncCrossTableBatchGetBuilder {
                     new CrossTableBatchGetResult(Map.of(), Map.of(), Map.of()));
         }
 
-        if (entries.size() > MAX_BATCH_SIZE) {
+        if (entries.size() > DynamoDbLimits.BATCH_GET_MAX_SIZE) {
             throw new IllegalArgumentException(
-                    "CrossTable batch get supports a maximum of " + MAX_BATCH_SIZE
-                            + " keys per request, but " + entries.size() + " were provided");
+                    Messages.CROSS_TABLE_BATCH_GET_SIZE_FMT.formatted(DynamoDbLimits.BATCH_GET_MAX_SIZE, entries.size()));
         }
 
         Map<String, List<Entry<?>>> entriesByTable = groupEntriesByTable();
@@ -173,7 +174,7 @@ public class AsyncCrossTableBatchGetBuilder {
         }
         return dynamoDbAsyncClient.batchGetItem(requestBuilder.build())
                 .thenApply(response -> buildCrossTableBatchGetResult(response, tableSchemas, start))
-                .exceptionally(AsyncExceptionMapper.handler("BatchGetItem", null));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), null));
     }
 
     private Map<String, List<Entry<?>>> groupEntriesByTable() {
