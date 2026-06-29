@@ -1,8 +1,9 @@
 {
   "packages": {
     ".": {
-      "release-type": "gradle",
-      "package-name": "dynamodb-simplified"
+      "release-type": "simple",
+      "package-name": "dynamodb-simplified",
+      "extra-files": ["gradle.properties"]
     }
   }
 }
