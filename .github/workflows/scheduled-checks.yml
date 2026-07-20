@@ -1,11 +1,13 @@
-name: CI
+name: Scheduled Checks
 
 on:
-  pull_request:
-    branches: [main, master]
+  schedule:
+    # Daily at 06:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,27 +23,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          # Pre-installs this exact version, ./gradlew then skips downloading
           gradle-version: "9.6.0"
-          # Cache is written on push, read-only on PRs (standard security)
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          cache-read-only: false
 
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x gradlew
 
-      - name: Validate PR title
-        uses: amannn/action-semantic-pull-request@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          scopes: |
-            core
-            docs
-            ci
-            deps
-            release
-
-      - name: Build and test core library
+      - name: Full check (tests + static analysis + coverage + integration)
         run: ./gradlew check
 
       - name: Upload test reports
