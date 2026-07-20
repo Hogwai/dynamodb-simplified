@@ -3,6 +3,11 @@ name: Release
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/**'
+      - 'docs/**'
+      - '**/*.md'
+      - 'renovate.json'
 
 permissions:
   contents: write
