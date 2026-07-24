@@ -21,19 +21,33 @@ import java.util.function.Consumer;
  * @param <S> the concrete builder type (for fluent chaining)
  */
 public abstract class AbstractPutBuilder<T, S extends AbstractPutBuilder<T, S>> {
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractPutBuilder.class);
 
+    /** The item to put. */
     protected final T item;
+    /** Optional condition expression that gates the put operation. */
     protected ConditionExpression conditionExpression;
+    /** Optional return values setting for the put operation. */
     protected ReturnValue returnValues;
+    /** Whether optimistic locking is enabled. */
     protected boolean optimisticLocking;
 
+    /**
+     * Constructs a new {@code AbstractPutBuilder} with the item to put.
+     *
+     * @param item the item to put
+     */
     protected AbstractPutBuilder(@NonNull T item) {
         this.item = item;
     }
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
@@ -144,6 +158,8 @@ public abstract class AbstractPutBuilder<T, S extends AbstractPutBuilder<T, S>> 
     /**
      * Builds a high-level {@link PutItemEnhancedRequest} with the item
      * and optional condition expression.
+     *
+     * @return the built enhanced request
      */
     @SuppressWarnings("unchecked")
     protected @NonNull PutItemEnhancedRequest<T> buildEnhancedRequest() {
@@ -161,6 +177,9 @@ public abstract class AbstractPutBuilder<T, S extends AbstractPutBuilder<T, S>> 
     /**
      * Builds a low-level {@link PutItemRequest} from the given item attribute map,
      * using the configured return values and condition expression.
+     *
+     * @param itemMap the item attribute map
+     * @return the built low-level request
      */
     protected @NonNull PutItemRequest buildLowLevelRequest(@NonNull Map<String, AttributeValue> itemMap) {
         PutItemRequest.Builder requestBuilder = PutItemRequest.builder()
@@ -178,6 +197,8 @@ public abstract class AbstractPutBuilder<T, S extends AbstractPutBuilder<T, S>> 
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 }

@@ -26,18 +26,30 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractBatchGetBuilder<T, S extends AbstractBatchGetBuilder<T, S>> {
 
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractBatchGetBuilder.class);
 
+    /** The list of keys to retrieve. */
     protected final List<Key> keys = new ArrayList<>();
+    /** Whether to use strongly consistent reads, or {@code null} to use the default. */
     protected Boolean consistentRead;
+    /** Optional projection expression to restrict returned attributes. */
     protected ProjectionExpression projectionExpression;
+    /** Optional consumed capacity reporting level. */
     protected ReturnConsumedCapacity returnConsumedCapacity;
 
+    /**
+     * Constructs a new {@code AbstractBatchGetBuilder}.
+     */
     protected AbstractBatchGetBuilder() {
     }
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
@@ -162,6 +174,8 @@ public abstract class AbstractBatchGetBuilder<T, S extends AbstractBatchGetBuild
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 }

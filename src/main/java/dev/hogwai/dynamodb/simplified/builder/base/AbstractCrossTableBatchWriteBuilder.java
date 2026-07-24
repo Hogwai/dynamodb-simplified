@@ -24,11 +24,19 @@ import java.util.*;
  */
 public abstract class AbstractCrossTableBatchWriteBuilder<S extends AbstractCrossTableBatchWriteBuilder<S>> {
 
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractCrossTableBatchWriteBuilder.class);
 
+    /** The list of operations (put/delete) in this batch write. */
     protected final List<Operation> operations = new ArrayList<>();
+    /** Optional consumed capacity reporting level. */
     protected ReturnConsumedCapacity returnConsumedCapacity;
 
+    /**
+     * Constructs a new {@code AbstractCrossTableBatchWriteBuilder}.
+     */
     protected AbstractCrossTableBatchWriteBuilder() {
     }
 
@@ -36,6 +44,12 @@ public abstract class AbstractCrossTableBatchWriteBuilder<S extends AbstractCros
      * Stores a table reference, operation type, and optional item or key values.
      * The table is stored as {@code Object} to accommodate both {@code Table}
      * and {@code AsyncTable} types without coupling the base to either package.
+     *
+     * @param type         the operation type (PUT or DELETE)
+     * @param table        the table reference (either {@code DynamoDbTable} or {@code DynamoDbAsyncTable})
+     * @param item         the item to put, or {@code null} for delete operations
+     * @param partitionKey the partition key value for delete operations, or {@code null} for put operations
+     * @param sortKey      the sort key value for delete operations, or {@code null} for put operations or tables without a sort key
      */
     public record Operation(
             Type type,
@@ -44,8 +58,18 @@ public abstract class AbstractCrossTableBatchWriteBuilder<S extends AbstractCros
             @Nullable Object partitionKey,
             @Nullable Object sortKey
     ) {
+        /**
+         * The type of batch write operation.
+         */
         public enum Type {
-            PUT, DELETE
+            /**
+             * Insert or replace an item.
+             */
+            PUT,
+            /**
+             * Delete an item.
+             */
+            DELETE
         }
     }
 

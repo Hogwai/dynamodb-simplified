@@ -25,57 +25,113 @@ import java.util.function.Consumer;
  * @param <S> the concrete builder type (for fluent chaining)
  */
 public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, S>> {
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractQueryBuilder.class);
 
+    /** The key condition for the query. */
     protected QueryConditional keyCondition;
+    /** Optional filter expression applied after the query. */
     protected FilterExpression filterExpression;
+    /** Optional projection expression to restrict returned attributes. */
     protected ProjectionExpression projectionExpression;
+    /** Whether to scan in forward (ascending) order ({@code true} by default). */
     protected Boolean scanIndexForward = true;
+    /** Maximum number of items to evaluate per page. */
     protected Integer limit;
+    /** Exclusive start key for paginated queries. */
     protected Map<String, AttributeValue> exclusiveStartKey;
+    /** Whether to use strongly consistent reads ({@code false} by default). */
     protected Boolean consistentRead = false;
+    /** Optional consumed capacity reporting level. */
     protected ReturnConsumedCapacity returnConsumedCapacity;
+    /** Optional select parameter controlling which attributes are returned. */
     protected Select select;
 
     /**
      * Describes the type of sort key comparison for a key condition expression.
      */
     protected enum KeyConditionOp {
-        EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
+        /**
+         * Equality comparison.
+         */
+        EQ,
+        /**
+         * Begins-with comparison.
+         */
+        BEGINS_WITH,
+        /**
+         * Between (inclusive range) comparison.
+         */
+        BETWEEN,
+        /**
+         * Greater-than comparison.
+         */
+        GT,
+        /**
+         * Greater-than-or-equal comparison.
+         */
+        GE,
+        /**
+         * Less-than comparison.
+         */
+        LT,
+        /** Less-than-or-equal comparison. */
+        LE
     }
 
+    /** The key condition operator for low-level count operations. */
     protected KeyConditionOp keyOp;
+    /** The partition key value. */
     protected @Nullable Object pkValue;
+    /**
+     * The sort key value (first bound for BETWEEN).
+     */
     protected @Nullable Object skValue;
-    protected @Nullable Object skValue2; // for BETWEEN only
+    /** The second sort key bound (for BETWEEN only). */
+    protected @Nullable Object skValue2;
 
+    /**
+     * Constructs a new {@code AbstractQueryBuilder}.
+     */
     protected AbstractQueryBuilder() {
     }
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 
     /**
      * Returns the DynamoDB index name, or {@code null} if the query targets the base table.
+     *
+     * @return the index name, or {@code null} for the base table
      */
     @Nullable
     protected abstract String indexName();
 
     /**
      * Returns the primary partition key attribute name for the targeted table or index.
+     *
+     * @return the primary partition key attribute name
      */
     protected abstract @NonNull String primaryPartitionKey();
 
     /**
      * Returns the primary sort key attribute name for the targeted table or index,
      * or empty if the table/index has no sort key.
+     *
+     * @return the primary sort key attribute name, or empty if none
      */
     protected abstract @NonNull Optional<String> primarySortKey();
 
@@ -411,6 +467,8 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
 
     /**
      * Builds a high-level {@link QueryEnhancedRequest} from the configured parameters.
+     *
+     * @return the built enhanced request
      */
     protected @NonNull QueryEnhancedRequest buildEnhancedRequest() {
         QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
@@ -458,6 +516,10 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
 
     /**
      * Builds a DynamoDB key condition expression string for low-level count operations.
+     *
+     * @param expressionNames  the map to populate with expression attribute names
+     * @param expressionValues the map to populate with expression attribute values
+     * @return the key condition expression string
      */
     protected @NonNull String buildKeyConditionExpression(
             Map<String, String> expressionNames,
@@ -502,6 +564,10 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
 
     /**
      * Applies the configured filter expression to a low-level {@link QueryRequest.Builder}.
+     *
+     * @param requestBuilder the query request builder to configure
+     * @param keyNames       the expression attribute names from the key condition
+     * @param keyValues      the expression attribute values from the key condition
      */
     protected void applyFilterExpression(
             QueryRequest.Builder requestBuilder,
@@ -518,6 +584,8 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
      * Applies the configured query options (limit, start key, consistent read,
      * scan index forward, return consumed capacity) to a low-level
      * {@link QueryRequest.Builder}.
+     *
+     * @param requestBuilder the query request builder to configure
      */
     protected void applyQueryOptions(QueryRequest.Builder requestBuilder) {
         if (limit != null) {
@@ -539,6 +607,12 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
 
     /**
      * Merges two maps, with the override map taking precedence.
+     *
+     * @param <K>      the map key type
+     * @param <V>      the map value type
+     * @param base     the base map
+     * @param override the override map (entries take precedence over base)
+     * @return a new map containing all entries from both maps
      */
     protected static <K, V> Map<K, V> mergeMaps(Map<K, V> base, Map<K, V> override) {
         Map<K, V> merged = new HashMap<>(base);

@@ -22,14 +22,27 @@ import java.util.function.Consumer;
  * @param <S> the concrete builder type (for fluent chaining)
  */
 public abstract class AbstractDeleteBuilder<T, S extends AbstractDeleteBuilder<T, S>> {
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractDeleteBuilder.class);
 
+    /** The partition key value. */
     protected final Object partitionKey;
+    /** The sort key value, or {@code null} if the table has no sort key. */
     @Nullable
     protected final Object sortKey;
+    /** Optional condition expression that gates the delete operation. */
     protected ConditionExpression conditionExpression;
+    /** Optional return values setting for the delete operation. */
     protected ReturnValue returnValues;
 
+    /**
+     * Constructs a new {@code AbstractDeleteBuilder} with the given key values.
+     *
+     * @param partitionKey the partition key value
+     * @param sortKey      the sort key value, or {@code null} if the table has no sort key
+     */
     protected AbstractDeleteBuilder(@NonNull Object partitionKey, @Nullable Object sortKey) {
         this.partitionKey = partitionKey;
         this.sortKey = sortKey;
@@ -37,6 +50,8 @@ public abstract class AbstractDeleteBuilder<T, S extends AbstractDeleteBuilder<T
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
@@ -96,6 +111,8 @@ public abstract class AbstractDeleteBuilder<T, S extends AbstractDeleteBuilder<T
     /**
      * Builds a high-level {@link DeleteItemEnhancedRequest} from the current key
      * and optional condition expression.
+     *
+     * @return the built enhanced request
      */
     protected @NonNull DeleteItemEnhancedRequest buildEnhancedRequest() {
         DeleteItemEnhancedRequest.Builder requestBuilder =
@@ -116,6 +133,9 @@ public abstract class AbstractDeleteBuilder<T, S extends AbstractDeleteBuilder<T
     /**
      * Builds a low-level {@link DeleteItemRequest} from the given key map,
      * using the configured return values and condition expression.
+     *
+     * @param keyMap the key attribute map
+     * @return the built low-level request
      */
     protected @NonNull DeleteItemRequest buildLowLevelRequest(@NonNull Map<String, AttributeValue> keyMap) {
         DeleteItemRequest.Builder requestBuilder = DeleteItemRequest.builder()
@@ -133,6 +153,10 @@ public abstract class AbstractDeleteBuilder<T, S extends AbstractDeleteBuilder<T
 
     /**
      * Builds a key map for low-level requests using the given key attribute names.
+     *
+     * @param pkName the partition key attribute name
+     * @param skName the sort key attribute name, or {@code null} if none
+     * @return the built key map
      */
     protected @NonNull Map<String, AttributeValue> buildKeyMap(@NonNull String pkName, @Nullable String skName) {
         Map<String, AttributeValue> keyMap = new HashMap<>();
@@ -145,6 +169,8 @@ public abstract class AbstractDeleteBuilder<T, S extends AbstractDeleteBuilder<T
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 }

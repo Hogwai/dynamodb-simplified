@@ -31,11 +31,19 @@ import java.util.Objects;
  */
 public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWriteBuilder<S>> {
 
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractTransactWriteBuilder.class);
 
+    /** The list of operations (put/update/delete/condition check) in this transaction. */
     protected final List<Operation> operations = new ArrayList<>();
+    /** Optional consumed capacity reporting level. */
     protected ReturnConsumedCapacity returnConsumedCapacity;
 
+    /**
+     * Constructs a new {@code AbstractTransactWriteBuilder}.
+     */
     protected AbstractTransactWriteBuilder() {
     }
 
@@ -45,6 +53,14 @@ public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWri
      * The table is stored as {@code Object} to accommodate both
      * {@code DynamoDbTable} and {@code DynamoDbAsyncTable} types without coupling
      * the base to either package.
+     *
+     * @param type                 the operation type
+     * @param table                the table reference (either {@code DynamoDbTable} or {@code DynamoDbAsyncTable})
+     * @param item                 the item to put or update, or {@code null} for delete/condition check
+     * @param partitionKey         the partition key value for delete/condition check, or {@code null} for put/update
+     * @param sortKey              the sort key value for delete/condition check, or {@code null} for put/update or tables without a sort key
+     * @param conditionExpression  optional condition expression for condition check operations
+     * @param updateExpression     optional update expression for update-with-expression operations
      */
     public record Operation(
             Type type,
@@ -55,8 +71,30 @@ public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWri
             @Nullable ConditionExpression conditionExpression,
             @Nullable UpdateExpression updateExpression
     ) {
+        /**
+         * The type of transactional write operation.
+         */
         public enum Type {
-            PUT, UPDATE, DELETE, CONDITION_CHECK, UPDATE_WITH_EXPRESSION
+            /**
+             * Insert or replace an item.
+             */
+            PUT,
+            /**
+             * Update an item (full-item replacement).
+             */
+            UPDATE,
+            /**
+             * Delete an item.
+             */
+            DELETE,
+            /**
+             * Perform a condition check.
+             */
+            CONDITION_CHECK,
+            /**
+             * Update an item using an update expression.
+             */
+            UPDATE_WITH_EXPRESSION
         }
     }
 
@@ -139,6 +177,12 @@ public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWri
         };
     }
 
+    /**
+     * Builds a {@link TransactWriteItem} for a put operation.
+     *
+     * @param op the put operation
+     * @return the transact write item
+     */
     @SuppressWarnings("unchecked")
     protected TransactWriteItem buildPutItem(Operation op) {
         Objects.requireNonNull(op.item(), "item must not be null for PUT");
@@ -150,6 +194,12 @@ public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWri
                 .build();
     }
 
+    /**
+     * Builds a {@link TransactWriteItem} for a delete operation.
+     *
+     * @param op the delete operation
+     * @return the transact write item
+     */
     protected TransactWriteItem buildDeleteItem(Operation op) {
         var schema = getTableSchema(op);
         Key key = buildKey(Objects.requireNonNull(op.partitionKey()), op.sortKey());
@@ -160,6 +210,12 @@ public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWri
                 .build();
     }
 
+    /**
+     * Builds a {@link TransactWriteItem} for a condition check operation.
+     *
+     * @param op the condition check operation
+     * @return the transact write item
+     */
     protected TransactWriteItem buildConditionCheckItem(Operation op) {
         ConditionExpression condExpr = Objects.requireNonNull(op.conditionExpression(),
                 "conditionExpression must not be null for CONDITION_CHECK");
@@ -179,6 +235,12 @@ public abstract class AbstractTransactWriteBuilder<S extends AbstractTransactWri
                 .build();
     }
 
+    /**
+     * Builds a {@link TransactWriteItem} for an update-with-expression operation.
+     *
+     * @param op the update operation
+     * @return the transact write item
+     */
     protected TransactWriteItem buildUpdateWithExpressionItem(Operation op) {
         Object item = Objects.requireNonNull(op.item(), "item must not be null for UPDATE_WITH_EXPRESSION");
         var schema = getTableSchema(op);

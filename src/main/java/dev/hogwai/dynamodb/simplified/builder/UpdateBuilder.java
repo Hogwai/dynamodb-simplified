@@ -47,7 +47,7 @@ public class UpdateBuilder<T> extends AbstractUpdateBuilder<T, UpdateBuilder<T>>
     }
 
     /**
-     * Key-only constructor for use from {@link Table} convenience methods.
+     * Key-only constructor for use from {@code Table} convenience methods.
      * Skips the item parameter and builds the key map directly from partition
      * (and optionally sort) key values.
      *

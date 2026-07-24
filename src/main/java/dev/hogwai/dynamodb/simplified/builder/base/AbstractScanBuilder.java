@@ -22,33 +22,54 @@ import java.util.function.Consumer;
  * @param <S> the concrete builder type (for fluent chaining)
  */
 public abstract class AbstractScanBuilder<T, S extends AbstractScanBuilder<T, S>> {
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractScanBuilder.class);
 
+    /** Optional filter expression applied after the scan. */
     protected FilterExpression filterExpression;
+    /** Optional projection expression to restrict returned attributes. */
     protected ProjectionExpression projectionExpression;
+    /** Maximum number of items to evaluate per page. */
     protected Integer limit;
+    /** Exclusive start key for paginated scans. */
     protected Map<String, AttributeValue> exclusiveStartKey;
+    /** Whether to use strongly consistent reads ({@code false} by default). */
     protected Boolean consistentRead = false;
+    /** Optional consumed capacity reporting level. */
     protected ReturnConsumedCapacity returnConsumedCapacity;
+    /** Optional select parameter controlling which attributes are returned. */
     protected Select select;
+    /** Total number of segments for a parallel scan. */
     protected Integer totalSegments;
+    /** The segment index for this scan worker (0-based). */
     protected Integer segment;
 
+    /**
+     * Constructs a new {@code AbstractScanBuilder}.
+     */
     protected AbstractScanBuilder() {
     }
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 
     /**
      * Returns the DynamoDB index name, or {@code null} if the scan targets the base table.
+     *
+     * @return the index name, or {@code null} for the base table
      */
     @Nullable
     protected abstract String indexName();
@@ -216,6 +237,8 @@ public abstract class AbstractScanBuilder<T, S extends AbstractScanBuilder<T, S>
 
     /**
      * Builds a high-level {@link ScanEnhancedRequest} from the configured parameters.
+     *
+     * @return the built scan request
      */
     protected @NonNull ScanEnhancedRequest buildScanRequest() {
         ScanEnhancedRequest.Builder requestBuilder = ScanEnhancedRequest.builder()
@@ -256,6 +279,9 @@ public abstract class AbstractScanBuilder<T, S extends AbstractScanBuilder<T, S>
     /**
      * Builds a low-level {@link ScanRequest} for count operations
      * using the given {@link Select} mode.
+     *
+     * @param select the select mode (typically {@link Select#COUNT})
+     * @return the built scan request
      */
     protected @NonNull ScanRequest buildCountRequest(@NonNull Select select) {
         ScanRequest.Builder builder = ScanRequest.builder()

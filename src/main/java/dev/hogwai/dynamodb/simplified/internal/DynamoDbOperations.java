@@ -7,20 +7,37 @@ import org.jspecify.annotations.NonNull;
  */
 public enum DynamoDbOperations {
 
+    /**
+     * DynamoDB Query API.
+     */
     QUERY("Query"),
+    /** DynamoDB Scan API. */
     SCAN("Scan"),
+    /** DynamoDB PutItem API. */
     PUT_ITEM("PutItem"),
+    /** DynamoDB GetItem API. */
     GET_ITEM("GetItem"),
+    /** DynamoDB UpdateItem API. */
     UPDATE_ITEM("UpdateItem"),
+    /** DynamoDB DeleteItem API. */
     DELETE_ITEM("DeleteItem"),
+    /** DynamoDB BatchGetItem API. */
     BATCH_GET_ITEM("BatchGetItem"),
+    /** DynamoDB BatchWriteItem API. */
     BATCH_WRITE_ITEM("BatchWriteItem"),
+    /** DynamoDB TransactWriteItems API. */
     TRANSACT_WRITE("TransactWrite"),
+    /** DynamoDB TransactGetItems API. */
     TRANSACT_GET("TransactGet"),
+    /** DynamoDB UpdateTimeToLive API. */
     UPDATE_TIME_TO_LIVE("UpdateTimeToLive"),
+    /** DynamoDB DescribeTimeToLive API. */
     DESCRIBE_TIME_TO_LIVE("DescribeTimeToLive"),
+    /** Simplified entity put operation. */
     ENTITY_PUT("EntityPut"),
+    /** Simplified entity delete operation. */
     ENTITY_DELETE("EntityDelete"),
+    /** Simplified entity query operation. */
     ENTITY_QUERY("EntityQuery");
 
     private final String operationName;

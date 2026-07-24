@@ -30,15 +30,25 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractUpdateBuilder<T, S extends AbstractUpdateBuilder<T, S>> {
 
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractUpdateBuilder.class);
 
+    /** The item to update, or {@code null} for key-only partial updates. */
     protected final T item;
+    /** Pre-built key map for key-only update path. */
     @Nullable
     protected Map<String, AttributeValue> keyMap;
+    /** Optional update expression for partial updates. */
     protected UpdateExpression updateExpression;
+    /** Optional condition expression that gates the update operation. */
     protected ConditionExpression conditionExpression;
+    /** Whether to ignore null attributes in full-item replacement. */
     protected boolean ignoreNulls = true;
+    /** Optional return values setting. */
     protected ReturnValue returnValues;
+    /** Whether optimistic locking is enabled. */
     protected boolean optimisticLocking;
 
     /**
@@ -62,23 +72,31 @@ public abstract class AbstractUpdateBuilder<T, S extends AbstractUpdateBuilder<T
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 
     /**
      * Returns a {@link Key} built from the current item.
      * Used internally to build key maps for partial update requests.
+     *
+     * @return the key derived from the item
      */
     protected abstract @NonNull Key getKeyFromItem();
 
     /**
      * Returns the table schema for the item type.
      * Used internally for key and attribute conversion.
+     *
+     * @return the table schema
      */
     protected abstract @NonNull TableSchema<T> getTableSchema();
 
@@ -212,6 +230,8 @@ public abstract class AbstractUpdateBuilder<T, S extends AbstractUpdateBuilder<T
     /**
      * Builds a key map for low-level update requests from the item or from a
      * pre-built key map (set via {@link #buildKeyMapFromValues(Object, Object)}).
+     *
+     * @return the key attribute map
      */
     protected @NonNull Map<String, AttributeValue> buildKeyMap() {
         if (keyMap != null) {
