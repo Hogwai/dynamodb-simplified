@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("BatchGetBuilder")
 class BatchGetBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -39,7 +39,9 @@ class BatchGetBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbEnhancedClient enhancedClient;
@@ -56,7 +58,9 @@ class BatchGetBuilderTest {
     @Mock
     private DynamoDbClient dynamoDbClient;
 
-    // ============ addKey ============
+    // endregion
+
+    // region addKey
 
     @Test
     @DisplayName("addKey with partition key returns self")
@@ -78,7 +82,9 @@ class BatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ addKeys ============
+    // endregion
+
+    // region addKeys
 
     @Test
     @DisplayName("addKeys with collection returns self")
@@ -93,7 +99,9 @@ class BatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty keys ============
+    // endregion
+
+    // region execute, empty keys
 
     @Test
     @DisplayName("execute with empty keys returns empty result and does not call batchGetItem")
@@ -107,7 +115,9 @@ class BatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ consistentRead ============
+    // endregion
+
+    // region consistentRead
 
     @Test
     @DisplayName("consistentRead(true) configures per-item strong consistency")
@@ -152,7 +162,9 @@ class BatchGetBuilderTest {
         }
     }
 
-    // ============ execute, with keys ============
+    // endregion
+
+    // region execute, with keys
 
     @Test
     @DisplayName("execute with keys returns results from enhanced client")
@@ -188,7 +200,9 @@ class BatchGetBuilderTest {
         verify(enhancedClient).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ project(String...) ============
+    // endregion
+
+    // region project(String...)
 
     @Test
     @DisplayName("project(String...) returns self for chaining")
@@ -230,7 +244,9 @@ class BatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ project(Consumer) ============
+    // endregion
+
+    // region project(Consumer)
 
     @Test
     @DisplayName("project(Consumer<ProjectionExpression>) returns self for chaining")
@@ -272,7 +288,9 @@ class BatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ limit validation ============
+    // endregion
+
+    // region limit validation
 
     @Test
     @DisplayName("execute with more than 100 keys throws IllegalArgumentException")
@@ -287,7 +305,9 @@ class BatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ retry ============
+    // endregion
+
+    // region retry
 
     @Test
     @DisplayName("execute with unprocessed keys from enhanced path retries using low-level client")
@@ -439,3 +459,4 @@ class BatchGetBuilderTest {
         verify(dynamoDbClient, times(3)).batchGetItem(any(BatchGetItemRequest.class));
     }
 }
+// endregion

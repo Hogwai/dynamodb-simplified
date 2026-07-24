@@ -1,24 +1,21 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchWriteBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
-import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Builds a batch write operation to put and delete multiple items in a single table.
@@ -30,16 +27,12 @@ import java.util.Objects;
  *
  * @param <T> the item type
  */
-public class BatchWriteBuilder<T> {
+public class BatchWriteBuilder<T> extends AbstractBatchWriteBuilder<T, BatchWriteBuilder<T>> {
 
     private static final Logger LOG = Logging.getLogger(BatchWriteBuilder.class);
 
-
     private final DynamoDbTable<T> table;
     private final DynamoDbClient dynamoDbClient;
-    private final List<T> itemsToPut = new ArrayList<>();
-    private final List<Key> keysToDelete = new ArrayList<>();
-    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Creates a new {@code BatchWriteBuilder} with the given table and low-level client.
@@ -49,57 +42,24 @@ public class BatchWriteBuilder<T> {
      */
     public BatchWriteBuilder(@NonNull DynamoDbTable<T> table,
                              @NonNull DynamoDbClient dynamoDbClient) {
+        super();
         this.table = table;
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    /**
-     * Adds an item to be put (inserted or replaced) in the batch write.
-     *
-     * @param item the item to put
-     * @return this builder
-     */
-    public @NonNull BatchWriteBuilder<T> put(@NonNull T item) {
-        itemsToPut.add(Objects.requireNonNull(item, "item must not be null"));
+    @Override
+    protected BatchWriteBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Adds a delete operation for the given partition key.
-     *
-     * @param partitionKey the partition key of the item to delete
-     * @return this builder
-     */
-    public @NonNull BatchWriteBuilder<T> delete(@NonNull Object partitionKey) {
-        keysToDelete.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
-        return this;
+    @Override
+    protected @NonNull TableSchema<T> tableSchema() {
+        return table.tableSchema();
     }
 
-    /**
-     * Adds a delete operation for the given partition and sort key.
-     *
-     * @param partitionKey the partition key value
-     * @param sortKey      the sort key value
-     * @return this builder
-     */
-    public @NonNull BatchWriteBuilder<T> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        keysToDelete.add(Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                .build());
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public BatchWriteBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
     /**
@@ -146,6 +106,8 @@ public class BatchWriteBuilder<T> {
                 }
                 var response = dynamoDbClient.batchWriteItem(batchRequestBuilder.build());
                 unprocessed = response.unprocessedItems();
+            } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+                throw new ResourceNotFoundException(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), table.tableName(), e);
             } catch (DynamoDbException e) {
                 throw new OperationFailedException(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), table.tableName(), e);
             }
@@ -168,19 +130,5 @@ public class BatchWriteBuilder<T> {
     private boolean sleepWithBackoff(int attempt) {
         return RetryUtils.sleepWithBackoff(attempt, DynamoDbLimits.BASE_BACKOFF_MS);
     }
-
-    private Map<String, List<WriteRequest>> buildRequestItems() {
-        List<WriteRequest> writes = new ArrayList<>(itemsToPut.size() + keysToDelete.size());
-        for (T item : itemsToPut) {
-            Map<String, AttributeValue> itemMap = table.tableSchema().itemToMap(item, true);
-            writes.add(WriteRequest.builder().putRequest(r -> r.item(itemMap)).build());
-        }
-        for (Key key : keysToDelete) {
-            Map<String, AttributeValue> keyMap = key.primaryKeyMap(table.tableSchema());
-            writes.add(WriteRequest.builder().deleteRequest(r -> r.key(keyMap)).build());
-        }
-        return Map.of(table.tableName(), writes);
-    }
-
 
 }

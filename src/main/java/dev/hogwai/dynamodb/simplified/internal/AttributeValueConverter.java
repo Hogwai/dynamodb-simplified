@@ -66,7 +66,7 @@ public final class AttributeValueConverter {
         };
     }
 
-    // ---- Private helpers ----
+    // region Private helpers
 
     private static AttributeValue toListAttributeValue(List<?> list) {
         List<AttributeValue> items = new ArrayList<>(list.size());
@@ -113,3 +113,4 @@ public final class AttributeValueConverter {
         return AttributeValue.builder().m(attrs).build();
     }
 }
+// endregion

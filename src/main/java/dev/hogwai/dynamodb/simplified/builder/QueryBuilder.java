@@ -1,11 +1,9 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractQueryBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.FilterExpression;
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
@@ -15,15 +13,15 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -33,32 +31,12 @@ import java.util.stream.Stream;
  *
  * @param <T> the type of the item
  */
-@SuppressWarnings("PMD.CyclomaticComplexity")
-public class QueryBuilder<T> {
+public class QueryBuilder<T> extends AbstractQueryBuilder<T, QueryBuilder<T>> {
     private static final Logger LOG = Logging.getLogger(QueryBuilder.class);
-    private static final String CONDITION_JOINER = ExpressionConstants.AND;
 
     private final DynamoDbTable<T> table;
     private final DynamoDbIndex<T> index;
     private final DynamoDbClient dynamoDbClient;
-    private QueryConditional keyCondition;
-    private FilterExpression filterExpression;
-    private ProjectionExpression projectionExpression;
-    private Boolean scanIndexForward = true;
-    private Integer limit;
-    private Map<String, AttributeValue> exclusiveStartKey;
-    private Boolean consistentRead = false;
-    private ReturnConsumedCapacity returnConsumedCapacity;
-    private Select select;
-
-    enum KeyConditionOp {
-        EQ, BEGINS_WITH, BETWEEN, GT, GE, LT, LE
-    }
-
-    private KeyConditionOp keyOp;
-    private @Nullable Object pkValue;
-    private @Nullable Object skValue;
-    private @Nullable Object skValue2; // for BETWEEN only
 
     /**
      * Constructs a new {@code QueryBuilder} for the given table.
@@ -85,6 +63,7 @@ public class QueryBuilder<T> {
      * @param dynamoDbClient the low-level DynamoDB client (nullable)
      */
     public QueryBuilder(@NonNull DynamoDbTable<T> table, @Nullable DynamoDbClient dynamoDbClient) {
+        super();
         this.table = table;
         this.index = null;
         this.dynamoDbClient = dynamoDbClient;
@@ -98,316 +77,43 @@ public class QueryBuilder<T> {
      * @param dynamoDbClient the low-level DynamoDB client (nullable)
      */
     public QueryBuilder(@NonNull DynamoDbIndex<T> index, @Nullable DynamoDbClient dynamoDbClient) {
+        super();
         this.table = null;
         this.index = index;
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    // ============ Key Conditions ============
-
-    /**
-     * Sets the key condition to match all items with the given partition key value.
-     *
-     * @param pkValue the partition key value
-     * @return this builder for chaining
-     */
-    @SuppressWarnings("PMD.NullAssignment")
-    public @NonNull QueryBuilder<T> partitionKey(@NonNull Object pkValue) {
-        this.pkValue = pkValue;
-        this.keyOp = KeyConditionOp.EQ;
-        this.skValue = null;
-        this.skValue2 = null;
-        this.keyCondition = QueryConditional.keyEqualTo(
-                Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue)).build()
-        );
+    @Override
+    protected @NonNull QueryBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Sets the key condition to match the item with the exact partition key
-     * and sort key values.
-     *
-     * @param pkValue the partition key value
-     * @param skValue the sort key value
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyEquals(@NonNull Object pkValue, @NonNull Object skValue) {
-        this.partitionKey(pkValue);
-        this.skValue = skValue;
-        this.keyCondition = QueryConditional.keyEqualTo(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                        .build()
-        );
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table != null ? table.tableName() : index.tableName();
     }
 
-    /**
-     * Sets the key condition to match items whose sort key begins with the
-     * given prefix within the specified partition.
-     *
-     * @param pkValue  the partition key value
-     * @param skPrefix the sort key prefix string
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyBeginsWith(@NonNull Object pkValue, @NonNull String skPrefix) {
-        this.partitionKey(pkValue);
-        this.keyOp = KeyConditionOp.BEGINS_WITH;
-        this.skValue = skPrefix;
-        this.keyCondition = QueryConditional.sortBeginsWith(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(skPrefix)
-                        .build()
-        );
-        return this;
+    @Override
+    @Nullable
+    protected String indexName() {
+        return index != null ? index.indexName() : null;
     }
 
-    /**
-     * Sets the key condition to match items whose sort key falls within
-     * the specified range (inclusive) within the given partition.
-     *
-     * @param pkValue the partition key value
-     * @param skLow   the lower bound of the sort key range (inclusive)
-     * @param skHigh  the upper bound of the sort key range (inclusive)
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyBetween(@NonNull Object pkValue, @NonNull Object skLow, @NonNull Object skHigh) {
-        this.partitionKey(pkValue);
-        this.keyOp = KeyConditionOp.BETWEEN;
-        this.skValue = skLow;
-        this.skValue2 = skHigh;
-        this.keyCondition = QueryConditional.sortBetween(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skLow))
-                        .build(),
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skHigh))
-                        .build()
-        );
-        return this;
+    @Override
+    protected @NonNull String primaryPartitionKey() {
+        return table != null
+                ? table.tableSchema().tableMetadata().primaryPartitionKey()
+                : index.tableSchema().tableMetadata().primaryPartitionKey();
     }
 
-    /**
-     * Sets the key condition to match items whose sort key is strictly
-     * greater than the given value within the specified partition.
-     *
-     * @param pkValue the partition key value
-     * @param skValue the sort key threshold (exclusive)
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyGreaterThan(@NonNull Object pkValue, @NonNull Object skValue) {
-        this.partitionKey(pkValue);
-        this.keyOp = KeyConditionOp.GT;
-        this.skValue = skValue;
-        this.keyCondition = QueryConditional.sortGreaterThan(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                        .build()
-        );
-        return this;
+    @Override
+    protected @NonNull Optional<String> primarySortKey() {
+        return table != null
+                ? table.tableSchema().tableMetadata().primarySortKey()
+                : index.tableSchema().tableMetadata().primarySortKey();
     }
 
-    /**
-     * Sets the key condition to match items whose sort key is greater than
-     * or equal to the given value within the specified partition.
-     *
-     * @param pkValue the partition key value
-     * @param skValue the sort key threshold (inclusive)
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyGreaterThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
-        this.partitionKey(pkValue);
-        this.keyOp = KeyConditionOp.GE;
-        this.skValue = skValue;
-        this.keyCondition = QueryConditional.sortGreaterThanOrEqualTo(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                        .build()
-        );
-        return this;
-    }
-
-    /**
-     * Sets the key condition to match items whose sort key is strictly
-     * less than the given value within the specified partition.
-     *
-     * @param pkValue the partition key value
-     * @param skValue the sort key threshold (exclusive)
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyLessThan(@NonNull Object pkValue, @NonNull Object skValue) {
-        this.partitionKey(pkValue);
-        this.keyOp = KeyConditionOp.LT;
-        this.skValue = skValue;
-        this.keyCondition = QueryConditional.sortLessThan(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                        .build()
-        );
-        return this;
-    }
-
-    /**
-     * Sets the key condition to match items whose sort key is less than
-     * or equal to the given value within the specified partition.
-     *
-     * @param pkValue the partition key value
-     * @param skValue the sort key threshold (inclusive)
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> partitionKeyAndSortKeyLessThanOrEqual(@NonNull Object pkValue, @NonNull Object skValue) {
-        this.partitionKey(pkValue);
-        this.keyOp = KeyConditionOp.LE;
-        this.skValue = skValue;
-        this.keyCondition = QueryConditional.sortLessThanOrEqualTo(
-                Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(pkValue))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(skValue))
-                        .build()
-        );
-        return this;
-    }
-
-    // ============ Filter ============
-
-    /**
-     * Configures a post-query filter expression using a {@link FilterExpression} consumer.
-     *
-     * @param filterBuilder a consumer that configures the {@link FilterExpression}
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> filter(@NonNull Consumer<FilterExpression> filterBuilder) {
-        this.filterExpression = FilterExpression.builder();
-        filterBuilder.accept(this.filterExpression);
-        return this;
-    }
-
-    /**
-     * Configures a post-query filter expression from a pre-built {@link FilterExpression}.
-     *
-     * @param filter the filter expression
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> filter(@Nullable FilterExpression filter) {
-        this.filterExpression = filter;
-        return this;
-    }
-
-    // ============ Projection ============
-
-    /**
-     * Restricts the returned attributes to the specified ones.
-     *
-     * @param attributes the attribute names to include in the result
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> project(@NonNull String... attributes) {
-        this.projectionExpression = ProjectionExpression.builder().include(attributes);
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes by configuring a {@link ProjectionExpression}
-     * via a consumer.
-     *
-     * @param projectionBuilder a consumer that configures the {@link ProjectionExpression}
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> project(@NonNull Consumer<ProjectionExpression> projectionBuilder) {
-        this.projectionExpression = ProjectionExpression.builder();
-        projectionBuilder.accept(this.projectionExpression);
-        return this;
-    }
-
-    // ============ Options ============
-
-    /**
-     * Sets the query to return results in descending sort key order.
-     *
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> descending() {
-        this.scanIndexForward = false;
-        return this;
-    }
-
-    /**
-     * Sets the query to return results in ascending sort key order (the default).
-     *
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> ascending() {
-        this.scanIndexForward = true;
-        return this;
-    }
-
-    /**
-     * Limits the number of items evaluated per page.
-     *
-     * @param limit the maximum number of items to evaluate per page
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> limit(int limit) {
-        this.limit = limit;
-        return this;
-    }
-
-    /**
-     * Sets the exclusive start key for paginated queries.
-     * Typically obtained from the {@link PagedResult#lastEvaluatedKey()} of a previous query.
-     *
-     * @param lastEvaluatedKey the key map from which to start the next page
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> startFrom(@Nullable Map<String, AttributeValue> lastEvaluatedKey) {
-        this.exclusiveStartKey = lastEvaluatedKey;
-        return this;
-    }
-
-    /**
-     * Enables or disables strongly consistent reads.
-     *
-     * @param consistentRead {@code true} for a strongly consistent read,
-     *                       {@code false} (the default) for an eventually consistent read
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> consistentRead(boolean consistentRead) {
-        this.consistentRead = consistentRead;
-        return this;
-    }
-
-    /**
-     * Sets the return consumed capacity value for the query.
-     *
-     * @param returnConsumedCapacity the return consumed capacity value
-     * @return this builder for chaining
-     */
-    @NonNull
-    public QueryBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
-    }
-
-    /**
-     * Sets the select parameter for the query, controlling which attributes are returned.
-     * Use {@link Select#COUNT} to request only the item count from the server.
-     *
-     * @param select the select parameter (nullable)
-     * @return this builder for chaining
-     */
-    public @NonNull QueryBuilder<T> select(@Nullable Select select) {
-        this.select = select;
-        return this;
-    }
-
-    // ============ Execution ============
+    // region Execution
 
     /**
      * Executes the query and returns all matching items aggregated from all pages.
@@ -430,11 +136,13 @@ public class QueryBuilder<T> {
                     .toList();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Query on table '{}' returned {} items in {}ms",
-                        getTableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
+                        tableName(), results.size(), (System.nanoTime() - start) / 1_000_000);
             }
             return results;
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         }
     }
 
@@ -451,13 +159,15 @@ public class QueryBuilder<T> {
             throw new IllegalStateException(Messages.SELECT_COUNT_FMT.formatted("executeStream"));
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Query stream on table '{}'", getTableName());
+            LOG.debug("Query stream on table '{}'", tableName());
         }
         try {
             return executeAsPages().stream()
                     .flatMap(page -> page.items().stream());
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         }
     }
 
@@ -479,7 +189,7 @@ public class QueryBuilder<T> {
                 Page<T> firstPage = pages.next();
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Query on table '{}' returned {} items in {}ms (first page)",
-                            getTableName(), firstPage.items().size(), (System.nanoTime() - start) / 1_000_000);
+                            tableName(), firstPage.items().size(), (System.nanoTime() - start) / 1_000_000);
                 }
                 return new PagedResult<>(
                         firstPage.items(),
@@ -488,11 +198,13 @@ public class QueryBuilder<T> {
             }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Query on table '{}' returned 0 items in {}ms (first page)",
-                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+                        tableName(), (System.nanoTime() - start) / 1_000_000);
             }
             return new PagedResult<>(Collections.emptyList(), null);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         }
     }
 
@@ -511,11 +223,13 @@ public class QueryBuilder<T> {
             Optional<T> result = firstPage.items().stream().findFirst();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Query on table '{}' returned first item in {}ms",
-                        getTableName(), (System.nanoTime() - start) / 1_000_000);
+                        tableName(), (System.nanoTime() - start) / 1_000_000);
             }
             return result;
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         }
     }
 
@@ -535,7 +249,7 @@ public class QueryBuilder<T> {
                 long result = countWithLowLevel(select != null ? select : Select.COUNT);
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Count on table '{}' returned {} items in {}ms",
-                            getTableName(), result, (System.nanoTime() - start) / 1_000_000);
+                            tableName(), result, (System.nanoTime() - start) / 1_000_000);
                 }
                 return result;
             }
@@ -545,28 +259,30 @@ public class QueryBuilder<T> {
             }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Count on table '{}' returned {} items in {}ms",
-                        getTableName(), total, (System.nanoTime() - start) / 1_000_000);
+                        tableName(), total, (System.nanoTime() - start) / 1_000_000);
             }
             return total;
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), getTableName(), e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName(), e);
         }
     }
 
-    // ============ Low-Level Count ============
+    // endregion
+
+    // region Low-Level Count
 
     private long countWithLowLevel(Select select) {
-        if (pkValue == null) {
-            throw new IllegalStateException(Messages.PK_NOT_SET);
-        }
-        String tableName = getTableName();
+        requirePartitionKey();
+        String tblName = tableName();
         Map<String, String> expressionNames = new HashMap<>();
         Map<String, AttributeValue> expressionValues = new HashMap<>();
 
         String keyConditionExpression = buildKeyConditionExpression(expressionNames, expressionValues);
 
         QueryRequest.Builder requestBuilder = QueryRequest.builder()
-                .tableName(tableName)
+                .tableName(tblName)
                 .keyConditionExpression(keyConditionExpression)
                 .expressionAttributeNames(expressionNames)
                 .expressionAttributeValues(expressionValues)
@@ -581,138 +297,26 @@ public class QueryBuilder<T> {
 
         try {
             return dynamoDbClient.query(requestBuilder.build()).count();
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.QUERY.getOperationName(), tblName, e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tableName, e);
+            throw new OperationFailedException(DynamoDbOperations.QUERY.getOperationName(), tblName, e);
         }
     }
 
-    private String buildKeyConditionExpression(Map<String, String> expressionNames, Map<String, AttributeValue> expressionValues) {
-        String pkName = table != null
-                ? table.tableSchema().tableMetadata().primaryPartitionKey()
-                : index.tableSchema().tableMetadata().primaryPartitionKey();
+    // endregion
 
-        StringBuilder keyExpr = new StringBuilder();
-        expressionNames.put(ExpressionConstants.PK, pkName);
-        expressionValues.put(ExpressionConstants.PK_VAL, AttributeValueConverter.toKeyAttributeValue(pkValue));
-        keyExpr.append(ExpressionConstants.PK).append(" = ").append(ExpressionConstants.PK_VAL);
-
-        Optional<String> skName = table != null
-                ? table.tableSchema().tableMetadata().primarySortKey()
-                : index.tableSchema().tableMetadata().primarySortKey();
-
-        if (skValue != null && skName.isPresent()) {
-            expressionNames.put(ExpressionConstants.SK, skName.get());
-            expressionValues.put(ExpressionConstants.SK_VAL0, AttributeValueConverter.toKeyAttributeValue(skValue));
-
-            switch (keyOp) {
-                case BEGINS_WITH -> keyExpr.append(CONDITION_JOINER)
-                        .append(ExpressionConstants.BEGINS_WITH).append(ExpressionConstants.SK).append(", ")
-                        .append(ExpressionConstants.SK_VAL0).append(')');
-                case BETWEEN -> {
-                    expressionValues.put(ExpressionConstants.SK_VAL1, AttributeValueConverter.toKeyAttributeValue(skValue2));
-                    keyExpr.append(CONDITION_JOINER)
-                            .append(ExpressionConstants.SK).append(" BETWEEN ")
-                            .append(ExpressionConstants.SK_VAL0).append(CONDITION_JOINER)
-                            .append(ExpressionConstants.SK_VAL1);
-                }
-                case GT ->
-                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK).append(" > ").append(ExpressionConstants.SK_VAL0);
-                case GE ->
-                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK)
-                                .append(ExpressionConstants.GE).append(ExpressionConstants.SK_VAL0);
-                case LT ->
-                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK).append(" < ").append(ExpressionConstants.SK_VAL0);
-                case LE ->
-                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK)
-                                .append(ExpressionConstants.LE).append(ExpressionConstants.SK_VAL0);
-                case EQ ->
-                        keyExpr.append(CONDITION_JOINER).append(ExpressionConstants.SK).append(" = ").append(ExpressionConstants.SK_VAL0);
-            }
-        }
-        return keyExpr.toString();
-    }
-
-    private void applyFilterExpression(
-            QueryRequest.Builder requestBuilder,
-            Map<String, String> keyNames,
-            Map<String, AttributeValue> keyValues
-    ) {
-        if (filterExpression != null && !filterExpression.isEmpty()) {
-            requestBuilder.filterExpression(filterExpression.getExpression());
-            requestBuilder.expressionAttributeNames(mergeMaps(keyNames, filterExpression.getExpressionNames()));
-            requestBuilder.expressionAttributeValues(mergeMaps(keyValues, filterExpression.getExpressionValues()));
-        }
-    }
-
-    private void applyQueryOptions(QueryRequest.Builder requestBuilder) {
-        if (limit != null) {
-            requestBuilder.limit(limit);
-        }
-        if (exclusiveStartKey != null) {
-            requestBuilder.exclusiveStartKey(exclusiveStartKey);
-        }
-        if (consistentRead != null) {
-            requestBuilder.consistentRead(consistentRead);
-        }
-        if (scanIndexForward != null) {
-            requestBuilder.scanIndexForward(scanIndexForward);
-        }
-        if (returnConsumedCapacity != null) {
-            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
-        }
-    }
-
-    private static <K, V> Map<K, V> mergeMaps(Map<K, V> base, Map<K, V> override) {
-        Map<K, V> merged = new HashMap<>(base);
-        merged.putAll(override);
-        return merged;
-    }
-
-    // ============ Internal ============
-
-    private String getTableName() {
-        return table != null ? table.tableName() : index.tableName();
-    }
+    // region Internal
 
     private SdkIterable<Page<T>> executeAsPages() {
-        if (pkValue == null) {
-            throw new IllegalStateException(Messages.PK_NOT_SET);
-        }
-        QueryEnhancedRequest.Builder requestBuilder = QueryEnhancedRequest.builder()
-                .queryConditional(keyCondition)
-                .scanIndexForward(scanIndexForward)
-                .consistentRead(consistentRead);
-
-        if (filterExpression != null && !filterExpression.isEmpty()) {
-            requestBuilder.filterExpression(
-                    filterExpression.toSdkExpression()
-            );
-        }
-
-        if (projectionExpression != null && !projectionExpression.isEmpty()) {
-            requestBuilder.attributesToProject(
-                    projectionExpression.getProjectedAttributes().toArray(new String[0])
-            );
-        }
-
-        if (limit != null) {
-            requestBuilder.limit(limit);
-        }
-
-        if (exclusiveStartKey != null) {
-            requestBuilder.exclusiveStartKey(exclusiveStartKey);
-        }
-
-        if (returnConsumedCapacity != null) {
-            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
-        }
-
+        requirePartitionKey();
+        QueryEnhancedRequest request = buildEnhancedRequest();
         if (index != null) {
-            return index.query(requestBuilder.build());
+            return index.query(request);
         }
-
-        return table.query(requestBuilder.build());
+        return table.query(request);
     }
 
-
+    // endregion
 }
+// endregion

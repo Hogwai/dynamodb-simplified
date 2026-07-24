@@ -195,7 +195,7 @@ class AsyncEntityTableTest {
         verify(mockAsyncTable).updateItem(user);
     }
 
-    // ============ SK Branch Coverage Tests ============
+    // region SK Branch Coverage Tests
 
     @Entity(discriminator = "ITEM", table = "myapp")
     @KeyPrefix(component = "PK", value = "ITEM")
@@ -348,3 +348,4 @@ class AsyncEntityTableTest {
                 () -> tableForUser.deleteEntity(brokenUser));
     }
 }
+// endregion

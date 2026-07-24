@@ -1,6 +1,5 @@
 package dev.hogwai.dynamodb.simplified.async;
 
-import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
 import dev.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import org.junit.jupiter.api.DisplayName;
@@ -14,11 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.CancellationReason;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
-import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsResponse;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
@@ -36,13 +31,15 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncTransactWriteBuilder")
 class AsyncTransactWriteBuilderTest {
 
-    // ============ Test Items ============
+    // region Test Items
 
     @SuppressWarnings("unused")
     record TestItem(String id) {
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private DynamoDbAsyncTable<TestItem> table;
@@ -53,7 +50,9 @@ class AsyncTransactWriteBuilderTest {
     @Mock
     private DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     @SuppressWarnings("unchecked")
     private <T> AsyncTable<T> createAsyncTable(DynamoDbAsyncTable<T> dynamoDbAsyncTable)
@@ -64,7 +63,9 @@ class AsyncTransactWriteBuilderTest {
         return (AsyncTable<T>) ctor.newInstance(enhancedClient, dynamoDbAsyncTable, null);
     }
 
-    // ============ Put ============
+    // endregion
+
+    // region Put
 
     @Test
     @DisplayName("put adds a put item and execute delegates to enhancedClient")
@@ -81,7 +82,9 @@ class AsyncTransactWriteBuilderTest {
         verify(enhancedClient).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ Update ============
+    // endregion
+
+    // region Update
 
     @Test
     @DisplayName("update returns this builder")
@@ -93,7 +96,9 @@ class AsyncTransactWriteBuilderTest {
         assertNotNull(builder.update(tableWrapper, item));
     }
 
-    // ============ Delete ============
+    // endregion
+
+    // region Delete
 
     @Test
     @DisplayName("delete with partition key delegates to enhancedClient")
@@ -118,7 +123,9 @@ class AsyncTransactWriteBuilderTest {
         assertNotNull(builder.delete(tableWrapper, "pk-value", "sk-value"));
     }
 
-    // ============ Condition Check ============
+    // endregion
+
+    // region Condition Check
 
     @Test
     @DisplayName("conditionCheck with partition key delegates to enhancedClient")
@@ -144,7 +151,9 @@ class AsyncTransactWriteBuilderTest {
                 expr -> expr.eq("status", "active")));
     }
 
-    // ============ Execute Delegation ============
+    // endregion
+
+    // region Execute Delegation
 
     @Test
     @DisplayName("execute delegates to enhancedClient.transactWriteItems")
@@ -161,7 +170,9 @@ class AsyncTransactWriteBuilderTest {
         verify(enhancedClient, times(1)).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ Multiple Operations ============
+    // endregion
+
+    // region Multiple Operations
 
     @Test
     @DisplayName("multiple put and delete operations chain into a single transaction")
@@ -180,7 +191,9 @@ class AsyncTransactWriteBuilderTest {
         verify(enhancedClient, times(1)).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ Error propagation ============
+    // endregion
+
+    // region Error propagation
 
     @Test
     @DisplayName("execute propagates error from enhanced client")
@@ -197,7 +210,9 @@ class AsyncTransactWriteBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 
-    // ============ Update with Expression ============
+    // endregion
+
+    // region Update with Expression
 
     @Test
     @DisplayName("updateWithExpression delegates to low-level dynamoDbAsyncClient")
@@ -239,7 +254,9 @@ class AsyncTransactWriteBuilderTest {
         verify(enhancedClient, never()).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ TransactionCanceledException handling ============
+    // endregion
+
+    // region TransactionCanceledException handling
 
     @Test
     @DisplayName("executeEnhanced wraps TransactionCanceledException from enhanced client")
@@ -291,7 +308,9 @@ class AsyncTransactWriteBuilderTest {
         assertNull(tfe.getCancellationReason(0));
     }
 
-    // ============ Enhanced path exception wrapping (missed branches) ============
+    // endregion
+
+    // region Enhanced path exception wrapping (missed branches)
 
     @Test
     @DisplayName("executeEnhanced wraps DynamoDbException into OperationFailedException")
@@ -312,8 +331,8 @@ class AsyncTransactWriteBuilderTest {
     }
 
     @Test
-    @DisplayName("executeEnhanced wraps generic exception into DynamoSimplifiedException")
-    void executeEnhanced_wrapsGenericException() throws Exception {
+    @DisplayName("executeEnhanced rethrows RuntimeException as-is")
+    void executeEnhanced_rethrowsRuntimeException() throws Exception {
         when(enhancedClient.transactWriteItems(any(TransactWriteItemsEnhancedRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("unexpected")));
 
@@ -325,10 +344,12 @@ class AsyncTransactWriteBuilderTest {
 
         CompletableFuture<Void> future = builder.execute();
         var ex = assertThrows(CompletionException.class, future::join);
-        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
+        assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 
-    // ============ Low-level path exception wrapping (missed branches) ============
+    // endregion
+
+    // region Low-level path exception wrapping (missed branches)
 
     @Test
     @DisplayName("executeLowLevel wraps DynamoDbException into OperationFailedException")
@@ -351,8 +372,8 @@ class AsyncTransactWriteBuilderTest {
     }
 
     @Test
-    @DisplayName("executeLowLevel wraps generic exception into DynamoSimplifiedException")
-    void executeLowLevel_wrapsGenericException() throws Exception {
+    @DisplayName("executeLowLevel rethrows RuntimeException as-is")
+    void executeLowLevel_rethrowsRuntimeException() throws Exception {
         when(dynamoDbAsyncClient.transactWriteItems(any(TransactWriteItemsRequest.class)))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("oops")));
         when(table.tableName()).thenReturn("test-table");
@@ -366,6 +387,7 @@ class AsyncTransactWriteBuilderTest {
 
         CompletableFuture<Void> future = builder.execute();
         var ex = assertThrows(CompletionException.class, future::join);
-        assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
+        assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 }
+// endregion

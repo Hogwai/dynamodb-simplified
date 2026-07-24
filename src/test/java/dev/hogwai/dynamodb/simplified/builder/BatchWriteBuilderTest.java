@@ -10,12 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
-import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +24,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("BatchWriteBuilder")
 class BatchWriteBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -39,7 +34,9 @@ class BatchWriteBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbTable<TestItem> table;
@@ -50,7 +47,9 @@ class BatchWriteBuilderTest {
     @Mock
     private DynamoDbClient dynamoDbClient;
 
-    // ============ put ============
+    // endregion
+
+    // region put
 
     @Test
     @DisplayName("put adds item and returns self")
@@ -63,7 +62,9 @@ class BatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ delete ============
+    // endregion
+
+    // region delete
 
     @Test
     @DisplayName("delete with partition key returns self")
@@ -85,7 +86,9 @@ class BatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty queues ============
+    // endregion
+
+    // region execute, empty queues
 
     @Test
     @DisplayName("execute with empty queues returns BatchWriteResult with no unprocessed items")
@@ -99,7 +102,9 @@ class BatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ execute, with put ============
+    // endregion
+
+    // region execute, with put
 
     @Test
     @DisplayName("execute with put delegates to low-level client")
@@ -126,7 +131,9 @@ class BatchWriteBuilderTest {
         verify(dynamoDbClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ execute, retry logic ============
+    // endregion
+
+    // region execute, retry logic
 
     @Test
     @DisplayName("execute retries unprocessed items and succeeds")
@@ -184,7 +191,9 @@ class BatchWriteBuilderTest {
         verify(dynamoDbClient, times(4)).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ limit validation ============
+    // endregion
+
+    // region limit validation
 
     @Test
     @DisplayName("execute with more than 25 items throws IllegalArgumentException")
@@ -199,7 +208,9 @@ class BatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ returnConsumedCapacity ============
+    // endregion
+
+    // region returnConsumedCapacity
 
     @Test
     @DisplayName("returnConsumedCapacity sets the value and returns self")
@@ -208,7 +219,9 @@ class BatchWriteBuilderTest {
         assertSame(builder, builder.returnConsumedCapacity(ReturnConsumedCapacity.TOTAL));
     }
 
-    // ============ DynamoDbException Path ============
+    // endregion
+
+    // region DynamoDbException Path
 
     @Test
     @DisplayName("execute wraps DynamoDbException in OperationFailedException")
@@ -226,3 +239,4 @@ class BatchWriteBuilderTest {
         assertThrows(OperationFailedException.class, builder::execute);
     }
 }
+// endregion

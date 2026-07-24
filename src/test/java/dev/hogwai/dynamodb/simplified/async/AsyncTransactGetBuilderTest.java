@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncTransactGetBuilder")
 class AsyncTransactGetBuilderTest {
 
-    // ============ Mocks ============
+    // region Mocks
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private DynamoDbAsyncTable<?> table;
@@ -43,7 +43,9 @@ class AsyncTransactGetBuilderTest {
     @Mock
     private DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     @SuppressWarnings("unchecked")
     private <T> AsyncTable<T> createAsyncTable(DynamoDbAsyncTable<T> dynamoDbAsyncTable)
@@ -54,7 +56,9 @@ class AsyncTransactGetBuilderTest {
         return (AsyncTable<T>) ctor.newInstance(enhancedClient, dynamoDbAsyncTable, null);
     }
 
-    // ============ addGetItem ============
+    // endregion
+
+    // region addGetItem
 
     @Test
     @DisplayName("addGetItem with partition key adds entry and execute returns results")
@@ -79,7 +83,9 @@ class AsyncTransactGetBuilderTest {
         assertDoesNotThrow(() -> builder.addGetItem(asyncTableWrapper, "pk-value", "sk-value"));
     }
 
-    // ============ Execute ============
+    // endregion
+
+    // region Execute
 
     @Test
     @DisplayName("execute returns a non-null TransactGetResults instance")
@@ -138,7 +144,9 @@ class AsyncTransactGetBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 
-    // ============ Projection ============
+    // endregion
+
+    // region Projection
 
     @Test
     @DisplayName("project without entries throws IllegalStateException")
@@ -231,3 +239,4 @@ class AsyncTransactGetBuilderTest {
         assertNull(results.get(0));
     }
 }
+// endregion

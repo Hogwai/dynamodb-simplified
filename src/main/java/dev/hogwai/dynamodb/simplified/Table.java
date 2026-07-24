@@ -2,15 +2,16 @@ package dev.hogwai.dynamodb.simplified;
 
 import dev.hogwai.dynamodb.simplified.builder.*;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
+import dev.hogwai.dynamodb.simplified.internal.KeyUtils;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -51,7 +52,7 @@ public class Table<T> {
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    // ============ Query ============
+    // region Query
 
     /**
      * Starts building a query operation.
@@ -66,7 +67,9 @@ public class Table<T> {
         return new QueryBuilder<>(dynamoDbTable, dynamoDbClient);
     }
 
-    // ============ Scan ============
+    // endregion
+
+    // region Scan
 
     /**
      * Starts building a scan operation.
@@ -81,7 +84,9 @@ public class Table<T> {
         return new ScanBuilder<>(dynamoDbTable, dynamoDbClient);
     }
 
-    // ============ Get Item ============
+    // endregion
+
+    // region Get Item
 
     /**
      * Starts building a get operation by partition key.
@@ -121,7 +126,7 @@ public class Table<T> {
     @NonNull
     public Optional<T> getItem(@NonNull Object partitionKey) {
         return Optional.ofNullable(
-                dynamoDbTable.getItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
+                dynamoDbTable.getItem(KeyUtils.buildKey(AttributeValueConverter.toKeyAttributeValue(partitionKey), null))
         );
     }
 
@@ -135,14 +140,15 @@ public class Table<T> {
     @NonNull
     public Optional<T> getItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
         return Optional.ofNullable(
-                dynamoDbTable.getItem(Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                        .build())
+                dynamoDbTable.getItem(KeyUtils.buildKey(
+                        AttributeValueConverter.toKeyAttributeValue(partitionKey),
+                        AttributeValueConverter.toKeyAttributeValue(sortKey)))
         );
     }
 
-    // ============ Put Item ============
+    // endregion
+
+    // region Put Item
 
     /**
      * Starts building a put operation with optional conditions.
@@ -167,7 +173,9 @@ public class Table<T> {
         dynamoDbTable.putItem(item);
     }
 
-    // ============ Update Item ============
+    // endregion
+
+    // region Update Item
 
     /**
      * Starts building an update operation with optional conditions and partial expressions.
@@ -229,7 +237,9 @@ public class Table<T> {
         return dynamoDbTable.updateItem(item);
     }
 
-    // ============ Delete Item ============
+    // endregion
+
+    // region Delete Item
 
     /**
      * Starts building a delete operation by partition key with optional conditions.
@@ -268,7 +278,7 @@ public class Table<T> {
      */
     @Nullable
     public T deleteItem(@NonNull Object partitionKey) {
-        return dynamoDbTable.deleteItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
+        return dynamoDbTable.deleteItem(KeyUtils.buildKey(AttributeValueConverter.toKeyAttributeValue(partitionKey), null));
     }
 
     /**
@@ -280,13 +290,14 @@ public class Table<T> {
      */
     @Nullable
     public T deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return dynamoDbTable.deleteItem(Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                .build());
+        return dynamoDbTable.deleteItem(KeyUtils.buildKey(
+                AttributeValueConverter.toKeyAttributeValue(partitionKey),
+                AttributeValueConverter.toKeyAttributeValue(sortKey)));
     }
 
-    // ============ Secondary Index ============
+    // endregion
+
+    // region Secondary Index
 
     /**
      * Returns a typed wrapper for the named secondary index (GSI or LSI).
@@ -302,7 +313,9 @@ public class Table<T> {
         return new Index<>(dynamoDbTable.index(indexName), dynamoDbClient);
     }
 
-    // ============ Batch Operations ============
+    // endregion
+
+    // region Batch Operations
 
     /**
      * Starts building a batch get operation to retrieve multiple items by key.
@@ -349,7 +362,9 @@ public class Table<T> {
         return batch.execute();
     }
 
-    // ============ Raw Access ============
+    // endregion
+
+    // region Raw Access
 
     /**
      * Returns the underlying {@link DynamoDbTable} for advanced operations.
@@ -381,7 +396,9 @@ public class Table<T> {
         return dynamoDbClient;
     }
 
-    // ============ Table Management (DDL) ============
+    // endregion
+
+    // region Table Management (DDL)
 
     /**
      * Creates the DynamoDB table corresponding to this {@code Table} instance.
@@ -440,6 +457,32 @@ public class Table<T> {
     }
 
     /**
+     * Updates the DynamoDB table with the specified configuration.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * table.updateTable(b -> b
+     *     .provisionedThroughput(p -> p
+     *         .readCapacityUnits(10L)
+     *         .writeCapacityUnits(10L)));
+     * }</pre>
+     *
+     * @param requestConsumer a consumer to configure the {@link UpdateTableRequest.Builder}
+     * @throws OperationFailedException if the DynamoDB API call fails
+     */
+    public void updateTable(@NonNull Consumer<UpdateTableRequest.Builder> requestConsumer) {
+        Objects.requireNonNull(requestConsumer, "requestConsumer must not be null");
+        try {
+            dynamoDbClient.updateTable(UpdateTableRequest.builder()
+                    .tableName(dynamoDbTable.tableName())
+                    .applyMutation(requestConsumer)
+                    .build());
+        } catch (DynamoDbException e) {
+            throw new OperationFailedException("UpdateTable", dynamoDbTable.tableName(), e);
+        }
+    }
+
+    /**
      * Checks whether the DynamoDB table exists.
      * <p>
      * Returns {@code true} if the table exists, {@code false} if it does not.
@@ -450,12 +493,14 @@ public class Table<T> {
         try {
             dynamoDbTable.describeTable();
             return true;
-        } catch (ResourceNotFoundException ignored) {
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException ignored) {
             return false;
         }
     }
 
-    // ============ TTL Management ============
+    // endregion
+
+    // region TTL Management
 
     /**
      * Enables Time To Live (TTL) on this table with the given attribute name.
@@ -472,6 +517,8 @@ public class Table<T> {
                         spec.enabled(true);
                     })
                     .build());
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.UPDATE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.UPDATE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         }
@@ -492,6 +539,8 @@ public class Table<T> {
                         spec.enabled(false);
                     })
                     .build());
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.UPDATE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.UPDATE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         }
@@ -510,9 +559,12 @@ public class Table<T> {
                             .tableName(dynamoDbTable.tableName())
                             .build())
                     .timeToLiveDescription();
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.DESCRIBE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.DESCRIBE_TIME_TO_LIVE.getOperationName(), dynamoDbTable.tableName(), e);
         }
     }
 
 }
+// endregion

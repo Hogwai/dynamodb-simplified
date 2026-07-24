@@ -38,13 +38,15 @@ import static org.mockito.Mockito.*;
 @DisplayName("TransactWriteBuilder")
 class TransactWriteBuilderTest {
 
-    // ============ Test Items ============
+    // region Test Items
 
     @SuppressWarnings("unused")
     record TestItem(String id) {
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private DynamoDbTable<TestItem> table;
@@ -55,7 +57,9 @@ class TransactWriteBuilderTest {
     @Mock
     private DynamoDbClient dynamoDbClient;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     @SuppressWarnings("unchecked")
     private <T> Table<T> createTable(DynamoDbTable<T> dynamoDbTable)
@@ -66,7 +70,9 @@ class TransactWriteBuilderTest {
         return (Table<T>) ctor.newInstance(enhancedClient, dynamoDbTable, null);
     }
 
-    // ============ Put ============
+    // endregion
+
+    // region Put
 
     @Test
     @DisplayName("put adds a put item and execute delegates to enhancedClient")
@@ -81,7 +87,9 @@ class TransactWriteBuilderTest {
         verify(enhancedClient).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ Update ============
+    // endregion
+
+    // region Update
 
     @Test
     @DisplayName("update returns this builder")
@@ -93,7 +101,9 @@ class TransactWriteBuilderTest {
         assertNotNull(builder.update(tableWrapper, item));
     }
 
-    // ============ Delete ============
+    // endregion
+
+    // region Delete
 
     @Test
     @DisplayName("delete with partition key delegates to enhancedClient")
@@ -116,7 +126,9 @@ class TransactWriteBuilderTest {
         assertNotNull(builder.delete(tableWrapper, "pk-value", "sk-value"));
     }
 
-    // ============ Condition Check ============
+    // endregion
+
+    // region Condition Check
 
     @Test
     @DisplayName("conditionCheck with partition key delegates to enhancedClient")
@@ -140,7 +152,9 @@ class TransactWriteBuilderTest {
                 expr -> expr.eq("status", "active")));
     }
 
-    // ============ Execute Delegation ============
+    // endregion
+
+    // region Execute Delegation
 
     @Test
     @DisplayName("execute delegates to enhancedClient.transactWriteItems")
@@ -155,7 +169,9 @@ class TransactWriteBuilderTest {
         verify(enhancedClient, times(1)).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ Multiple Operations ============
+    // endregion
+
+    // region Multiple Operations
 
     @Test
     @DisplayName("multiple put and delete operations chain into a single transaction")
@@ -175,7 +191,9 @@ class TransactWriteBuilderTest {
         verify(enhancedClient, times(1)).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ Update with Expression ============
+    // endregion
+
+    // region Update with Expression
 
     @Test
     @DisplayName("updateWithExpression delegates to low-level dynamoDbClient")
@@ -217,7 +235,9 @@ class TransactWriteBuilderTest {
         verify(enhancedClient, never()).transactWriteItems(any(TransactWriteItemsEnhancedRequest.class));
     }
 
-    // ============ TransactionCanceledException handling ============
+    // endregion
+
+    // region TransactionCanceledException handling
 
     @Test
     @DisplayName("executeEnhanced wraps TransactionCanceledException with reasons")
@@ -264,3 +284,4 @@ class TransactWriteBuilderTest {
         verify(dynamoDbClient).transactWriteItems(any(TransactWriteItemsRequest.class));
     }
 }
+// endregion

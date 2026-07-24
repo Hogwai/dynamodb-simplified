@@ -69,7 +69,7 @@ class TableTest {
         return new Table<>(enhancedClient, dynamoDbTable, dynamoDbClient);
     }
 
-    // ============ Builder Factories ============
+    // region Builder Factories
 
     @Test
     @DisplayName("query() returns a non-null QueryBuilder")
@@ -164,7 +164,9 @@ class TableTest {
         verify(dynamoDbTable).deleteItem(any(Key.class));
     }
 
-    // ============ Convenience Delegation Methods ============
+    // endregion
+
+    // region Convenience Delegation Methods
 
     @Test
     @DisplayName("getItem(pk) delegates to DynamoDbTable.getItem(Key)")
@@ -198,7 +200,9 @@ class TableTest {
         verify(dynamoDbTable).updateItem(item);
     }
 
-    // ============ Fluent Builder Methods ============
+    // endregion
+
+    // region Fluent Builder Methods
 
     @Test
     @DisplayName("put(item) returns a non-null PutBuilder")
@@ -226,7 +230,9 @@ class TableTest {
         assertNotNull(table.delete("pk"));
     }
 
-    // ============ Batch Operations ============
+    // endregion
+
+    // region Batch Operations
 
     @Test
     @DisplayName("batchGet() returns a non-null BatchGetBuilder")
@@ -263,7 +269,9 @@ class TableTest {
         verify(dynamoDbClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ Secondary Index ============
+    // endregion
+
+    // region Secondary Index
 
     @Test
     @DisplayName("index(name) returns a non-null Index and delegates to DynamoDbTable.index()")
@@ -277,7 +285,9 @@ class TableTest {
         verify(dynamoDbTable).index("my-index");
     }
 
-    // ============ Key-Only Update ============
+    // endregion
+
+    // region Key-Only Update
 
     @SuppressWarnings("unchecked")
     private void mockSchema(String sortKeyName) {
@@ -321,7 +331,9 @@ class TableTest {
         verify(dynamoDbClient).updateItem(any(UpdateItemRequest.class));
     }
 
-    // ============ Raw Access ============
+    // endregion
+
+    // region Raw Access
 
     @Test
     @DisplayName("getRawTable() returns the same DynamoDbTable instance")
@@ -347,3 +359,4 @@ class TableTest {
         assertSame(dynamoDbClient, table.getDynamoDbClient());
     }
 }
+// endregion

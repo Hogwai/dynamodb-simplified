@@ -15,7 +15,7 @@ class FilterExpressionTest {
 
     private static final String ATTR = "data";
 
-    // ============ isEmpty ============
+    // region isEmpty
 
     @Test
     @DisplayName("isEmpty returns true for fresh builder, false after adding condition")
@@ -30,7 +30,9 @@ class FilterExpressionTest {
         assertFalse(fe.isEmpty());
     }
 
-    // ============ Basic Comparisons ============
+    // endregion
+
+    // region Basic Comparisons
 
     @Test
     @DisplayName("eq builds correct equality expression")
@@ -82,7 +84,9 @@ class FilterExpressionTest {
         assertEquals(AttributeValue.builder().n("99").build(), fe.getExpressionValues().get(":v0"));
     }
 
-    // ============ String Operations ============
+    // endregion
+
+    // region String Operations
 
     @Test
     @DisplayName("beginsWith builds correct begins_with function expression")
@@ -148,7 +152,9 @@ class FilterExpressionTest {
                 () -> expr.contains("tags", setValue));
     }
 
-    // ============ Server-side SIZE Operations ============
+    // endregion
+
+    // region Server-side SIZE Operations
 
     @Test
     @DisplayName("sizeEq builds correct size() equality expression")
@@ -199,7 +205,9 @@ class FilterExpressionTest {
         assertEquals(AttributeValue.builder().n("10").build(), fe.getExpressionValues().get(":v1"));
     }
 
-    // ============ Attribute Existence ============
+    // endregion
+
+    // region Attribute Existence
 
     @Test
     @DisplayName("exists builds correct attribute_exists expression")
@@ -219,7 +227,9 @@ class FilterExpressionTest {
         assertTrue(fe.getExpressionValues().isEmpty());
     }
 
-    // ============ Attribute Type ============
+    // endregion
+
+    // region Attribute Type
 
     @Test
     @DisplayName("attributeType with STRING produces attribute_type expression with type code 'S'")
@@ -253,7 +263,9 @@ class FilterExpressionTest {
                 "type code for " + type + " should be '" + expectedCode + "'");
     }
 
-    // ============ BETWEEN ============
+    // endregion
+
+    // region BETWEEN
 
     @Test
     @DisplayName("between with numeric values produces correct BETWEEN expression")
@@ -273,7 +285,9 @@ class FilterExpressionTest {
         assertEquals(AttributeValue.builder().s("Z").build(), fe.getExpressionValues().get(":v1"));
     }
 
-    // ============ IN ============
+    // endregion
+
+    // region IN
 
     @Test
     @DisplayName("in with string values produces correct IN expression with comma-separated placeholders")
@@ -316,7 +330,9 @@ class FilterExpressionTest {
         assertEquals(AttributeValue.builder().s("active").build(), fe.getExpressionValues().get(":v0"));
     }
 
-    // ============ Logical Operators: and / or / not ============
+    // endregion
+
+    // region Logical Operators: and / or / not
 
     @Test
     @DisplayName("and() joins two conditions with AND operator")
@@ -353,7 +369,9 @@ class FilterExpressionTest {
         assertEquals(AttributeValue.builder().bool(true).build(), fe.getExpressionValues().get(":v0"));
     }
 
-    // ============ Group ============
+    // endregion
+
+    // region Group
 
     @Test
     @DisplayName("group wraps a sub-expression in parentheses and merges its names and values with offset re-keying to avoid collisions")
@@ -404,7 +422,9 @@ class FilterExpressionTest {
         assertEquals("#n0 > :v0 AND (#n1 = :v1 OR #n2 = :v2)", outer.getExpression());
     }
 
-    // ============ Nested Attribute Access ============
+    // endregion
+
+    // region Nested Attribute Access
 
     @Test
     @DisplayName("nestedEq builds correct dotted path expression with multiple name keys")
@@ -434,7 +454,9 @@ class FilterExpressionTest {
         assertEquals(Map.of("#n0", "a", "#n1", "b", "#n2", "c"), fe.getExpressionNames());
     }
 
-    // ============ Naming / Counter Patterns ============
+    // endregion
+
+    // region Naming / Counter Patterns
 
     @Test
     @DisplayName("expression names use #nN pattern and values use :vN pattern across multiple conditions")
@@ -473,7 +495,9 @@ class FilterExpressionTest {
         assertEquals(3, fe.getExpressionValues().size());
     }
 
-    // ============ Complex / Real-World Combinations ============
+    // endregion
+
+    // region Complex / Real-World Combinations
 
     @Test
     @DisplayName("real-world: filter active users in age range")
@@ -570,7 +594,9 @@ class FilterExpressionTest {
         assertEquals(AttributeValue.builder().s("APAC").build(), fe.getExpressionValues().get(":v3"));
     }
 
-    // ============ Edge Cases ============
+    // endregion
+
+    // region Edge Cases
 
     @Test
     @DisplayName("builder returns independent instances with separate counters")
@@ -626,3 +652,4 @@ class FilterExpressionTest {
         assertEquals(11, outer.getExpressionValues().size());
     }
 }
+// endregion

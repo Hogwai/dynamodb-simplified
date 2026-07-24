@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("CrossTableBatchGetBuilder")
 class CrossTableBatchGetBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -39,7 +39,9 @@ class CrossTableBatchGetBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbEnhancedClient enhancedClient;
@@ -56,7 +58,9 @@ class CrossTableBatchGetBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     @SuppressWarnings("unchecked")
     private <T> Table<T> createTable(DynamoDbTable<T> dynamoDbTable)
@@ -74,7 +78,9 @@ class CrossTableBatchGetBuilderTest {
         lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
     }
 
-    // ============ addKey ============
+    // endregion
+
+    // region addKey
 
     @Test
     @DisplayName("addKey with partition key returns self")
@@ -112,7 +118,9 @@ class CrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty ============
+    // endregion
+
+    // region execute, empty
 
     @Test
     @DisplayName("execute with empty entries returns empty result")
@@ -126,7 +134,9 @@ class CrossTableBatchGetBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ execute, with keys ============
+    // endregion
+
+    // region execute, with keys
 
     @Test
     @DisplayName("execute with keys calls low-level client")
@@ -163,7 +173,9 @@ class CrossTableBatchGetBuilderTest {
         verify(dynamoDbClient).batchGetItem(any(BatchGetItemRequest.class));
     }
 
-    // ============ returnConsumedCapacity ============
+    // endregion
+
+    // region returnConsumedCapacity
 
     @Test
     @DisplayName("returnConsumedCapacity is propagated to the request")
@@ -201,7 +213,9 @@ class CrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ consistentRead ============
+    // endregion
+
+    // region consistentRead
 
     @Test
     @DisplayName("consistentRead(true) propagates to KeysAndAttributes in request")
@@ -230,7 +244,9 @@ class CrossTableBatchGetBuilderTest {
         assertTrue(ka.consistentRead());
     }
 
-    // ============ project ============
+    // endregion
+
+    // region project
 
     @Test
     @DisplayName("project(String...) returns self for chaining")
@@ -279,7 +295,9 @@ class CrossTableBatchGetBuilderTest {
         assertTrue(attrNames.containsValue("attr2"));
     }
 
-    // ============ limit validation ============
+    // endregion
+
+    // region limit validation
 
     @Test
     @DisplayName("execute with more than 100 keys throws IllegalArgumentException")
@@ -295,7 +313,9 @@ class CrossTableBatchGetBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ project on empty throws ============
+    // endregion
+
+    // region project on empty throws
 
     @Test
     @DisplayName("project on empty entries throws IllegalStateException")
@@ -305,7 +325,9 @@ class CrossTableBatchGetBuilderTest {
         assertThrows(IllegalStateException.class, () -> builder.project("attr"));
     }
 
-    // ============ retry ============
+    // endregion
+
+    // region retry
 
     @Test
     @DisplayName("execute retries unprocessed keys and accumulates items")
@@ -394,3 +416,4 @@ class CrossTableBatchGetBuilderTest {
         verify(dynamoDbClient, times(4)).batchGetItem(any(BatchGetItemRequest.class));
     }
 }
+// endregion

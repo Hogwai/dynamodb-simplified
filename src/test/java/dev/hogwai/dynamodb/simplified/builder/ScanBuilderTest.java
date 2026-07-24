@@ -31,13 +31,15 @@ import static org.mockito.Mockito.*;
 @DisplayName("ScanBuilder")
 class ScanBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         public String id;
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     DynamoDbTable<TestItem> table;
@@ -45,7 +47,9 @@ class ScanBuilderTest {
     @Mock
     DynamoDbIndex<TestItem> index;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private static AttributeValue attrVal(String s) {
         return AttributeValue.builder().s(s).build();
@@ -79,7 +83,9 @@ class ScanBuilderTest {
         when(table.scan(any(ScanEnhancedRequest.class))).thenReturn(pages);
     }
 
-    // ============ Tests ============
+    // endregion
+
+    // region Tests
 
     @Test
     @DisplayName("execute() returns all items from all pages (flattened)")
@@ -352,7 +358,9 @@ class ScanBuilderTest {
         assertEquals(2, expr.expressionValues().size());
     }
 
-    // ============ Index Constructor ============
+    // endregion
+
+    // region Index Constructor
 
     @Test
     @DisplayName("constructWithIndex_executesViaIndexScan using DynamoDbIndex constructor")
@@ -366,7 +374,9 @@ class ScanBuilderTest {
         verify(index).scan(any(ScanEnhancedRequest.class));
     }
 
-    // ============ returnConsumedCapacity ============
+    // endregion
+
+    // region returnConsumedCapacity
 
     @Test
     @DisplayName("returnConsumedCapacity(setsOnRequest)")
@@ -384,7 +394,9 @@ class ScanBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
     }
 
-    // ============ executeStream ============
+    // endregion
+
+    // region executeStream
 
     @Test
     @DisplayName("executeStream_returnsLazyStream()")
@@ -399,7 +411,9 @@ class ScanBuilderTest {
         assertEquals(2, result.size());
     }
 
-    // ============ Low-Level Client Tests ============
+    // endregion
+
+    // region Low-Level Client Tests
 
     @Mock
     DynamoDbClient dynamoDbClient;
@@ -564,7 +578,9 @@ class ScanBuilderTest {
         assertTrue(captor.getValue().consistentRead());
     }
 
-    // ============ Routing Guard Tests ============
+    // endregion
+
+    // region Routing Guard Tests
 
     @Test
     @DisplayName("executeAll() throws when Select.COUNT is set")
@@ -610,7 +626,9 @@ class ScanBuilderTest {
         );
     }
 
-    // ============ Exception Paths ============
+    // endregion
+
+    // region Exception Paths
 
     @Test
     @DisplayName("executeAll wraps DynamoDbException in OperationFailedException")
@@ -679,3 +697,4 @@ class ScanBuilderTest {
         verify(index).scan(any(ScanEnhancedRequest.class));
     }
 }
+// endregion

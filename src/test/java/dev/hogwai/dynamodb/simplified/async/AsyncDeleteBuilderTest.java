@@ -164,7 +164,7 @@ class AsyncDeleteBuilderTest {
         );
     }
 
-    // ============ Error paths ============
+    // region Error paths
 
     @Test
     @DisplayName("execute wraps ConditionalCheckFailedException into ConditionFailedException")
@@ -225,7 +225,9 @@ class AsyncDeleteBuilderTest {
         assertSame(nonRuntimeEx, ex.getCause().getCause());
     }
 
-    // ============ Return values ============
+    // endregion
+
+    // region Return values
 
     @Test
     @DisplayName("returnValues with ALL_OLD uses low-level deleteItem and maps response")
@@ -389,7 +391,9 @@ class AsyncDeleteBuilderTest {
         assertEquals(expectedKey, request.key());
     }
 
-    // ============ Missed branches: sort key schema present but no sort key provided ============
+    // endregion
+
+    // region Missed branches: sort key schema present but no sort key provided
 
     @Test
     @DisplayName("returnValues with sort key in schema but no sort key provided builds pk-only key")
@@ -434,7 +438,9 @@ class AsyncDeleteBuilderTest {
         assertInstanceOf(OperationFailedException.class, ex.getCause());
     }
 
-    // ============ Missed branch: empty condition expression in returnValues path ============
+    // endregion
+
+    // region Missed branch: empty condition expression in returnValues path
 
     @Test
     @DisplayName("returnValues with empty condition expression does not include condition in low-level request")
@@ -458,7 +464,9 @@ class AsyncDeleteBuilderTest {
         assertNull(request.conditionExpression());
     }
 
-    // ============ Missed branch: non-null empty response attributes ============
+    // endregion
+
+    // region Missed branch: non-null empty response attributes
 
     @Test
     @DisplayName("returnValues with non-null empty response attributes returns empty")
@@ -478,7 +486,9 @@ class AsyncDeleteBuilderTest {
         assertTrue(result.isEmpty());
     }
 
-    // ============ Missed branch: empty condition expression in enhanced path ============
+    // endregion
+
+    // region Missed branch: empty condition expression in enhanced path
 
     @Test
     @DisplayName("execute with empty condition expression does not include condition in enhanced request")
@@ -495,3 +505,4 @@ class AsyncDeleteBuilderTest {
         assertNull(request.conditionExpression());
     }
 }
+// endregion

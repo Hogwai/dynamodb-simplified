@@ -1,21 +1,15 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
-import dev.hogwai.dynamodb.simplified.Table;
-import dev.hogwai.dynamodb.simplified.Versioned;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractUpdateBuilder;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
-import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.VersionHelper;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -24,40 +18,31 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * A fluent builder for updating an item in a DynamoDB table.
  * Supports both full-item replacement and partial updates via an
- * {@link UpdateExpression}. Part of the DynamoDB Simplified library.
+ * {@link dev.hogwai.dynamodb.simplified.expression.UpdateExpression}.
+ * Part of the DynamoDB Simplified library.
  *
  * @param <T> the type of the item
  */
-public class UpdateBuilder<T> {
-    private static final Logger LOG = Logging.getLogger(UpdateBuilder.class);
+public class UpdateBuilder<T> extends AbstractUpdateBuilder<T, UpdateBuilder<T>> {
 
     private final DynamoDbTable<T> table;
-    private final T item;
     private final DynamoDbClient dynamoDbClient;
-    @Nullable
-    private Map<String, AttributeValue> keyMap;
-    private UpdateExpression updateExpression;
-    private ConditionExpression conditionExpression;
-    private boolean ignoreNulls = true;
-    private ReturnValue returnValues;
-    private boolean optimisticLocking;
 
     /**
      * Constructs a new {@code UpdateBuilder} for the given table and item.
      *
      * @param table          the DynamoDB table
      * @param item           the item to update (full replacement data, or
-     *                       a template object when used with {@link #update(Consumer)})
+     *                       a template object when used with {@link #update(java.util.function.Consumer)})
      * @param dynamoDbClient the low-level DynamoDB client (required for partial updates)
      */
     public UpdateBuilder(@NonNull DynamoDbTable<T> table, @NonNull T item, @NonNull DynamoDbClient dynamoDbClient) {
+        super(item);
         this.table = table;
-        this.item = item;
         this.dynamoDbClient = dynamoDbClient;
     }
 
@@ -73,131 +58,36 @@ public class UpdateBuilder<T> {
      */
     public UpdateBuilder(@NonNull DynamoDbTable<T> table, @NonNull DynamoDbClient dynamoDbClient,
                          @NonNull Object partitionKey, @Nullable Object sortKey) {
+        super();
         this.table = table;
-        this.item = null;
         this.dynamoDbClient = dynamoDbClient;
         buildKeyMapFromValues(partitionKey, sortKey);
     }
 
-    /**
-     * Defines a partial update expression ({@code SET}, {@code REMOVE}, {@code ADD}, {@code DELETE}).
-     * When set, this replaces the full-item replacement with a targeted partial update.
-     *
-     * @param updateBuilder a consumer that configures the {@link UpdateExpression}
-     * @return this builder for chaining
-     */
-    public @NonNull UpdateBuilder<T> update(@NonNull Consumer<UpdateExpression> updateBuilder) {
-        this.updateExpression = UpdateExpression.builder();
-        updateBuilder.accept(this.updateExpression);
+    @Override
+    protected @NonNull UpdateBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Configures a condition expression that gates the update operation.
-     * DynamoDB evaluates this condition <b>before</b> updating the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param configurator a consumer to build the condition expression
-     * @return this builder for chaining
-     */
-    public @NonNull UpdateBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
-        var builder = ConditionExpression.builder();
-        configurator.accept(builder);
-        this.conditionExpression = builder.build();
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
-    /**
-     * Configures a condition expression that gates the update operation.
-     * DynamoDB evaluates this condition <b>before</b> updating the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param condition the condition expression
-     * @return this builder for chaining
-     */
-    public @NonNull UpdateBuilder<T> condition(@Nullable ConditionExpression condition) {
-        this.conditionExpression = condition;
-        return this;
+    @Override
+    protected @NonNull Key getKeyFromItem() {
+        return table.keyFrom(item);
     }
 
-    /**
-     * Controls whether null-valued attributes in the item are ignored during
-     * full-item replacement. Has no effect when using a partial update expression.
-     *
-     * @param ignoreNulls {@code true} (default) to skip null attributes,
-     *                    {@code false} to persist them
-     * @return this builder for chaining
-     */
-    public @NonNull UpdateBuilder<T> ignoreNulls(boolean ignoreNulls) {
-        this.ignoreNulls = ignoreNulls;
-        return this;
-    }
-
-    /**
-     * Configures which item attributes to return after the update.
-     * <p>
-     * When set, controls the {@code ReturnValues} parameter of the underlying
-     * {@code UpdateItemRequest}. Common values: {@link ReturnValue#ALL_NEW}
-     * (default if not set), {@link ReturnValue#NONE}, {@link ReturnValue#ALL_OLD},
-     * {@link ReturnValue#UPDATED_NEW}, {@link ReturnValue#UPDATED_OLD}.
-     *
-     * @param returnValues the return value setting, or {@code null} to use the default
-     * @return this builder for chaining
-     */
-    public @NonNull UpdateBuilder<T> returnValues(@Nullable ReturnValue returnValues) {
-        this.returnValues = returnValues;
-        return this;
-    }
-
-    /**
-     * Enables optimistic locking for this update operation.
-     * <p>
-     * When enabled, the library adds a condition expression checking that the
-     * version attribute hasn't changed, and increments the version on success.
-     * The item must implement {@link dev.hogwai.dynamodb.simplified.Versioned}.
-     * <p>
-     * This is only supported for full-item replacement. For partial updates
-     * ({@link #update(Consumer)}), the item must be provided in the constructor.
-     *
-     * @return this builder for chaining
-     */
-    public @NonNull UpdateBuilder<T> withOptimisticLocking() {
-        this.optimisticLocking = true;
-        return this;
-    }
-
-    // ---- Optimistic locking ----
-
-    private void applyOptimisticLocking() {
-        if (!optimisticLocking || item == null) {
-            return;
-        }
-        ConditionExpression versionCondition = VersionHelper.buildCondition(item);
-        if (versionCondition == null) {
-            return;
-        }
-
-        if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            conditionExpression = ConditionExpression.builder()
-                    .group(conditionExpression)
-                    .and()
-                    .group(versionCondition)
-                    .build();
-        } else {
-            conditionExpression = versionCondition;
-        }
-    }
-
-    private void incrementVersion() {
-        if (optimisticLocking && item instanceof Versioned v) {
-            VersionHelper.incrementVersion(v);
-        }
+    @Override
+    protected @NonNull TableSchema<T> getTableSchema() {
+        return table.tableSchema();
     }
 
     /**
      * Executes the update operation. If a partial update expression was configured
-     * via {@link #update(Consumer)}, a targeted partial update is performed via the
-     * low-level DynamoDB client. Otherwise, the full item is replaced.
+     * via {@link #update(java.util.function.Consumer)}, a targeted partial update is
+     * performed via the low-level DynamoDB client. Otherwise, the full item is replaced.
      *
      * @return the updated item, or empty if not found
      */
@@ -244,7 +134,7 @@ public class UpdateBuilder<T> {
         return hasExpression;
     }
 
-    // ---- Full item replacement (existing behavior) ----
+    // region Full item replacement (existing behavior)
 
     @SuppressWarnings("unchecked")
     private T executeWithFullItem() {
@@ -263,18 +153,32 @@ public class UpdateBuilder<T> {
             return table.updateItem(requestBuilder.build());
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
-    // ---- Partial update via low-level client ----
+    // endregion
+
+    // region Partial update via low-level client
 
     private T executeWithExpression() {
         Map<String, AttributeValue> expressionKeyMap = buildKeyMap();
 
-        Map<String, String> allNames = new HashMap<>(updateExpression.getExpressionNames());
-        Map<String, AttributeValue> allValues = new HashMap<>(updateExpression.getExpressionValues());
+        Map<String, String> allNames;
+        Map<String, AttributeValue> allValues;
+
+        if (conditionExpression != null && !conditionExpression.isEmpty()) {
+            allNames = new HashMap<>(updateExpression.getExpressionNames());
+            allNames.putAll(conditionExpression.getExpressionNames());
+            allValues = new HashMap<>(updateExpression.getExpressionValues());
+            allValues.putAll(conditionExpression.getExpressionValues());
+        } else {
+            allNames = updateExpression.getExpressionNames();
+            allValues = updateExpression.getExpressionValues();
+        }
 
         UpdateItemRequest.Builder requestBuilder = UpdateItemRequest.builder()
                 .tableName(table.tableName())
@@ -285,12 +189,7 @@ public class UpdateBuilder<T> {
                 .returnValues(returnValues != null ? returnValues : ReturnValue.ALL_NEW);
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            allNames.putAll(conditionExpression.getExpressionNames());
-            allValues.putAll(conditionExpression.getExpressionValues());
-            requestBuilder
-                    .conditionExpression(conditionExpression.getExpression())
-                    .expressionAttributeNames(allNames)
-                    .expressionAttributeValues(allValues);
+            requestBuilder.conditionExpression(conditionExpression.getExpression());
         }
 
         Map<String, AttributeValue> result;
@@ -298,6 +197,8 @@ public class UpdateBuilder<T> {
             result = dynamoDbClient.updateItem(requestBuilder.build()).attributes();
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName(), e);
         }
@@ -308,28 +209,5 @@ public class UpdateBuilder<T> {
         return table.tableSchema().mapToItem(result);
     }
 
-    // ---- Key extraction from item ----
-
-    private Map<String, AttributeValue> buildKeyMap() {
-        if (keyMap != null) {
-            return keyMap;
-        }
-        Key key = table.keyFrom(item);
-        return key.primaryKeyMap(table.tableSchema());
-    }
-
-    private void buildKeyMapFromValues(@NonNull Object partitionKey, @Nullable Object sortKey) {
-        TableMetadata metadata = table.tableSchema().tableMetadata();
-        Map<String, AttributeValue> map = new HashMap<>();
-        map.put(metadata.primaryPartitionKey(), AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            map.put(
-                    metadata.primarySortKey()
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "Table " + table.tableName() + " has no sort key, but a sort key value was provided.")),
-                    AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-        this.keyMap = map;
-    }
-
 }
+// endregion

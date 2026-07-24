@@ -49,7 +49,7 @@ public class UpdateExpression {
         return new UpdateExpression();
     }
 
-    // ============ SET Operations ============
+    // region SET Operations
 
     /**
      * Adds a {@code SET} action that assigns the given value to the specified
@@ -137,7 +137,9 @@ public class UpdateExpression {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         String emptyListKey = addValue(AttributeValue.builder().l(Collections.emptyList()).build());
-        setActions.add("%s = %s%s%s, %s), %s)".formatted(nameKey, ExpressionConstants.LIST_APPEND, ExpressionConstants.IF_NOT_EXISTS, nameKey, emptyListKey, valueKey));
+        setActions.add("%s = %s%s%s, %s), %s)"
+                .formatted(nameKey, ExpressionConstants.LIST_APPEND,
+                        ExpressionConstants.IF_NOT_EXISTS, nameKey, emptyListKey, valueKey));
         return this;
     }
 
@@ -209,7 +211,9 @@ public class UpdateExpression {
         return set(attribute, epoch);
     }
 
-    // ============ REMOVE Operations ============
+    // endregion
+
+    // region REMOVE Operations
 
     /**
      * Adds one or more attributes to the {@code REMOVE} clause, deleting them
@@ -241,7 +245,9 @@ public class UpdateExpression {
         return this;
     }
 
-    // ============ ADD Operations (for sets and numbers) ============
+    // endregion
+
+    // region ADD Operations (for sets and numbers)
 
     /**
      * Adds an {@code ADD} action that inserts the given values into a set
@@ -279,7 +285,9 @@ public class UpdateExpression {
         return this;
     }
 
-    // ============ DELETE Operations (for sets) ============
+    // endregion
+
+    // region DELETE Operations (for sets)
 
     /**
      * Adds a {@code DELETE} action that removes the given values from a set
@@ -297,7 +305,9 @@ public class UpdateExpression {
         return this;
     }
 
-    // ============ Helper methods ============
+    // endregion
+
+    // region Helper methods
 
     private String addName(@NonNull String attribute) {
         String key = "#u" + nameCounter;
@@ -393,3 +403,4 @@ public class UpdateExpression {
                 && addActions.isEmpty() && deleteActions.isEmpty();
     }
 }
+// endregion

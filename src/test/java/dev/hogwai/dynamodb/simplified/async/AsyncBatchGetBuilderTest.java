@@ -11,18 +11,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
 import software.amazon.awssdk.enhanced.dynamodb.*;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
-import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +30,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncBatchGetBuilder")
 class AsyncBatchGetBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -49,7 +40,9 @@ class AsyncBatchGetBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbEnhancedAsyncClient enhancedClient;
@@ -69,7 +62,9 @@ class AsyncBatchGetBuilderTest {
     @Mock
     private DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     /**
      * Creates a {@link BatchGetResultPagePublisher} that emits a single page and completes.
@@ -99,7 +94,9 @@ class AsyncBatchGetBuilderTest {
         lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
     }
 
-    // ============ addKey ============
+    // endregion
+
+    // region addKey
 
     @Test
     @DisplayName("addKey with partition key returns self")
@@ -121,7 +118,9 @@ class AsyncBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ keys ============
+    // endregion
+
+    // region keys
 
     @Test
     @DisplayName("keys with list returns self")
@@ -133,7 +132,9 @@ class AsyncBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ consistentRead ============
+    // endregion
+
+    // region consistentRead
 
     @Test
     @DisplayName("consistentRead returns self")
@@ -145,7 +146,9 @@ class AsyncBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty keys ============
+    // endregion
+
+    // region execute, empty keys
 
     @Test
     @DisplayName("execute with empty keys returns empty result and does not call batchGetItem")
@@ -159,7 +162,9 @@ class AsyncBatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ execute, with keys ============
+    // endregion
+
+    // region execute, with keys
 
     @Test
     @DisplayName("execute with keys returns results from enhanced client")
@@ -236,7 +241,9 @@ class AsyncBatchGetBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 
-    // ============ executeWithPagination ============
+    // endregion
+
+    // region executeWithPagination
 
     @Test
     @DisplayName("executeWithPagination with empty keys returns empty PagedResult")
@@ -293,7 +300,9 @@ class AsyncBatchGetBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 
-    // ============ limit validation ============
+    // endregion
+
+    // region limit validation
 
     @Test
     @DisplayName("execute with more than 100 keys throws IllegalArgumentException")
@@ -307,7 +316,9 @@ class AsyncBatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ project ============
+    // endregion
+
+    // region project
 
     @Test
     @DisplayName("project with varargs returns self")
@@ -411,7 +422,9 @@ class AsyncBatchGetBuilderTest {
         verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
-    // ============ returnConsumedCapacity ============
+    // endregion
+
+    // region returnConsumedCapacity
 
     @Test
     @DisplayName("execute with returnConsumedCapacity passes it to enhanced request")
@@ -460,7 +473,9 @@ class AsyncBatchGetBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
     }
 
-    // ============ execute with projection edge cases ============
+    // endregion
+
+    // region execute with projection edge cases
 
     @Test
     @DisplayName("execute with projection without low-level client throws IllegalStateException")
@@ -559,7 +574,9 @@ class AsyncBatchGetBuilderTest {
         assertFalse(result.hasUnprocessed());
     }
 
-    // ============ publisher error handling with DynamoDbException ============
+    // endregion
+
+    // region publisher error handling with DynamoDbException
 
     @Test
     @DisplayName("execute completes exceptionally with OperationFailedException when publisher errors with DynamoDbException")
@@ -607,7 +624,9 @@ class AsyncBatchGetBuilderTest {
         assertInstanceOf(OperationFailedException.class, ex.getCause());
     }
 
-    // ============ buildReadBatch with consistentRead ============
+    // endregion
+
+    // region buildReadBatch with consistentRead
 
     @Test
     @DisplayName("execute with consistentRead(true) uses per-item consistentRead in batch")
@@ -645,3 +664,4 @@ class AsyncBatchGetBuilderTest {
         }
     }
 }
+// endregion

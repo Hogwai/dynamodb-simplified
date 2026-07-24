@@ -114,7 +114,7 @@ class TableDDLTest {
         assertThrows(NullPointerException.class, () -> table.create((Consumer) null));
     }
 
-    // ============ TTL Management ============
+    // region TTL Management
 
     @Test
     @DisplayName("enableTtl() calls dynamoDbClient.updateTimeToLive with correct params")
@@ -187,3 +187,4 @@ class TableDDLTest {
         assertThrows(OperationFailedException.class, table::describeTtl);
     }
 }
+// endregion

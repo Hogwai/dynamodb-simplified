@@ -1,23 +1,18 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractDeleteBuilder;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * A fluent builder for deleting an item from a DynamoDB table by its key,
@@ -25,15 +20,10 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of the item
  */
-public class DeleteBuilder<T> {
-    private static final Logger LOG = Logging.getLogger(DeleteBuilder.class);
+public class DeleteBuilder<T> extends AbstractDeleteBuilder<T, DeleteBuilder<T>> {
 
     private final DynamoDbTable<T> table;
-    private final Object partitionKey;
-    private final Object sortKey;
     private final DynamoDbClient dynamoDbClient;
-    private ConditionExpression conditionExpression;
-    private ReturnValue returnValues;
 
     /**
      * Constructs a new {@code DeleteBuilder} for the given table and key.
@@ -45,50 +35,19 @@ public class DeleteBuilder<T> {
      */
     public DeleteBuilder(@NonNull DynamoDbTable<T> table, @NonNull Object partitionKey,
                          @Nullable Object sortKey, @Nullable DynamoDbClient dynamoDbClient) {
+        super(partitionKey, sortKey);
         this.table = table;
-        this.partitionKey = partitionKey;
-        this.sortKey = sortKey;
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    /**
-     * Configures a condition expression that gates the delete operation.
-     * DynamoDB evaluates this condition <b>before</b> deleting the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param configurator a consumer to build the condition expression
-     * @return this builder for chaining
-     */
-    public @NonNull DeleteBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
-        var builder = ConditionExpression.builder();
-        configurator.accept(builder);
-        this.conditionExpression = builder.build();
+    @Override
+    protected DeleteBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Configures a condition expression that gates the delete operation.
-     * DynamoDB evaluates this condition <b>before</b> deleting the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param condition the condition expression
-     * @return this builder for chaining
-     */
-    public @NonNull DeleteBuilder<T> condition(@Nullable ConditionExpression condition) {
-        this.conditionExpression = condition;
-        return this;
-    }
-
-    /**
-     * Adds a condition that the specified attribute must exist on the item
-     * for the deletion to succeed.
-     *
-     * @param attribute the attribute name to check for existence
-     * @return this builder for chaining
-     */
-    public @NonNull DeleteBuilder<T> onlyIfExists(@NonNull String attribute) {
-        this.conditionExpression = ConditionExpression.builder().exists(attribute).build();
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
     /**
@@ -100,14 +59,14 @@ public class DeleteBuilder<T> {
      * @param returnValues the return value setting, or {@code null} to use the default
      * @return this builder for chaining
      */
+    @Override
     public @NonNull DeleteBuilder<T> returnValues(@Nullable ReturnValue returnValues) {
         if (returnValues != ReturnValue.NONE && dynamoDbClient == null) {
             throw new IllegalStateException(
                     "Return values require a low-level DynamoDbClient. " +
                     "Use the 4-argument constructor or provide a non-null client.");
         }
-        this.returnValues = returnValues;
-        return this;
+        return super.returnValues(returnValues);
     }
 
     /**
@@ -127,21 +86,8 @@ public class DeleteBuilder<T> {
             return Optional.ofNullable(result);
         }
 
-        DeleteItemEnhancedRequest.Builder requestBuilder =
-                DeleteItemEnhancedRequest.builder().key(k -> {
-                    k.partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
-                    if (sortKey != null) {
-                        k.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
-                    }
-                });
-        if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            requestBuilder.conditionExpression(
-                    conditionExpression.toSdkExpression()
-            );
-        }
-
         try {
-            T result = table.deleteItem(requestBuilder.build());
+            T result = table.deleteItem(buildEnhancedRequest());
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Delete on table '{}' completed in {}ms",
                         table.tableName(), (System.nanoTime() - start) / 1_000_000);
@@ -149,46 +95,36 @@ public class DeleteBuilder<T> {
             return Optional.ofNullable(result);
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
-    // ---- Low-level path for return values ----
+    // region Low-level path for return values
 
     private @Nullable T executeWithReturnValues() {
         String pkName = table.tableSchema().tableMetadata().primaryPartitionKey();
         String skName = table.tableSchema().tableMetadata().primarySortKey().orElse(null);
 
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put(pkName, AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (skName != null && sortKey != null) {
-            key.put(skName, AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-
-        DeleteItemRequest.Builder requestBuilder = DeleteItemRequest.builder()
-                .tableName(table.tableName())
-                .key(key)
-                .returnValues(returnValues);
-
-        if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            requestBuilder.conditionExpression(conditionExpression.getExpression())
-                    .expressionAttributeNames(conditionExpression.getExpressionNames())
-                    .expressionAttributeValues(conditionExpression.getExpressionValues());
-        }
+        Map<String, AttributeValue> key = buildKeyMap(pkName, skName);
+        DeleteItemRequest request = buildLowLevelRequest(key);
 
         try {
-            DeleteItemResponse response = dynamoDbClient.deleteItem(requestBuilder.build());
+            DeleteItemResponse response = dynamoDbClient.deleteItem(request);
             if (response.attributes() == null || response.attributes().isEmpty()) {
                 return null;
             }
             return table.tableSchema().mapToItem(response.attributes());
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.DELETE_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 
-
 }
+// endregion

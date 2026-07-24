@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncCrossTableBatchWriteBuilder")
 class AsyncCrossTableBatchWriteBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -39,7 +39,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbEnhancedAsyncClient enhancedClient;
@@ -56,7 +58,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private void stubTableNameAndSchema() {
         lenient().when(rawTable.tableName()).thenReturn("test_table");
@@ -72,7 +76,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         return new AsyncTable<>(enhancedClient, rawTable, dynamoDbAsyncClient);
     }
 
-    // ============ put ============
+    // endregion
+
+    // region put
 
     @Test
     @DisplayName("put returns self")
@@ -85,7 +91,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ delete ============
+    // endregion
+
+    // region delete
 
     @Test
     @DisplayName("delete with partition key returns self")
@@ -111,7 +119,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty ============
+    // endregion
+
+    // region execute, empty
 
     @Test
     @DisplayName("execute with empty operations returns empty result")
@@ -124,7 +134,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ execute, with put ============
+    // endregion
+
+    // region execute, with put
 
     @Test
     @DisplayName("execute with put calls low-level client")
@@ -148,7 +160,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         verify(dynamoDbAsyncClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ execute, with delete ============
+    // endregion
+
+    // region execute, with delete
 
     @Test
     @DisplayName("execute with delete calls low-level client")
@@ -172,7 +186,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         verify(dynamoDbAsyncClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ retry ============
+    // endregion
+
+    // region retry
 
     @Test
     @DisplayName("execute retries unprocessed items and succeeds")
@@ -204,7 +220,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         verify(dynamoDbAsyncClient, times(2)).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ 25 item limit ============
+    // endregion
+
+    // region 25 item limit
 
     @Test
     @DisplayName("execute with more than 25 items throws IllegalArgumentException")
@@ -219,7 +237,9 @@ class AsyncCrossTableBatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ error propagation ============
+    // endregion
+
+    // region error propagation
 
     @Test
     @DisplayName("execute propagates error from low-level client")
@@ -239,3 +259,4 @@ class AsyncCrossTableBatchWriteBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 }
+// endregion

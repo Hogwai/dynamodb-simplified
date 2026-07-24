@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncQueryBuilder")
 class AsyncQueryBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         public String id;
@@ -42,7 +42,9 @@ class AsyncQueryBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     DynamoDbAsyncTable<TestItem> table;
@@ -50,7 +52,9 @@ class AsyncQueryBuilderTest {
     @Mock
     DynamoDbAsyncIndex<TestItem> index;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private static AttributeValue attrVal(String s) {
         return AttributeValue.builder().s(s).build();
@@ -89,7 +93,9 @@ class AsyncQueryBuilderTest {
         return page;
     }
 
-    // ============ Tests ============
+    // endregion
+
+    // region Tests
 
     @Test
     @DisplayName("partitionKey().executeAll() delegates to table.query() and returns items")
@@ -607,7 +613,9 @@ class AsyncQueryBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
     }
 
-    // ============ Low-Level Client Tests ============
+    // endregion
+
+    // region Low-Level Client Tests
 
     @Mock
     DynamoDbAsyncClient dynamoDbAsyncClient;
@@ -726,7 +734,9 @@ class AsyncQueryBuilderTest {
         assertEquals(5L, total);
     }
 
-    // ============ Low-Level Client — Sort Key Conditions ============
+    // endregion
+
+    // region Low-Level Client — Sort Key Conditions
 
     @Test
     @DisplayName("count() with low-level client and sort key BETWEEN condition")
@@ -835,7 +845,9 @@ class AsyncQueryBuilderTest {
         assertTrue(request.keyConditionExpression().contains(" <= "));
     }
 
-    // ============ Low-Level Client — ApplyQueryOptions ============
+    // endregion
+
+    // region Low-Level Client — ApplyQueryOptions
 
     @Test
     @DisplayName("count() with low-level client applies limit option")
@@ -913,7 +925,9 @@ class AsyncQueryBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, captor.getValue().returnConsumedCapacity());
     }
 
-    // ============ Low-Level Client — Index Path ============
+    // endregion
+
+    // region Low-Level Client — Index Path
 
     @Test
     @DisplayName("count() with low-level client using index resolves table name from index")
@@ -939,7 +953,9 @@ class AsyncQueryBuilderTest {
         assertEquals("index-table", captor.getValue().tableName());
     }
 
-    // ============ Low-Level Client — Filter Expression ============
+    // endregion
+
+    // region Low-Level Client — Filter Expression
 
     @Test
     @DisplayName("count() with low-level client and filter expression includes filter in low-level request")
@@ -962,3 +978,4 @@ class AsyncQueryBuilderTest {
         assertNotNull(captor.getValue().filterExpression());
     }
 }
+// endregion

@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.Document;
 import software.amazon.awssdk.enhanced.dynamodb.MappedTableResource;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
 
 import java.util.List;
 
@@ -16,20 +17,34 @@ import java.util.List;
  *
  * @param <T> the mapped table resource type
  */
-public class TransactGetResults<T extends MappedTableResource<?>> {
+public class TransactGetResults<T extends MappedTableResource<?>> implements Consumed {
 
     private final List<Document> documents;
     private final List<T> tables;
+    private final @Nullable ConsumedCapacity consumedCapacity;
 
     /**
-     * Constructs a results wrapper.
+     * Constructs a results wrapper with no consumed capacity information.
      *
      * @param documents the result documents from the transaction
      * @param tables    the table references (in builder order) for type-safe item extraction
      */
     public TransactGetResults(@NonNull List<Document> documents, @NonNull List<T> tables) {
+        this(documents, tables, null);
+    }
+
+    /**
+     * Constructs a results wrapper.
+     *
+     * @param documents        the result documents from the transaction
+     * @param tables           the table references (in builder order) for type-safe item extraction
+     * @param consumedCapacity the consumed capacity, or {@code null}
+     */
+    public TransactGetResults(@NonNull List<Document> documents, @NonNull List<T> tables,
+                              @Nullable ConsumedCapacity consumedCapacity) {
         this.documents = List.copyOf(documents);
         this.tables = List.copyOf(tables);
+        this.consumedCapacity = consumedCapacity;
     }
 
     /**
@@ -68,5 +83,17 @@ public class TransactGetResults<T extends MappedTableResource<?>> {
      */
     public boolean isEmpty() {
         return tables.isEmpty();
+    }
+
+    /**
+     * Returns the consumed capacity, or {@code null} if capacity was not requested
+     * or the operation does not support capacity tracking.
+     *
+     * @return consumed capacity, or {@code null}
+     */
+    @Override
+    @Nullable
+    public ConsumedCapacity consumedCapacity() {
+        return consumedCapacity;
     }
 }

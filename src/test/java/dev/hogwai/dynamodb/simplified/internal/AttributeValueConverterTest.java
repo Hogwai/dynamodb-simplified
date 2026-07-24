@@ -6,6 +6,7 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AttributeValueConverterTest {
 
-    // ---------------------------------------------------------------
+    // region 
     // toAttributeValue – null
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(null) should return AttributeValue with nul(true)")
@@ -29,9 +32,13 @@ class AttributeValueConverterTest {
         assertTrue(result.nul(), "Expected nul() to be true for null input");
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – String
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(String) should return AttributeValue with s()")
@@ -40,9 +47,13 @@ class AttributeValueConverterTest {
         assertEquals("hello", result.s());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Number (Integer)
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Integer) should return AttributeValue with n()")
@@ -51,9 +62,13 @@ class AttributeValueConverterTest {
         assertEquals("42", result.n());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Number (Double)
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Double) should return AttributeValue with n()")
@@ -62,9 +77,13 @@ class AttributeValueConverterTest {
         assertEquals("3.14", result.n());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Boolean
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Boolean true) should return AttributeValue with bool(true)")
@@ -80,9 +99,13 @@ class AttributeValueConverterTest {
         assertFalse(result.bool());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – byte[]
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(byte[]) should return AttributeValue with b()")
@@ -100,9 +123,13 @@ class AttributeValueConverterTest {
         assertArrayEquals(bytes, result.b().asByteArray());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – List<String>
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(List<String>) should return AttributeValue with l([s(...), s(...)])")
@@ -116,9 +143,13 @@ class AttributeValueConverterTest {
         assertEquals("b", items.get(1).s());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – List with mixed types
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(List with mixed types) should preserve types via nested l()")
@@ -133,9 +164,13 @@ class AttributeValueConverterTest {
         assertTrue(items.get(2).bool());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Set<String>
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Set<String>) should return AttributeValue with ss()")
@@ -149,9 +184,13 @@ class AttributeValueConverterTest {
         assertTrue(ss.contains("y"));
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Set<Integer>
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Set<Integer>) should return AttributeValue with ns()")
@@ -165,9 +204,13 @@ class AttributeValueConverterTest {
         assertTrue(ns.contains("2"));
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Set<byte[]>
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Set<byte[]>) should return AttributeValue with bs()")
@@ -185,15 +228,19 @@ class AttributeValueConverterTest {
         assertArrayEquals(b, bs.get(1).asByteArray());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Set with unsupported element type
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Set with unsupported element type) should throw IllegalArgumentException")
     void shouldThrowWhenSetContainsUnsupportedType() {
         Set<Object> badSet = new LinkedHashSet<>();
-        badSet.add(LocalDate.of(2025, 1, 1));
+        badSet.add(LocalDate.of(2025, Month.JANUARY, 1));
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> AttributeValueConverter.toAttributeValue(badSet)
@@ -201,9 +248,13 @@ class AttributeValueConverterTest {
         assertTrue(ex.getMessage().contains("LocalDate"));
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Map<String, Object>
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Map<String, Object>) should return AttributeValue with m() containing correct entries")
@@ -235,9 +286,13 @@ class AttributeValueConverterTest {
         assertEquals("two", m.get("2").s());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Nested structures
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(Map with nested List and Map) should recurse correctly")
@@ -268,9 +323,13 @@ class AttributeValueConverterTest {
         assertFalse(m.get("flag").bool());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Empty collections
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(empty List) should return AttributeValue with empty l()")
@@ -293,14 +352,18 @@ class AttributeValueConverterTest {
         assertTrue(ex.getMessage().contains("DynamoDB"));
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toAttributeValue – Unsupported type
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toAttributeValue(unsupported type) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingUnsupportedType() {
-        LocalDate date = LocalDate.of(2025, 1, 1);
+        LocalDate date = LocalDate.of(2025, Month.JANUARY, 1);
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> AttributeValueConverter.toAttributeValue(date)
@@ -319,9 +382,13 @@ class AttributeValueConverterTest {
         assertTrue(ex.getMessage().contains(Object.class.getName()));
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toKeyAttributeValue – String
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toKeyAttributeValue(String) should return AttributeValue with s()")
@@ -330,9 +397,13 @@ class AttributeValueConverterTest {
         assertEquals("pk-value", result.s());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toKeyAttributeValue – Number
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toKeyAttributeValue(Integer) should return AttributeValue with n()")
@@ -355,9 +426,13 @@ class AttributeValueConverterTest {
         assertEquals("1.5", result.n());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toKeyAttributeValue – byte[]
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toKeyAttributeValue(byte[]) should return AttributeValue with b()")
@@ -367,9 +442,13 @@ class AttributeValueConverterTest {
         assertArrayEquals(bytes, result.b().asByteArray());
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toKeyAttributeValue – Unsupported types
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toKeyAttributeValue(Boolean) should throw IllegalArgumentException")
@@ -420,7 +499,9 @@ class AttributeValueConverterTest {
         );
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toKeyAttributeValue – null (no null guard)
     @Test
     @DisplayName("toKeyAttributeValue(null) should throw IllegalArgumentException")
@@ -431,9 +512,13 @@ class AttributeValueConverterTest {
         );
     }
 
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
     // toKeyAttributeValue – Error message includes type name
-    // ---------------------------------------------------------------
+    // endregion
+
+    // region 
 
     @Test
     @DisplayName("toKeyAttributeValue(unsupported) should mention the unsupported type in the message")
@@ -448,3 +533,4 @@ class AttributeValueConverterTest {
                 "Error message should indicate the unsupported type");
     }
 }
+// endregion

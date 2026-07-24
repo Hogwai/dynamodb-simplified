@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncGetItemBuilder")
 class AsyncGetItemBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         public String id;
@@ -44,7 +44,9 @@ class AsyncGetItemBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbAsyncTable<TestItem> table;
@@ -58,7 +60,9 @@ class AsyncGetItemBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
-    // ============ Builders ============
+    // endregion
+
+    // region Builders
 
     private AsyncGetItemBuilder<TestItem> pkOnlyBuilder;
     private AsyncGetItemBuilder<TestItem> pkSkBuilder;
@@ -69,7 +73,9 @@ class AsyncGetItemBuilderTest {
         pkSkBuilder = new AsyncGetItemBuilder<>(table, "pk-value", "sk-value", dynamoDbAsyncClient);
     }
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private void mockTableSchema(String pkName, String skName) {
         when(table.tableSchema()).thenReturn(tableSchema);
@@ -90,7 +96,9 @@ class AsyncGetItemBuilderTest {
                 .thenReturn(CompletableFuture.completedFuture(GetItemResponse.builder().build()));
     }
 
-    // ============ execute(), Simple GetItem ============
+    // endregion
+
+    // region execute(), Simple GetItem
 
     @Test
     @DisplayName("execute() with only partition key calls getItem() with correct key")
@@ -149,7 +157,9 @@ class AsyncGetItemBuilderTest {
         verify(table).getItem(any(GetItemEnhancedRequest.class));
     }
 
-    // ============ execute(), With Projection ============
+    // endregion
+
+    // region execute(), With Projection
 
     @Test
     @DisplayName("execute() with projection uses low-level client with projection expression")
@@ -196,7 +206,9 @@ class AsyncGetItemBuilderTest {
         verify(table, never()).getItem(any(GetItemEnhancedRequest.class));
     }
 
-    // ============ project(Consumer) ============
+    // endregion
+
+    // region project(Consumer)
 
     @Test
     @DisplayName("project(Consumer) applies projection expression via consumer")
@@ -227,7 +239,9 @@ class AsyncGetItemBuilderTest {
         assertEquals("name", request.expressionAttributeNames().get("#p0"));
     }
 
-    // ============ consistentRead ============
+    // endregion
+
+    // region consistentRead
 
     @Test
     @DisplayName("consistentRead(true) sets consistentRead on the request")
@@ -249,7 +263,9 @@ class AsyncGetItemBuilderTest {
         assertTrue(request.consistentRead());
     }
 
-    // ============ projection with sort key ============
+    // endregion
+
+    // region projection with sort key
 
     @Test
     @DisplayName("execute() with projection and sort key includes sort key in low-level key map")
@@ -288,7 +304,9 @@ class AsyncGetItemBuilderTest {
         assertEquals(AttributeValue.builder().s("sk-value").build(), request.key().get("sk"));
     }
 
-    // ============ error handling - simple path ============
+    // endregion
+
+    // region error handling - simple path
 
     @Test
     @DisplayName("execute() wraps DynamoDbException from simple path in OperationFailedException")
@@ -315,7 +333,9 @@ class AsyncGetItemBuilderTest {
         assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 
-    // ============ error handling - projection path ============
+    // endregion
+
+    // region error handling - projection path
 
     @Test
     @DisplayName("execute() with projection wraps DynamoDbException in OperationFailedException")
@@ -348,3 +368,4 @@ class AsyncGetItemBuilderTest {
         assertInstanceOf(RuntimeException.class, ex.getCause());
     }
 }
+// endregion

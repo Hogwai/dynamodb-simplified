@@ -1,24 +1,18 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractGetItemBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * A fluent builder for retrieving an item from a DynamoDB table by its key,
@@ -26,14 +20,10 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of the item
  */
-public class GetItemBuilder<T> {
+public class GetItemBuilder<T> extends AbstractGetItemBuilder<T, GetItemBuilder<T>> {
     private static final Logger LOG = Logging.getLogger(GetItemBuilder.class);
 
     private final DynamoDbTable<T> table;
-    private final Object partitionKey;
-    private final Object sortKey;
-    private ProjectionExpression projectionExpression;
-    private boolean consistentRead = false;
     private final DynamoDbClient dynamoDbClient;
 
     /**
@@ -46,46 +36,19 @@ public class GetItemBuilder<T> {
      */
     public GetItemBuilder(@NonNull DynamoDbTable<T> table, @NonNull Object partitionKey,
                           @Nullable Object sortKey, @NonNull DynamoDbClient dynamoDbClient) {
+        super(partitionKey, sortKey);
         this.table = table;
-        this.partitionKey = partitionKey;
-        this.sortKey = sortKey;
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    /**
-     * Restricts the returned attributes to the specified ones.
-     *
-     * @param attributes the attribute names to include in the result
-     * @return this builder for chaining
-     */
-    public @NonNull GetItemBuilder<T> project(@NonNull String... attributes) {
-        this.projectionExpression = ProjectionExpression.builder().include(attributes);
+    @Override
+    protected GetItemBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Restricts the returned attributes by configuring a {@link ProjectionExpression}
-     * via a consumer.
-     *
-     * @param projectionBuilder a consumer that configures the {@link ProjectionExpression}
-     * @return this builder for chaining
-     */
-    public @NonNull GetItemBuilder<T> project(@NonNull Consumer<ProjectionExpression> projectionBuilder) {
-        this.projectionExpression = ProjectionExpression.builder();
-        projectionBuilder.accept(this.projectionExpression);
-        return this;
-    }
-
-    /**
-     * Enables or disables strongly consistent reads.
-     *
-     * @param consistentRead {@code true} for a strongly consistent read,
-     *                       {@code false} (the default) for an eventually consistent read
-     * @return this builder for chaining
-     */
-    public @NonNull GetItemBuilder<T> consistentRead(boolean consistentRead) {
-        this.consistentRead = consistentRead;
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
     /**
@@ -113,19 +76,11 @@ public class GetItemBuilder<T> {
     }
 
     private Optional<T> executeSimple() {
-        AttributeValue partitionAttrValue = AttributeValueConverter.toKeyAttributeValue(partitionKey);
-        AttributeValue sortAttrValue = sortKey != null ? AttributeValueConverter.toKeyAttributeValue(sortKey) : null;
-        GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
-                .key(k -> {
-                    k.partitionValue(partitionAttrValue);
-                    if (sortKey != null) {
-                        k.sortValue(sortAttrValue);
-                    }
-                })
-                .consistentRead(consistentRead)
-                .build();
+        var request = buildEnhancedRequest();
         try {
             return Optional.ofNullable(table.getItem(request));
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName(), e);
         }
@@ -134,29 +89,16 @@ public class GetItemBuilder<T> {
     private Optional<T> executeWithProjection() {
         String pkName = table.tableSchema().tableMetadata().primaryPartitionKey();
         String skName = table.tableSchema().tableMetadata().primarySortKey().orElse(null);
-
-        Map<String, AttributeValue> keyMap = new HashMap<>();
-        keyMap.put(pkName, AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (skName != null && sortKey != null) {
-            keyMap.put(skName, AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-
-        GetItemRequest request = GetItemRequest.builder()
-                .tableName(table.tableName())
-                .key(keyMap)
-                .projectionExpression(projectionExpression.getExpression())
-                .expressionAttributeNames(projectionExpression.getExpressionNames())
-                .consistentRead(consistentRead)
-                .build();
-
+        var keyMap = buildKeyMap(pkName, skName);
+        var request = buildLowLevelRequest(keyMap);
         try {
             var response = dynamoDbClient.getItem(request);
             T item = response.hasItem() ? table.tableSchema().mapToItem(response.item()) : null;
             return Optional.ofNullable(item);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.GET_ITEM.getOperationName(), table.tableName(), e);
         }
     }
-
-
 }

@@ -2,9 +2,11 @@ package dev.hogwai.dynamodb.simplified.entity;
 
 import dev.hogwai.dynamodb.simplified.Table;
 import org.jspecify.annotations.NonNull;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
@@ -64,6 +66,70 @@ public final class EntityTableBuilder<T> {
         return this;
     }
 
+    // region Static Factory Methods
+
+    /**
+     * Creates an {@link EntityTable} for the given entity class using the
+     * provided DynamoDB clients.
+     * <p>
+     * This is a convenience method equivalent to:
+     * <pre>{@code
+     * new EntityTableBuilder<>(entityClass)
+     *         .dynamoDbClient(dynamoDbClient)
+     *         .enhancedClient(enhancedClient)
+     *         .build();
+     * }</pre>
+     *
+     * @param entityClass    the entity class annotated with {@code @Entity}
+     * @param dynamoDbClient the low-level DynamoDB client
+     * @param enhancedClient the enhanced DynamoDB client
+     * @param <T>            the entity type
+     * @return a new {@code EntityTable<T>}
+     */
+    @NonNull
+    public static <T> EntityTable<T> create(
+            @NonNull Class<T> entityClass,
+            @NonNull DynamoDbClient dynamoDbClient,
+            @NonNull DynamoDbEnhancedClient enhancedClient) {
+        return new EntityTableBuilder<>(entityClass)
+                .dynamoDbClient(dynamoDbClient)
+                .enhancedClient(enhancedClient)
+                .build();
+    }
+
+    /**
+     * Creates an {@link AsyncEntityTable} for the given entity class using the
+     * provided async DynamoDB clients.
+     * <p>
+     * This is a convenience method equivalent to:
+     * <pre>{@code
+     * new AsyncEntityTableBuilder<>(entityClass)
+     *         .dynamoDbAsyncClient(dynamoDbAsyncClient)
+     *         .enhancedAsyncClient(enhancedAsyncClient)
+     *         .build();
+     * }</pre>
+     *
+     * @param entityClass         the entity class annotated with {@code @Entity}
+     * @param dynamoDbAsyncClient the low-level async DynamoDB client
+     * @param enhancedAsyncClient the enhanced async DynamoDB client
+     * @param <T>                 the entity type
+     * @return a new {@code AsyncEntityTable<T>}
+     */
+    @NonNull
+    public static <T> AsyncEntityTable<T> createAsync(
+            @NonNull Class<T> entityClass,
+            @NonNull DynamoDbAsyncClient dynamoDbAsyncClient,
+            @NonNull DynamoDbEnhancedAsyncClient enhancedAsyncClient) {
+        return new AsyncEntityTableBuilder<>(entityClass)
+                .dynamoDbAsyncClient(dynamoDbAsyncClient)
+                .enhancedAsyncClient(enhancedAsyncClient)
+                .build();
+    }
+
+    // endregion
+
+    // region Build
+
     /**
      * Builds the {@link EntityTable} instance.
      * <p>
@@ -86,3 +152,4 @@ public final class EntityTableBuilder<T> {
         return new DefaultEntityTable<>(table, schema);
     }
 }
+// endregion

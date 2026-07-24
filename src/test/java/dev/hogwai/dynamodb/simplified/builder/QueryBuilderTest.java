@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("QueryBuilder")
 class QueryBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         public String id;
@@ -39,7 +39,9 @@ class QueryBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     DynamoDbTable<TestItem> table;
@@ -47,7 +49,9 @@ class QueryBuilderTest {
     @Mock
     DynamoDbIndex<TestItem> index;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private static AttributeValue attrVal(String s) {
         return AttributeValue.builder().s(s).build();
@@ -83,7 +87,9 @@ class QueryBuilderTest {
         return page;
     }
 
-    // ============ Mock Setup Helpers ============
+    // endregion
+
+    // region Mock Setup Helpers
 
     /**
      * Configures table.query() to return an empty page iterable.
@@ -102,7 +108,9 @@ class QueryBuilderTest {
         when(table.query(any(QueryEnhancedRequest.class))).thenReturn(pageIterableOf(pages));
     }
 
-    // ============ Key Condition Tests ============
+    // endregion
+
+    // region Key Condition Tests
 
     @Test
     @DisplayName("partitionKey sets keyEqualTo condition and executes")
@@ -234,7 +242,9 @@ class QueryBuilderTest {
         assertNotNull(captor.getValue().queryConditional());
     }
 
-    // ============ Execution Tests ============
+    // endregion
+
+    // region Execution Tests
 
     @Test
     @DisplayName("executeWithPagination() returns first page items + lastEvaluatedKey")
@@ -321,7 +331,9 @@ class QueryBuilderTest {
         assertEquals(5L, total);
     }
 
-    // ============ Request Verification Tests ============
+    // endregion
+
+    // region Request Verification Tests
     //
     // These tests only verify the request structure; they use emptyPageIterable()
     // to avoid creating unnecessary Page mocks and stubbings.
@@ -555,7 +567,9 @@ class QueryBuilderTest {
         assertFalse(result.hasMorePages());
     }
 
-    // ============ ReturnConsumedCapacity / executeAll / executeStream Tests ============
+    // endregion
+
+    // region ReturnConsumedCapacity / executeAll / executeStream Tests
 
     @Test
     @DisplayName("returnConsumedCapacity(TOTAL) sets returnConsumedCapacity in request")
@@ -606,7 +620,9 @@ class QueryBuilderTest {
         assertEquals("b", result.get(1).id);
     }
 
-    // ============ Low-Level Client Tests ============
+    // endregion
+
+    // region Low-Level Client Tests
 
     @Mock
     DynamoDbClient dynamoDbClient;
@@ -640,7 +656,9 @@ class QueryBuilderTest {
         when(dynamoDbClient.query(any(QueryRequest.class))).thenReturn(response);
     }
 
-    // ============ Low-Level Count Tests ============
+    // endregion
+
+    // region Low-Level Count Tests
 
     @Test
     @DisplayName("count() with DynamoDbClient uses low-level QueryRequest with Select.COUNT")
@@ -911,7 +929,9 @@ class QueryBuilderTest {
         assertEquals("index-table", captor.getValue().tableName());
     }
 
-    // ============ Routing Guard Tests ============
+    // endregion
+
+    // region Routing Guard Tests
 
     @Test
     @DisplayName("executeAll() throws when Select.COUNT is set")
@@ -984,3 +1004,4 @@ class QueryBuilderTest {
         );
     }
 }
+// endregion

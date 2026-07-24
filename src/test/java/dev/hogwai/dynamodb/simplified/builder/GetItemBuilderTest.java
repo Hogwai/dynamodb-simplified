@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("GetItemBuilder")
 class GetItemBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         public String id;
@@ -40,7 +40,9 @@ class GetItemBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbTable<TestItem> table;
@@ -54,7 +56,9 @@ class GetItemBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
-    // ============ Builders ============
+    // endregion
+
+    // region Builders
 
     private GetItemBuilder<TestItem> pkOnlyBuilder;
     private GetItemBuilder<TestItem> pkSkBuilder;
@@ -65,7 +69,9 @@ class GetItemBuilderTest {
         pkSkBuilder = new GetItemBuilder<>(table, "pk-value", "sk-value", dynamoDbClient);
     }
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private void mockTableSchema(String pkName, String skName) {
         when(table.tableSchema()).thenReturn(tableSchema);
@@ -85,7 +91,9 @@ class GetItemBuilderTest {
                 .thenReturn(GetItemResponse.builder().build());
     }
 
-    // ============ execute(), Simple GetItem ============
+    // endregion
+
+    // region execute(), Simple GetItem
 
     @Test
     @DisplayName("execute() with only partition key calls getItem() with correct key")
@@ -141,7 +149,9 @@ class GetItemBuilderTest {
         verify(table).getItem(any(GetItemEnhancedRequest.class));
     }
 
-    // ============ execute(), With Projection ============
+    // endregion
+
+    // region execute(), With Projection
 
     @Test
     @DisplayName("execute() with projection uses low-level client with projection expression")
@@ -225,7 +235,9 @@ class GetItemBuilderTest {
         assertEquals("#p0", request.projectionExpression());
     }
 
-    // ============ consistentRead ============
+    // endregion
+
+    // region consistentRead
 
     @Test
     @DisplayName("consistentRead(true) sets consistentRead on the request")
@@ -245,7 +257,9 @@ class GetItemBuilderTest {
         assertTrue(request.consistentRead());
     }
 
-    // ============ project(String...) ============
+    // endregion
+
+    // region project(String...)
 
     @Test
     @DisplayName("project(\"attr1\", \"attr2\") passes projection expression to low-level client")
@@ -275,7 +289,9 @@ class GetItemBuilderTest {
         assertEquals("attr2", request.expressionAttributeNames().get("#p1"));
     }
 
-    // ============ project(Consumer) ============
+    // endregion
+
+    // region project(Consumer)
 
     @Test
     @DisplayName("project(Consumer<ProjectionExpression>) includes attribute from consumer")
@@ -303,3 +319,4 @@ class GetItemBuilderTest {
         assertEquals("consumerAttr", request.expressionAttributeNames().get("#p0"));
     }
 }
+// endregion

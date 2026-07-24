@@ -3,8 +3,7 @@
  * <p>
  * {@link dev.hogwai.dynamodb.simplified.DynamoSimplifiedClient} and
  * {@link dev.hogwai.dynamodb.simplified.Table} are the primary entry points
- * for synchronous operations. {@link dev.hogwai.dynamodb.simplified.Versioned}
- * provides an optimistic locking interface for item version management.
+ * for synchronous operations.
  * <p>
  * Sub-packages contain fluent builders ({@code builder/}), async variants
  * ({@code async/}), expression builders ({@code expression/}), exception

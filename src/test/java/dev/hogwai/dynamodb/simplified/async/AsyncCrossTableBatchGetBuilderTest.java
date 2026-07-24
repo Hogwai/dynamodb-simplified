@@ -12,11 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +27,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncCrossTableBatchGetBuilder")
 class AsyncCrossTableBatchGetBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -41,7 +37,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbEnhancedAsyncClient enhancedClient;
@@ -58,7 +56,9 @@ class AsyncCrossTableBatchGetBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private void stubTableLookup() {
         lenient().when(rawTable.tableName()).thenReturn("test_table");
@@ -71,7 +71,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         return new AsyncTable<>(enhancedClient, rawTable, dynamoDbAsyncClient);
     }
 
-    // ============ addKey ============
+    // endregion
+
+    // region addKey
 
     @Test
     @DisplayName("addKey with partition key returns self")
@@ -95,7 +97,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ addKeys ============
+    // endregion
+
+    // region addKeys
 
     @Test
     @DisplayName("addKeys with collection returns self")
@@ -108,7 +112,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty ============
+    // endregion
+
+    // region execute, empty
 
     @Test
     @DisplayName("execute with empty entries returns empty result")
@@ -122,7 +128,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ execute, with keys ============
+    // endregion
+
+    // region execute, with keys
 
     @Test
     @DisplayName("execute with keys calls low-level client")
@@ -153,7 +161,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         verify(dynamoDbAsyncClient).batchGetItem(any(BatchGetItemRequest.class));
     }
 
-    // ============ returnConsumedCapacity ============
+    // endregion
+
+    // region returnConsumedCapacity
 
     @Test
     @DisplayName("returnConsumedCapacity is propagated to the request")
@@ -191,7 +201,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ project ============
+    // endregion
+
+    // region project
 
     @Test
     @DisplayName("project(String...) returns self for chaining")
@@ -205,7 +217,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ limit validation ============
+    // endregion
+
+    // region limit validation
 
     @Test
     @DisplayName("execute with more than 100 keys throws IllegalArgumentException")
@@ -220,7 +234,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ error propagation ============
+    // endregion
+
+    // region error propagation
 
     @Test
     @DisplayName("execute propagates error from low-level client")
@@ -240,7 +256,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 
-    // ============ project on empty throws ============
+    // endregion
+
+    // region project on empty throws
 
     @Test
     @DisplayName("project on empty entries throws IllegalStateException")
@@ -250,7 +268,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertThrows(IllegalStateException.class, () -> builder.project("attr"));
     }
 
-    // ============ buildCrossTableBatchGetResult — null responses ============
+    // endregion
+
+    // region buildCrossTableBatchGetResult — null responses
 
     @Test
     @DisplayName("execute handles null responses and unprocessedKeys from DynamoDB gracefully")
@@ -275,7 +295,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         verify(dynamoDbAsyncClient).batchGetItem(any(BatchGetItemRequest.class));
     }
 
-    // ============ buildTableKeysAndAttributes — multiple keys, same table ============
+    // endregion
+
+    // region buildTableKeysAndAttributes — multiple keys, same table
 
     @Test
     @DisplayName("execute with multiple keys for same table includes all keys in request")
@@ -310,7 +332,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertEquals(2, requestItems.get("test_table").keys().size());
     }
 
-    // ============ buildTableKeysAndAttributes — no projection ============
+    // endregion
+
+    // region buildTableKeysAndAttributes — no projection
 
     @Test
     @DisplayName("execute without projection omits projectionExpression in request")
@@ -341,7 +365,9 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertNull(requestItems.get("test_table").projectionExpression());
     }
 
-    // ============ buildTableKeysAndAttributes — empty projection expression ============
+    // endregion
+
+    // region buildTableKeysAndAttributes — empty projection expression
 
     @Test
     @DisplayName("execute with empty projection expression omits projectionExpression in request")
@@ -373,3 +399,4 @@ class AsyncCrossTableBatchGetBuilderTest {
         assertNull(requestItems.get("test_table").projectionExpression());
     }
 }
+// endregion

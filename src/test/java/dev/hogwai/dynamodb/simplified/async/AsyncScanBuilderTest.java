@@ -37,13 +37,15 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncScanBuilder")
 class AsyncScanBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         public String id;
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     DynamoDbAsyncTable<TestItem> table;
@@ -51,7 +53,9 @@ class AsyncScanBuilderTest {
     @Mock
     DynamoDbAsyncIndex<TestItem> index;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private static AttributeValue attrVal(String s) {
         return AttributeValue.builder().s(s).build();
@@ -94,7 +98,9 @@ class AsyncScanBuilderTest {
         return page;
     }
 
-    // ============ Tests ============
+    // endregion
+
+    // region Tests
 
     @Test
     @DisplayName("execute() returns all items from all pages (flattened)")
@@ -379,7 +385,9 @@ class AsyncScanBuilderTest {
         assertEquals(ReturnConsumedCapacity.TOTAL, request.returnConsumedCapacity());
     }
 
-    // ============ Low-Level Client Tests ============
+    // endregion
+
+    // region Low-Level Client Tests
 
     @Mock
     DynamoDbAsyncClient dynamoDbAsyncClient;
@@ -566,7 +574,9 @@ class AsyncScanBuilderTest {
         );
     }
 
-    // ============ executeAndGetFirst() Tests ============
+    // endregion
+
+    // region executeAndGetFirst() Tests
 
     @Test
     @DisplayName("executeAndGetFirst() returns first item from page")
@@ -651,3 +661,4 @@ class AsyncScanBuilderTest {
         assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 }
+// endregion

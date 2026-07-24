@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("CrossTableBatchWriteBuilder")
 class CrossTableBatchWriteBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -40,7 +40,9 @@ class CrossTableBatchWriteBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbEnhancedClient enhancedClient;
@@ -57,7 +59,9 @@ class CrossTableBatchWriteBuilderTest {
     @Mock
     private TableMetadata tableMetadata;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     @SuppressWarnings("unchecked")
     private <T> Table<T> createTable(DynamoDbTable<T> dynamoDbTable)
@@ -78,7 +82,9 @@ class CrossTableBatchWriteBuilderTest {
         lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
     }
 
-    // ============ put ============
+    // endregion
+
+    // region put
 
     @Test
     @DisplayName("put returns self")
@@ -92,7 +98,9 @@ class CrossTableBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ delete ============
+    // endregion
+
+    // region delete
 
     @Test
     @DisplayName("delete with partition key returns self")
@@ -120,7 +128,9 @@ class CrossTableBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty ============
+    // endregion
+
+    // region execute, empty
 
     @Test
     @DisplayName("execute with empty operations returns empty result")
@@ -133,7 +143,9 @@ class CrossTableBatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ execute, with put ============
+    // endregion
+
+    // region execute, with put
 
     @Test
     @DisplayName("execute with put calls low-level client")
@@ -157,7 +169,9 @@ class CrossTableBatchWriteBuilderTest {
         verify(dynamoDbClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ execute, retry ============
+    // endregion
+
+    // region execute, retry
 
     @Test
     @DisplayName("execute retries unprocessed items and succeeds")
@@ -189,7 +203,9 @@ class CrossTableBatchWriteBuilderTest {
         verify(dynamoDbClient, times(2)).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ 25 item limit ============
+    // endregion
+
+    // region 25 item limit
 
     @Test
     @DisplayName("execute with more than 25 items throws IllegalArgumentException")
@@ -205,7 +221,9 @@ class CrossTableBatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ delete with key ============
+    // endregion
+
+    // region delete with key
 
     @Test
     @DisplayName("execute with delete calls low-level client")
@@ -229,3 +247,4 @@ class CrossTableBatchWriteBuilderTest {
         verify(dynamoDbClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 }
+// endregion

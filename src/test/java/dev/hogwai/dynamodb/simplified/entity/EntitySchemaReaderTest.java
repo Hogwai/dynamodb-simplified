@@ -1,9 +1,9 @@
 package dev.hogwai.dynamodb.simplified.entity;
 
+import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -76,7 +76,7 @@ class EntitySchemaReaderTest {
         assertThat(schema.keyComponents()).containsExactly("PK");
     }
 
-    // ============ Additional Branch Coverage Tests ============
+    // region Additional Branch Coverage Tests
 
     @Entity(discriminator = "NOPREFIX", table = "myapp")
     static class NoPrefixEntity {
@@ -201,7 +201,9 @@ class EntitySchemaReaderTest {
         assertThat(sk).isEqualTo("DATE#2024-01-15");
     }
 
-    // ============ @KeyComponent on Fields Tests ============
+    // endregion
+
+    // region @KeyComponent on Fields Tests
 
     @Entity(discriminator = "FLD", table = "field-test")
     @KeyPrefix(component = "PK", value = "FLD")
@@ -255,8 +257,8 @@ class EntitySchemaReaderTest {
         private String id;
 
         public FieldNoGetterEntity() {
+            // test entity
         }
-        // Intentionally no getId() getter
     }
 
     @Test
@@ -266,3 +268,4 @@ class EntitySchemaReaderTest {
                 () -> EntitySchemaReader.read(FieldNoGetterEntity.class));
     }
 }
+// endregion
