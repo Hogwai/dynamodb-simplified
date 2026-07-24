@@ -26,16 +26,20 @@ public final class Messages {
     public static final String BATCH_GET_SIZE_FMT = "BatchGet supports a maximum of %d keys per request, but %d were provided";
 
     /** Template: "CrossTable batch get supports a maximum of %d keys per request, but %d were provided" */
-    public static final String CROSS_TABLE_BATCH_GET_SIZE_FMT = "CrossTable batch get supports a maximum of %d keys per request, but %d were provided";
+    public static final String CROSS_TABLE_BATCH_GET_SIZE_FMT =
+            "CrossTable batch get supports a maximum of %d keys per request, but %d were provided";
 
     /** Template: "CrossTable batch write supports a maximum of %d items per request, but %d were provided" */
-    public static final String CROSS_TABLE_BATCH_WRITE_SIZE_FMT = "CrossTable batch write supports a maximum of %d items per request, but %d were provided";
+    public static final String CROSS_TABLE_BATCH_WRITE_SIZE_FMT =
+            "CrossTable batch write supports a maximum of %d items per request, but %d were provided";
 
     /** Template: "BatchWrite supports a maximum of %d items per request, but %d were provided" */
-    public static final String BATCH_WRITE_SIZE_FMT = "BatchWrite supports a maximum of %d items per request, but %d were provided";
+    public static final String BATCH_WRITE_SIZE_FMT =
+            "BatchWrite supports a maximum of %d items per request, but %d were provided";
 
     /** Template: "CrossTable transact write supports a maximum of %d items per request, but %d were provided" */
-    public static final String CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT = "CrossTable transact write supports a maximum of %d items per request, but %d were provided";
+    public static final String CROSS_TABLE_TRANSACT_WRITE_SIZE_FMT =
+            "CrossTable transact write supports a maximum of %d items per request, but %d were provided";
 
     // endregion
 

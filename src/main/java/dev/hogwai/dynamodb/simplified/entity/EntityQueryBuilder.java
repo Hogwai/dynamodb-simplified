@@ -458,20 +458,20 @@ public final class EntityQueryBuilder {
                 String skValPlaceholder2 = ExpressionConstants.SK_VAL1;
                 exprAttrValues.put(skValPlaceholder2, AttributeValueConverter.toKeyAttributeValue(skValue2));
                 keyConditionExpr.append(CONDITION_JOINER)
-                        .append(skPlaceholder).append(" BETWEEN ")
+                        .append(skPlaceholder).append(ExpressionConstants.BETWEEN)
                         .append(skValPlaceholder).append(CONDITION_JOINER)
                         .append(skValPlaceholder2);
             }
             case GT ->
-                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" > ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.GT).append(skValPlaceholder);
             case GE ->
                     keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.GE).append(skValPlaceholder);
             case LT ->
-                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" < ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.LT).append(skValPlaceholder);
             case LE ->
                     keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.LE).append(skValPlaceholder);
             case EQ ->
-                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(" = ").append(skValPlaceholder);
+                    keyConditionExpr.append(CONDITION_JOINER).append(skPlaceholder).append(ExpressionConstants.EQ).append(skValPlaceholder);
         }
     }
 
@@ -487,7 +487,7 @@ public final class EntityQueryBuilder {
             if (!first) {
                 filterExpr.append(ExpressionConstants.OR);
             }
-            filterExpr.append(ExpressionConstants.DT).append(" = ").append(valueKey);
+            filterExpr.append(ExpressionConstants.DT).append(ExpressionConstants.EQ).append(valueKey);
             exprAttrValues.put(valueKey, AttributeValue.builder().s(schema.discriminator()).build());
             first = false;
         }

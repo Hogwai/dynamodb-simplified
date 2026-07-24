@@ -467,7 +467,7 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
         expressionValues.put(ExpressionConstants.PK_VAL, AttributeValueConverter.toKeyAttributeValue(pkValue));
 
         StringBuilder keyExpr = new StringBuilder();
-        keyExpr.append(ExpressionConstants.PK).append(" = ").append(ExpressionConstants.PK_VAL);
+        keyExpr.append(ExpressionConstants.PK).append(ExpressionConstants.EQ).append(ExpressionConstants.PK_VAL);
 
         Optional<String> skNameOpt = primarySortKey();
         if (skValue != null && skNameOpt.isPresent()) {
@@ -481,20 +481,20 @@ public abstract class AbstractQueryBuilder<T, S extends AbstractQueryBuilder<T, 
                 case BETWEEN -> {
                     expressionValues.put(ExpressionConstants.SK_VAL1, AttributeValueConverter.toKeyAttributeValue(skValue2));
                     keyExpr.append(ExpressionConstants.AND)
-                            .append(ExpressionConstants.SK).append(" BETWEEN ")
+                            .append(ExpressionConstants.SK).append(ExpressionConstants.BETWEEN)
                             .append(ExpressionConstants.SK_VAL0).append(ExpressionConstants.AND)
                             .append(ExpressionConstants.SK_VAL1);
                 }
-                case GT ->
-                        keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK).append(" > ").append(ExpressionConstants.SK_VAL0);
+                case GT -> keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK)
+                        .append(ExpressionConstants.GT).append(ExpressionConstants.SK_VAL0);
                 case GE -> keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK)
                         .append(ExpressionConstants.GE).append(ExpressionConstants.SK_VAL0);
-                case LT ->
-                        keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK).append(" < ").append(ExpressionConstants.SK_VAL0);
+                case LT -> keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK)
+                        .append(ExpressionConstants.LT).append(ExpressionConstants.SK_VAL0);
                 case LE -> keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK)
                         .append(ExpressionConstants.LE).append(ExpressionConstants.SK_VAL0);
-                case EQ ->
-                        keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK).append(" = ").append(ExpressionConstants.SK_VAL0);
+                case EQ -> keyExpr.append(ExpressionConstants.AND).append(ExpressionConstants.SK)
+                        .append(ExpressionConstants.EQ).append(ExpressionConstants.SK_VAL0);
             }
         }
         return keyExpr.toString();

@@ -203,7 +203,7 @@ public class ConditionExpression extends FilterExpression {
 
         @Override
         @NonNull
-        public Builder attributeType(@NonNull String attr, FilterExpression.AttributeType type) {
+        public Builder attributeType(@NonNull String attr, FilterExpression.@NonNull AttributeType type) {
             super.attributeType(attr, type);
             return this;
         }

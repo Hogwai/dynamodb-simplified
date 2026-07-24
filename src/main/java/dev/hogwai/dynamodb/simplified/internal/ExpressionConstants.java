@@ -50,8 +50,30 @@ public final class ExpressionConstants {
 
     // region Comparison operators
 
+    /**
+     * Less-than operator with surrounding spaces.
+     */
+    public static final String LT = " < ";
+    /**
+     * Greater-than operator with surrounding spaces.
+     */
+    public static final String GT = " > ";
+    /**
+     * Equals operator with surrounding spaces.
+     */
+    public static final String EQ = " = ";
+    /**
+     * Less-than-or-equal operator with surrounding spaces.
+     */
     public static final String LE = " <= ";
+    /**
+     * Greater-than-or-equal operator with surrounding spaces.
+     */
     public static final String GE = " >= ";
+    /**
+     * BETWEEN keyword with surrounding spaces.
+     */
+    public static final String BETWEEN = " BETWEEN ";
 
     // endregion
 

@@ -137,7 +137,9 @@ public class UpdateExpression {
         String nameKey = addName(attribute);
         String valueKey = addValue(toAttributeValue(values));
         String emptyListKey = addValue(AttributeValue.builder().l(Collections.emptyList()).build());
-        setActions.add("%s = %s%s%s, %s), %s)".formatted(nameKey, ExpressionConstants.LIST_APPEND, ExpressionConstants.IF_NOT_EXISTS, nameKey, emptyListKey, valueKey));
+        setActions.add("%s = %s%s%s, %s), %s)"
+                .formatted(nameKey, ExpressionConstants.LIST_APPEND,
+                        ExpressionConstants.IF_NOT_EXISTS, nameKey, emptyListKey, valueKey));
         return this;
     }
 
