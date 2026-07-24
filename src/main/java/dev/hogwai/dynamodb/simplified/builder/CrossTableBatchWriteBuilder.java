@@ -1,23 +1,21 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
 import dev.hogwai.dynamodb.simplified.Table;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
-import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchWriteResult;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builds a cross-table batch write operation to put and delete items across multiple tables.
@@ -29,26 +27,11 @@ import java.util.*;
  * A single batch write can contain up to 25 put and delete operations combined.
  * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
  */
-public class CrossTableBatchWriteBuilder {
+public class CrossTableBatchWriteBuilder extends AbstractCrossTableBatchWriteBuilder<CrossTableBatchWriteBuilder> {
 
     private static final Logger LOG = Logging.getLogger(CrossTableBatchWriteBuilder.class);
 
-
     private final DynamoDbClient dynamoDbClient;
-    private final List<Operation> operations = new ArrayList<>();
-    private ReturnConsumedCapacity returnConsumedCapacity;
-
-    private record Operation(
-            Type type,
-            Table<?> table,
-            @Nullable Object item,
-            @Nullable Object partitionKey,
-            @Nullable Object sortKey
-    ) {
-        enum Type {
-            PUT, DELETE
-        }
-    }
 
     /**
      * Constructs a new {@code CrossTableBatchWriteBuilder}.
@@ -56,61 +39,23 @@ public class CrossTableBatchWriteBuilder {
      * @param dynamoDbClient the low-level DynamoDB client
      */
     public CrossTableBatchWriteBuilder(@NonNull DynamoDbClient dynamoDbClient) {
+        super();
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    /**
-     * Adds a put action to insert or replace an item in the given table.
-     *
-     * @param table the typed table to write to
-     * @param item  the item to put
-     * @param <T>   the item type
-     * @return this builder
-     */
-    public @NonNull <T> CrossTableBatchWriteBuilder put(@NonNull Table<T> table, @NonNull T item) {
-        operations.add(new Operation(Operation.Type.PUT, table, Objects.requireNonNull(item), null, null));
+    @Override
+    protected @NonNull CrossTableBatchWriteBuilder self() {
         return this;
     }
 
-    /**
-     * Adds a delete action for the given partition key in the given table.
-     *
-     * @param table        the typed table to delete from
-     * @param partitionKey the partition key value
-     * @param <T>          the item type
-     * @return this builder
-     */
-    public @NonNull <T> CrossTableBatchWriteBuilder delete(@NonNull Table<T> table, @NonNull Object partitionKey) {
-        operations.add(new Operation(Operation.Type.DELETE, table, null, partitionKey, null));
-        return this;
+    @Override
+    protected @NonNull String getTableName(@NonNull Operation operation) {
+        return ((Table<?>) operation.table()).getRawTable().tableName();
     }
 
-    /**
-     * Adds a delete action for the given partition and sort key in the given table.
-     *
-     * @param table        the typed table to delete from
-     * @param partitionKey the partition key value
-     * @param sortKey      the sort key value
-     * @param <T>          the item type
-     * @return this builder
-     */
-    public @NonNull <T> CrossTableBatchWriteBuilder delete(@NonNull Table<T> table,
-                                                           @NonNull Object partitionKey,
-                                                           @NonNull Object sortKey) {
-        operations.add(new Operation(Operation.Type.DELETE, table, null, partitionKey, sortKey));
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public CrossTableBatchWriteBuilder returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
+    @Override
+    protected @NonNull TableSchema<?> getTableSchema(@NonNull Operation operation) {
+        return ((Table<?>) operation.table()).getRawTable().tableSchema();
     }
 
     /**
@@ -154,6 +99,8 @@ public class CrossTableBatchWriteBuilder {
                 }
                 var response = dynamoDbClient.batchWriteItem(batchRequestBuilder.build());
                 unprocessed = response.unprocessedItems();
+            } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+                throw new ResourceNotFoundException(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), null, e);
             } catch (DynamoDbException e) {
                 throw new OperationFailedException(DynamoDbOperations.BATCH_WRITE_ITEM.getOperationName(), null, e);
             }
@@ -175,39 +122,5 @@ public class CrossTableBatchWriteBuilder {
 
     private boolean sleepWithBackoff(int attempt) {
         return RetryUtils.sleepWithBackoff(attempt, DynamoDbLimits.BASE_BACKOFF_MS);
-    }
-
-    @SuppressWarnings({"unchecked"})
-    private Map<String, List<WriteRequest>> buildRequestItems() {
-        Map<String, List<WriteRequest>> requestMap = new HashMap<>();
-        for (Operation op : operations) {
-            String tableName = op.table().getRawTable().tableName();
-            List<WriteRequest> writes = requestMap.computeIfAbsent(tableName, ignored -> new ArrayList<>());
-
-            switch (op.type()) {
-                case PUT -> {
-                    Objects.requireNonNull(op.item(), "item must not be null for PUT");
-                    var rawTable = (DynamoDbTable<Object>) op.table().getRawTable();
-                    Map<String, AttributeValue> itemMap = rawTable.tableSchema().itemToMap(op.item(), true);
-                    writes.add(WriteRequest.builder().putRequest(r -> r.item(itemMap)).build());
-                }
-                case DELETE -> {
-                    Key key = buildKey(Objects.requireNonNull(op.partitionKey()), op.sortKey());
-                    Map<String, AttributeValue> keyMap = key.primaryKeyMap(
-                            op.table().getRawTable().tableSchema());
-                    writes.add(WriteRequest.builder().deleteRequest(r -> r.key(keyMap)).build());
-                }
-            }
-        }
-        return requestMap;
-    }
-
-    private static Key buildKey(@NonNull Object partitionKey, @Nullable Object sortKey) {
-        Key.Builder builder = Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            builder.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-        return builder.build();
     }
 }

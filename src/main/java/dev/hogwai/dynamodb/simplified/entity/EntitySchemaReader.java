@@ -4,6 +4,8 @@ import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.jspecify.annotations.NonNull;
 
 import java.beans.Introspector;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -48,11 +50,18 @@ public final class EntitySchemaReader {
                     ? Introspector.decapitalize(method.getName().substring(3))
                     : method.getName();
 
-            // Use method reference via lambda rather than reflection per-invocation
+            // Use MethodHandle via unreflect for faster invocation
+            MethodHandle handle;
+            try {
+                handle = MethodHandles.lookup().unreflect(method);
+            } catch (IllegalAccessException e) {
+                throw new DynamoSimplifiedException(
+                        "Failed to access key component method: " + method.getName(), e);
+            }
             UnaryOperator<Object> extractor = entity -> {
                 try {
-                    return method.invoke(entity);
-                } catch (Exception e) {
+                    return handle.invoke(entity);
+                } catch (Throwable e) {
                     throw new DynamoSimplifiedException("Failed to extract key component '"
                             + attributeName + "' from " + entity, e);
                 }
@@ -71,26 +80,27 @@ public final class EntitySchemaReader {
             list.sort(Comparator.comparingInt(EntitySchema.KeyComponentInfo::position));
         }
 
-        // Read @KeyPrefix
+        return new EntitySchema<>(clazz,
+                entityAnn.discriminator(),
+                entityAnn.discriminatorAttribute(),
+                entityAnn.table(),
+                components,
+                readKeyPrefixes(clazz));
+    }
+
+    private static Map<String, String> readKeyPrefixes(Class<?> clazz) {
         Map<String, String> prefixes = new HashMap<>();
         KeyPrefix prefixAnn = clazz.getAnnotation(KeyPrefix.class);
         if (prefixAnn != null) {
             prefixes.put(prefixAnn.component(), prefixAnn.value());
         }
-        // Support multiple @KeyPrefix via container annotation
         KeyPrefix.Container container = clazz.getAnnotation(KeyPrefix.Container.class);
         if (container != null) {
             for (KeyPrefix kp : container.value()) {
                 prefixes.put(kp.component(), kp.value());
             }
         }
-
-        return new EntitySchema<>(clazz,
-                entityAnn.discriminator(),
-                entityAnn.discriminatorAttribute(),
-                entityAnn.table(),
-                components,
-                prefixes);
+        return prefixes;
     }
 
     private static <T> void scanFieldsForKeyComponents(Class<T> clazz,
@@ -114,10 +124,17 @@ public final class EntitySchemaReader {
                                 + field.getName() + "' in " + clazz.getName(), e);
             }
 
+            MethodHandle handle;
+            try {
+                handle = MethodHandles.lookup().unreflect(getter);
+            } catch (IllegalAccessException e) {
+                throw new DynamoSimplifiedException(
+                        "Failed to access key component getter: " + getterName, e);
+            }
             UnaryOperator<Object> extractor = entity -> {
                 try {
-                    return getter.invoke(entity);
-                } catch (Exception e) {
+                    return handle.invoke(entity);
+                } catch (Throwable e) {
                     throw new DynamoSimplifiedException("Failed to extract key component '"
                             + attributeName + "' from " + entity, e);
                 }

@@ -90,6 +90,7 @@ class DynamoSimplifiedClientTest {
 
         @SuppressWarnings("checkstyle:RedundantModifier")
         public TestEntity() {
+            // test entity
         }
 
         @DynamoDbPartitionKey
@@ -268,7 +269,7 @@ class DynamoSimplifiedClientTest {
                 () -> client.table("test-table", TestItem.class, null));
     }
 
-    // ============ Entity Table ============
+    // region Entity Table
 
     @Test
     @DisplayName("entityTable returns a non-null EntityTable")
@@ -281,7 +282,9 @@ class DynamoSimplifiedClientTest {
         assertNotNull(entityTable);
     }
 
-    // ============ Cross-Table Batch Operations ============
+    // endregion
+
+    // region Cross-Table Batch Operations
 
     @Test
     @DisplayName("batchGet returns a non-null CrossTableBatchGetBuilder")
@@ -297,7 +300,9 @@ class DynamoSimplifiedClientTest {
         assertNotNull(client.batchWrite());
     }
 
-    // ============ Client Utilities ============
+    // endregion
+
+    // region Client Utilities
 
     @Test
     @DisplayName("getDynamoDbClient returns the injected DynamoDbClient")
@@ -314,3 +319,4 @@ class DynamoSimplifiedClientTest {
         verify(dynamoDbClient).close();
     }
 }
+// endregion

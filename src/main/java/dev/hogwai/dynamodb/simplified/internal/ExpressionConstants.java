@@ -6,7 +6,7 @@ package dev.hogwai.dynamodb.simplified.internal;
  */
 public final class ExpressionConstants {
 
-    // ============ Entity key component names ============
+    // region Entity key component names
 
     /** Entity key component name for partition key ({@code @KeyComponent(component = "PK")}). */
     public static final String PK_COMPONENT = "PK";
@@ -14,7 +14,9 @@ public final class ExpressionConstants {
     /** Entity key component name for sort key ({@code @KeyComponent(component = "SK")}). */
     public static final String SK_COMPONENT = "SK";
 
-    // ============ Expression attribute placeholders ============
+    // endregion
+
+    // region Expression attribute placeholders
 
     /** Partition key expression attribute name placeholder. */
     public static final String PK = "#pk";
@@ -34,7 +36,9 @@ public final class ExpressionConstants {
     /** Sort key (upper bound) expression attribute value placeholder. */
     public static final String SK_VAL1 = ":sk1";
 
-    // ============ Logical operators ============
+    // endregion
+
+    // region Logical operators
 
     /** AND operator with surrounding spaces. */
     public static final String AND = " AND ";
@@ -42,12 +46,16 @@ public final class ExpressionConstants {
     /** OR operator with surrounding spaces. */
     public static final String OR = " OR ";
 
-    // ============ Comparison operators ============
+    // endregion
+
+    // region Comparison operators
 
     public static final String LE = " <= ";
     public static final String GE = " >= ";
 
-    // ============ DynamoDB function names ============
+    // endregion
+
+    // region DynamoDB function names
 
     /** {@code begins_with(path, substr)} function name. */
     public static final String BEGINS_WITH = "begins_with(";
@@ -73,3 +81,4 @@ public final class ExpressionConstants {
     private ExpressionConstants() {
     }
 }
+// endregion

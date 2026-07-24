@@ -1,30 +1,28 @@
 package dev.hogwai.dynamodb.simplified.async;
 
-import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
-import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactWriteBuilder;
 import dev.hogwai.dynamodb.simplified.exception.TransactionFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.TransactWriteItem;
+import software.amazon.awssdk.services.dynamodb.model.TransactWriteItemsRequest;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 /**
@@ -35,27 +33,12 @@ import java.util.function.Consumer;
  * or none are applied. If any condition fails or a conflict occurs, the entire transaction
  * is rejected.
  */
-public class AsyncTransactWriteBuilder {
+public class AsyncTransactWriteBuilder extends AbstractTransactWriteBuilder<AsyncTransactWriteBuilder> {
 
     private static final Logger LOG = Logging.getLogger(AsyncTransactWriteBuilder.class);
 
     private final DynamoDbEnhancedAsyncClient enhancedClient;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
-    private final List<Operation> operations = new ArrayList<>();
-
-    private record Operation(
-            Type type,
-            AsyncTable<?> table,
-            @Nullable Object item,
-            @Nullable Object partitionKey,
-            @Nullable Object sortKey,
-            @Nullable ConditionExpression conditionExpression,
-            @Nullable UpdateExpression updateExpression
-    ) {
-        enum Type {
-            PUT, UPDATE, DELETE, CONDITION_CHECK, UPDATE_WITH_EXPRESSION
-        }
-    }
 
     /**
      * Constructs a new {@code AsyncTransactWriteBuilder}.
@@ -65,8 +48,29 @@ public class AsyncTransactWriteBuilder {
      */
     public AsyncTransactWriteBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient,
                                      @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        super();
         this.enhancedClient = enhancedClient;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+    }
+
+    @Override
+    protected @NonNull AsyncTransactWriteBuilder self() {
+        return this;
+    }
+
+    @Override
+    protected @NonNull String getTableName(@NonNull Operation operation) {
+        return ((DynamoDbAsyncTable<?>) operation.table()).tableName();
+    }
+
+    @Override
+    protected @NonNull TableSchema<?> getTableSchema(@NonNull Operation operation) {
+        return ((DynamoDbAsyncTable<?>) operation.table()).tableSchema();
+    }
+
+    @Override
+    protected @NonNull Key keyFromItem(@NonNull Operation operation, @NonNull Object item) {
+        return ((DynamoDbAsyncTable<Object>) operation.table()).keyFrom(item);
     }
 
     /**
@@ -79,7 +83,8 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder put(@NonNull AsyncTable<T> table, @NonNull T item) {
-        operations.add(new Operation(Operation.Type.PUT, table, Objects.requireNonNull(item), null, null, null, null));
+        operations.add(new Operation(Operation.Type.PUT, table.getRawTable(),
+                Objects.requireNonNull(item), null, null, null, null));
         return this;
     }
 
@@ -93,7 +98,8 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder update(@NonNull AsyncTable<T> table, @NonNull T item) {
-        operations.add(new Operation(Operation.Type.UPDATE, table, Objects.requireNonNull(item), null, null, null, null));
+        operations.add(new Operation(Operation.Type.UPDATE, table.getRawTable(),
+                Objects.requireNonNull(item), null, null, null, null));
         return this;
     }
 
@@ -119,8 +125,8 @@ public class AsyncTransactWriteBuilder {
         UpdateExpression expression = UpdateExpression.builder();
         expressionConfigurator.accept(expression);
         operations.add(new Operation(
-                Operation.Type.UPDATE_WITH_EXPRESSION, table, Objects.requireNonNull(item),
-                null, null, null, expression));
+                Operation.Type.UPDATE_WITH_EXPRESSION, table.getRawTable(),
+                Objects.requireNonNull(item), null, null, null, expression));
         return this;
     }
 
@@ -134,7 +140,8 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder delete(@NonNull AsyncTable<T> table, @NonNull Object partitionKey) {
-        operations.add(new Operation(Operation.Type.DELETE, table, null, partitionKey, null, null, null));
+        operations.add(new Operation(Operation.Type.DELETE, table.getRawTable(),
+                null, partitionKey, null, null, null));
         return this;
     }
 
@@ -149,7 +156,8 @@ public class AsyncTransactWriteBuilder {
      */
     @NonNull
     public <T> AsyncTransactWriteBuilder delete(@NonNull AsyncTable<T> table, @NonNull Object partitionKey, @NonNull Object sortKey) {
-        operations.add(new Operation(Operation.Type.DELETE, table, null, partitionKey, sortKey, null, null));
+        operations.add(new Operation(Operation.Type.DELETE, table.getRawTable(),
+                null, partitionKey, sortKey, null, null));
         return this;
     }
 
@@ -187,7 +195,20 @@ public class AsyncTransactWriteBuilder {
         var builder = ConditionExpression.builder();
         condition.accept(builder);
         ConditionExpression conditionExpression = builder.build();
-        operations.add(new Operation(Operation.Type.CONDITION_CHECK, table, null, partitionKey, sortKey, conditionExpression, null));
+        operations.add(new Operation(Operation.Type.CONDITION_CHECK, table.getRawTable(),
+                null, partitionKey, sortKey, conditionExpression, null));
+        return this;
+    }
+
+    /**
+     * Configures whether to return consumed capacity information for the operation.
+     *
+     * @param returnConsumedCapacity the consumed capacity reporting level
+     * @return this builder for chaining
+     */
+    @NonNull
+    public AsyncTransactWriteBuilder returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
+        this.returnConsumedCapacity = returnConsumedCapacity;
         return this;
     }
 
@@ -207,10 +228,7 @@ public class AsyncTransactWriteBuilder {
     @NonNull
     public CompletableFuture<Void> execute() {
         long start = System.nanoTime();
-        boolean hasExpressionOperation = operations.stream()
-                .anyMatch(op -> op.type() == Operation.Type.UPDATE_WITH_EXPRESSION);
-
-        if (hasExpressionOperation) {
+        if (hasExpressionOperation()) {
             return executeLowLevel().thenRun(() -> {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("AsyncTransactWrite (low-level) completed in {}ms ({} operations)",
@@ -236,23 +254,23 @@ public class AsyncTransactWriteBuilder {
                 case PUT -> {
                     Objects.requireNonNull(op.item(), "item must not be null for PUT");
                     requestBuilder.addPutItem(
-                            (DynamoDbAsyncTable<Object>) op.table().getRawTable(), op.item());
+                            (DynamoDbAsyncTable<Object>) op.table(), op.item());
                 }
                 case UPDATE -> {
                     Objects.requireNonNull(op.item(), "item must not be null for UPDATE");
                     requestBuilder.addUpdateItem(
-                            (DynamoDbAsyncTable<Object>) op.table().getRawTable(), op.item());
+                            (DynamoDbAsyncTable<Object>) op.table(), op.item());
                 }
                 case DELETE -> {
                     Key key = buildKey(Objects.requireNonNull(op.partitionKey()), op.sortKey());
-                    requestBuilder.addDeleteItem(op.table().getRawTable(), key);
+                    requestBuilder.addDeleteItem((DynamoDbAsyncTable<?>) op.table(), key);
                 }
                 case CONDITION_CHECK -> {
                     ConditionExpression condExpr = Objects.requireNonNull(op.conditionExpression(),
                             "conditionExpression must not be null for CONDITION_CHECK");
                     Expression expression = condExpr.toSdkExpression();
                     requestBuilder.addConditionCheck(
-                            op.table().getRawTable(),
+                            (DynamoDbAsyncTable<Object>) op.table(),
                             cb -> cb.key(k -> {
                                 k.partitionValue(AttributeValueConverter.toKeyAttributeValue(op.partitionKey()));
                                 if (op.sortKey() != null) {
@@ -260,18 +278,17 @@ public class AsyncTransactWriteBuilder {
                                 }
                             }).conditionExpression(expression));
                 }
-                default -> throw new IllegalStateException(Messages.UNEXPECTED_OPERATION_TYPE_FMT.formatted(op.type()));
+                default -> throw new IllegalStateException(
+                        "Unexpected operation type: " + op.type());
             }
         }
         return enhancedClient.transactWriteItems(requestBuilder.build())
                 .exceptionally(e -> {
-                    if (e instanceof TransactionCanceledException tce) {
+                    Throwable cause = e instanceof CompletionException ce ? ce.getCause() : e;
+                    if (cause instanceof TransactionCanceledException tce) {
                         throw new TransactionFailedException(tce);
                     }
-                    if (e instanceof DynamoDbException dde) {
-                        throw new OperationFailedException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, dde);
-                    }
-                    throw new DynamoSimplifiedException("Async transaction failed", e);
+                    throw AsyncExceptionMapper.mapException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, e);
                 });
     }
 
@@ -281,96 +298,18 @@ public class AsyncTransactWriteBuilder {
         for (Operation op : operations) {
             items.add(buildTransactWriteItem(op));
         }
-        return dynamoDbAsyncClient.transactWriteItems(
-                        TransactWriteItemsRequest.builder().transactItems(items).build())
-                .handle((ignored, e) -> {
-                    if (e != null) {
-                        if (e instanceof TransactionCanceledException tce) {
-                            throw new TransactionFailedException(tce);
-                        }
-                        if (e instanceof DynamoDbException dde) {
-                            throw new OperationFailedException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, dde);
-                        }
-                        throw new DynamoSimplifiedException("Async transaction failed", e);
-                    }
-                    return null;
-                });
-    }
-
-    private TransactWriteItem buildTransactWriteItem(Operation op) {
-        return switch (op.type()) {
-            case PUT, UPDATE -> buildPutItem(op);
-            case DELETE -> buildDeleteItem(op);
-            case CONDITION_CHECK -> buildConditionCheckItem(op);
-            case UPDATE_WITH_EXPRESSION -> buildUpdateWithExpressionItem(op);
-        };
-    }
-
-    @SuppressWarnings("unchecked")
-    private TransactWriteItem buildPutItem(Operation op) {
-        Objects.requireNonNull(op.item(), "item must not be null for PUT");
-        var rawTable = (DynamoDbAsyncTable<Object>) op.table().getRawTable();
-        Map<String, AttributeValue> itemMap = rawTable.tableSchema().itemToMap(op.item(), true);
-        String tableName = rawTable.tableName();
-        return TransactWriteItem.builder()
-                .put(p -> p.tableName(tableName).item(itemMap))
-                .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private TransactWriteItem buildDeleteItem(Operation op) {
-        var rawTable = (DynamoDbAsyncTable<Object>) op.table().getRawTable();
-        Key key = buildKey(Objects.requireNonNull(op.partitionKey()), op.sortKey());
-        Map<String, AttributeValue> keyMap = key.primaryKeyMap(rawTable.tableSchema());
-        String tableName = rawTable.tableName();
-        return TransactWriteItem.builder()
-                .delete(d -> d.tableName(tableName).key(keyMap))
-                .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private TransactWriteItem buildConditionCheckItem(Operation op) {
-        ConditionExpression condExpr = Objects.requireNonNull(op.conditionExpression(),
-                "conditionExpression must not be null for CONDITION_CHECK");
-        Expression expression = condExpr.toSdkExpression();
-        var rawTable = (DynamoDbAsyncTable<Object>) op.table().getRawTable();
-        Key key = buildKey(Objects.requireNonNull(op.partitionKey()), op.sortKey());
-        Map<String, AttributeValue> keyMap = key.primaryKeyMap(rawTable.tableSchema());
-        String tableName = rawTable.tableName();
-        return TransactWriteItem.builder()
-                .conditionCheck(c -> c.tableName(tableName)
-                        .key(keyMap)
-                        .conditionExpression(Objects.requireNonNull(expression.expression()))
-                        .expressionAttributeNames(
-                                Objects.requireNonNullElse(expression.expressionNames(), Map.of()))
-                        .expressionAttributeValues(
-                                Objects.requireNonNullElse(expression.expressionValues(), Map.of())))
-                .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private TransactWriteItem buildUpdateWithExpressionItem(Operation op) {
-        Objects.requireNonNull(op.item(), "item must not be null for UPDATE_WITH_EXPRESSION");
-        var rawTable = (DynamoDbAsyncTable<Object>) op.table().getRawTable();
-        Key key = rawTable.keyFrom(op.item());
-        Map<String, AttributeValue> keyMap = key.primaryKeyMap(rawTable.tableSchema());
-        String tableName = rawTable.tableName();
-        UpdateExpression expr = op.updateExpression();
-        return TransactWriteItem.builder()
-                .update(u -> u.tableName(tableName)
-                        .key(keyMap)
-                        .updateExpression(Objects.requireNonNull(expr).getExpression())
-                        .expressionAttributeNames(expr.getExpressionNames())
-                        .expressionAttributeValues(expr.getExpressionValues()))
-                .build();
-    }
-
-    private static Key buildKey(@NonNull Object partitionKey, @Nullable Object sortKey) {
-        var keyBuilder = Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            keyBuilder.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
+        var requestBuilder = TransactWriteItemsRequest.builder()
+                .transactItems(items);
+        if (returnConsumedCapacity != null) {
+            requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
         }
-        return keyBuilder.build();
+        return dynamoDbAsyncClient.transactWriteItems(requestBuilder.build())
+                .exceptionally(e -> {
+                    Throwable cause = e instanceof CompletionException ce ? ce.getCause() : e;
+                    if (cause instanceof TransactionCanceledException tce) {
+                        throw new TransactionFailedException(tce);
+                    }
+                    throw AsyncExceptionMapper.mapException(DynamoDbOperations.TRANSACT_WRITE.getOperationName(), null, e);
+                }).thenApply(ignored -> null);
     }
 }

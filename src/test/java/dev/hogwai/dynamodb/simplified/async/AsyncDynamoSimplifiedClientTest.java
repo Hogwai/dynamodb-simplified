@@ -92,6 +92,7 @@ class AsyncDynamoSimplifiedClientTest {
 
         @SuppressWarnings("checkstyle:RedundantModifier")
         public TestEntity() {
+            // test entity
         }
 
         @DynamoDbPartitionKey
@@ -349,7 +350,7 @@ class AsyncDynamoSimplifiedClientTest {
         assertSame(expected, ex.getCause());
     }
 
-    // ============ Entity Table ============
+    // region Entity Table
 
     @Test
     @DisplayName("entityTable returns a non-null AsyncEntityTable")
@@ -362,7 +363,9 @@ class AsyncDynamoSimplifiedClientTest {
         assertNotNull(entityTable);
     }
 
-    // ============ Cross-Table Batch Operations ============
+    // endregion
+
+    // region Cross-Table Batch Operations
 
     @Test
     @DisplayName("batchGet returns a non-null AsyncCrossTableBatchGetBuilder")
@@ -378,7 +381,9 @@ class AsyncDynamoSimplifiedClientTest {
         assertNotNull(client.batchWrite());
     }
 
-    // ============ Client Utilities ============
+    // endregion
+
+    // region Client Utilities
 
     @Test
     @DisplayName("close delegates to DynamoDbAsyncClient.close()")
@@ -388,3 +393,4 @@ class AsyncDynamoSimplifiedClientTest {
         verify(dynamoDbAsyncClient).close();
     }
 }
+// endregion

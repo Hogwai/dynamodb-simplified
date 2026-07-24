@@ -1,13 +1,9 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchGetBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
-import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.BatchGetResult;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -15,12 +11,18 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builds a batch get operation to retrieve multiple items from a single table by their keys.
@@ -29,18 +31,13 @@ import java.util.function.Consumer;
  *
  * @param <T> the item type
  */
-public class BatchGetBuilder<T> {
+public class BatchGetBuilder<T> extends AbstractBatchGetBuilder<T, BatchGetBuilder<T>> {
 
     private static final Logger LOG = Logging.getLogger(BatchGetBuilder.class);
-
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<T> table;
     private final DynamoDbClient dynamoDbClient;
-    private final List<Key> keys = new ArrayList<>();
-    private boolean consistentRead;
-    private ProjectionExpression projectionExpression;
-    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a batch get builder for the given table.
@@ -53,95 +50,20 @@ public class BatchGetBuilder<T> {
      */
     public BatchGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbTable<T> table,
                            @NonNull DynamoDbClient dynamoDbClient) {
+        super();
         this.enhancedClient = enhancedClient;
         this.table = table;
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    /**
-     * Adds a key to retrieve by partition key only.
-     *
-     * @param partitionKey the partition key value
-     * @return this builder
-     */
-    public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey) {
-        keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
+    @Override
+    protected BatchGetBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Adds a key to retrieve by partition and sort key.
-     *
-     * @param partitionKey the partition key value
-     * @param sortKey      the sort key value
-     * @return this builder
-     */
-    public @NonNull BatchGetBuilder<T> addKey(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        keys.add(Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                .build());
-        return this;
-    }
-
-    /**
-     * Adds multiple keys at once.
-     *
-     * @param keys the keys to retrieve
-     * @return this builder
-     */
-    public @NonNull BatchGetBuilder<T> addKeys(@NonNull Collection<Key> keys) {
-        this.keys.addAll(keys);
-        return this;
-    }
-
-    /**
-     * Enables or disables strongly consistent reads for this batch get.
-     * <p>
-     * If not set, the default (eventually consistent) is used by the DynamoDB API.
-     *
-     * @param consistentRead {@code true} for strongly consistent reads
-     * @return this builder
-     */
-    public @NonNull BatchGetBuilder<T> consistentRead(boolean consistentRead) {
-        this.consistentRead = consistentRead;
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes to the specified ones.
-     *
-     * @param attributes the attribute names to include in each result
-     * @return this builder for chaining
-     */
-    public @NonNull BatchGetBuilder<T> project(@NonNull String... attributes) {
-        this.projectionExpression = ProjectionExpression.builder().include(attributes);
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes by configuring a {@link ProjectionExpression}
-     * via a consumer.
-     *
-     * @param projectionBuilder a consumer that configures the {@link ProjectionExpression}
-     * @return this builder for chaining
-     */
-    public @NonNull BatchGetBuilder<T> project(@NonNull Consumer<ProjectionExpression> projectionBuilder) {
-        this.projectionExpression = ProjectionExpression.builder();
-        projectionBuilder.accept(this.projectionExpression);
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public BatchGetBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
     /**
@@ -183,17 +105,7 @@ public class BatchGetBuilder<T> {
     }
 
     private BatchGetResult<T> executeEnhancedPath() {
-        Class<T> itemClass = table.tableSchema().itemType().rawClass();
-        ReadBatch.Builder<T> batchBuilder = ReadBatch.builder(itemClass)
-                .mappedTableResource(table);
-        for (Key key : keys) {
-            if (consistentRead) {
-                batchBuilder.addGetItem(b -> b.key(key).consistentRead(true));
-            } else {
-                batchBuilder.addGetItem(key);
-            }
-        }
-
+        ReadBatch.Builder<T> batchBuilder = buildReadBatch();
         BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder()
                 .readBatches(batchBuilder.build());
         applyReturnConsumedCapacityIfNeeded(requestBuilder);
@@ -203,30 +115,53 @@ public class BatchGetBuilder<T> {
         Map<String, KeysAndAttributes> allUnprocessed = new HashMap<>();
 
         try {
-            var pages = enhancedClient.batchGetItem(request);
-            for (var page : pages) {
-                List<T> pageItems = page.resultsForTable(table);
-                if (pageItems != null) {
-                    allItems.addAll(pageItems);
-                }
-                List<Key> unprocessedKeys = page.unprocessedKeysForTable(table);
-                if (unprocessedKeys != null && !unprocessedKeys.isEmpty()) {
-                    List<Map<String, AttributeValue>> keyMaps = new ArrayList<>(unprocessedKeys.size());
-                    for (Key key : unprocessedKeys) {
-                        keyMaps.add(key.primaryKeyMap(table.tableSchema()));
-                    }
-                    KeysAndAttributes keysAndAttrs = KeysAndAttributes.builder()
-                            .keys(keyMaps)
-                            .consistentRead(consistentRead)
-                            .build();
-                    allUnprocessed.put(table.tableName(), keysAndAttrs);
-                }
+            for (var page : enhancedClient.batchGetItem(request)) {
+                collectPageResults(page, allItems, allUnprocessed);
             }
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), e);
         }
 
         return new BatchGetResult<>(allItems, allUnprocessed);
+    }
+
+    private ReadBatch.Builder<T> buildReadBatch() {
+        Class<T> itemClass = table.tableSchema().itemType().rawClass();
+        ReadBatch.Builder<T> batchBuilder = ReadBatch.builder(itemClass)
+                .mappedTableResource(table);
+        if (consistentRead != null && consistentRead) {
+            for (Key key : keys) {
+                batchBuilder.addGetItem(b -> b.key(key).consistentRead(true));
+            }
+        } else {
+            for (Key key : keys) {
+                batchBuilder.addGetItem(key);
+            }
+        }
+        return batchBuilder;
+    }
+
+    private void collectPageResults(BatchGetResultPage page, List<T> allItems, Map<String, KeysAndAttributes> allUnprocessed) {
+        List<T> pageItems = page.resultsForTable(table);
+        if (pageItems != null) {
+            allItems.addAll(pageItems);
+        }
+        List<Key> unprocessedKeys = page.unprocessedKeysForTable(table);
+        if (unprocessedKeys == null || unprocessedKeys.isEmpty()) {
+            return;
+        }
+        List<Map<String, AttributeValue>> keyMaps = new ArrayList<>(unprocessedKeys.size());
+        for (Key key : unprocessedKeys) {
+            keyMaps.add(key.primaryKeyMap(table.tableSchema()));
+        }
+        KeysAndAttributes.Builder kaBuilder = KeysAndAttributes.builder()
+                .keys(keyMaps);
+        if (consistentRead != null) {
+            kaBuilder.consistentRead(consistentRead);
+        }
+        allUnprocessed.put(table.tableName(), kaBuilder.build());
     }
 
     private BatchGetResult<T> retryLoop(BatchGetResult<T> initialResult) {
@@ -277,6 +212,8 @@ public class BatchGetBuilder<T> {
                 allItems.add(table.tableSchema().mapToItem(item));
             }
             return response.unprocessedKeys();
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), table.tableName(), e);
         }
@@ -287,21 +224,11 @@ public class BatchGetBuilder<T> {
     }
 
     private BatchGetResult<T> executeWithProjection() {
-        String tableName = table.tableName();
-        List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(keys.size());
-        for (Key key : keys) {
-            sdkKeys.add(key.primaryKeyMap(table.tableSchema()));
-        }
-
-        KeysAndAttributes keysAndAttributes = KeysAndAttributes.builder()
-                .keys(sdkKeys)
-                .consistentRead(consistentRead)
-                .projectionExpression(projectionExpression.getExpression())
-                .expressionAttributeNames(projectionExpression.getExpressionNames())
-                .build();
+        String tblName = table.tableName();
+        KeysAndAttributes keysAndAttributes = buildKeysAndAttributes(table.tableSchema());
 
         Map<String, KeysAndAttributes> requestItems = new HashMap<>();
-        requestItems.put(tableName, keysAndAttributes);
+        requestItems.put(tblName, keysAndAttributes);
 
         BatchGetItemRequest.Builder requestBuilder = BatchGetItemRequest.builder()
                 .requestItems(requestItems);
@@ -315,10 +242,12 @@ public class BatchGetBuilder<T> {
         try {
             var response = dynamoDbClient.batchGetItem(request);
             items = response.responses()
-                    .getOrDefault(tableName, List.of());
+                    .getOrDefault(tblName, List.of());
             unprocessed = response.unprocessedKeys();
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tblName, e);
         } catch (DynamoDbException e) {
-            throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tableName, e);
+            throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tblName, e);
         }
         List<T> results = new ArrayList<>(items.size());
         for (Map<String, AttributeValue> item : items) {

@@ -84,7 +84,7 @@ class DynamoSimplifiedClientBuilderTest {
         assertThrows(NullPointerException.class, () -> builder.extensions((DynamoDbEnhancedClientExtension[]) null));
     }
 
-    // ========== New tests improving branch coverage ==========
+    // region New tests improving branch coverage
 
     @Test
     @DisplayName("build() succeeds with internally created client and no extensions (created=true default path)")
@@ -161,3 +161,4 @@ class DynamoSimplifiedClientBuilderTest {
         }
     }
 }
+// endregion

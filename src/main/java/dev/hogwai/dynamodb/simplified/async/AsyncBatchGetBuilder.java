@@ -1,13 +1,8 @@
 package dev.hogwai.dynamodb.simplified.async;
 
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchGetBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.BatchGetResult;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.jspecify.annotations.NonNull;
@@ -22,12 +17,13 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPage;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchGetResultPagePublisher;
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 /**
  * Builds an async batch get operation to retrieve multiple items from a single table by their keys.
@@ -37,17 +33,13 @@ import java.util.function.Consumer;
  *
  * @param <T> the item type
  */
-public class AsyncBatchGetBuilder<T> {
+public class AsyncBatchGetBuilder<T> extends AbstractBatchGetBuilder<T, AsyncBatchGetBuilder<T>> {
 
     private static final Logger LOG = Logging.getLogger(AsyncBatchGetBuilder.class);
 
     private final DynamoDbEnhancedAsyncClient enhancedClient;
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
-    private final List<Key> keys = new ArrayList<>();
-    private Boolean consistentRead;
-    private ProjectionExpression projectionExpression;
-    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncBatchGetBuilder}.
@@ -68,108 +60,20 @@ public class AsyncBatchGetBuilder<T> {
      */
     AsyncBatchGetBuilder(@NonNull DynamoDbEnhancedAsyncClient enhancedClient, @NonNull DynamoDbAsyncTable<T> table,
                          DynamoDbAsyncClient dynamoDbAsyncClient) {
+        super();
         this.enhancedClient = enhancedClient;
         this.table = table;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
-    /**
-     * Adds a collection of partition keys to retrieve (without sort keys).
-     *
-     * @param partitionKeys the partition key values
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> keys(@NonNull List<Object> partitionKeys) {
-        for (Object pk : partitionKeys) {
-            this.keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(pk)).build());
-        }
+    @Override
+    protected AsyncBatchGetBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Adds a key to retrieve by partition key only.
-     *
-     * @param partitionKey the partition key value
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> addKey(@NonNull Object partitionKey) {
-        this.keys.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
-        return this;
-    }
-
-    /**
-     * Adds a key to retrieve by partition and sort key.
-     *
-     * @param partitionKey the partition key value
-     * @param sortKey      the sort key value
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> addKey(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        this.keys.add(Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                .build());
-        return this;
-    }
-
-    /**
-     * Enables or disables strongly consistent reads for this batch get.
-     * <p>
-     * Note: This setting is applied per-item in the batch. If not set, the
-     * default (eventually consistent) is used by the DynamoDB API.
-     *
-     * @param consistentRead {@code true} for strongly consistent reads
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> consistentRead(boolean consistentRead) {
-        this.consistentRead = consistentRead;
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes to the specified ones for this batch get.
-     * <p>
-     * When projection is set, the operation falls back to the low-level DynamoDB API.
-     *
-     * @param attributes the attribute names to include in each result
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> project(@NonNull String... attributes) {
-        this.projectionExpression = ProjectionExpression.builder().include(attributes);
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes by configuring a {@link ProjectionExpression}
-     * via a consumer for this batch get.
-     * <p>
-     * When projection is set, the operation falls back to the low-level DynamoDB API.
-     *
-     * @param projectionBuilder a consumer that configures the {@link ProjectionExpression}
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> project(@NonNull Consumer<ProjectionExpression> projectionBuilder) {
-        this.projectionExpression = ProjectionExpression.builder();
-        projectionBuilder.accept(this.projectionExpression);
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncBatchGetBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
     /**
@@ -285,8 +189,9 @@ public class AsyncBatchGetBuilder<T> {
 
     private Subscriber<BatchGetResultPage> createPaginationSubscriber(
             CompletableFuture<PagedResult<T>> resultFuture, long start) {
-        AtomicBoolean firstPageReceived = new AtomicBoolean();
         return new Subscriber<>() {
+            private boolean firstPageReceived = false;
+
             @Override
             public void onSubscribe(Subscription s) {
                 s.request(1);
@@ -294,7 +199,10 @@ public class AsyncBatchGetBuilder<T> {
 
             @Override
             public void onNext(BatchGetResultPage page) {
-                onNextPage(page, firstPageReceived, resultFuture, start);
+                if (!firstPageReceived) {
+                    firstPageReceived = true;
+                    onNextPage(page, resultFuture, start);
+                }
             }
 
             @Override
@@ -310,11 +218,7 @@ public class AsyncBatchGetBuilder<T> {
     }
 
     private void onNextPage(BatchGetResultPage page,
-                            AtomicBoolean firstPageReceived,
                             CompletableFuture<PagedResult<T>> resultFuture, long start) {
-        if (!firstPageReceived.compareAndSet(false, true)) {
-            return;
-        }
         List<T> items = page.resultsForTable(table);
         if (LOG.isDebugEnabled()) {
             LOG.debug("AsyncBatchGet on table '{}' returned {} items in {}ms (first page)",
@@ -348,26 +252,15 @@ public class AsyncBatchGetBuilder<T> {
     }
 
     private CompletableFuture<BatchGetResult<T>> executeWithProjection() {
-        String tableName = table.tableName();
+        String tblName = table.tableName();
         if (dynamoDbAsyncClient == null) {
             throw new IllegalStateException(Messages.PROJECTION_REQUIRES_LOW_LEVEL_CLIENT_ASYNC);
         }
 
-        List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(keys.size());
-        for (Key key : keys) {
-            sdkKeys.add(key.primaryKeyMap(table.tableSchema()));
-        }
-
-        KeysAndAttributes.Builder keysAndAttributesBuilder = KeysAndAttributes.builder()
-                .keys(sdkKeys)
-                .projectionExpression(projectionExpression.getExpression())
-                .expressionAttributeNames(projectionExpression.getExpressionNames());
-        if (consistentRead != null) {
-            keysAndAttributesBuilder.consistentRead(consistentRead);
-        }
+        KeysAndAttributes keysAndAttributes = buildKeysAndAttributes(table.tableSchema());
 
         Map<String, KeysAndAttributes> requestItems = new HashMap<>();
-        requestItems.put(tableName, keysAndAttributesBuilder.build());
+        requestItems.put(tblName, keysAndAttributes);
 
         BatchGetItemRequest.Builder lowLevelRequestBuilder = BatchGetItemRequest.builder()
                 .requestItems(requestItems);
@@ -379,7 +272,7 @@ public class AsyncBatchGetBuilder<T> {
         return dynamoDbAsyncClient.batchGetItem(request)
                 .thenApply(response -> {
                     List<Map<String, AttributeValue>> items = response.responses()
-                            .getOrDefault(tableName, List.of());
+                            .getOrDefault(tblName, List.of());
                     Map<String, KeysAndAttributes> unprocessed = response.unprocessedKeys();
                     List<T> results = new ArrayList<>(items.size());
                     for (Map<String, AttributeValue> item : items) {
@@ -387,7 +280,7 @@ public class AsyncBatchGetBuilder<T> {
                     }
                     return new BatchGetResult<>(results, unprocessed != null ? unprocessed : Map.of());
                 })
-                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tableName));
+                .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), tblName));
     }
 
     private ReadBatch buildReadBatch() {

@@ -1,23 +1,18 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
-import dev.hogwai.dynamodb.simplified.Versioned;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractPutBuilder;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.VersionHelper;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * A fluent builder for putting (inserting or replacing) an item in a DynamoDB table,
@@ -25,15 +20,10 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of the item
  */
-public class PutBuilder<T> {
-    private static final Logger LOG = Logging.getLogger(PutBuilder.class);
+public class PutBuilder<T> extends AbstractPutBuilder<T, PutBuilder<T>> {
 
     private final DynamoDbTable<T> table;
-    private final T item;
     private final DynamoDbClient dynamoDbClient;
-    private ConditionExpression conditionExpression;
-    private ReturnValue returnValues;
-    private boolean optimisticLocking;
 
     /**
      * Constructs a new {@code PutBuilder} for the given table and item.
@@ -44,80 +34,13 @@ public class PutBuilder<T> {
      */
     public PutBuilder(@NonNull DynamoDbTable<T> table, @NonNull T item,
                       @NonNull DynamoDbClient dynamoDbClient) {
+        super(item);
         this.table = table;
-        this.item = item;
         this.dynamoDbClient = dynamoDbClient;
     }
 
-    /**
-     * Configures a condition expression that gates the put operation.
-     * DynamoDB evaluates this condition <b>before</b> writing the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param configurator a consumer to build the condition expression
-     * @return this builder for chaining
-     */
-    public @NonNull PutBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
-        var builder = ConditionExpression.builder();
-        configurator.accept(builder);
-        this.conditionExpression = builder.build();
-        return this;
-    }
-
-    /**
-     * Configures a condition expression that gates the put operation.
-     * DynamoDB evaluates this condition <b>before</b> writing the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param condition the condition expression
-     * @return this builder for chaining
-     */
-    public @NonNull PutBuilder<T> condition(@Nullable ConditionExpression condition) {
-        this.conditionExpression = condition;
-        return this;
-    }
-
-    /**
-     * Adds a condition that the specified attribute must not already exist
-     * on an item with the same key for the put to succeed.
-     *
-     * @param attribute the attribute name to check for absence
-     * @return this builder for chaining
-     */
-    public @NonNull PutBuilder<T> onlyIfNotExists(@NonNull String attribute) {
-        this.conditionExpression = ConditionExpression.builder().notExists(attribute).build();
-        return this;
-    }
-
-    /**
-     * Configures which item attributes to return after the put.
-     * <p>
-     * When set, uses the low-level {@code PutItemRequest} with the specified
-     * {@code ReturnValues}. Common values: {@link ReturnValue#ALL_OLD}
-     * (returns the previous item if one existed), {@link ReturnValue#NONE}.
-     * <p>
-     * To retrieve the previous item when using {@code ReturnValue#ALL_OLD},
-     * use {@link #executeReturning()} instead of {@link #execute()}.
-     *
-     * @param returnValues the return value setting, or {@code null} to use the default
-     * @return this builder for chaining
-     */
-    public @NonNull PutBuilder<T> returnValues(@Nullable ReturnValue returnValues) {
-        this.returnValues = returnValues;
-        return this;
-    }
-
-    /**
-     * Enables optimistic locking for this put operation.
-     * <p>
-     * When enabled, the library adds a condition expression checking that the
-     * version attribute hasn't changed, and increments the version on success.
-     * The item must implement {@link dev.hogwai.dynamodb.simplified.Versioned}.
-     *
-     * @return this builder for chaining
-     */
-    public @NonNull PutBuilder<T> withOptimisticLocking() {
-        this.optimisticLocking = true;
+    @Override
+    protected @NonNull PutBuilder<T> self() {
         return this;
     }
 
@@ -136,21 +59,12 @@ public class PutBuilder<T> {
             incrementVersion();
             return;
         }
-        @SuppressWarnings("unchecked")
-        PutItemEnhancedRequest.Builder<T> requestBuilder = PutItemEnhancedRequest
-                .builder((Class<T>) item.getClass())
-                .item(item);
-
-        if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            requestBuilder.conditionExpression(
-                    conditionExpression.toSdkExpression()
-            );
-        }
-
         try {
-            table.putItem(requestBuilder.build());
+            table.putItem(buildEnhancedRequest());
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName(), e);
         }
@@ -181,61 +95,29 @@ public class PutBuilder<T> {
         return Optional.empty();
     }
 
-    // ---- Optimistic locking ----
-
-    private void applyOptimisticLocking() {
-        if (!optimisticLocking) {
-            return;
-        }
-        ConditionExpression versionCondition = VersionHelper.buildCondition(item);
-        if (versionCondition == null) {
-            return;
-        }
-
-        if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            conditionExpression = ConditionExpression.builder()
-                    .group(conditionExpression)
-                    .and()
-                    .group(versionCondition)
-                    .build();
-        } else {
-            conditionExpression = versionCondition;
-        }
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
-    private void incrementVersion() {
-        if (optimisticLocking && item instanceof Versioned v) {
-            VersionHelper.incrementVersion(v);
-        }
-    }
-
-    // ---- Low-level put with return values ----
+    // region Low-level put with return values
 
     private @Nullable T executeWithReturnValues() {
         Map<String, AttributeValue> itemMap = table.tableSchema().itemToMap(item, false);
-
-        PutItemRequest.Builder requestBuilder = PutItemRequest.builder()
-                .tableName(table.tableName())
-                .item(itemMap)
-                .returnValues(returnValues);
-
-        if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            requestBuilder
-                    .conditionExpression(conditionExpression.getExpression())
-                    .expressionAttributeNames(conditionExpression.getExpressionNames())
-                    .expressionAttributeValues(conditionExpression.getExpressionValues());
-        }
-
+        PutItemRequest request = buildLowLevelRequest(itemMap);
         try {
-            PutItemResponse response = dynamoDbClient.putItem(requestBuilder.build());
+            PutItemResponse response = dynamoDbClient.putItem(request);
             if (response.attributes() == null || response.attributes().isEmpty()) {
                 return null;
             }
             return table.tableSchema().mapToItem(response.attributes());
         } catch (ConditionalCheckFailedException e) {
             throw ConditionFailedException.fromSdk(e);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName(), e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.PUT_ITEM.getOperationName(), table.tableName(), e);
         }
     }
 }
+// endregion

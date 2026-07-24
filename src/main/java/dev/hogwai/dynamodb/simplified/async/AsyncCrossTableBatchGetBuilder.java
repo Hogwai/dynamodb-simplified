@@ -1,24 +1,22 @@
 package dev.hogwai.dynamodb.simplified.async;
 
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchGetBuilder;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchGetResult;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * Builds an async cross-table batch get operation to retrieve items from multiple tables.
@@ -27,13 +25,11 @@ import java.util.function.Consumer;
  * Uses the low-level {@link DynamoDbAsyncClient#batchGetItem(BatchGetItemRequest)}
  * which returns a {@link CompletableFuture}, avoiding the reactive publisher model.
  */
-public class AsyncCrossTableBatchGetBuilder {
+public class AsyncCrossTableBatchGetBuilder extends AbstractCrossTableBatchGetBuilder<AsyncCrossTableBatchGetBuilder> {
 
     private static final Logger LOG = Logging.getLogger(AsyncCrossTableBatchGetBuilder.class);
 
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
-    private final List<Entry<?>> entries = new ArrayList<>();
-    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncCrossTableBatchGetBuilder}.
@@ -41,7 +37,23 @@ public class AsyncCrossTableBatchGetBuilder {
      * @param dynamoDbAsyncClient the low-level async DynamoDB client
      */
     public AsyncCrossTableBatchGetBuilder(@NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        super();
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+    }
+
+    @Override
+    protected @NonNull AsyncCrossTableBatchGetBuilder self() {
+        return this;
+    }
+
+    @Override
+    protected @NonNull String getTableName(@NonNull Entry entry) {
+        return ((AsyncTable<?>) entry.table()).getRawTable().tableName();
+    }
+
+    @Override
+    protected @NonNull TableSchema<?> getTableSchema(@NonNull Entry entry) {
+        return ((AsyncTable<?>) entry.table()).getRawTable().tableSchema();
     }
 
     /**
@@ -54,8 +66,8 @@ public class AsyncCrossTableBatchGetBuilder {
      */
     @NonNull
     public <T> AsyncCrossTableBatchGetBuilder addKey(@NonNull AsyncTable<T> table, @NonNull Object partitionKey) {
-        entries.add(new Entry<>(table, buildKey(partitionKey, null), null));
-        return this;
+        entries.add(new Entry(table, buildKey(partitionKey, null), null));
+        return self();
     }
 
     /**
@@ -71,8 +83,8 @@ public class AsyncCrossTableBatchGetBuilder {
     public <T> AsyncCrossTableBatchGetBuilder addKey(@NonNull AsyncTable<T> table,
                                                      @NonNull Object partitionKey,
                                                      @NonNull Object sortKey) {
-        entries.add(new Entry<>(table, buildKey(partitionKey, sortKey), null));
-        return this;
+        entries.add(new Entry(table, buildKey(partitionKey, sortKey), null));
+        return self();
     }
 
     /**
@@ -87,60 +99,9 @@ public class AsyncCrossTableBatchGetBuilder {
     public <T> AsyncCrossTableBatchGetBuilder addKeys(@NonNull AsyncTable<T> table,
                                                       @NonNull Collection<?> partitionKeys) {
         for (Object pk : partitionKeys) {
-            entries.add(new Entry<>(table, buildKey(pk, null), null));
+            entries.add(new Entry(table, buildKey(pk, null), null));
         }
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes for the most recently added entry
-     * to the specified attribute names.
-     *
-     * @param attributes the attribute names to include
-     * @return this builder
-     * @throws IllegalStateException if no entries have been added yet
-     */
-    @NonNull
-    public AsyncCrossTableBatchGetBuilder project(@NonNull String... attributes) {
-        if (entries.isEmpty()) {
-            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
-        }
-        ProjectionExpression expression = ProjectionExpression.builder().include(attributes);
-        Entry<?> lastEntry = entries.removeLast();
-        entries.add(new Entry<>(lastEntry.table, lastEntry.key, expression));
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes for the most recently added entry
-     * using a {@link ProjectionExpression} builder consumer.
-     *
-     * @param consumer a consumer to configure the projection expression
-     * @return this builder
-     * @throws IllegalStateException if no entries have been added yet
-     */
-    @NonNull
-    public AsyncCrossTableBatchGetBuilder project(@NonNull Consumer<ProjectionExpression> consumer) {
-        if (entries.isEmpty()) {
-            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
-        }
-        ProjectionExpression expression = ProjectionExpression.builder();
-        consumer.accept(expression);
-        Entry<?> lastEntry = entries.removeLast();
-        entries.add(new Entry<>(lastEntry.table, lastEntry.key, expression));
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncCrossTableBatchGetBuilder returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
+        return self();
     }
 
     /**
@@ -164,7 +125,7 @@ public class AsyncCrossTableBatchGetBuilder {
                     Messages.CROSS_TABLE_BATCH_GET_SIZE_FMT.formatted(DynamoDbLimits.BATCH_GET_MAX_SIZE, entries.size()));
         }
 
-        Map<String, List<Entry<?>>> entriesByTable = groupEntriesByTable();
+        Map<String, List<Entry>> entriesByTable = groupEntriesByTable();
         Map<String, TableSchema<?>> tableSchemas = new HashMap<>();
         Map<String, KeysAndAttributes> requestItems = buildRequestItems(entriesByTable, tableSchemas);
 
@@ -175,25 +136,6 @@ public class AsyncCrossTableBatchGetBuilder {
         return dynamoDbAsyncClient.batchGetItem(requestBuilder.build())
                 .thenApply(response -> buildCrossTableBatchGetResult(response, tableSchemas, start))
                 .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), null));
-    }
-
-    private Map<String, List<Entry<?>>> groupEntriesByTable() {
-        Map<String, List<Entry<?>>> entriesByTable = new HashMap<>();
-        for (Entry<?> entry : entries) {
-            String tableName = entry.table.getRawTable().tableName();
-            entriesByTable.computeIfAbsent(tableName, ignored -> new ArrayList<>()).add(entry);
-        }
-        return entriesByTable;
-    }
-
-    private Map<String, KeysAndAttributes> buildRequestItems(
-            Map<String, List<Entry<?>>> entriesByTable,
-            Map<String, TableSchema<?>> tableSchemas) {
-        Map<String, KeysAndAttributes> requestItems = new HashMap<>();
-        for (Map.Entry<String, List<Entry<?>>> tableEntry : entriesByTable.entrySet()) {
-            buildTableKeysAndAttributes(tableEntry, requestItems, tableSchemas);
-        }
-        return requestItems;
     }
 
     private CrossTableBatchGetResult buildCrossTableBatchGetResult(
@@ -213,48 +155,5 @@ public class AsyncCrossTableBatchGetBuilder {
                 responses != null ? responses : Map.of(),
                 unprocessed != null ? unprocessed : Map.of(),
                 tableSchemas);
-    }
-
-    private void buildTableKeysAndAttributes(
-            Map.Entry<String, List<Entry<?>>> tableEntry,
-            Map<String, KeysAndAttributes> requestItems,
-            Map<String, TableSchema<?>> tableSchemas) {
-        String tableName = tableEntry.getKey();
-        List<Entry<?>> tableEntries = tableEntry.getValue();
-
-        List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(tableEntries.size());
-        ProjectionExpression projection = null;
-        TableSchema<?> schema = null;
-        for (Entry<?> entry : tableEntries) {
-            TableSchema<?> entrySchema = entry.table.getRawTable().tableSchema();
-            if (schema == null) {
-                schema = entrySchema;
-            }
-            sdkKeys.add(entry.key.primaryKeyMap(entrySchema));
-            if (entry.projectionExpression != null && !entry.projectionExpression.isEmpty()) {
-                projection = entry.projectionExpression;
-            }
-        }
-        tableSchemas.put(tableName, schema);
-
-        KeysAndAttributes.Builder kaBuilder = KeysAndAttributes.builder().keys(sdkKeys);
-        if (projection != null) {
-            kaBuilder
-                    .projectionExpression(projection.getExpression())
-                    .expressionAttributeNames(projection.getExpressionNames());
-        }
-        requestItems.put(tableName, kaBuilder.build());
-    }
-
-    private static Key buildKey(@NonNull Object partitionKey, @Nullable Object sortKey) {
-        Key.Builder builder = Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            builder.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-        return builder.build();
-    }
-
-    private record Entry<T>(AsyncTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
     }
 }

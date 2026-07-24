@@ -1,25 +1,18 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
 import dev.hogwai.dynamodb.simplified.Table;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchGetBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
-import dev.hogwai.dynamodb.simplified.internal.RetryUtils;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.CrossTableBatchGetResult;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * Builds a cross-table batch get operation to retrieve items from multiple tables by their keys.
@@ -28,15 +21,11 @@ import java.util.function.Consumer;
  * Unlike the single-table {@link BatchGetBuilder}, this builder accepts table-scoped keys,
  * allowing retrieval from multiple tables in a single request.
  */
-public class CrossTableBatchGetBuilder {
+public class CrossTableBatchGetBuilder extends AbstractCrossTableBatchGetBuilder<CrossTableBatchGetBuilder> {
 
     private static final Logger LOG = Logging.getLogger(CrossTableBatchGetBuilder.class);
 
-
     private final DynamoDbClient dynamoDbClient;
-    private final List<Entry<?>> entries = new ArrayList<>();
-    private ReturnConsumedCapacity returnConsumedCapacity;
-    private Boolean consistentRead;
 
     /**
      * Constructs a new {@code CrossTableBatchGetBuilder}.
@@ -44,7 +33,23 @@ public class CrossTableBatchGetBuilder {
      * @param dynamoDbClient the low-level DynamoDB client
      */
     public CrossTableBatchGetBuilder(@NonNull DynamoDbClient dynamoDbClient) {
+        super();
         this.dynamoDbClient = dynamoDbClient;
+    }
+
+    @Override
+    protected @NonNull CrossTableBatchGetBuilder self() {
+        return this;
+    }
+
+    @Override
+    protected @NonNull String getTableName(@NonNull Entry entry) {
+        return ((Table<?>) entry.table()).getRawTable().tableName();
+    }
+
+    @Override
+    protected @NonNull TableSchema<?> getTableSchema(@NonNull Entry entry) {
+        return ((Table<?>) entry.table()).getRawTable().tableSchema();
     }
 
     /**
@@ -56,8 +61,8 @@ public class CrossTableBatchGetBuilder {
      * @return this builder
      */
     public @NonNull <T> CrossTableBatchGetBuilder addKey(@NonNull Table<T> table, @NonNull Object partitionKey) {
-        entries.add(new Entry<>(table, buildKey(partitionKey, null), null));
-        return this;
+        entries.add(new Entry(table, buildKey(partitionKey, null), null));
+        return self();
     }
 
     /**
@@ -72,8 +77,8 @@ public class CrossTableBatchGetBuilder {
     public @NonNull <T> CrossTableBatchGetBuilder addKey(@NonNull Table<T> table,
                                                          @NonNull Object partitionKey,
                                                          @NonNull Object sortKey) {
-        entries.add(new Entry<>(table, buildKey(partitionKey, sortKey), null));
-        return this;
+        entries.add(new Entry(table, buildKey(partitionKey, sortKey), null));
+        return self();
     }
 
     /**
@@ -87,73 +92,9 @@ public class CrossTableBatchGetBuilder {
     public @NonNull <T> CrossTableBatchGetBuilder addKeys(@NonNull Table<T> table,
                                                           @NonNull Collection<?> partitionKeys) {
         for (Object pk : partitionKeys) {
-            entries.add(new Entry<>(table, buildKey(pk, null), null));
+            entries.add(new Entry(table, buildKey(pk, null), null));
         }
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes for the most recently added entry
-     * to the specified attribute names.
-     * <p>
-     * Projection is applied server-side, reducing data transfer and consumed capacity.
-     *
-     * @param attributes the attribute names to include
-     * @return this builder
-     * @throws IllegalStateException if no entries have been added yet
-     */
-    public @NonNull CrossTableBatchGetBuilder project(@NonNull String... attributes) {
-        if (entries.isEmpty()) {
-            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
-        }
-        ProjectionExpression expression = ProjectionExpression.builder().include(attributes);
-        Entry<?> lastEntry = entries.removeLast();
-        entries.add(new Entry<>(lastEntry.table, lastEntry.key, expression));
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes for the most recently added entry
-     * using a {@link ProjectionExpression} builder consumer.
-     *
-     * @param consumer a consumer to configure the projection expression
-     * @return this builder
-     * @throws IllegalStateException if no entries have been added yet
-     */
-    public @NonNull CrossTableBatchGetBuilder project(@NonNull Consumer<ProjectionExpression> consumer) {
-        if (entries.isEmpty()) {
-            throw new IllegalStateException(Messages.NO_CROSS_TABLE_BATCH_GET_KEYS);
-        }
-        ProjectionExpression expression = ProjectionExpression.builder();
-        consumer.accept(expression);
-        Entry<?> lastEntry = entries.removeLast();
-        entries.add(new Entry<>(lastEntry.table, lastEntry.key, expression));
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public CrossTableBatchGetBuilder returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
-    }
-
-    /**
-     * Configures whether to use strongly consistent reads for this batch get operation.
-     * <p>
-     * If not set, DynamoDB defaults to eventually consistent reads.
-     *
-     * @param consistentRead {@code true} for strongly consistent reads
-     * @return this builder for chaining
-     */
-    public @NonNull CrossTableBatchGetBuilder consistentRead(boolean consistentRead) {
-        this.consistentRead = consistentRead;
-        return this;
+        return self();
     }
 
     /**
@@ -175,57 +116,11 @@ public class CrossTableBatchGetBuilder {
                     Messages.CROSS_TABLE_BATCH_GET_SIZE_FMT.formatted(DynamoDbLimits.BATCH_GET_MAX_SIZE, entries.size()));
         }
 
-        Map<String, List<Entry<?>>> entriesByTable = groupEntriesByTable();
+        Map<String, List<Entry>> entriesByTable = groupEntriesByTable();
         Map<String, TableSchema<?>> tableSchemas = new HashMap<>();
         Map<String, KeysAndAttributes> requestItems = buildRequestItems(entriesByTable, tableSchemas);
 
         return retryLoop(requestItems, tableSchemas, start);
-    }
-
-    private Map<String, List<Entry<?>>> groupEntriesByTable() {
-        Map<String, List<Entry<?>>> entriesByTable = new HashMap<>();
-        for (Entry<?> entry : entries) {
-            String tableName = entry.table.getRawTable().tableName();
-            entriesByTable.computeIfAbsent(tableName, ignored -> new ArrayList<>()).add(entry);
-        }
-        return entriesByTable;
-    }
-
-    private Map<String, KeysAndAttributes> buildRequestItems(
-            Map<String, List<Entry<?>>> entriesByTable,
-            Map<String, TableSchema<?>> tableSchemas) {
-        Map<String, KeysAndAttributes> requestItems = new HashMap<>();
-        for (Map.Entry<String, List<Entry<?>>> tableEntry : entriesByTable.entrySet()) {
-            String tableName = tableEntry.getKey();
-            List<Entry<?>> tableEntries = tableEntry.getValue();
-
-            List<Map<String, AttributeValue>> sdkKeys = new ArrayList<>(tableEntries.size());
-            ProjectionExpression projection = null;
-            TableSchema<?> schema = null;
-            for (Entry<?> entry : tableEntries) {
-                TableSchema<?> entrySchema = entry.table.getRawTable().tableSchema();
-                if (schema == null) {
-                    schema = entrySchema;
-                }
-                sdkKeys.add(entry.key.primaryKeyMap(entrySchema));
-                if (entry.projectionExpression != null && !entry.projectionExpression.isEmpty()) {
-                    projection = entry.projectionExpression;
-                }
-            }
-            tableSchemas.put(tableName, schema);
-
-            KeysAndAttributes.Builder kaBuilder = KeysAndAttributes.builder().keys(sdkKeys);
-            if (projection != null) {
-                kaBuilder
-                        .projectionExpression(projection.getExpression())
-                        .expressionAttributeNames(projection.getExpressionNames());
-            }
-            if (consistentRead != null) {
-                kaBuilder.consistentRead(consistentRead);
-            }
-            requestItems.put(tableName, kaBuilder.build());
-        }
-        return requestItems;
     }
 
     private BatchGetItemResponse executeRequest(Map<String, KeysAndAttributes> requestItems) {
@@ -235,6 +130,8 @@ public class CrossTableBatchGetBuilder {
                 requestBuilder.returnConsumedCapacity(returnConsumedCapacity);
             }
             return dynamoDbClient.batchGetItem(requestBuilder.build());
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), null, e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.BATCH_GET_ITEM.getOperationName(), null, e);
         }
@@ -294,17 +191,5 @@ public class CrossTableBatchGetBuilder {
             allResponses.computeIfAbsent(entry.getKey(), ignored -> new ArrayList<>())
                     .addAll(entry.getValue());
         }
-    }
-
-    private static Key buildKey(@NonNull Object partitionKey, @Nullable Object sortKey) {
-        Key.Builder builder = Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            builder.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-        return builder.build();
-    }
-
-    private record Entry<T>(Table<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
     }
 }

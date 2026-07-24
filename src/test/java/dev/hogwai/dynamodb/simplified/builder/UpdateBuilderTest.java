@@ -1,6 +1,6 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
-import dev.hogwai.dynamodb.simplified.Versioned;
+import dev.hogwai.dynamodb.simplified.entity.Version;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,19 +56,14 @@ class UpdateBuilderTest {
         public int version;
     }
 
-    static class VersionedTestItem implements Versioned {
+    static class VersionedTestItem {
         public String id;
         public String name;
-        private Integer version = 1;
+        @Version
+        Integer version = 1;
 
-        @Override
-        public Integer getVersion() {
+        Integer getVersion() {
             return version;
-        }
-
-        @Override
-        public void setVersion(Integer version) {
-            this.version = version;
         }
     }
 
@@ -85,7 +80,7 @@ class UpdateBuilderTest {
         resultItem.version = 2;
     }
 
-    // ============ Full-item replacement path ============
+    // region Full-item replacement path
 
     @Test
     @DisplayName("execute() without update expression performs full-item replacement via table.updateItem()")
@@ -178,7 +173,9 @@ class UpdateBuilderTest {
                 request.conditionExpression().expressionValues().get(":v0"));
     }
 
-    // ============ Partial update with expression path ============
+    // endregion
+
+    // region Partial update with expression path
 
     @Test
     @DisplayName("execute() with update expression performs partial update via low-level client")
@@ -266,7 +263,9 @@ class UpdateBuilderTest {
         assertThrows(IllegalStateException.class, updateBuilder::execute);
     }
 
-    // ============ ReturnValues tests ============
+    // endregion
+
+    // region ReturnValues tests
 
     @Test
     @DisplayName("returnValues() sets the returnValues field")
@@ -317,7 +316,9 @@ class UpdateBuilderTest {
         assertEquals(ReturnValue.NONE, request.returnValues());
     }
 
-    // ============ Key-only update tests ============
+    // endregion
+
+    // region Key-only update tests
 
     @SuppressWarnings("unchecked")
     private TableSchema<TestItem> mockSchema() {
@@ -389,7 +390,9 @@ class UpdateBuilderTest {
         assertThrows(IllegalStateException.class, builder::execute);
     }
 
-    // ============ Optimistic locking tests ============
+    // endregion
+
+    // region Optimistic locking tests
 
     @Test
     @DisplayName("withOptimisticLocking returns itself for fluent chaining")
@@ -459,3 +462,4 @@ class UpdateBuilderTest {
                 "Condition expression should be set (user condition merged with version check)");
     }
 }
+// endregion

@@ -1,6 +1,7 @@
 package dev.hogwai.dynamodb.simplified.entity;
 
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.ExpressionConstants;
@@ -135,7 +136,7 @@ public final class EntityQueryBuilder {
         return this;
     }
 
-    // ============ Sort Key Conditions ============
+    // region Sort Key Conditions
 
     /**
      * Adds a sort key condition: sort key begins with the given prefix.
@@ -236,7 +237,9 @@ public final class EntityQueryBuilder {
         return this;
     }
 
-    // ============ Projection ============
+    // endregion
+
+    // region Projection
 
     /**
      * Restricts the returned attributes to the specified ones.
@@ -250,7 +253,9 @@ public final class EntityQueryBuilder {
         return this;
     }
 
-    // ============ Options ============
+    // endregion
+
+    // region Options
 
     /**
      * Enables or disables strongly consistent reads.
@@ -278,7 +283,9 @@ public final class EntityQueryBuilder {
         return this;
     }
 
-    // ============ Execution ============
+    // endregion
+
+    // region Execution
 
     /**
      * Executes the query and returns all matching items grouped by entity type.
@@ -389,7 +396,9 @@ public final class EntityQueryBuilder {
         return total;
     }
 
-    // ============ Internal ============
+    // endregion
+
+    // region Internal
 
     private static boolean hasNextPage(@Nullable Map<String, AttributeValue> key) {
         return key != null && !key.isEmpty();
@@ -513,6 +522,8 @@ public final class EntityQueryBuilder {
     private QueryResponse executeQuery(QueryRequest request) {
         try {
             return dynamoDbClient.query(request);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.ENTITY_QUERY.getOperationName(), tableName, e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.ENTITY_QUERY.getOperationName(), tableName, e);
         }
@@ -584,3 +595,4 @@ public final class EntityQueryBuilder {
         return new CrossEntityResult(finalResult);
     }
 }
+// endregion

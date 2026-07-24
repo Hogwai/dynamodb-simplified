@@ -1,91 +1,51 @@
 package dev.hogwai.dynamodb.simplified.expression;
 
 import org.jspecify.annotations.NonNull;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-
-import java.util.Map;
 
 /**
- * A typed wrapper around a condition expression for DynamoDB pre-write gating
- * (PutItem, UpdateItem, DeleteItem, TransactWriteItems condition checks).
+ * A {@link FilterExpression} subtype that represents a DynamoDB condition expression.
  * <p>
- * This is semantically distinct from a {@link FilterExpression}, which is used
- * for post-read filtering on Query/Scan operations. DynamoDB treats these as
- * separate expression types, see the DynamoDB Developer Guide for details.
- * <p>
- * Internally delegates to a {@link FilterExpression} for the actual expression
- * building logic, but presents a distinct type in the public API to prevent
- * accidental misuse of filter expressions where condition expressions are
- * expected, and vice versa.
+ * This is a type-safe alias — it inherits all builder methods from {@link FilterExpression}
+ * but is accepted by APIs that require a condition expression (e.g., put, update, delete)
+ * rather than a filter expression (e.g., query, scan).
  */
-public final class ConditionExpression {
-    private final FilterExpression delegate;
+public class ConditionExpression extends FilterExpression {
 
-    private ConditionExpression(FilterExpression delegate) {
-        this.delegate = delegate;
+    private static final ConditionExpression EMPTY = new ConditionExpression();
+
+    /**
+     * Returns an empty condition expression.
+     *
+     * @return an empty condition expression
+     */
+    public static ConditionExpression empty() {
+        return EMPTY;
     }
 
     /**
-     * Wraps a {@link FilterExpression} as a {@code ConditionExpression} for
-     * typed API use. Useful for migrating existing code that builds expressions
-     * using {@code FilterExpression}.
+     * Creates a new empty condition expression.
+     */
+    public ConditionExpression() {
+        super();
+    }
+
+    /**
+     * Creates a condition expression that copies the state from the given filter expression.
+     *
+     * @param delegate the filter expression to copy
+     */
+    public ConditionExpression(FilterExpression delegate) {
+        super(delegate);
+    }
+
+    /**
+     * Wraps a {@link FilterExpression} as a {@code ConditionExpression}.
      *
      * @param filterExpression the filter expression to wrap
      * @return a new condition expression backed by the given filter expression
      */
     public static ConditionExpression from(@NonNull FilterExpression filterExpression) {
         return new ConditionExpression(filterExpression);
-    }
-
-    /**
-     * Converts this condition expression into an AWS SDK {@link Expression}
-     * for use with enhanced client request builders.
-     *
-     * @return the SDK expression
-     */
-    @NonNull
-    public Expression toSdkExpression() {
-        return delegate.toSdkExpression();
-    }
-
-    /**
-     * Returns the built condition expression string.
-     *
-     * @return the expression string
-     */
-    @NonNull
-    public String getExpression() {
-        return delegate.getExpression();
-    }
-
-    /**
-     * Returns the map of expression attribute names used in this expression.
-     *
-     * @return the expression attribute names map
-     */
-    @NonNull
-    public Map<String, String> getExpressionNames() {
-        return delegate.getExpressionNames();
-    }
-
-    /**
-     * Returns the map of expression attribute values used in this expression.
-     *
-     * @return the expression attribute values map
-     */
-    @NonNull
-    public Map<String, AttributeValue> getExpressionValues() {
-        return delegate.getExpressionValues();
-    }
-
-    /**
-     * Returns whether no conditions have been added to this expression yet.
-     *
-     * @return {@code true} if the expression is empty, {@code false} otherwise
-     */
-    public boolean isEmpty() {
-        return delegate.isEmpty();
     }
 
     /**
@@ -100,343 +60,225 @@ public final class ConditionExpression {
     /**
      * Fluent builder for {@link ConditionExpression}.
      * <p>
-     * Every public builder method delegates to the underlying
-     * {@link FilterExpression} builder, ensuring identical expression-building
-     * capability while maintaining a distinct type.
+     * Extends {@link FilterExpression} to inherit all expression-building
+     * capability, with covariant return types to preserve the builder type
+     * through method chaining, and a terminal {@link #build()} method.
      */
-    public static final class Builder {
+    public static final class Builder extends FilterExpression {
 
         /** Creates a new condition expression builder. */
         public Builder() {
+            super();
         }
 
-        private final FilterExpression delegate = FilterExpression.builder();
+        // region Basic Comparisons
 
-        // ============ Basic Comparisons ============
-
-        /**
-         * Adds an equality condition: {@code attr = value}.
-         *
-         * @param attr  the attribute name
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder eq(@NonNull String attr, @NonNull Object value) {
-            delegate.eq(attr, value);
+            super.eq(attr, value);
             return this;
         }
 
-        /**
-         * Adds a not-equal condition: {@code attr <> value}.
-         *
-         * @param attr  the attribute name
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder ne(@NonNull String attr, @NonNull Object value) {
-            delegate.ne(attr, value);
+            super.ne(attr, value);
             return this;
         }
 
-        /**
-         * Adds a less-than condition: {@code attr < value}.
-         *
-         * @param attr  the attribute name
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder lt(@NonNull String attr, @NonNull Object value) {
-            delegate.lt(attr, value);
+            super.lt(attr, value);
             return this;
         }
 
-        /**
-         * Adds a less-than-or-equal condition: {@code attr <= value}.
-         *
-         * @param attr  the attribute name
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder le(@NonNull String attr, @NonNull Object value) {
-            delegate.le(attr, value);
+            super.le(attr, value);
             return this;
         }
 
-        /**
-         * Adds a greater-than condition: {@code attr > value}.
-         *
-         * @param attr  the attribute name
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder gt(@NonNull String attr, @NonNull Object value) {
-            delegate.gt(attr, value);
+            super.gt(attr, value);
             return this;
         }
 
-        /**
-         * Adds a greater-than-or-equal condition: {@code attr >= value}.
-         *
-         * @param attr  the attribute name
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder ge(@NonNull String attr, @NonNull Object value) {
-            delegate.ge(attr, value);
+            super.ge(attr, value);
             return this;
         }
 
-        // ============ String Operations ============
+        // endregion
 
-        /**
-         * Adds a {@code begins_with} condition: the attribute value starts with the given prefix.
-         *
-         * @param attr   the attribute name
-         * @param prefix the prefix to match
-         * @return this builder for chaining
-         */
+        // region String Operations
+
+        @Override
         @NonNull
         public Builder beginsWith(@NonNull String attr, @NonNull String prefix) {
-            delegate.beginsWith(attr, prefix);
+            super.beginsWith(attr, prefix);
             return this;
         }
 
-        /**
-         * Adds a {@code contains} condition: the attribute value contains the given value.
-         *
-         * @param attr  the attribute name
-         * @param value the value to search for within the attribute
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder contains(@NonNull String attr, @NonNull Object value) {
-            delegate.contains(attr, value);
+            super.contains(attr, value);
             return this;
         }
 
-        // ============ Server-side SIZE Operations ============
+        // endregion
 
-        /**
-         * Adds a condition on the server-side size of the attribute value: {@code size(attr) = value}.
-         *
-         * @param attr the attribute name
-         * @param size the expected size
-         * @return this builder for chaining
-         */
+        // region Server-side SIZE Operations
+
+        @Override
         @NonNull
         public Builder sizeEq(@NonNull String attr, int size) {
-            delegate.sizeEq(attr, size);
+            super.sizeEq(attr, size);
             return this;
         }
 
-        /**
-         * Adds a condition: {@code size(attr) < value}.
-         *
-         * @param attr the attribute name
-         * @param size the size threshold
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder sizeLt(@NonNull String attr, int size) {
-            delegate.sizeLt(attr, size);
+            super.sizeLt(attr, size);
             return this;
         }
 
-        /**
-         * Adds a condition: {@code size(attr) <= value}.
-         *
-         * @param attr the attribute name
-         * @param size the size threshold
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder sizeLe(@NonNull String attr, int size) {
-            delegate.sizeLe(attr, size);
+            super.sizeLe(attr, size);
             return this;
         }
 
-        /**
-         * Adds a condition: {@code size(attr) > value}.
-         *
-         * @param attr the attribute name
-         * @param size the size threshold
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder sizeGt(@NonNull String attr, int size) {
-            delegate.sizeGt(attr, size);
+            super.sizeGt(attr, size);
             return this;
         }
 
-        /**
-         * Adds a condition: {@code size(attr) >= value}.
-         *
-         * @param attr the attribute name
-         * @param size the size threshold
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder sizeGe(@NonNull String attr, int size) {
-            delegate.sizeGe(attr, size);
+            super.sizeGe(attr, size);
             return this;
         }
 
-        /**
-         * Adds a condition: {@code size(attr) BETWEEN min AND max}.
-         *
-         * @param attr the attribute name
-         * @param min  the minimum size (inclusive)
-         * @param max  the maximum size (inclusive)
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder sizeBetween(@NonNull String attr, int min, int max) {
-            delegate.sizeBetween(attr, min, max);
+            super.sizeBetween(attr, min, max);
             return this;
         }
 
-        // ============ Attribute Existence ============
+        // endregion
 
-        /**
-         * Adds a condition that the attribute must exist (not null).
-         *
-         * @param attr the attribute name
-         * @return this builder for chaining
-         */
+        // region Attribute Existence
+
+        @Override
         @NonNull
         public Builder exists(@NonNull String attr) {
-            delegate.exists(attr);
+            super.exists(attr);
             return this;
         }
 
-        /**
-         * Adds a condition that the attribute must not exist (is null or absent).
-         *
-         * @param attr the attribute name
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder notExists(@NonNull String attr) {
-            delegate.notExists(attr);
+            super.notExists(attr);
             return this;
         }
 
-        // ============ Attribute Type ============
+        // endregion
 
-        /**
-         * Adds a condition checking the attribute's DynamoDB type using {@code attribute_type}.
-         *
-         * @param attr the attribute name
-         * @param type the expected DynamoDB attribute type
-         * @return this builder for chaining
-         */
+        // region Attribute Type
+
+        @Override
         @NonNull
         public Builder attributeType(@NonNull String attr, FilterExpression.AttributeType type) {
-            delegate.attributeType(attr, type);
+            super.attributeType(attr, type);
             return this;
         }
 
-        // ============ BETWEEN, IN ============
+        // endregion
 
-        /**
-         * Adds a BETWEEN condition: {@code attr BETWEEN low AND high}.
-         *
-         * @param attr the attribute name
-         * @param low  the lower bound (inclusive)
-         * @param high the upper bound (inclusive)
-         * @return this builder for chaining
-         */
+        // region BETWEEN, IN
+
+        @Override
         @NonNull
         public Builder between(@NonNull String attr, @NonNull Object low, @NonNull Object high) {
-            delegate.between(attr, low, high);
+            super.between(attr, low, high);
             return this;
         }
 
-        /**
-         * Adds an IN condition: {@code attr IN (value1, value2, ...)}.
-         *
-         * @param attr   the attribute name
-         * @param values the set of values to test against
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
-        public Builder in(@NonNull String attr, Object... values) {
-            delegate.in(attr, values);
+        public Builder in(@NonNull String attr, @NonNull Object... values) {
+            super.in(attr, values);
             return this;
         }
 
-        // ============ Logical ============
+        // endregion
 
-        /**
-         * Adds a logical AND between the previously added condition and the next one.
-         *
-         * @return this builder for chaining
-         */
+        // region Logical
+
+        @Override
         @NonNull
         public Builder and() {
-            delegate.and();
+            super.and();
             return this;
         }
 
-        /**
-         * Adds a logical OR between the previously added condition and the next one.
-         *
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder or() {
-            delegate.or();
+            super.or();
             return this;
         }
 
-        /**
-         * Adds a logical NOT to negate the previously added condition.
-         *
-         * @return this builder for chaining
-         */
+        @Override
         @NonNull
         public Builder not() {
-            delegate.not();
+            super.not();
             return this;
         }
 
         /**
-         * Wraps the given nested {@link ConditionExpression} in parentheses and
-         * merges its expression attribute names and values into this builder.
-         * Useful for creating grouped or nested conditions with proper precedence.
+         * Wraps the given nested expression in parentheses and merges its
+         * expression attribute names and values into this builder.
          *
-         * @param nested the condition expression to wrap in parentheses
+         * @param nested the expression to wrap in parentheses
          * @return this builder for chaining
          */
+        @Override
         @NonNull
-        public Builder group(@NonNull ConditionExpression nested) {
-            delegate.group(nested.delegate);
+        public Builder group(@NonNull FilterExpression nested) {
+            super.group(nested);
             return this;
         }
 
-        // ============ Nested ============
+        // endregion
 
-        /**
-         * Adds an equality condition on a nested attribute path (e.g. {@code "address.city"}).
-         * The path is automatically expanded with expression attribute names for each segment.
-         *
-         * @param path  the dotted nested attribute path
-         * @param value the value to compare against
-         * @return this builder for chaining
-         */
+        // region Nested
+
+        @Override
         @NonNull
         public Builder nestedEq(@NonNull String path, @NonNull Object value) {
-            delegate.nestedEq(path, value);
+            super.nestedEq(path, value);
             return this;
         }
 
-        // ============ Build ============
+        // endregion
+
+        // region Build
 
         /**
          * Builds the {@link ConditionExpression}.
@@ -444,7 +286,8 @@ public final class ConditionExpression {
          * @return a new condition expression with the accumulated conditions
          */
         public @NonNull ConditionExpression build() {
-            return new ConditionExpression(delegate);
+            return new ConditionExpression(this);
         }
     }
 }
+// endregion

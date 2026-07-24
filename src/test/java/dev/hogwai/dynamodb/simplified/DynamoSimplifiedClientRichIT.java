@@ -79,7 +79,7 @@ class DynamoSimplifiedClientRichIT {
         table.deleteItem(p.getId(), p.getCreatedAt());
     }
 
-    // ============ Sort key equality query ============
+    // region Sort key equality query
 
     @Test
     void queryBySortKeyEquals() {
@@ -93,7 +93,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals("Title", results.getFirst().getTitle());
     }
 
-    // ============ Sort key less-than query ============
+    // endregion
+
+    // region Sort key less-than query
 
     @Test
     void queryBySortKeyLt() {
@@ -107,7 +109,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals(2, results.size());
     }
 
-    // ============ Sort key greater-than-or-equal query ============
+    // endregion
+
+    // region Sort key greater-than-or-equal query
 
     @Test
     void queryBySortKeyGe() {
@@ -121,7 +125,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals("B", results.getFirst().getTitle());
     }
 
-    // ============ Sort key between query ============
+    // endregion
+
+    // region Sort key between query
 
     @Test
     void queryBySortKeyBetween() {
@@ -136,7 +142,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals(2, results.size());
     }
 
-    // ============ Query with filter ============
+    // endregion
+
+    // region Query with filter
 
     @Test
     void queryWithFilter() {
@@ -152,7 +160,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals("Visible", results.getFirst().getTitle());
     }
 
-    // ============ Query with descending order ============
+    // endregion
+
+    // region Query with descending order
 
     @Test
     void queryDescending() {
@@ -169,7 +179,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals("Low", results.get(2).getTitle());
     }
 
-    // ============ Query with limit ============
+    // endregion
+
+    // region Query with limit
 
     @Test
     void queryWithLimit() {
@@ -186,7 +198,9 @@ class DynamoSimplifiedClientRichIT {
         assertTrue(page.hasMorePages());
     }
 
-    // ============ Query count ============
+    // endregion
+
+    // region Query count
 
     @Test
     void queryCount() {
@@ -197,7 +211,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals(2, count);
     }
 
-    // ============ Index query by GSI ============
+    // endregion
+
+    // region Index query by GSI
 
     @Test
     void indexQueryByStatus() {
@@ -224,7 +240,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals(2, results.size());
     }
 
-    // ============ Scan with filter ============
+    // endregion
+
+    // region Scan with filter
 
     @Test
     void scanWithFilterOnRichTable() {
@@ -237,7 +255,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals(1, results.size());
     }
 
-    // ============ Conditional put with ConditionExpression ============
+    // endregion
+
+    // region Conditional put with ConditionExpression
 
     @Test
     void conditionalPutWithConditionExpression() {
@@ -252,7 +272,9 @@ class DynamoSimplifiedClientRichIT {
         assertTrue(table.getItem("cp1", 1L).isPresent());
     }
 
-    // ============ Batch get with consistent read ============
+    // endregion
+
+    // region Batch get with consistent read
 
     @Test
     void batchGetWithConsistentRead() {
@@ -270,7 +292,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals(2, results.items().size());
     }
 
-    // ============ TransactWrite with update ============
+    // endregion
+
+    // region TransactWrite with update
 
     @Test
     void transactWriteUpdate() {
@@ -288,7 +312,9 @@ class DynamoSimplifiedClientRichIT {
         assertEquals("After", found.get().getTitle());
     }
 
-    // ============ TransactWrite with delete ============
+    // endregion
+
+    // region TransactWrite with delete
 
     @Test
     void transactWriteDelete() {
@@ -303,7 +329,9 @@ class DynamoSimplifiedClientRichIT {
         assertFalse(table.getItem("twd1", 1L).isPresent());
     }
 
-    // ============ TransactGet with sort key ============
+    // endregion
+
+    // region TransactGet with sort key
 
     @Test
     void transactGetWithSortKey() {
@@ -318,7 +346,9 @@ class DynamoSimplifiedClientRichIT {
         assertNotNull(results.get(0));
     }
 
-    // ============ exists() / not found ============
+    // endregion
+
+    // region exists() / not found
 
     @Test
     void tableExists() {
@@ -331,7 +361,9 @@ class DynamoSimplifiedClientRichIT {
         assertFalse(table.getItem("nonexistent", 0L).isPresent());
     }
 
-    // ============ executeWithPagination ============
+    // endregion
+
+    // region executeWithPagination
 
     @Test
     void queryWithPagination() {
@@ -347,7 +379,9 @@ class DynamoSimplifiedClientRichIT {
         assertTrue(page.hasMorePages());
     }
 
-    // ============ deleteItem (direct convenience) ============
+    // endregion
+
+    // region deleteItem (direct convenience)
 
     @Test
     void deleteItemDirect() {
@@ -358,7 +392,9 @@ class DynamoSimplifiedClientRichIT {
         assertFalse(table.getItem("del1", 1L).isPresent());
     }
 
-    // ============ onlyIfNotExists ============
+    // endregion
+
+    // region onlyIfNotExists
 
     @Test
     void putOnlyIfNotExists() {
@@ -373,7 +409,9 @@ class DynamoSimplifiedClientRichIT {
         assertThrows(ConditionFailedException.class, putOp::execute);
     }
 
-    // ============ Query Execution Variants ============
+    // endregion
+
+    // region Query Execution Variants
 
     @Test
     void queryExecuteStream() {
@@ -449,3 +487,4 @@ class DynamoSimplifiedClientRichIT {
         assertEquals("NewContent", found.get().getContent());
     }
 }
+// endregion
