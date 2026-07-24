@@ -53,16 +53,12 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#field-summary" tabindex="0">Field Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
-<li><a href="#keys(java.util.List)" tabindex="0">keys(List)</a></li>
-<li><a href="#addKey(java.lang.Object)" tabindex="0">addKey(Object)</a></li>
-<li><a href="#addKey(java.lang.Object,java.lang.Object)" tabindex="0">addKey(Object, Object)</a></li>
-<li><a href="#consistentRead(boolean)" tabindex="0">consistentRead(boolean)</a></li>
-<li><a href="#project(java.lang.String...)" tabindex="0">project(String...)</a></li>
-<li><a href="#project(java.util.function.Consumer)" tabindex="0">project(Consumer)</a></li>
-<li><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" tabindex="0">returnConsumedCapacity(ReturnConsumedCapacity)</a></li>
+<li><a href="#self()" tabindex="0">self()</a></li>
+<li><a href="#tableName()" tabindex="0">tableName()</a></li>
 <li><a href="#execute()" tabindex="0">execute()</a></li>
 <li><a href="#executeWithPagination()" tabindex="0">executeWithPagination()</a></li>
 </ol>
@@ -75,7 +71,9 @@ loadScripts(document, 'script');</script>
 <h1 title="Class AsyncBatchGetBuilder" class="title">Class AsyncBatchGetBuilder&lt;T&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="../builder/base/AbstractBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchGetBuilder</a>&lt;T, <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;T&gt;&gt;
 <div class="inheritance">dev.hogwai.dynamodb.simplified.async.AsyncBatchGetBuilder&lt;T&gt;</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <dl class="notes">
@@ -85,7 +83,7 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">AsyncBatchGetBuilder&lt;T&gt;</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="../builder/base/AbstractBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a>&lt;T, <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;T&gt;&gt;</span></div>
 <div class="block">Builds an async batch get operation to retrieve multiple items from a single table by their keys.
 <p>
 Obtain via <a href="AsyncTable.html#batchGet()"><code>AsyncTable.batchGet()</code></a>. Executes using the async enhanced client and
@@ -94,6 +92,15 @@ returns a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- =========== FIELD SUMMARY =========== -->
+<li>
+<section class="field-summary" id="field-summary">
+<h2>Field Summary</h2>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchGetBuilder">Fields inherited from class&nbsp;<a href="../builder/base/AbstractBatchGetBuilder.html#field-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a></h3>
+<code><a href="../builder/base/AbstractBatchGetBuilder.html#consistentRead">consistentRead</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#keys">keys</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#projectionExpression">projectionExpression</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#returnConsumedCapacity">returnConsumedCapacity</a></code></div>
+</section>
+</li>
 <!-- ========== METHOD SUMMARY =========== -->
 <li>
 <section class="method-summary" id="method-summary">
@@ -105,58 +112,34 @@ returns a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addKey(java.lang.Object)" class="member-name-link">addKey</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/BatchGetResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchGetResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#execute()" class="member-name-link">execute</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a key to retrieve by partition key only.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addKey(java.lang.Object,java.lang.Object)" class="member-name-link">addKey</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;sortKey)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a key to retrieve by partition and sort key.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#consistentRead(boolean)" class="member-name-link">consistentRead</a><wbr>(boolean&nbsp;consistentRead)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Enables or disables strongly consistent reads for this batch get.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/BatchGetResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchGetResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#execute()" class="member-name-link">execute</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the batch get operation asynchronously and returns all matching items
 aggregated from all pages.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeWithPagination()" class="member-name-link">executeWithPagination</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeWithPagination()" class="member-name-link">executeWithPagination</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the batch get operation and returns a single page of results
 along with any unprocessed keys.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#keys(java.util.List)" class="member-name-link">keys</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&gt;&nbsp;partitionKeys)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a collection of partition keys to retrieve (without sort keys).</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#project(java.lang.String...)" class="member-name-link">project</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>...&nbsp;attributes)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Restricts the returned attributes to the specified ones for this batch get.</div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#project(java.util.function.Consumer)" class="member-name-link">project</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a>&gt;&nbsp;projectionBuilder)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#tableName()" class="member-name-link">tableName</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Restricts the returned attributes by configuring a <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a>
-via a consumer for this batch get.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" class="member-name-link">returnConsumedCapacity</a><wbr>(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures whether to return consumed capacity information for the operation.</div>
+<div class="block">Returns the DynamoDB table name.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchGetBuilder">Methods inherited from class&nbsp;<a href="../builder/base/AbstractBatchGetBuilder.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a></h3>
+<code><a href="../builder/base/AbstractBatchGetBuilder.html#addKey(java.lang.Object)" title="addKey(Object)">addKey</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#addKey(java.lang.Object,java.lang.Object)" title="addKey(Object, Object)">addKey</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#addKeys(java.util.Collection)" title="addKeys(Collection)">addKeys</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#buildKeysAndAttributes(software.amazon.awssdk.enhanced.dynamodb.TableSchema)" title="buildKeysAndAttributes(TableSchema)">buildKeysAndAttributes</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#consistentRead(boolean)" title="consistentRead(boolean)">consistentRead</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#keys(java.util.List)" title="keys(List)">keys</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#project(java.lang.String...)" title="project(String...)">project</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#project(java.util.function.Consumer)" title="project(Consumer)">project</a>, <a href="../builder/base/AbstractBatchGetBuilder.html#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" title="returnConsumedCapacity(ReturnConsumedCapacity)">returnConsumedCapacity</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -172,14 +155,15 @@ via a consumer for this batch get.</div>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="keys(java.util.List)">
-<h3>keys</h3>
+<section class="detail" id="self()">
+<h3>self</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">keys</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&gt;&nbsp;partitionKeys)</span></div>
-<div class="block">Adds a collection of partition keys to retrieve (without sort keys).</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type"><a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">self</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractBatchGetBuilder.html#self()">AbstractBatchGetBuilder</a></code></span></div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>partitionKeys</code> - the partition key values</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractBatchGetBuilder.html#self()">self</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>, <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
 <dd>this builder</dd>
 </dl>
@@ -187,101 +171,17 @@ via a consumer for this batch get.</div>
 </section>
 </li>
 <li>
-<section class="detail" id="addKey(java.lang.Object)">
-<h3>addKey</h3>
+<section class="detail" id="tableName()">
+<h3>tableName</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">addKey</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey)</span></div>
-<div class="block">Adds a key to retrieve by partition key only.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">tableName</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractBatchGetBuilder.html#tableName()">AbstractBatchGetBuilder</a></code></span></div>
+<div class="block">Returns the DynamoDB table name.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>partitionKey</code> - the partition key value</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractBatchGetBuilder.html#tableName()">tableName</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>, <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="addKey(java.lang.Object,java.lang.Object)">
-<h3>addKey</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">addKey</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;sortKey)</span></div>
-<div class="block">Adds a key to retrieve by partition and sort key.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>partitionKey</code> - the partition key value</dd>
-<dd><code>sortKey</code> - the sort key value</dd>
-<dt>Returns:</dt>
-<dd>this builder</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="consistentRead(boolean)">
-<h3>consistentRead</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">consistentRead</span><wbr><span class="parameters">(boolean&nbsp;consistentRead)</span></div>
-<div class="block">Enables or disables strongly consistent reads for this batch get.
-<p>
-Note: This setting is applied per-item in the batch. If not set, the
-default (eventually consistent) is used by the DynamoDB API.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>consistentRead</code> - <code>true</code> for strongly consistent reads</dd>
-<dt>Returns:</dt>
-<dd>this builder</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="project(java.lang.String...)">
-<h3>project</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">project</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>...&nbsp;attributes)</span></div>
-<div class="block">Restricts the returned attributes to the specified ones for this batch get.
-<p>
-When projection is set, the operation falls back to the low-level DynamoDB API.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>attributes</code> - the attribute names to include in each result</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="project(java.util.function.Consumer)">
-<h3>project</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">project</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a>&gt;&nbsp;projectionBuilder)</span></div>
-<div class="block">Restricts the returned attributes by configuring a <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a>
-via a consumer for this batch get.
-<p>
-When projection is set, the operation falls back to the low-level DynamoDB API.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>projectionBuilder</code> - a consumer that configures the <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a></dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)">
-<h3>returnConsumedCapacity</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">returnConsumedCapacity</span><wbr><span class="parameters">(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</span></div>
-<div class="block">Configures whether to return consumed capacity information for the operation.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>returnConsumedCapacity</code> - the consumed capacity reporting level</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the DynamoDB table name</dd>
 </dl>
 </div>
 </section>

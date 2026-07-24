@@ -64,6 +64,8 @@ loadScripts(document, 'script');</script>
 <ol class="toc-list">
 <li><a href="#dynamoDbClient(software.amazon.awssdk.services.dynamodb.DynamoDbClient)" tabindex="0">dynamoDbClient(DynamoDbClient)</a></li>
 <li><a href="#enhancedClient(software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient)" tabindex="0">enhancedClient(DynamoDbEnhancedClient)</a></li>
+<li><a href="#create(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient)" tabindex="0">create(Class, DynamoDbClient, DynamoDbEnhancedClient)</a></li>
+<li><a href="#createAsync(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient)" tabindex="0">createAsync(Class, DynamoDbAsyncClient, DynamoDbEnhancedAsyncClient)</a></li>
 <li><a href="#build()" tabindex="0">build()</a></li>
 </ol>
 </li>
@@ -123,7 +125,7 @@ for a simpler end-to-end flow.</div>
 <section class="method-summary" id="method-summary">
 <h2>Method Summary</h2>
 <div id="method-summary-table">
-<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab1" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab1', 3)" class="table-tab">Static Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
 <div id="method-summary-table.tabpanel" role="tabpanel" aria-labelledby="method-summary-table-tab0">
 <div class="summary-table three-column-summary">
 <div class="table-header col-first">Modifier and Type</div>
@@ -133,6 +135,22 @@ for a simpler end-to-end flow.</div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#build()" class="member-name-link">build</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Builds the <a href="EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity"><code>EntityTable</code></a> instance.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;T&gt;&nbsp;@NonNull <a href="EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity">EntityTable</a><wbr>&lt;T&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#create(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient)" class="member-name-link">create</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;T&gt;&nbsp;entityClass,
+ @NonNull software.amazon.awssdk.services.dynamodb.DynamoDbClient&nbsp;dynamoDbClient,
+ @NonNull software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient&nbsp;enhancedClient)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Creates an <a href="EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity"><code>EntityTable</code></a> for the given entity class using the
+provided DynamoDB clients.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;T&gt;&nbsp;@NonNull <a href="AsyncEntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity">AsyncEntityTable</a><wbr>&lt;T&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#createAsync(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient)" class="member-name-link">createAsync</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;T&gt;&nbsp;entityClass,
+ @NonNull software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient&nbsp;dynamoDbAsyncClient,
+ @NonNull software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient&nbsp;enhancedAsyncClient)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Creates an <a href="AsyncEntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity"><code>AsyncEntityTable</code></a> for the given entity class using the
+provided async DynamoDB clients.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="EntityTableBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityTableBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in EntityTableBuilder">T</a>&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#dynamoDbClient(software.amazon.awssdk.services.dynamodb.DynamoDbClient)" class="member-name-link">dynamoDbClient</a><wbr>(@NonNull software.amazon.awssdk.services.dynamodb.DynamoDbClient&nbsp;client)</code></div>
@@ -210,6 +228,64 @@ If not set, one will be built from the provided <a href="#dynamoDbClient(softwar
 <dd><code>client</code> - the enhanced DynamoDB client</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="create(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient)">
+<h3>create</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">@NonNull <a href="EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity">EntityTable</a>&lt;T&gt;</span>&nbsp;<span class="element-name">create</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;T&gt;&nbsp;entityClass,
+ @NonNull software.amazon.awssdk.services.dynamodb.DynamoDbClient&nbsp;dynamoDbClient,
+ @NonNull software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient&nbsp;enhancedClient)</span></div>
+<div class="block">Creates an <a href="EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity"><code>EntityTable</code></a> for the given entity class using the
+provided DynamoDB clients.
+<p>
+This is a convenience method equivalent to:
+<pre><code>new EntityTableBuilder&lt;&gt;(entityClass)
+        .dynamoDbClient(dynamoDbClient)
+        .enhancedClient(enhancedClient)
+        .build();
+</code></pre></div>
+<dl class="notes">
+<dt>Type Parameters:</dt>
+<dd><span id="create(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient)-type-param-T"><code>T</code> - the entity type</span></dd>
+<dt>Parameters:</dt>
+<dd><code>entityClass</code> - the entity class annotated with <code>@Entity</code></dd>
+<dd><code>dynamoDbClient</code> - the low-level DynamoDB client</dd>
+<dd><code>enhancedClient</code> - the enhanced DynamoDB client</dd>
+<dt>Returns:</dt>
+<dd>a new <code>EntityTable&lt;T&gt;</code></dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="createAsync(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient)">
+<h3>createAsync</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncEntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity">AsyncEntityTable</a>&lt;T&gt;</span>&nbsp;<span class="element-name">createAsync</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;T&gt;&nbsp;entityClass,
+ @NonNull software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient&nbsp;dynamoDbAsyncClient,
+ @NonNull software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient&nbsp;enhancedAsyncClient)</span></div>
+<div class="block">Creates an <a href="AsyncEntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity"><code>AsyncEntityTable</code></a> for the given entity class using the
+provided async DynamoDB clients.
+<p>
+This is a convenience method equivalent to:
+<pre><code>new AsyncEntityTableBuilder&lt;&gt;(entityClass)
+        .dynamoDbAsyncClient(dynamoDbAsyncClient)
+        .enhancedAsyncClient(enhancedAsyncClient)
+        .build();
+</code></pre></div>
+<dl class="notes">
+<dt>Type Parameters:</dt>
+<dd><span id="createAsync(java.lang.Class,software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient,software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient)-type-param-T"><code>T</code> - the entity type</span></dd>
+<dt>Parameters:</dt>
+<dd><code>entityClass</code> - the entity class annotated with <code>@Entity</code></dd>
+<dd><code>dynamoDbAsyncClient</code> - the low-level async DynamoDB client</dd>
+<dd><code>enhancedAsyncClient</code> - the enhanced async DynamoDB client</dd>
+<dt>Returns:</dt>
+<dd>a new <code>AsyncEntityTable&lt;T&gt;</code></dd>
 </dl>
 </div>
 </section>

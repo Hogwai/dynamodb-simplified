@@ -53,15 +53,14 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#field-summary" tabindex="0">Field Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
-<li><a href="#condition(java.util.function.Consumer)" tabindex="0">condition(Consumer)</a></li>
-<li><a href="#condition(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)" tabindex="0">condition(ConditionExpression)</a></li>
-<li><a href="#onlyIfNotExists(java.lang.String)" tabindex="0">onlyIfNotExists(String)</a></li>
-<li><a href="#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)" tabindex="0">returnValues(ReturnValue)</a></li>
+<li><a href="#self()" tabindex="0">self()</a></li>
 <li><a href="#execute()" tabindex="0">execute()</a></li>
 <li><a href="#executeReturning()" tabindex="0">executeReturning()</a></li>
+<li><a href="#tableName()" tabindex="0">tableName()</a></li>
 </ol>
 </li>
 </ol>
@@ -72,7 +71,9 @@ loadScripts(document, 'script');</script>
 <h1 title="Class AsyncPutBuilder" class="title">Class AsyncPutBuilder&lt;T&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="../builder/base/AbstractPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">dev.hogwai.dynamodb.simplified.builder.base.AbstractPutBuilder</a>&lt;T, <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;T&gt;&gt;
 <div class="inheritance">dev.hogwai.dynamodb.simplified.async.AsyncPutBuilder&lt;T&gt;</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <dl class="notes">
@@ -82,13 +83,22 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">AsyncPutBuilder&lt;T&gt;</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="../builder/base/AbstractPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder</a>&lt;T, <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;T&gt;&gt;</span></div>
 <div class="block">Async fluent builder for putting (inserting or replacing) an item in a DynamoDB table,
 with an optional condition expression. Part of the DynamoDB Simplified library.</div>
 </div>
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- =========== FIELD SUMMARY =========== -->
+<li>
+<section class="field-summary" id="field-summary">
+<h2>Field Summary</h2>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractPutBuilder">Fields inherited from class&nbsp;<a href="../builder/base/AbstractPutBuilder.html#field-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder</a></h3>
+<code><a href="../builder/base/AbstractPutBuilder.html#conditionExpression">conditionExpression</a>, <a href="../builder/base/AbstractPutBuilder.html#item">item</a>, <a href="../builder/base/AbstractPutBuilder.html#LOG">LOG</a>, <a href="../builder/base/AbstractPutBuilder.html#optimisticLocking">optimisticLocking</a>, <a href="../builder/base/AbstractPutBuilder.html#returnValues">returnValues</a></code></div>
+</section>
+</li>
 <!-- ========== METHOD SUMMARY =========== -->
 <li>
 <section class="method-summary" id="method-summary">
@@ -100,16 +110,6 @@ with an optional condition expression. Part of the DynamoDB Simplified library.<
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#condition(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)" class="member-name-link">condition</a><wbr>(@Nullable <a href="../expression/ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a>&nbsp;condition)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures a condition expression that gates the put operation.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#condition(java.util.function.Consumer)" class="member-name-link">condition</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a>&gt;&nbsp;configurator)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures a condition expression that gates the put operation.</div>
-</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#execute()" class="member-name-link">execute</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
@@ -119,22 +119,24 @@ with an optional condition expression. Part of the DynamoDB Simplified library.<
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeReturning()" class="member-name-link">executeReturning</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the put operation and returns the previous item if
-<a href="#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)"><code>returnValues(ReturnValue)</code></a> was set to <code>ALL_OLD</code>.</div>
+<a href="../builder/base/AbstractPutBuilder.html#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)"><code>AbstractPutBuilder.returnValues(ReturnValue)</code></a> was set to <code>ALL_OLD</code>.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#onlyIfNotExists(java.lang.String)" class="member-name-link">onlyIfNotExists</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attribute)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition that the specified attribute must not already exist
-on an item with the same key for the put to succeed.</div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)" class="member-name-link">returnValues</a><wbr>(@Nullable software.amazon.awssdk.services.dynamodb.model.ReturnValue&nbsp;returnValues)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#tableName()" class="member-name-link">tableName</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures which item attributes to return after the put.</div>
+<div class="block">Returns the DynamoDB table name.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractPutBuilder">Methods inherited from class&nbsp;<a href="../builder/base/AbstractPutBuilder.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder</a></h3>
+<code><a href="../builder/base/AbstractPutBuilder.html#applyOptimisticLocking()" title="applyOptimisticLocking()">applyOptimisticLocking</a>, <a href="../builder/base/AbstractPutBuilder.html#buildEnhancedRequest()" title="buildEnhancedRequest()">buildEnhancedRequest</a>, <a href="../builder/base/AbstractPutBuilder.html#buildLowLevelRequest(java.util.Map)" title="buildLowLevelRequest(Map)">buildLowLevelRequest</a>, <a href="../builder/base/AbstractPutBuilder.html#condition(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)" title="condition(ConditionExpression)">condition</a>, <a href="../builder/base/AbstractPutBuilder.html#condition(java.util.function.Consumer)" title="condition(Consumer)">condition</a>, <a href="../builder/base/AbstractPutBuilder.html#incrementVersion()" title="incrementVersion()">incrementVersion</a>, <a href="../builder/base/AbstractPutBuilder.html#onlyIfNotExists(java.lang.String)" title="onlyIfNotExists(String)">onlyIfNotExists</a>, <a href="../builder/base/AbstractPutBuilder.html#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)" title="returnValues(ReturnValue)">returnValues</a>, <a href="../builder/base/AbstractPutBuilder.html#withOptimisticLocking()" title="withOptimisticLocking()">withOptimisticLocking</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -150,73 +152,17 @@ on an item with the same key for the put to succeed.</div>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="condition(java.util.function.Consumer)">
-<h3>condition</h3>
+<section class="detail" id="self()">
+<h3>self</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">condition</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a>&gt;&nbsp;configurator)</span></div>
-<div class="block">Configures a condition expression that gates the put operation.
-DynamoDB evaluates this condition <b>before</b> writing the item
-(unlike a filter expression which applies after reading).</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">self</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractPutBuilder.html#self()">AbstractPutBuilder</a></code></span></div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>configurator</code> - a consumer to build the condition expression</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractPutBuilder.html#self()">self</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>, <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="condition(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)">
-<h3>condition</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">condition</span><wbr><span class="parameters">(@Nullable <a href="../expression/ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a>&nbsp;condition)</span></div>
-<div class="block">Configures a condition expression that gates the put operation.
-DynamoDB evaluates this condition <b>before</b> writing the item
-(unlike a filter expression which applies after reading).</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>condition</code> - the condition expression</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="onlyIfNotExists(java.lang.String)">
-<h3>onlyIfNotExists</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">onlyIfNotExists</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attribute)</span></div>
-<div class="block">Adds a condition that the specified attribute must not already exist
-on an item with the same key for the put to succeed.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>attribute</code> - the attribute name to check for absence</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)">
-<h3>returnValues</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">returnValues</span><wbr><span class="parameters">(@Nullable software.amazon.awssdk.services.dynamodb.model.ReturnValue&nbsp;returnValues)</span></div>
-<div class="block">Configures which item attributes to return after the put.
-<p>
-When set, uses the low-level <code>PutItemRequest</code> with the specified
-<code>ReturnValues</code>. Common values: <code>ReturnValue.ALL_OLD</code>
-(returns the previous item if one existed), <code>ReturnValue.NONE</code>.
-<p>
-To retrieve the previous item when using <code>ReturnValue#ALL_OLD</code>,
-use <a href="#executeReturning()"><code>executeReturning()</code></a> instead of <a href="#execute()"><code>execute()</code></a>.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>returnValues</code> - the return value setting, or <code>null</code> to use the default</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>this builder</dd>
 </dl>
 </div>
 </section>
@@ -240,10 +186,26 @@ use <a href="#executeReturning()"><code>executeReturning()</code></a> instead of
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;&gt;</span>&nbsp;<span class="element-name">executeReturning</span>()</div>
 <div class="block">Executes the put operation and returns the previous item if
-<a href="#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)"><code>returnValues(ReturnValue)</code></a> was set to <code>ALL_OLD</code>.</div>
+<a href="../builder/base/AbstractPutBuilder.html#returnValues(software.amazon.awssdk.services.dynamodb.model.ReturnValue)"><code>AbstractPutBuilder.returnValues(ReturnValue)</code></a> was set to <code>ALL_OLD</code>.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a CompletableFuture containing the previous item, or empty</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="tableName()">
+<h3>tableName</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">tableName</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractPutBuilder.html#tableName()">AbstractPutBuilder</a></code></span></div>
+<div class="block">Returns the DynamoDB table name.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractPutBuilder.html#tableName()">tableName</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>, <a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncPutBuilder">T</a>&gt;&gt;</code></dd>
+<dt>Returns:</dt>
+<dd>the DynamoDB table name</dd>
 </dl>
 </div>
 </section>

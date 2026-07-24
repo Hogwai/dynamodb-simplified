@@ -87,13 +87,13 @@ loadScripts(document, 'script');</script>
 <section class="class-description" id="class-description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
 </dl>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">AsyncDynamoSimplifiedClient</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></span></div>
+implements <a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></span></div>
 <div class="block">Async entry point for the DynamoDB Simplified library.
 <p>
 Provides factory methods to create an async client and access typed <a href="AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncTable</code></a>
@@ -285,6 +285,8 @@ extensions and a custom DynamoDB async client.</div>
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;T&gt;&nbsp;itemClass)</span></div>
 <div class="block">Returns a typed <a href="AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncTable</code></a> for the given table name and item class.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#table(java.lang.String,java.lang.Class)">table</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="table(java.lang.String,java.lang.Class)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
@@ -304,6 +306,8 @@ extensions and a custom DynamoDB async client.</div>
  @NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema&lt;T&gt;&nbsp;schema)</span></div>
 <div class="block">Returns a typed <a href="AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncTable</code></a> for the given table name and custom schema.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#table(java.lang.String,software.amazon.awssdk.enhanced.dynamodb.TableSchema)">table</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="table(java.lang.String,software.amazon.awssdk.enhanced.dynamodb.TableSchema)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
@@ -328,6 +332,8 @@ using a <code>StaticTableSchema</code> configured by the provided consumer.
 This is useful when you want to define the table schema programmatically
 rather than using annotations.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#table(java.lang.String,java.lang.Class,java.util.function.Consumer)">table</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="table(java.lang.String,java.lang.Class,java.util.function.Consumer)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
@@ -357,6 +363,8 @@ and automatically composed into the table's partition/sort keys before
 every put and update operation. Queries are automatically filtered by
 the entity's discriminator value.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#entityTable(java.lang.Class)">entityTable</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="entityTable(java.lang.Class)-type-param-T"><code>T</code> - the entity type</span></dd>
 <dt>Parameters:</dt>
@@ -376,6 +384,8 @@ the entity's discriminator value.</div>
 <p>
 All items are read atomically in a single all-or-nothing transaction.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#transactGet()">transactGet</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>an <a href="AsyncTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncTransactGetBuilder</code></a> for configuring and executing the transaction</dd>
 </dl>
@@ -391,6 +401,8 @@ All items are read atomically in a single all-or-nothing transaction.</div>
 <p>
 All put, update, delete, and condition check actions are applied atomically.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#transactWrite()">transactWrite</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>an <a href="AsyncTransactWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncTransactWriteBuilder</code></a> for configuring and executing the transaction</dd>
 </dl>
@@ -404,6 +416,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncCrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchGetBuilder</a></span>&nbsp;<span class="element-name">batchGet</span>()</div>
 <div class="block">Returns an async cross-table batch get builder for retrieving items from multiple tables.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#batchGet()">batchGet</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>an async cross-table batch get builder</dd>
 </dl>
@@ -417,6 +431,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">batchWrite</span>()</div>
 <div class="block">Returns an async cross-table batch write builder for putting/deleting items across multiple tables.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#batchWrite()">batchWrite</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>an async cross-table batch write builder</dd>
 </dl>
@@ -430,6 +446,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient</span>&nbsp;<span class="element-name">getEnhancedClient</span>()</div>
 <div class="block">Returns the underlying <code>DynamoDbEnhancedAsyncClient</code>.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#getEnhancedClient()">getEnhancedClient</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>the enhanced async DynamoDB client</dd>
 </dl>
@@ -443,6 +461,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient</span>&nbsp;<span class="element-name">getDynamoDbClient</span>()</div>
 <div class="block">Returns the underlying <code>DynamoDbAsyncClient</code>.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#getDynamoDbClient()">getDynamoDbClient</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>the DynamoDB async client</dd>
 </dl>
@@ -456,6 +476,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;&gt;</span>&nbsp;<span class="element-name">listTables</span>()</div>
 <div class="block">Lists all DynamoDB tables asynchronously.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#listTables()">listTables</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing a list of table names</dd>
 </dl>
@@ -472,6 +494,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 This is a passthrough to the underlying low-level
 <code>DynamoDbAsyncClient.executeStatement(ExecuteStatementRequest)</code>.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#executeStatement(software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest)">executeStatement</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>request</code> - the PartiQL request to execute</dd>
 <dt>Returns:</dt>
@@ -489,6 +513,8 @@ This is a passthrough to the underlying low-level
 <p>
 After calling this method, the client instance is no longer usable.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="AsyncDynamoSimplifiedClientInterface.html#close()">close</a></code>&nbsp;in interface&nbsp;<code><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></code></dd>
 <dt>Specified by:</dt>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html#close()" title="class or interface in java.lang" class="external-link">close</a></code>&nbsp;in interface&nbsp;<code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
 </dl>

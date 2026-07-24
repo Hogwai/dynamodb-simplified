@@ -1,6 +1,7 @@
 dev.hogwai.dynamodb.simplified
 dev.hogwai.dynamodb.simplified.async
 dev.hogwai.dynamodb.simplified.builder
+dev.hogwai.dynamodb.simplified.builder.base
 dev.hogwai.dynamodb.simplified.entity
 dev.hogwai.dynamodb.simplified.exception
 dev.hogwai.dynamodb.simplified.expression

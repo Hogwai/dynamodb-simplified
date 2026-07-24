@@ -53,6 +53,7 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#field-summary" tabindex="0">Field Summary</a></li>
 <li><a href="#constructor-summary" tabindex="0">Constructor Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#constructor-detail" tabindex="0">Constructor Details</a>
@@ -62,10 +63,9 @@ loadScripts(document, 'script');</script>
 </li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
-<li><a href="#put(T)" tabindex="0">put(T)</a></li>
-<li><a href="#delete(java.lang.Object)" tabindex="0">delete(Object)</a></li>
-<li><a href="#delete(java.lang.Object,java.lang.Object)" tabindex="0">delete(Object, Object)</a></li>
-<li><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" tabindex="0">returnConsumedCapacity(ReturnConsumedCapacity)</a></li>
+<li><a href="#self()" tabindex="0">self()</a></li>
+<li><a href="#tableSchema()" tabindex="0">tableSchema()</a></li>
+<li><a href="#tableName()" tabindex="0">tableName()</a></li>
 <li><a href="#execute()" tabindex="0">execute()</a></li>
 </ol>
 </li>
@@ -77,7 +77,9 @@ loadScripts(document, 'script');</script>
 <h1 title="Class BatchWriteBuilder" class="title">Class BatchWriteBuilder&lt;T&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="base/AbstractBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchWriteBuilder</a>&lt;T, <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;T&gt;&gt;
 <div class="inheritance">dev.hogwai.dynamodb.simplified.builder.BatchWriteBuilder&lt;T&gt;</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <dl class="notes">
@@ -87,7 +89,7 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">BatchWriteBuilder&lt;T&gt;</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="base/AbstractBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a>&lt;T, <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;T&gt;&gt;</span></div>
 <div class="block">Builds a batch write operation to put and delete multiple items in a single table.
 <p>
 Obtain via <a href="../Table.html#batchWrite()"><code>Table.batchWrite()</code></a>.
@@ -98,6 +100,15 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- =========== FIELD SUMMARY =========== -->
+<li>
+<section class="field-summary" id="field-summary">
+<h2>Field Summary</h2>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchWriteBuilder">Fields inherited from class&nbsp;<a href="base/AbstractBatchWriteBuilder.html#field-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a></h3>
+<code><a href="base/AbstractBatchWriteBuilder.html#itemsToPut">itemsToPut</a>, <a href="base/AbstractBatchWriteBuilder.html#keysToDelete">keysToDelete</a>, <a href="base/AbstractBatchWriteBuilder.html#returnConsumedCapacity">returnConsumedCapacity</a></code></div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor-summary">
@@ -125,35 +136,32 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#delete(java.lang.Object)" class="member-name-link">delete</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a delete operation for the given partition key.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#delete(java.lang.Object,java.lang.Object)" class="member-name-link">delete</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;sortKey)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a delete operation for the given partition and sort key.</div>
-</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="../result/BatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchWriteResult</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#execute()" class="member-name-link">execute</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the batch write operation.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#put(T)" class="member-name-link">put</a><wbr>(@NonNull <a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&nbsp;item)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds an item to be put (inserted or replaced) in the batch write.</div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" class="member-name-link">returnConsumedCapacity</a><wbr>(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#tableName()" class="member-name-link">tableName</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures whether to return consumed capacity information for the operation.</div>
+<div class="block">Returns the DynamoDB table name.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema<wbr>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#tableSchema()" class="member-name-link">tableSchema</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Returns the table schema for converting items to attribute maps.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchWriteBuilder">Methods inherited from class&nbsp;<a href="base/AbstractBatchWriteBuilder.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a></h3>
+<code><a href="base/AbstractBatchWriteBuilder.html#buildRequestItems()" title="buildRequestItems()">buildRequestItems</a>, <a href="base/AbstractBatchWriteBuilder.html#delete(java.lang.Object)" title="delete(Object)">delete</a>, <a href="base/AbstractBatchWriteBuilder.html#delete(java.lang.Object,java.lang.Object)" title="delete(Object, Object)">delete</a>, <a href="base/AbstractBatchWriteBuilder.html#put(T)" title="put(T)">put</a>, <a href="base/AbstractBatchWriteBuilder.html#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" title="returnConsumedCapacity(ReturnConsumedCapacity)">returnConsumedCapacity</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -192,14 +200,15 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="put(T)">
-<h3 id="put(java.lang.Object)">put</h3>
+<section class="detail" id="self()">
+<h3>self</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">put</span><wbr><span class="parameters">(@NonNull <a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&nbsp;item)</span></div>
-<div class="block">Adds an item to be put (inserted or replaced) in the batch write.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type"><a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">self</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractBatchWriteBuilder.html#self()">AbstractBatchWriteBuilder</a></code></span></div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>item</code> - the item to put</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractBatchWriteBuilder.html#self()">self</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>, <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
 <dd>this builder</dd>
 </dl>
@@ -207,48 +216,33 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 </section>
 </li>
 <li>
-<section class="detail" id="delete(java.lang.Object)">
-<h3>delete</h3>
+<section class="detail" id="tableSchema()">
+<h3>tableSchema</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">delete</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey)</span></div>
-<div class="block">Adds a delete operation for the given partition key.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">tableSchema</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractBatchWriteBuilder.html#tableSchema()">AbstractBatchWriteBuilder</a></code></span></div>
+<div class="block">Returns the table schema for converting items to attribute maps.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>partitionKey</code> - the partition key of the item to delete</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractBatchWriteBuilder.html#tableSchema()">tableSchema</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>, <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder</dd>
+<dd>the table schema</dd>
 </dl>
 </div>
 </section>
 </li>
 <li>
-<section class="detail" id="delete(java.lang.Object,java.lang.Object)">
-<h3>delete</h3>
+<section class="detail" id="tableName()">
+<h3>tableName</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">delete</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;sortKey)</span></div>
-<div class="block">Adds a delete operation for the given partition and sort key.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">tableName</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractBatchWriteBuilder.html#tableName()">AbstractBatchWriteBuilder</a></code></span></div>
+<div class="block">Returns the DynamoDB table name.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>partitionKey</code> - the partition key value</dd>
-<dd><code>sortKey</code> - the sort key value</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractBatchWriteBuilder.html#tableName()">tableName</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>, <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)">
-<h3>returnConsumedCapacity</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;<a href="#type-param-T" title="type parameter in BatchWriteBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">returnConsumedCapacity</span><wbr><span class="parameters">(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</span></div>
-<div class="block">Configures whether to return consumed capacity information for the operation.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>returnConsumedCapacity</code> - the consumed capacity reporting level</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the DynamoDB table name</dd>
 </dl>
 </div>
 </section>

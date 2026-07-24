@@ -67,8 +67,12 @@ loadScripts(document, 'script');</script>
 <li><a href="#SK_VAL1" tabindex="0">SK_VAL1</a></li>
 <li><a href="#AND" tabindex="0">AND</a></li>
 <li><a href="#OR" tabindex="0">OR</a></li>
+<li><a href="#LT" tabindex="0">LT</a></li>
+<li><a href="#GT" tabindex="0">GT</a></li>
+<li><a href="#EQ" tabindex="0">EQ</a></li>
 <li><a href="#LE" tabindex="0">LE</a></li>
 <li><a href="#GE" tabindex="0">GE</a></li>
+<li><a href="#BETWEEN" tabindex="0">BETWEEN</a></li>
 <li><a href="#BEGINS_WITH" tabindex="0">BEGINS_WITH</a></li>
 <li><a href="#CONTAINS" tabindex="0">CONTAINS</a></li>
 <li><a href="#ATTRIBUTE_EXISTS" tabindex="0">ATTRIBUTE_EXISTS</a></li>
@@ -129,30 +133,54 @@ logical operators, and function names.</div>
 <div class="block"><code>begins_with(path, substr)</code> function name.</div>
 </div>
 <div class="col-first even-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#CONTAINS" class="member-name-link">CONTAINS</a></code></div>
+<div class="col-second even-row-color"><code><a href="#BETWEEN" class="member-name-link">BETWEEN</a></code></div>
 <div class="col-last even-row-color">
-<div class="block"><code>contains(path, operand)</code> function name.</div>
+<div class="block">BETWEEN keyword with surrounding spaces.</div>
 </div>
 <div class="col-first odd-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#DT" class="member-name-link">DT</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#CONTAINS" class="member-name-link">CONTAINS</a></code></div>
 <div class="col-last odd-row-color">
+<div class="block"><code>contains(path, operand)</code> function name.</div>
+</div>
+<div class="col-first even-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#DT" class="member-name-link">DT</a></code></div>
+<div class="col-last even-row-color">
 <div class="block">Discriminator expression attribute name placeholder.</div>
+</div>
+<div class="col-first odd-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#EQ" class="member-name-link">EQ</a></code></div>
+<div class="col-last odd-row-color">
+<div class="block">Equals operator with surrounding spaces.</div>
 </div>
 <div class="col-first even-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color"><code><a href="#GE" class="member-name-link">GE</a></code></div>
-<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-last even-row-color">
+<div class="block">Greater-than-or-equal operator with surrounding spaces.</div>
+</div>
 <div class="col-first odd-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#IF_NOT_EXISTS" class="member-name-link">IF_NOT_EXISTS</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#GT" class="member-name-link">GT</a></code></div>
 <div class="col-last odd-row-color">
-<div class="block"><code>if_not_exists(path, default)</code> function name.</div>
+<div class="block">Greater-than operator with surrounding spaces.</div>
 </div>
 <div class="col-first even-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#LE" class="member-name-link">LE</a></code></div>
-<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-second even-row-color"><code><a href="#IF_NOT_EXISTS" class="member-name-link">IF_NOT_EXISTS</a></code></div>
+<div class="col-last even-row-color">
+<div class="block"><code>if_not_exists(path, default)</code> function name.</div>
+</div>
 <div class="col-first odd-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#LIST_APPEND" class="member-name-link">LIST_APPEND</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#LE" class="member-name-link">LE</a></code></div>
 <div class="col-last odd-row-color">
+<div class="block">Less-than-or-equal operator with surrounding spaces.</div>
+</div>
+<div class="col-first even-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#LIST_APPEND" class="member-name-link">LIST_APPEND</a></code></div>
+<div class="col-last even-row-color">
 <div class="block"><code>list_append(list1, list2)</code> function name.</div>
+</div>
+<div class="col-first odd-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#LT" class="member-name-link">LT</a></code></div>
+<div class="col-last odd-row-color">
+<div class="block">Less-than operator with surrounding spaces.</div>
 </div>
 <div class="col-first even-row-color"><code>static final <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color"><code><a href="#OR" class="member-name-link">OR</a></code></div>
@@ -391,10 +419,62 @@ logical operators, and function names.</div>
 </section>
 </li>
 <li>
+<section class="detail" id="LT">
+<h3>LT</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">LT</span></div>
+<div class="block">Less-than operator with surrounding spaces.</div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="tag-list">
+<li><a href="../../../../../constant-values.html#dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.LT">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="GT">
+<h3>GT</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">GT</span></div>
+<div class="block">Greater-than operator with surrounding spaces.</div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="tag-list">
+<li><a href="../../../../../constant-values.html#dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.GT">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="EQ">
+<h3>EQ</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">EQ</span></div>
+<div class="block">Equals operator with surrounding spaces.</div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="tag-list">
+<li><a href="../../../../../constant-values.html#dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.EQ">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
 <section class="detail" id="LE">
 <h3>LE</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">LE</span></div>
+<div class="block">Less-than-or-equal operator with surrounding spaces.</div>
 <dl class="notes">
 <dt>See Also:</dt>
 <dd>
@@ -411,11 +491,29 @@ logical operators, and function names.</div>
 <h3>GE</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">GE</span></div>
+<div class="block">Greater-than-or-equal operator with surrounding spaces.</div>
 <dl class="notes">
 <dt>See Also:</dt>
 <dd>
 <ul class="tag-list">
 <li><a href="../../../../../constant-values.html#dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.GE">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="BETWEEN">
+<h3>BETWEEN</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">BETWEEN</span></div>
+<div class="block">BETWEEN keyword with surrounding spaces.</div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="tag-list">
+<li><a href="../../../../../constant-values.html#dev.hogwai.dynamodb.simplified.internal.ExpressionConstants.BETWEEN">Constant Field Values</a></li>
 </ul>
 </dd>
 </dl>

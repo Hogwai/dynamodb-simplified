@@ -68,8 +68,7 @@ loadScripts(document, 'script');</script>
 <p>
 <a href="DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified"><code>DynamoSimplifiedClient</code></a> and
 <a href="Table.html" title="class in dev.hogwai.dynamodb.simplified"><code>Table</code></a> are the primary entry points
-for synchronous operations. <a href="Versioned.html" title="interface in dev.hogwai.dynamodb.simplified"><code>Versioned</code></a>
-provides an optimistic locking interface for item version management.
+for synchronous operations.
 <p>
 Sub-packages contain fluent builders (<code>builder/</code>), async variants
 (<code>async/</code>), expression builders (<code>expression/</code>), exception
@@ -133,13 +132,13 @@ support for single-table design (<code>entity/</code>), and internal utilities
 <div class="block">Builder for creating <a href="DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified"><code>DynamoSimplifiedClient</code></a> instances with
 a custom DynamoDB client and/or <code>extensions</code>.</div>
 </div>
-<div class="col-first even-row-color class-summary class-summary-tab2"><a href="Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;</div>
-<div class="col-last even-row-color class-summary class-summary-tab2">
-<div class="block">Typed entry point for DynamoDB operations on a single table.</div>
+<div class="col-first even-row-color class-summary class-summary-tab1"><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></div>
+<div class="col-last even-row-color class-summary class-summary-tab1">
+<div class="block">Interface for <a href="DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified"><code>DynamoSimplifiedClient</code></a> to enable mocking and polymorphic usage.</div>
 </div>
-<div class="col-first odd-row-color class-summary class-summary-tab1"><a href="Versioned.html" title="interface in dev.hogwai.dynamodb.simplified">Versioned</a></div>
-<div class="col-last odd-row-color class-summary class-summary-tab1">
-<div class="block">Interface for entities that support optimistic locking via version field.</div>
+<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color class-summary class-summary-tab2">
+<div class="block">Typed entry point for DynamoDB operations on a single table.</div>
 </div>
 </div>
 </div>

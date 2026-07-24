@@ -53,6 +53,8 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#nested-class-summary" tabindex="0">Nested Class Summary</a></li>
+<li><a href="#field-summary" tabindex="0">Field Summary</a></li>
 <li><a href="#constructor-summary" tabindex="0">Constructor Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#constructor-detail" tabindex="0">Constructor Details</a>
@@ -62,10 +64,9 @@ loadScripts(document, 'script');</script>
 </li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
-<li><a href="#put(dev.hogwai.dynamodb.simplified.Table,T)" tabindex="0">put(Table, T)</a></li>
-<li><a href="#delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)" tabindex="0">delete(Table, Object)</a></li>
-<li><a href="#delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object,java.lang.Object)" tabindex="0">delete(Table, Object, Object)</a></li>
-<li><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" tabindex="0">returnConsumedCapacity(ReturnConsumedCapacity)</a></li>
+<li><a href="#self()" tabindex="0">self()</a></li>
+<li><a href="#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)" tabindex="0">getTableName(AbstractCrossTableBatchWriteBuilder.Operation)</a></li>
+<li><a href="#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)" tabindex="0">getTableSchema(AbstractCrossTableBatchWriteBuilder.Operation)</a></li>
 <li><a href="#execute()" tabindex="0">execute()</a></li>
 </ol>
 </li>
@@ -77,13 +78,15 @@ loadScripts(document, 'script');</script>
 <h1 title="Class CrossTableBatchWriteBuilder" class="title">Class CrossTableBatchWriteBuilder</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="base/AbstractCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder</a>&lt;<a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a>&gt;
 <div class="inheritance">dev.hogwai.dynamodb.simplified.builder.CrossTableBatchWriteBuilder</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">CrossTableBatchWriteBuilder</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="base/AbstractCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a>&lt;<a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a>&gt;</span></div>
 <div class="block">Builds a cross-table batch write operation to put and delete items across multiple tables.
 <p>
 Obtain via <a href="../DynamoSimplifiedClient.html#batchWrite()"><code>DynamoSimplifiedClient.batchWrite()</code></a>.
@@ -96,6 +99,24 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<li>
+<section class="nested-class-summary" id="nested-class-summary">
+<h2>Nested Class Summary</h2>
+<div class="inherited-list">
+<h3 id="nested-classes-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder">Nested classes/interfaces inherited from class&nbsp;<a href="base/AbstractCrossTableBatchWriteBuilder.html#nested-class-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a></h3>
+<code><a href="base/AbstractCrossTableBatchWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a></code></div>
+</section>
+</li>
+<!-- =========== FIELD SUMMARY =========== -->
+<li>
+<section class="field-summary" id="field-summary">
+<h2>Field Summary</h2>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder">Fields inherited from class&nbsp;<a href="base/AbstractCrossTableBatchWriteBuilder.html#field-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a></h3>
+<code><a href="base/AbstractCrossTableBatchWriteBuilder.html#operations">operations</a>, <a href="base/AbstractCrossTableBatchWriteBuilder.html#returnConsumedCapacity">returnConsumedCapacity</a></code></div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor-summary">
@@ -122,38 +143,32 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;T&gt;&nbsp;@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)" class="member-name-link">delete</a><wbr>(@NonNull <a href="../Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;&nbsp;table,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a delete action for the given partition key in the given table.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;T&gt;&nbsp;@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object,java.lang.Object)" class="member-name-link">delete</a><wbr>(@NonNull <a href="../Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;&nbsp;table,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;sortKey)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a delete action for the given partition and sort key in the given table.</div>
-</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="../result/CrossTableBatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchWriteResult</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#execute()" class="member-name-link">execute</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the batch write operation.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;T&gt;&nbsp;@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#put(dev.hogwai.dynamodb.simplified.Table,T)" class="member-name-link">put</a><wbr>(@NonNull <a href="../Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;&nbsp;table,
- @NonNull T&nbsp;item)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)" class="member-name-link">getTableName</a><wbr>(@NonNull <a href="base/AbstractCrossTableBatchWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a>&nbsp;operation)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a put action to insert or replace an item in the given table.</div>
+<div class="block">Extracts the DynamoDB table name from an operation's table reference.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" class="member-name-link">returnConsumedCapacity</a><wbr>(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema<wbr>&lt;?&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)" class="member-name-link">getTableSchema</a><wbr>(@NonNull <a href="base/AbstractCrossTableBatchWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a>&nbsp;operation)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures whether to return consumed capacity information for the operation.</div>
+<div class="block">Extracts the table schema from an operation's table reference.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder">Methods inherited from class&nbsp;<a href="base/AbstractCrossTableBatchWriteBuilder.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a></h3>
+<code><a href="base/AbstractCrossTableBatchWriteBuilder.html#buildKey(java.lang.Object,java.lang.Object)" title="buildKey(Object, Object)">buildKey</a>, <a href="base/AbstractCrossTableBatchWriteBuilder.html#buildRequestItems()" title="buildRequestItems()">buildRequestItems</a>, <a href="base/AbstractCrossTableBatchWriteBuilder.html#delete(java.lang.Object,java.lang.Object)" title="delete(Object, Object)">delete</a>, <a href="base/AbstractCrossTableBatchWriteBuilder.html#delete(java.lang.Object,java.lang.Object,java.lang.Object)" title="delete(Object, Object, Object)">delete</a>, <a href="base/AbstractCrossTableBatchWriteBuilder.html#put(java.lang.Object,T)" title="put(Object, T)">put</a>, <a href="base/AbstractCrossTableBatchWriteBuilder.html#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" title="returnConsumedCapacity(ReturnConsumedCapacity)">returnConsumedCapacity</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -190,18 +205,15 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="put(dev.hogwai.dynamodb.simplified.Table,T)">
-<h3 id="put(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)">put</h3>
+<section class="detail" id="self()">
+<h3>self</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">put</span><wbr><span class="parameters">(@NonNull <a href="../Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;&nbsp;table,
- @NonNull T&nbsp;item)</span></div>
-<div class="block">Adds a put action to insert or replace an item in the given table.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">self</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractCrossTableBatchWriteBuilder.html#self()">AbstractCrossTableBatchWriteBuilder</a></code></span></div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 <dl class="notes">
-<dt>Type Parameters:</dt>
-<dd><span id="put(dev.hogwai.dynamodb.simplified.Table,T)-type-param-T"><code>T</code> - the item type</span></dd>
-<dt>Parameters:</dt>
-<dd><code>table</code> - the typed table to write to</dd>
-<dd><code>item</code> - the item to put</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractCrossTableBatchWriteBuilder.html#self()">self</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a>&lt;<a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a>&gt;</code></dd>
 <dt>Returns:</dt>
 <dd>this builder</dd>
 </dl>
@@ -209,56 +221,37 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 </section>
 </li>
 <li>
-<section class="detail" id="delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)">
-<h3>delete</h3>
+<section class="detail" id="getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)">
+<h3>getTableName</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">delete</span><wbr><span class="parameters">(@NonNull <a href="../Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;&nbsp;table,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey)</span></div>
-<div class="block">Adds a delete action for the given partition key in the given table.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getTableName</span><wbr><span class="parameters">(@NonNull <a href="base/AbstractCrossTableBatchWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a>&nbsp;operation)</span></div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractCrossTableBatchWriteBuilder.html#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)">AbstractCrossTableBatchWriteBuilder</a></code></span></div>
+<div class="block">Extracts the DynamoDB table name from an operation's table reference.</div>
 <dl class="notes">
-<dt>Type Parameters:</dt>
-<dd><span id="delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)-type-param-T"><code>T</code> - the item type</span></dd>
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractCrossTableBatchWriteBuilder.html#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)">getTableName</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a>&lt;<a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a>&gt;</code></dd>
 <dt>Parameters:</dt>
-<dd><code>table</code> - the typed table to delete from</dd>
-<dd><code>partitionKey</code> - the partition key value</dd>
+<dd><code>operation</code> - the operation whose table name to extract</dd>
 <dt>Returns:</dt>
-<dd>this builder</dd>
+<dd>the DynamoDB table name</dd>
 </dl>
 </div>
 </section>
 </li>
 <li>
-<section class="detail" id="delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object,java.lang.Object)">
-<h3>delete</h3>
+<section class="detail" id="getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)">
+<h3>getTableSchema</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">delete</span><wbr><span class="parameters">(@NonNull <a href="../Table.html" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;&nbsp;table,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;partitionKey,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;sortKey)</span></div>
-<div class="block">Adds a delete action for the given partition and sort key in the given table.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema&lt;?&gt;</span>&nbsp;<span class="element-name">getTableSchema</span><wbr><span class="parameters">(@NonNull <a href="base/AbstractCrossTableBatchWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a>&nbsp;operation)</span></div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractCrossTableBatchWriteBuilder.html#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)">AbstractCrossTableBatchWriteBuilder</a></code></span></div>
+<div class="block">Extracts the table schema from an operation's table reference.</div>
 <dl class="notes">
-<dt>Type Parameters:</dt>
-<dd><span id="delete(dev.hogwai.dynamodb.simplified.Table,java.lang.Object,java.lang.Object)-type-param-T"><code>T</code> - the item type</span></dd>
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractCrossTableBatchWriteBuilder.html#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractCrossTableBatchWriteBuilder.Operation)">getTableSchema</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a>&lt;<a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a>&gt;</code></dd>
 <dt>Parameters:</dt>
-<dd><code>table</code> - the typed table to delete from</dd>
-<dd><code>partitionKey</code> - the partition key value</dd>
-<dd><code>sortKey</code> - the sort key value</dd>
+<dd><code>operation</code> - the operation whose table schema to extract</dd>
 <dt>Returns:</dt>
-<dd>this builder</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)">
-<h3>returnConsumedCapacity</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">returnConsumedCapacity</span><wbr><span class="parameters">(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</span></div>
-<div class="block">Configures whether to return consumed capacity information for the operation.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>returnConsumedCapacity</code> - the consumed capacity reporting level</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the table schema</dd>
 </dl>
 </div>
 </section>

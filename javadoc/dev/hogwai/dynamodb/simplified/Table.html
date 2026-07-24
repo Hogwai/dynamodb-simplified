@@ -90,6 +90,7 @@ loadScripts(document, 'script');</script>
 <li><a href="#create(java.util.function.Consumer)" tabindex="0">create(Consumer)</a></li>
 <li><a href="#delete()" tabindex="0">delete()</a></li>
 <li><a href="#describe()" tabindex="0">describe()</a></li>
+<li><a href="#updateTable(java.util.function.Consumer)" tabindex="0">updateTable(Consumer)</a></li>
 <li><a href="#exists()" tabindex="0">exists()</a></li>
 <li><a href="#enableTtl(java.lang.String)" tabindex="0">enableTtl(String)</a></li>
 <li><a href="#disableTtl(java.lang.String)" tabindex="0">disableTtl(String)</a></li>
@@ -319,6 +320,11 @@ throughput settings, and indexes.</div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#updateItem(T)" class="member-name-link">updateItem</a><wbr>(@NonNull <a href="#type-param-T" title="type parameter in Table">T</a>&nbsp;item)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Updates an item directly without conditions or partial expressions.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#updateTable(java.util.function.Consumer)" class="member-name-link">updateTable</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;software.amazon.awssdk.services.dynamodb.model.UpdateTableRequest.Builder&gt;&nbsp;requestConsumer)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Updates the DynamoDB table with the specified configuration.</div>
 </div>
 </div>
 </div>
@@ -814,6 +820,28 @@ throughput settings, and indexes.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>the table description response</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="updateTable(java.util.function.Consumer)">
+<h3>updateTable</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">updateTable</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;software.amazon.awssdk.services.dynamodb.model.UpdateTableRequest.Builder&gt;&nbsp;requestConsumer)</span></div>
+<div class="block">Updates the DynamoDB table with the specified configuration.
+<p>
+Example usage:
+<pre><code>table.updateTable(b -&gt; b
+    .provisionedThroughput(p -&gt; p
+        .readCapacityUnits(10L)
+        .writeCapacityUnits(10L)));
+</code></pre></div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>requestConsumer</code> - a consumer to configure the <code>UpdateTableRequest.Builder</code></dd>
+<dt>Throws:</dt>
+<dd><code><a href="exception/OperationFailedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">OperationFailedException</a></code> - if the DynamoDB API call fails</dd>
 </dl>
 </div>
 </section>

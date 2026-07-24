@@ -53,6 +53,8 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#nested-class-summary" tabindex="0">Nested Class Summary</a></li>
+<li><a href="#field-summary" tabindex="0">Field Summary</a></li>
 <li><a href="#constructor-summary" tabindex="0">Constructor Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#constructor-detail" tabindex="0">Constructor Details</a>
@@ -65,26 +67,11 @@ loadScripts(document, 'script');</script>
 </li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
-<li><a href="#partitionKey(java.lang.Object)" tabindex="0">partitionKey(Object)</a></li>
-<li><a href="#partitionKeyAndSortKeyEquals(java.lang.Object,java.lang.Object)" tabindex="0">partitionKeyAndSortKeyEquals(Object, Object)</a></li>
-<li><a href="#partitionKeyAndSortKeyBeginsWith(java.lang.Object,java.lang.String)" tabindex="0">partitionKeyAndSortKeyBeginsWith(Object, String)</a></li>
-<li><a href="#partitionKeyAndSortKeyBetween(java.lang.Object,java.lang.Object,java.lang.Object)" tabindex="0">partitionKeyAndSortKeyBetween(Object, Object, Object)</a></li>
-<li><a href="#partitionKeyAndSortKeyGreaterThan(java.lang.Object,java.lang.Object)" tabindex="0">partitionKeyAndSortKeyGreaterThan(Object, Object)</a></li>
-<li><a href="#partitionKeyAndSortKeyGreaterThanOrEqual(java.lang.Object,java.lang.Object)" tabindex="0">partitionKeyAndSortKeyGreaterThanOrEqual(Object, Object)</a></li>
-<li><a href="#partitionKeyAndSortKeyLessThan(java.lang.Object,java.lang.Object)" tabindex="0">partitionKeyAndSortKeyLessThan(Object, Object)</a></li>
-<li><a href="#partitionKeyAndSortKeyLessThanOrEqual(java.lang.Object,java.lang.Object)" tabindex="0">partitionKeyAndSortKeyLessThanOrEqual(Object, Object)</a></li>
-<li><a href="#filter(java.util.function.Consumer)" tabindex="0">filter(Consumer)</a></li>
-<li><a href="#filter(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" tabindex="0">filter(FilterExpression)</a></li>
-<li><a href="#filter(java.util.Map)" tabindex="0">filter(Map)</a></li>
-<li><a href="#project(java.lang.String...)" tabindex="0">project(String...)</a></li>
-<li><a href="#project(java.util.function.Consumer)" tabindex="0">project(Consumer)</a></li>
-<li><a href="#descending()" tabindex="0">descending()</a></li>
-<li><a href="#ascending()" tabindex="0">ascending()</a></li>
-<li><a href="#limit(int)" tabindex="0">limit(int)</a></li>
-<li><a href="#startFrom(java.util.Map)" tabindex="0">startFrom(Map)</a></li>
-<li><a href="#consistentRead(boolean)" tabindex="0">consistentRead(boolean)</a></li>
-<li><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" tabindex="0">returnConsumedCapacity(ReturnConsumedCapacity)</a></li>
-<li><a href="#select(software.amazon.awssdk.services.dynamodb.model.Select)" tabindex="0">select(Select)</a></li>
+<li><a href="#self()" tabindex="0">self()</a></li>
+<li><a href="#tableName()" tabindex="0">tableName()</a></li>
+<li><a href="#indexName()" tabindex="0">indexName()</a></li>
+<li><a href="#primaryPartitionKey()" tabindex="0">primaryPartitionKey()</a></li>
+<li><a href="#primarySortKey()" tabindex="0">primarySortKey()</a></li>
 <li><a href="#executeAll()" tabindex="0">executeAll()</a></li>
 <li><a href="#executeWithPagination()" tabindex="0">executeWithPagination()</a></li>
 <li><a href="#executeAndGetFirst()" tabindex="0">executeAndGetFirst()</a></li>
@@ -100,7 +87,9 @@ loadScripts(document, 'script');</script>
 <h1 title="Class AsyncQueryBuilder" class="title">Class AsyncQueryBuilder&lt;T&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">dev.hogwai.dynamodb.simplified.builder.base.AbstractQueryBuilder</a>&lt;T, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;T&gt;&gt;
 <div class="inheritance">dev.hogwai.dynamodb.simplified.async.AsyncQueryBuilder&lt;T&gt;</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <dl class="notes">
@@ -110,7 +99,7 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">AsyncQueryBuilder&lt;T&gt;</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;T, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;T&gt;&gt;</span></div>
 <div class="block">A fluent async builder for querying items in a DynamoDB table.
 <p>
 Mirrors the sync <code>QueryBuilder</code> but returns <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a>
@@ -124,6 +113,24 @@ read settings are all supported. For index-specific queries, use
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<li>
+<section class="nested-class-summary" id="nested-class-summary">
+<h2>Nested Class Summary</h2>
+<div class="inherited-list">
+<h3 id="nested-classes-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractQueryBuilder">Nested classes/interfaces inherited from class&nbsp;<a href="../builder/base/AbstractQueryBuilder.html#nested-class-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a></h3>
+<code><a href="../builder/base/AbstractQueryBuilder.KeyConditionOp.html" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder.KeyConditionOp</a></code></div>
+</section>
+</li>
+<!-- =========== FIELD SUMMARY =========== -->
+<li>
+<section class="field-summary" id="field-summary">
+<h2>Field Summary</h2>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractQueryBuilder">Fields inherited from class&nbsp;<a href="../builder/base/AbstractQueryBuilder.html#field-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a></h3>
+<code><a href="../builder/base/AbstractQueryBuilder.html#consistentRead">consistentRead</a>, <a href="../builder/base/AbstractQueryBuilder.html#exclusiveStartKey">exclusiveStartKey</a>, <a href="../builder/base/AbstractQueryBuilder.html#filterExpression">filterExpression</a>, <a href="../builder/base/AbstractQueryBuilder.html#keyCondition">keyCondition</a>, <a href="../builder/base/AbstractQueryBuilder.html#keyOp">keyOp</a>, <a href="../builder/base/AbstractQueryBuilder.html#limit">limit</a>, <a href="../builder/base/AbstractQueryBuilder.html#pkValue">pkValue</a>, <a href="../builder/base/AbstractQueryBuilder.html#projectionExpression">projectionExpression</a>, <a href="../builder/base/AbstractQueryBuilder.html#returnConsumedCapacity">returnConsumedCapacity</a>, <a href="../builder/base/AbstractQueryBuilder.html#scanIndexForward">scanIndexForward</a>, <a href="../builder/base/AbstractQueryBuilder.html#select">select</a>, <a href="../builder/base/AbstractQueryBuilder.html#skValue">skValue</a>, <a href="../builder/base/AbstractQueryBuilder.html#skValue2">skValue2</a></code></div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor-summary">
@@ -165,154 +172,67 @@ with a low-level client.</div>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#ascending()" class="member-name-link">ascending</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the query to return results in ascending sort key order (the default).</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#consistentRead(boolean)" class="member-name-link">consistentRead</a><wbr>(boolean&nbsp;consistentRead)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Enables or disables strongly consistent reads.</div>
-</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#count()" class="member-name-link">count</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns the total number of matching items asynchronously by iterating
 all query result pages.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#descending()" class="member-name-link">descending</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeAll()" class="member-name-link">executeAll</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the query to return results in descending sort key order.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeAll()" class="member-name-link">executeAll</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the query asynchronously and returns all matching items
 aggregated from all pages.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeAndGetFirst()" class="member-name-link">executeAndGetFirst</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeAndGetFirst()" class="member-name-link">executeAndGetFirst</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the query asynchronously and returns the first matching item,
 if any.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeWithPagination()" class="member-name-link">executeWithPagination</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeWithPagination()" class="member-name-link">executeWithPagination</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the query asynchronously and returns only the first page of
 results along with the last evaluated key for pagination.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#filter(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" class="member-name-link">filter</a><wbr>(@Nullable <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;filter)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures a post-query filter expression from a pre-built <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a>.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#filter(java.util.Map)" class="member-name-link">filter</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&gt;&nbsp;conditions)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @Nullable <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#indexName()" class="member-name-link">indexName</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures a query filter from a map of attribute-value pairs.</div>
+<div class="block">Returns the DynamoDB index name, or <code>null</code> if the query targets the base table.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#filter(java.util.function.Consumer)" class="member-name-link">filter</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&gt;&nbsp;filterBuilder)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#primaryPartitionKey()" class="member-name-link">primaryPartitionKey</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Configures a post-query filter expression using a <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> consumer.</div>
+<div class="block">Returns the primary partition key attribute name for the targeted table or index.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#limit(int)" class="member-name-link">limit</a><wbr>(int&nbsp;limit)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#primarySortKey()" class="member-name-link">primarySortKey</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Limits the number of items evaluated per page.</div>
+<div class="block">Returns the primary sort key attribute name for the targeted table or index,
+or empty if the table/index has no sort key.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKey(java.lang.Object)" class="member-name-link">partitionKey</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match all items with the given partition key value.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyBeginsWith(java.lang.Object,java.lang.String)" class="member-name-link">partitionKeyAndSortKeyBeginsWith</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;skPrefix)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match items whose sort key begins with the
-given prefix within the specified partition.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyBetween(java.lang.Object,java.lang.Object,java.lang.Object)" class="member-name-link">partitionKeyAndSortKeyBetween</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skLow,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skHigh)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match items whose sort key falls within
-the specified range (inclusive) within the given partition.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyEquals(java.lang.Object,java.lang.Object)" class="member-name-link">partitionKeyAndSortKeyEquals</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match the item with the exact partition key
-and sort key values.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyGreaterThan(java.lang.Object,java.lang.Object)" class="member-name-link">partitionKeyAndSortKeyGreaterThan</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match items whose sort key is strictly
-greater than the given value within the specified partition.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyGreaterThanOrEqual(java.lang.Object,java.lang.Object)" class="member-name-link">partitionKeyAndSortKeyGreaterThanOrEqual</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match items whose sort key is greater than
-or equal to the given value within the specified partition.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyLessThan(java.lang.Object,java.lang.Object)" class="member-name-link">partitionKeyAndSortKeyLessThan</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match items whose sort key is strictly
-less than the given value within the specified partition.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#partitionKeyAndSortKeyLessThanOrEqual(java.lang.Object,java.lang.Object)" class="member-name-link">partitionKeyAndSortKeyLessThanOrEqual</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the key condition to match items whose sort key is less than
-or equal to the given value within the specified partition.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#project(java.lang.String...)" class="member-name-link">project</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>...&nbsp;attributes)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Restricts the returned attributes to the specified ones.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#project(java.util.function.Consumer)" class="member-name-link">project</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a>&gt;&nbsp;projectionBuilder)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Restricts the returned attributes by configuring a <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a>
-via a consumer.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" class="member-name-link">returnConsumedCapacity</a><wbr>(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the return consumed capacity option for the query.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#select(software.amazon.awssdk.services.dynamodb.model.Select)" class="member-name-link">select</a><wbr>(@Nullable software.amazon.awssdk.services.dynamodb.model.Select&nbsp;select)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the select parameter for the query, controlling which attributes are returned.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#startFrom(java.util.Map)" class="member-name-link">startFrom</a><wbr>(@Nullable <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>, software.amazon.awssdk.services.dynamodb.model.AttributeValue&gt;&nbsp;lastEvaluatedKey)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Sets the exclusive start key for paginated queries.</div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull software.amazon.awssdk.core.async.SdkPublisher<wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#streamResults()" class="member-name-link">streamResults</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns a reactive publisher that streams query results lazily.</div>
 </div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#tableName()" class="member-name-link">tableName</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Returns the DynamoDB table name.</div>
 </div>
 </div>
 </div>
+</div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractQueryBuilder">Methods inherited from class&nbsp;<a href="../builder/base/AbstractQueryBuilder.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a></h3>
+<code><a href="../builder/base/AbstractQueryBuilder.html#applyFilterExpression(software.amazon.awssdk.services.dynamodb.model.QueryRequest.Builder,java.util.Map,java.util.Map)" title="applyFilterExpression(QueryRequest.Builder, Map, Map)">applyFilterExpression</a>, <a href="../builder/base/AbstractQueryBuilder.html#applyQueryOptions(software.amazon.awssdk.services.dynamodb.model.QueryRequest.Builder)" title="applyQueryOptions(QueryRequest.Builder)">applyQueryOptions</a>, <a href="../builder/base/AbstractQueryBuilder.html#ascending()" title="ascending()">ascending</a>, <a href="../builder/base/AbstractQueryBuilder.html#buildEnhancedRequest()" title="buildEnhancedRequest()">buildEnhancedRequest</a>, <a href="../builder/base/AbstractQueryBuilder.html#buildKeyConditionExpression(java.util.Map,java.util.Map)" title="buildKeyConditionExpression(Map, Map)">buildKeyConditionExpression</a>, <a href="../builder/base/AbstractQueryBuilder.html#consistentRead(boolean)" title="consistentRead(boolean)">consistentRead</a>, <a href="../builder/base/AbstractQueryBuilder.html#descending()" title="descending()">descending</a>, <a href="../builder/base/AbstractQueryBuilder.html#filter(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" title="filter(FilterExpression)">filter</a>, <a href="../builder/base/AbstractQueryBuilder.html#filter(java.util.Map)" title="filter(Map)">filter</a>, <a href="../builder/base/AbstractQueryBuilder.html#filter(java.util.function.Consumer)" title="filter(Consumer)">filter</a>, <a href="../builder/base/AbstractQueryBuilder.html#limit(int)" title="limit(int)">limit</a>, <a href="../builder/base/AbstractQueryBuilder.html#mergeMaps(java.util.Map,java.util.Map)" title="mergeMaps(Map, Map)">mergeMaps</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKey(java.lang.Object)" title="partitionKey(Object)">partitionKey</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyBeginsWith(java.lang.Object,java.lang.String)" title="partitionKeyAndSortKeyBeginsWith(Object, String)">partitionKeyAndSortKeyBeginsWith</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyBetween(java.lang.Object,java.lang.Object,java.lang.Object)" title="partitionKeyAndSortKeyBetween(Object, Object, Object)">partitionKeyAndSortKeyBetween</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyEquals(java.lang.Object,java.lang.Object)" title="partitionKeyAndSortKeyEquals(Object, Object)">partitionKeyAndSortKeyEquals</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyGreaterThan(java.lang.Object,java.lang.Object)" title="partitionKeyAndSortKeyGreaterThan(Object, Object)">partitionKeyAndSortKeyGreaterThan</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyGreaterThanOrEqual(java.lang.Object,java.lang.Object)" title="partitionKeyAndSortKeyGreaterThanOrEqual(Object, Object)">partitionKeyAndSortKeyGreaterThanOrEqual</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyLessThan(java.lang.Object,java.lang.Object)" title="partitionKeyAndSortKeyLessThan(Object, Object)">partitionKeyAndSortKeyLessThan</a>, <a href="../builder/base/AbstractQueryBuilder.html#partitionKeyAndSortKeyLessThanOrEqual(java.lang.Object,java.lang.Object)" title="partitionKeyAndSortKeyLessThanOrEqual(Object, Object)">partitionKeyAndSortKeyLessThanOrEqual</a>, <a href="../builder/base/AbstractQueryBuilder.html#project(java.lang.String...)" title="project(String...)">project</a>, <a href="../builder/base/AbstractQueryBuilder.html#project(java.util.function.Consumer)" title="project(Consumer)">project</a>, <a href="../builder/base/AbstractQueryBuilder.html#requirePartitionKey()" title="requirePartitionKey()">requirePartitionKey</a>, <a href="../builder/base/AbstractQueryBuilder.html#returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)" title="returnConsumedCapacity(ReturnConsumedCapacity)">returnConsumedCapacity</a>, <a href="../builder/base/AbstractQueryBuilder.html#select(software.amazon.awssdk.services.dynamodb.model.Select)" title="select(Select)">select</a>, <a href="../builder/base/AbstractQueryBuilder.html#startFrom(java.util.Map)" title="startFrom(Map)">startFrom</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -393,328 +313,82 @@ with a low-level client.</div>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="partitionKey(java.lang.Object)">
-<h3>partitionKey</h3>
+<section class="detail" id="self()">
+<h3>self</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKey</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue)</span></div>
-<div class="block">Sets the key condition to match all items with the given partition key value.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">self</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html#self()">AbstractQueryBuilder</a></code></span></div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractQueryBuilder.html#self()">self</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>this builder</dd>
 </dl>
 </div>
 </section>
 </li>
 <li>
-<section class="detail" id="partitionKeyAndSortKeyEquals(java.lang.Object,java.lang.Object)">
-<h3>partitionKeyAndSortKeyEquals</h3>
+<section class="detail" id="tableName()">
+<h3>tableName</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyEquals</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</span></div>
-<div class="block">Sets the key condition to match the item with the exact partition key
-and sort key values.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">tableName</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html#tableName()">AbstractQueryBuilder</a></code></span></div>
+<div class="block">Returns the DynamoDB table name.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skValue</code> - the sort key value</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractQueryBuilder.html#tableName()">tableName</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the DynamoDB table name</dd>
 </dl>
 </div>
 </section>
 </li>
 <li>
-<section class="detail" id="partitionKeyAndSortKeyBeginsWith(java.lang.Object,java.lang.String)">
-<h3>partitionKeyAndSortKeyBeginsWith</h3>
+<section class="detail" id="indexName()">
+<h3>indexName</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyBeginsWith</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;skPrefix)</span></div>
-<div class="block">Sets the key condition to match items whose sort key begins with the
-given prefix within the specified partition.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@Nullable <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">indexName</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html#indexName()">AbstractQueryBuilder</a></code></span></div>
+<div class="block">Returns the DynamoDB index name, or <code>null</code> if the query targets the base table.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skPrefix</code> - the sort key prefix string</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractQueryBuilder.html#indexName()">indexName</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the index name, or <code>null</code> for the base table</dd>
 </dl>
 </div>
 </section>
 </li>
 <li>
-<section class="detail" id="partitionKeyAndSortKeyBetween(java.lang.Object,java.lang.Object,java.lang.Object)">
-<h3>partitionKeyAndSortKeyBetween</h3>
+<section class="detail" id="primaryPartitionKey()">
+<h3>primaryPartitionKey</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyBetween</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skLow,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skHigh)</span></div>
-<div class="block">Sets the key condition to match items whose sort key falls within
-the specified range (inclusive) within the given partition.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">primaryPartitionKey</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html#primaryPartitionKey()">AbstractQueryBuilder</a></code></span></div>
+<div class="block">Returns the primary partition key attribute name for the targeted table or index.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skLow</code> - the lower bound of the sort key range (inclusive)</dd>
-<dd><code>skHigh</code> - the upper bound of the sort key range (inclusive)</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractQueryBuilder.html#primaryPartitionKey()">primaryPartitionKey</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the primary partition key attribute name</dd>
 </dl>
 </div>
 </section>
 </li>
 <li>
-<section class="detail" id="partitionKeyAndSortKeyGreaterThan(java.lang.Object,java.lang.Object)">
-<h3>partitionKeyAndSortKeyGreaterThan</h3>
+<section class="detail" id="primarySortKey()">
+<h3>primarySortKey</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyGreaterThan</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</span></div>
-<div class="block">Sets the key condition to match items whose sort key is strictly
-greater than the given value within the specified partition.</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">primarySortKey</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html#primarySortKey()">AbstractQueryBuilder</a></code></span></div>
+<div class="block">Returns the primary sort key attribute name for the targeted table or index,
+or empty if the table/index has no sort key.</div>
 <dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skValue</code> - the sort key threshold (exclusive)</dd>
+<dt>Specified by:</dt>
+<dd><code><a href="../builder/base/AbstractQueryBuilder.html#primarySortKey()">primarySortKey</a></code>&nbsp;in class&nbsp;<code><a href="../builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>, <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;&gt;</code></dd>
 <dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="partitionKeyAndSortKeyGreaterThanOrEqual(java.lang.Object,java.lang.Object)">
-<h3>partitionKeyAndSortKeyGreaterThanOrEqual</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyGreaterThanOrEqual</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</span></div>
-<div class="block">Sets the key condition to match items whose sort key is greater than
-or equal to the given value within the specified partition.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skValue</code> - the sort key threshold (inclusive)</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="partitionKeyAndSortKeyLessThan(java.lang.Object,java.lang.Object)">
-<h3>partitionKeyAndSortKeyLessThan</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyLessThan</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</span></div>
-<div class="block">Sets the key condition to match items whose sort key is strictly
-less than the given value within the specified partition.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skValue</code> - the sort key threshold (exclusive)</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="partitionKeyAndSortKeyLessThanOrEqual(java.lang.Object,java.lang.Object)">
-<h3>partitionKeyAndSortKeyLessThanOrEqual</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">partitionKeyAndSortKeyLessThanOrEqual</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;pkValue,
- @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;skValue)</span></div>
-<div class="block">Sets the key condition to match items whose sort key is less than
-or equal to the given value within the specified partition.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>pkValue</code> - the partition key value</dd>
-<dd><code>skValue</code> - the sort key threshold (inclusive)</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="filter(java.util.function.Consumer)">
-<h3>filter</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">filter</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&gt;&nbsp;filterBuilder)</span></div>
-<div class="block">Configures a post-query filter expression using a <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> consumer.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>filterBuilder</code> - a consumer that configures the <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a></dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="filter(dev.hogwai.dynamodb.simplified.expression.FilterExpression)">
-<h3>filter</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">filter</span><wbr><span class="parameters">(@Nullable <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;filter)</span></div>
-<div class="block">Configures a post-query filter expression from a pre-built <a href="../expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a>.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>filter</code> - the filter expression</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="filter(java.util.Map)">
-<h3>filter</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">filter</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&gt;&nbsp;conditions)</span></div>
-<div class="block">Configures a query filter from a map of attribute-value pairs.
-<p>
-All conditions are combined with AND. Each entry is treated as
-an equality filter. For other condition types, use the consumer-based
-<a href="#filter(java.util.function.Consumer)"><code>filter(Consumer)</code></a> method.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>conditions</code> - a map of attribute names to their expected values</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="project(java.lang.String...)">
-<h3>project</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">project</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>...&nbsp;attributes)</span></div>
-<div class="block">Restricts the returned attributes to the specified ones.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>attributes</code> - the attribute names to include in the result</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="project(java.util.function.Consumer)">
-<h3>project</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">project</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a>&gt;&nbsp;projectionBuilder)</span></div>
-<div class="block">Restricts the returned attributes by configuring a <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a>
-via a consumer.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>projectionBuilder</code> - a consumer that configures the <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a></dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="descending()">
-<h3>descending</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">descending</span>()</div>
-<div class="block">Sets the query to return results in descending sort key order.</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="ascending()">
-<h3>ascending</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">ascending</span>()</div>
-<div class="block">Sets the query to return results in ascending sort key order (the default).</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="limit(int)">
-<h3>limit</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">limit</span><wbr><span class="parameters">(int&nbsp;limit)</span></div>
-<div class="block">Limits the number of items evaluated per page.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>limit</code> - the maximum number of items to evaluate per page</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="startFrom(java.util.Map)">
-<h3>startFrom</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">startFrom</span><wbr><span class="parameters">(@Nullable <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>, software.amazon.awssdk.services.dynamodb.model.AttributeValue&gt;&nbsp;lastEvaluatedKey)</span></div>
-<div class="block">Sets the exclusive start key for paginated queries.
-Typically obtained from the <a href="../result/PagedResult.html#lastEvaluatedKey()"><code>PagedResult.lastEvaluatedKey()</code></a> of a previous query.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>lastEvaluatedKey</code> - the key map from which to start the next page</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="consistentRead(boolean)">
-<h3>consistentRead</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">consistentRead</span><wbr><span class="parameters">(boolean&nbsp;consistentRead)</span></div>
-<div class="block">Enables or disables strongly consistent reads.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>consistentRead</code> - <code>true</code> for a strongly consistent read,
-                      <code>false</code> (the default) for an eventually consistent read</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="returnConsumedCapacity(software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity)">
-<h3>returnConsumedCapacity</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">returnConsumedCapacity</span><wbr><span class="parameters">(@NonNull software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity&nbsp;returnConsumedCapacity)</span></div>
-<div class="block">Sets the return consumed capacity option for the query.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>returnConsumedCapacity</code> - the return consumed capacity value</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="select(software.amazon.awssdk.services.dynamodb.model.Select)">
-<h3>select</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;<a href="#type-param-T" title="type parameter in AsyncQueryBuilder">T</a>&gt;</span>&nbsp;<span class="element-name">select</span><wbr><span class="parameters">(@Nullable software.amazon.awssdk.services.dynamodb.model.Select&nbsp;select)</span></div>
-<div class="block">Sets the select parameter for the query, controlling which attributes are returned.
-Use <code>Select.COUNT</code> to request only the item count from the server.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>select</code> - the select parameter (nullable)</dd>
-<dt>Returns:</dt>
-<dd>this builder for chaining</dd>
+<dd>the primary sort key attribute name, or empty if none</dd>
 </dl>
 </div>
 </section>
@@ -729,7 +403,7 @@ aggregated from all pages.
 <p>
 <b>Memory warning:</b> This method eagerly loads <em>all</em> matching
 items into memory. If the result set may be large, consider using
-<code>executeAsPages()</code> or paginated methods such as
+paginated methods such as
 <a href="#executeWithPagination()"><code>executeWithPagination()</code></a> to process items incrementally.</div>
 <dl class="notes">
 <dt>Returns:</dt>

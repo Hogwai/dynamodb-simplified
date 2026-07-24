@@ -53,6 +53,8 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#nested-class-summary" tabindex="0">Nested Class Summary</a></li>
+<li><a href="#field-summary" tabindex="0">Field Summary</a></li>
 <li><a href="#constructor-summary" tabindex="0">Constructor Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#constructor-detail" tabindex="0">Constructor Details</a>
@@ -62,10 +64,11 @@ loadScripts(document, 'script');</script>
 </li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
+<li><a href="#self()" tabindex="0">self()</a></li>
+<li><a href="#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)" tabindex="0">getTableName(AbstractTransactGetBuilder.Entry)</a></li>
+<li><a href="#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)" tabindex="0">getTableSchema(AbstractTransactGetBuilder.Entry)</a></li>
 <li><a href="#addGetItem(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)" tabindex="0">addGetItem(Table, Object)</a></li>
 <li><a href="#addGetItem(dev.hogwai.dynamodb.simplified.Table,java.lang.Object,java.lang.Object)" tabindex="0">addGetItem(Table, Object, Object)</a></li>
-<li><a href="#project(java.lang.String...)" tabindex="0">project(String...)</a></li>
-<li><a href="#project(java.util.function.Consumer)" tabindex="0">project(Consumer)</a></li>
 <li><a href="#execute()" tabindex="0">execute()</a></li>
 </ol>
 </li>
@@ -77,13 +80,15 @@ loadScripts(document, 'script');</script>
 <h1 title="Class TransactGetBuilder" class="title">Class TransactGetBuilder</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="base/AbstractTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder</a>&lt;<a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a>&gt;
 <div class="inheritance">dev.hogwai.dynamodb.simplified.builder.TransactGetBuilder</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">TransactGetBuilder</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="base/AbstractTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a>&lt;<a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a>&gt;</span></div>
 <div class="block">Builds a transactional get operation that reads up to 100 items atomically
 across one or more tables.
 <p>
@@ -98,6 +103,24 @@ This is an API-level limitation and cannot be worked around through any code pat
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<li>
+<section class="nested-class-summary" id="nested-class-summary">
+<h2>Nested Class Summary</h2>
+<div class="inherited-list">
+<h3 id="nested-classes-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder">Nested classes/interfaces inherited from class&nbsp;<a href="base/AbstractTransactGetBuilder.html#nested-class-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a></h3>
+<code><a href="base/AbstractTransactGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a></code></div>
+</section>
+</li>
+<!-- =========== FIELD SUMMARY =========== -->
+<li>
+<section class="field-summary" id="field-summary">
+<h2>Field Summary</h2>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder">Fields inherited from class&nbsp;<a href="base/AbstractTransactGetBuilder.html#field-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a></h3>
+<code><a href="base/AbstractTransactGetBuilder.html#entries">entries</a></code></div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor-summary">
@@ -143,21 +166,27 @@ This is an API-level limitation and cannot be worked around through any code pat
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Executes the transactional get operation.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#project(java.lang.String...)" class="member-name-link">project</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>...&nbsp;attributes)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)" class="member-name-link">getTableName</a><wbr>(@NonNull <a href="base/AbstractTransactGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a>&nbsp;entry)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Restricts the returned attributes for the most recently added item
-to the specified attribute names.</div>
+<div class="block">Extracts the DynamoDB table name from an entry's table reference.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#project(java.util.function.Consumer)" class="member-name-link">project</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a>&gt;&nbsp;consumer)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema<wbr>&lt;?&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)" class="member-name-link">getTableSchema</a><wbr>(@NonNull <a href="base/AbstractTransactGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a>&nbsp;entry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Restricts the returned attributes for the most recently added item
-using a <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a> builder consumer.</div>
+<div class="block">Extracts the table schema from an entry's table reference.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected @NonNull <a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder">Methods inherited from class&nbsp;<a href="base/AbstractTransactGetBuilder.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a></h3>
+<code><a href="base/AbstractTransactGetBuilder.html#buildKey(java.lang.Object,java.lang.Object)" title="buildKey(Object, Object)">buildKey</a>, <a href="base/AbstractTransactGetBuilder.html#buildTransactItems()" title="buildTransactItems()">buildTransactItems</a>, <a href="base/AbstractTransactGetBuilder.html#hasNonEmptyProjection(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)" title="hasNonEmptyProjection(AbstractTransactGetBuilder.Entry)">hasNonEmptyProjection</a>, <a href="base/AbstractTransactGetBuilder.html#project(java.lang.String...)" title="project(String...)">project</a>, <a href="base/AbstractTransactGetBuilder.html#project(java.util.function.Consumer)" title="project(Consumer)">project</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -197,6 +226,58 @@ Typically obtained via <a href="../DynamoSimplifiedClient.html#transactGet()"><c
 <section class="method-details" id="method-detail">
 <h2>Method Details</h2>
 <ul class="member-list">
+<li>
+<section class="detail" id="self()">
+<h3>self</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></span>&nbsp;<span class="element-name">self</span>()</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractTransactGetBuilder.html#self()">AbstractTransactGetBuilder</a></code></span></div>
+<div class="block">Returns <code>this</code> typed as <code>S</code> for fluent chaining.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractTransactGetBuilder.html#self()">self</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a>&lt;<a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a>&gt;</code></dd>
+<dt>Returns:</dt>
+<dd>this builder</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)">
+<h3>getTableName</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getTableName</span><wbr><span class="parameters">(@NonNull <a href="base/AbstractTransactGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a>&nbsp;entry)</span></div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractTransactGetBuilder.html#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)">AbstractTransactGetBuilder</a></code></span></div>
+<div class="block">Extracts the DynamoDB table name from an entry's table reference.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractTransactGetBuilder.html#getTableName(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)">getTableName</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a>&lt;<a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a>&gt;</code></dd>
+<dt>Parameters:</dt>
+<dd><code>entry</code> - the entry whose table name to extract</dd>
+<dt>Returns:</dt>
+<dd>the DynamoDB table name</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)">
+<h3>getTableSchema</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema&lt;?&gt;</span>&nbsp;<span class="element-name">getTableSchema</span><wbr><span class="parameters">(@NonNull <a href="base/AbstractTransactGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a>&nbsp;entry)</span></div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="base/AbstractTransactGetBuilder.html#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)">AbstractTransactGetBuilder</a></code></span></div>
+<div class="block">Extracts the table schema from an entry's table reference.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="base/AbstractTransactGetBuilder.html#getTableSchema(dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder.Entry)">getTableSchema</a></code>&nbsp;in class&nbsp;<code><a href="base/AbstractTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a>&lt;<a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a>&gt;</code></dd>
+<dt>Parameters:</dt>
+<dd><code>entry</code> - the entry whose table schema to extract</dd>
+<dt>Returns:</dt>
+<dd>the table schema</dd>
+</dl>
+</div>
+</section>
+</li>
 <li>
 <section class="detail" id="addGetItem(dev.hogwai.dynamodb.simplified.Table,java.lang.Object)">
 <h3>addGetItem</h3>
@@ -238,51 +319,13 @@ Typically obtained via <a href="../DynamoSimplifiedClient.html#transactGet()"><c
 </section>
 </li>
 <li>
-<section class="detail" id="project(java.lang.String...)">
-<h3>project</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></span>&nbsp;<span class="element-name">project</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>...&nbsp;attributes)</span></div>
-<div class="block">Restricts the returned attributes for the most recently added item
-to the specified attribute names.
-<p>
-Projection is applied server-side, reducing data transfer and consumed capacity.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>attributes</code> - the attribute names to include</dd>
-<dt>Returns:</dt>
-<dd>this builder</dd>
-<dt>Throws:</dt>
-<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/IllegalStateException.html" title="class or interface in java.lang" class="external-link">IllegalStateException</a></code> - if no items have been added yet</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="project(java.util.function.Consumer)">
-<h3>project</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="TransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></span>&nbsp;<span class="element-name">project</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;<a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a>&gt;&nbsp;consumer)</span></div>
-<div class="block">Restricts the returned attributes for the most recently added item
-using a <a href="../expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ProjectionExpression</code></a> builder consumer.</div>
-<dl class="notes">
-<dt>Parameters:</dt>
-<dd><code>consumer</code> - a consumer to configure the projection expression</dd>
-<dt>Returns:</dt>
-<dd>this builder</dd>
-<dt>Throws:</dt>
-<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/IllegalStateException.html" title="class or interface in java.lang" class="external-link">IllegalStateException</a></code> - if no items have been added yet</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
 <section class="detail" id="execute()">
 <h3>execute</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="../result/TransactGetResults.html" title="class in dev.hogwai.dynamodb.simplified.result">TransactGetResults</a>&lt;software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable&lt;?&gt;&gt;</span>&nbsp;<span class="element-name">execute</span>()</div>
 <div class="block">Executes the transactional get operation.
 <p>
-If any item has a projection expression configured via <a href="#project(java.lang.String...)"><code>project(String...)</code></a>,
+If any item has a projection expression configured via <a href="base/AbstractTransactGetBuilder.html#project(java.lang.String...)"><code>AbstractTransactGetBuilder.project(String...)</code></a>,
 the operation falls back to the low-level DynamoDB API to support attribute filtering.</div>
 <dl class="notes">
 <dt>Returns:</dt>

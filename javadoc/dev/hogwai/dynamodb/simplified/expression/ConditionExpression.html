@@ -54,15 +54,18 @@ loadScripts(document, 'script');</script>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
 <li><a href="#nested-class-summary" tabindex="0">Nested Class Summary</a></li>
+<li><a href="#constructor-summary" tabindex="0">Constructor Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
+<li><a href="#constructor-detail" tabindex="0">Constructor Details</a>
+<ol class="toc-list">
+<li><a href="#%3Cinit%3E()" tabindex="0">ConditionExpression()</a></li>
+<li><a href="#%3Cinit%3E(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" tabindex="0">ConditionExpression(FilterExpression)</a></li>
+</ol>
+</li>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
+<li><a href="#empty()" tabindex="0">empty()</a></li>
 <li><a href="#from(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" tabindex="0">from(FilterExpression)</a></li>
-<li><a href="#toSdkExpression()" tabindex="0">toSdkExpression()</a></li>
-<li><a href="#getExpression()" tabindex="0">getExpression()</a></li>
-<li><a href="#getExpressionNames()" tabindex="0">getExpressionNames()</a></li>
-<li><a href="#getExpressionValues()" tabindex="0">getExpressionValues()</a></li>
-<li><a href="#isEmpty()" tabindex="0">isEmpty()</a></li>
 <li><a href="#builder()" tabindex="0">builder()</a></li>
 </ol>
 </li>
@@ -74,24 +77,20 @@ loadScripts(document, 'script');</script>
 <h1 title="Class ConditionExpression" class="title">Class ConditionExpression</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">dev.hogwai.dynamodb.simplified.expression.FilterExpression</a>
 <div class="inheritance">dev.hogwai.dynamodb.simplified.expression.ConditionExpression</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <hr>
 <div class="horizontal-scroll">
-<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">ConditionExpression</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
-<div class="block">A typed wrapper around a condition expression for DynamoDB pre-write gating
-(PutItem, UpdateItem, DeleteItem, TransactWriteItems condition checks).
+<div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">ConditionExpression</span>
+<span class="extends-implements">extends <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></span></div>
+<div class="block">A <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> subtype that represents a DynamoDB condition expression.
 <p>
-This is semantically distinct from a <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a>, which is used
-for post-read filtering on Query/Scan operations. DynamoDB treats these as
-separate expression types, see the DynamoDB Developer Guide for details.
-<p>
-Internally delegates to a <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> for the actual expression
-building logic, but presents a distinct type in the public API to prevent
-accidental misuse of filter expressions where condition expressions are
-expected, and vice versa.</div>
+This is a type-safe alias — it inherits all builder methods from <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a>
+but is accepted by APIs that require a condition expression (e.g., put, update, delete)
+rather than a filter expression (e.g., query, scan).</div>
 </div>
 </section>
 <section class="summary">
@@ -111,6 +110,28 @@ expected, and vice versa.</div>
 <div class="block">Fluent builder for <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ConditionExpression</code></a>.</div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="nested-classes-inherited-from-class-dev.hogwai.dynamodb.simplified.expression.FilterExpression">Nested classes/interfaces inherited from class&nbsp;<a href="FilterExpression.html#nested-class-summary" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></h3>
+<code><a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></code></div>
+</section>
+</li>
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+<li>
+<section class="constructor-summary" id="constructor-summary">
+<h2>Constructor Summary</h2>
+<div class="caption"><span>Constructors</span></div>
+<div class="summary-table two-column-summary">
+<div class="table-header col-first">Constructor</div>
+<div class="table-header col-last">Description</div>
+<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E()" class="member-name-link">ConditionExpression</a>()</code></div>
+<div class="col-last even-row-color">
+<div class="block">Creates a new empty condition expression.</div>
+</div>
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" class="member-name-link">ConditionExpression</a><wbr>(<a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;delegate)</code></div>
+<div class="col-last odd-row-color">
+<div class="block">Creates a condition expression that copies the state from the given filter expression.</div>
+</div>
+</div>
 </section>
 </li>
 <!-- ========== METHOD SUMMARY =========== -->
@@ -118,7 +139,7 @@ expected, and vice versa.</div>
 <section class="method-summary" id="method-summary">
 <h2>Method Summary</h2>
 <div id="method-summary-table">
-<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab1" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab1', 3)" class="table-tab">Static Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab1" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab1', 3)" class="table-tab">Static Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
 <div id="method-summary-table.tabpanel" role="tabpanel" aria-labelledby="method-summary-table-tab0">
 <div class="summary-table three-column-summary">
 <div class="table-header col-first">Modifier and Type</div>
@@ -130,40 +151,21 @@ expected, and vice versa.</div>
 <div class="block">Creates a new builder for constructing a <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ConditionExpression</code></a>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#from(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" class="member-name-link">from</a><wbr>(@NonNull <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;filterExpression)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#empty()" class="member-name-link">empty</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Wraps a <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> as a <code>ConditionExpression</code> for
-typed API use.</div>
+<div class="block">Returns an empty condition expression.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getExpression()" class="member-name-link">getExpression</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Returns the built condition expression string.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getExpressionNames()" class="member-name-link">getExpressionNames</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Returns the map of expression attribute names used in this expression.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a><wbr>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>, software.amazon.awssdk.services.dynamodb.model.AttributeValue&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getExpressionValues()" class="member-name-link">getExpressionValues</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Returns the map of expression attribute values used in this expression.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#isEmpty()" class="member-name-link">isEmpty</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Returns whether no conditions have been added to this expression yet.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull software.amazon.awssdk.enhanced.dynamodb.Expression</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toSdkExpression()" class="member-name-link">toSdkExpression</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Converts this condition expression into an AWS SDK <code>Expression</code>
-for use with enhanced client request builders.</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#from(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" class="member-name-link">from</a><wbr>(@NonNull <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;filterExpression)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Wraps a <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> as a <code>ConditionExpression</code>.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.expression.FilterExpression">Methods inherited from class&nbsp;<a href="FilterExpression.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></h3>
+<code><a href="FilterExpression.html#and()" title="and()">and</a>, <a href="FilterExpression.html#attributeType(java.lang.String,dev.hogwai.dynamodb.simplified.expression.FilterExpression.AttributeType)" title="attributeType(String, FilterExpression.AttributeType)">attributeType</a>, <a href="FilterExpression.html#beginsWith(java.lang.String,java.lang.String)" title="beginsWith(String, String)">beginsWith</a>, <a href="FilterExpression.html#between(java.lang.String,java.lang.Object,java.lang.Object)" title="between(String, Object, Object)">between</a>, <a href="FilterExpression.html#contains(java.lang.String,java.lang.Object)" title="contains(String, Object)">contains</a>, <a href="FilterExpression.html#eq(java.lang.String,java.lang.Object)" title="eq(String, Object)">eq</a>, <a href="FilterExpression.html#exists(java.lang.String)" title="exists(String)">exists</a>, <a href="FilterExpression.html#ge(java.lang.String,java.lang.Object)" title="ge(String, Object)">ge</a>, <a href="FilterExpression.html#getExpression()" title="getExpression()">getExpression</a>, <a href="FilterExpression.html#getExpressionNames()" title="getExpressionNames()">getExpressionNames</a>, <a href="FilterExpression.html#getExpressionValues()" title="getExpressionValues()">getExpressionValues</a>, <a href="FilterExpression.html#group(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" title="group(FilterExpression)">group</a>, <a href="FilterExpression.html#gt(java.lang.String,java.lang.Object)" title="gt(String, Object)">gt</a>, <a href="FilterExpression.html#in(java.lang.String,java.lang.Object...)" title="in(String, Object...)">in</a>, <a href="FilterExpression.html#isEmpty()" title="isEmpty()">isEmpty</a>, <a href="FilterExpression.html#le(java.lang.String,java.lang.Object)" title="le(String, Object)">le</a>, <a href="FilterExpression.html#lt(java.lang.String,java.lang.Object)" title="lt(String, Object)">lt</a>, <a href="FilterExpression.html#ne(java.lang.String,java.lang.Object)" title="ne(String, Object)">ne</a>, <a href="FilterExpression.html#nestedEq(java.lang.String,java.lang.Object)" title="nestedEq(String, Object)">nestedEq</a>, <a href="FilterExpression.html#not()" title="not()">not</a>, <a href="FilterExpression.html#notExists(java.lang.String)" title="notExists(String)">notExists</a>, <a href="FilterExpression.html#or()" title="or()">or</a>, <a href="FilterExpression.html#sizeBetween(java.lang.String,int,int)" title="sizeBetween(String, int, int)">sizeBetween</a>, <a href="FilterExpression.html#sizeEq(java.lang.String,int)" title="sizeEq(String, int)">sizeEq</a>, <a href="FilterExpression.html#sizeGe(java.lang.String,int)" title="sizeGe(String, int)">sizeGe</a>, <a href="FilterExpression.html#sizeGt(java.lang.String,int)" title="sizeGt(String, int)">sizeGt</a>, <a href="FilterExpression.html#sizeLe(java.lang.String,int)" title="sizeLe(String, int)">sizeLe</a>, <a href="FilterExpression.html#sizeLt(java.lang.String,int)" title="sizeLt(String, int)">sizeLt</a>, <a href="FilterExpression.html#toSdkExpression()" title="toSdkExpression()">toSdkExpression</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -173,90 +175,65 @@ for use with enhanced client request builders.</div>
 </section>
 <section class="details">
 <ul class="details-list">
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+<li>
+<section class="constructor-details" id="constructor-detail">
+<h2>Constructor Details</h2>
+<ul class="member-list">
+<li>
+<section class="detail" id="&lt;init&gt;()">
+<h3>ConditionExpression</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">ConditionExpression</span>()</div>
+<div class="block">Creates a new empty condition expression.</div>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="&lt;init&gt;(dev.hogwai.dynamodb.simplified.expression.FilterExpression)">
+<h3>ConditionExpression</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">ConditionExpression</span><wbr><span class="parameters">(<a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;delegate)</span></div>
+<div class="block">Creates a condition expression that copies the state from the given filter expression.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>delegate</code> - the filter expression to copy</dd>
+</dl>
+</div>
+</section>
+</li>
+</ul>
+</section>
+</li>
 <!-- ============ METHOD DETAIL ========== -->
 <li>
 <section class="method-details" id="method-detail">
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
+<section class="detail" id="empty()">
+<h3>empty</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></span>&nbsp;<span class="element-name">empty</span>()</div>
+<div class="block">Returns an empty condition expression.</div>
+<dl class="notes">
+<dt>Returns:</dt>
+<dd>an empty condition expression</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
 <section class="detail" id="from(dev.hogwai.dynamodb.simplified.expression.FilterExpression)">
 <h3>from</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></span>&nbsp;<span class="element-name">from</span><wbr><span class="parameters">(@NonNull <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;filterExpression)</span></div>
-<div class="block">Wraps a <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> as a <code>ConditionExpression</code> for
-typed API use. Useful for migrating existing code that builds expressions
-using <code>FilterExpression</code>.</div>
+<div class="block">Wraps a <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> as a <code>ConditionExpression</code>.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>filterExpression</code> - the filter expression to wrap</dd>
 <dt>Returns:</dt>
 <dd>a new condition expression backed by the given filter expression</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="toSdkExpression()">
-<h3>toSdkExpression</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.enhanced.dynamodb.Expression</span>&nbsp;<span class="element-name">toSdkExpression</span>()</div>
-<div class="block">Converts this condition expression into an AWS SDK <code>Expression</code>
-for use with enhanced client request builders.</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd>the SDK expression</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="getExpression()">
-<h3>getExpression</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getExpression</span>()</div>
-<div class="block">Returns the built condition expression string.</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd>the expression string</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="getExpressionNames()">
-<h3>getExpressionNames</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">getExpressionNames</span>()</div>
-<div class="block">Returns the map of expression attribute names used in this expression.</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd>the expression attribute names map</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="getExpressionValues()">
-<h3>getExpressionValues</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>, software.amazon.awssdk.services.dynamodb.model.AttributeValue&gt;</span>&nbsp;<span class="element-name">getExpressionValues</span>()</div>
-<div class="block">Returns the map of expression attribute values used in this expression.</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd>the expression attribute values map</dd>
-</dl>
-</div>
-</section>
-</li>
-<li>
-<section class="detail" id="isEmpty()">
-<h3>isEmpty</h3>
-<div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">isEmpty</span>()</div>
-<div class="block">Returns whether no conditions have been added to this expression yet.</div>
-<dl class="notes">
-<dt>Returns:</dt>
-<dd><code>true</code> if the expression is empty, <code>false</code> otherwise</dd>
 </dl>
 </div>
 </section>

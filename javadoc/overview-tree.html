@@ -54,6 +54,7 @@ loadScripts(document, 'script');</script>
 <li><a href="dev/hogwai/dynamodb/simplified/package-tree.html">dev.hogwai.dynamodb.simplified</a>, </li>
 <li><a href="dev/hogwai/dynamodb/simplified/async/package-tree.html">dev.hogwai.dynamodb.simplified.async</a>, </li>
 <li><a href="dev/hogwai/dynamodb/simplified/builder/package-tree.html">dev.hogwai.dynamodb.simplified.builder</a>, </li>
+<li><a href="dev/hogwai/dynamodb/simplified/builder/base/package-tree.html">dev.hogwai.dynamodb.simplified.builder.base</a>, </li>
 <li><a href="dev/hogwai/dynamodb/simplified/entity/package-tree.html">dev.hogwai.dynamodb.simplified.entity</a>, </li>
 <li><a href="dev/hogwai/dynamodb/simplified/exception/package-tree.html">dev.hogwai.dynamodb.simplified.exception</a>, </li>
 <li><a href="dev/hogwai/dynamodb/simplified/expression/package-tree.html">dev.hogwai.dynamodb.simplified.expression</a>, </li>
@@ -65,59 +66,115 @@ loadScripts(document, 'script');</script>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" class="type-name-link external-link" title="class or interface in java.lang">Object</a>
 <ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractBatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/BatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">BatchGetBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractBatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchWriteBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/BatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchGetBuilder</a>&lt;S&gt;
+<ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncCrossTableBatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchGetBuilder</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchGetBuilder</a></li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder</a>&lt;S&gt;
+<ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncCrossTableBatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchWriteBuilder</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractDeleteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractDeleteBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDeleteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDeleteBuilder</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a> (implements java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a>)</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/DeleteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">DeleteBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractGetItemBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractGetItemBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncGetItemBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncGetItemBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/GetItemBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">GetItemBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractPutBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncPutBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/PutBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">PutBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractQueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/QueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">QueryBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractScanBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractScanBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncScanBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncScanBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/ScanBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">ScanBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder</a>&lt;S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactGetBuilder</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/TransactGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactWriteBuilder</a>&lt;S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactWriteBuilder</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/TransactWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">TransactWriteBuilder</a></li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractUpdateBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractUpdateBuilder</a>&lt;T,<wbr>S&gt;
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncUpdateBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/UpdateBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">UpdateBuilder</a>&lt;T&gt;</li>
+</ul>
+</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a> (implements dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a>)</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientBuilder</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/AsyncEntityTableBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">AsyncEntityTableBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/AsyncExceptionMapper.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">AsyncExceptionMapper</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncGetItemBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncGetItemBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncIndex.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncIndex</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncPutBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncScanBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncScanBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/AsyncRetryUtils.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">AsyncRetryUtils</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactGetBuilder</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactWriteBuilder</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncUpdateBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/AttributePathParser.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">AttributePathParser</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/AttributeValueConverter.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">AttributeValueConverter</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/BatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">BatchGetBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/BatchGetResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">BatchGetResult</a>&lt;T&gt; (implements dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a>)</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/BatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">BatchWriteResult</a> (implements dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a>)</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResult</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResultWithPagination.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResultWithPagination</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchGetBuilder</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/CrossTableBatchGetResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchGetResult</a> (implements dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a>)</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/CrossTableBatchWriteResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchWriteResult</a> (implements dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a>)</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/DeleteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">DeleteBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a> (implements java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a>)</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a> (implements dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a>)</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientBuilder</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntityQueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchema</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntitySchemaReader.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchemaReader</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntityTableBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntityTableBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/ExpressionConstants.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">ExpressionConstants</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/GetItemBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">GetItemBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></li>
+</ul>
+</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/Index.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">Index</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/KeyUtils.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">KeyUtils</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Logging.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">Logging</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/PageCollector.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">PageCollector</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/PagedResult.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;T&gt; (implements dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a>)</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/PutBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">PutBuilder</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/QueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">QueryBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/RetryUtils.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">RetryUtils</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/ScanBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">ScanBuilder</a>&lt;T&gt;</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/Table.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified">Table</a>&lt;T&gt;</li>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Throwable.html" class="type-name-link external-link" title="class or interface in java.lang">Throwable</a> (implements java.io.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/io/Serializable.html" title="class or interface in java.io" class="external-link">Serializable</a>)
 <ul>
@@ -129,6 +186,7 @@ loadScripts(document, 'script');</script>
 <ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.exception.<a href="dev/hogwai/dynamodb/simplified/exception/ConditionFailedException.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.exception">ConditionFailedException</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.exception.<a href="dev/hogwai/dynamodb/simplified/exception/OperationFailedException.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.exception">OperationFailedException</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.exception.<a href="dev/hogwai/dynamodb/simplified/exception/ResourceNotFoundException.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.exception">ResourceNotFoundException</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.exception.<a href="dev/hogwai/dynamodb/simplified/exception/TransactionFailedException.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.exception">TransactionFailedException</a></li>
 </ul>
 </li>
@@ -138,10 +196,7 @@ loadScripts(document, 'script');</script>
 </li>
 </ul>
 </li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/TransactGetBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">TransactGetBuilder</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/TransactGetResults.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">TransactGetResults</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/TransactWriteBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">TransactWriteBuilder</a></li>
-<li class="circle">dev.hogwai.dynamodb.simplified.builder.<a href="dev/hogwai/dynamodb/simplified/builder/UpdateBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder">UpdateBuilder</a>&lt;T&gt;</li>
+<li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/TransactGetResults.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.result">TransactGetResults</a>&lt;T&gt; (implements dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a>)</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/UpdateExpression.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.expression">UpdateExpression</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/VersionHelper.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">VersionHelper</a></li>
 </ul>
@@ -152,9 +207,14 @@ loadScripts(document, 'script');</script>
 <h2 title="Interface Hierarchy">Interface Hierarchy</h2>
 <ul>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/AsyncEntityTable.html" class="type-name-link" title="interface in dev.hogwai.dynamodb.simplified.entity">AsyncEntityTable</a>&lt;T&gt;</li>
+<li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" class="type-name-link external-link" title="class or interface in java.lang">AutoCloseable</a>
+<ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientInterface.html" class="type-name-link" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html" class="type-name-link" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></li>
+</ul>
+</li>
 <li class="circle">dev.hogwai.dynamodb.simplified.result.<a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" class="type-name-link" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntityTable.html" class="type-name-link" title="interface in dev.hogwai.dynamodb.simplified.entity">EntityTable</a>&lt;T&gt;</li>
-<li class="circle">dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/Versioned.html" class="type-name-link" title="interface in dev.hogwai.dynamodb.simplified">Versioned</a></li>
 </ul>
 </section>
 <section class="hierarchy">
@@ -174,6 +234,9 @@ loadScripts(document, 'script');</script>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Enum.html" class="type-name-link external-link" title="class or interface in java.lang">Enum</a>&lt;E&gt; (implements java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Comparable.html" title="class or interface in java.lang" class="external-link">Comparable</a>&lt;T&gt;, java.lang.constant.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/constant/Constable.html" title="class or interface in java.lang.constant" class="external-link">Constable</a>, java.io.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/io/Serializable.html" title="class or interface in java.io" class="external-link">Serializable</a>)
 <ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchWriteBuilder.Operation.Type.html" class="type-name-link" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation.Type</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractQueryBuilder.KeyConditionOp.html" class="type-name-link" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder.KeyConditionOp</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactWriteBuilder.Operation.Type.html" class="type-name-link" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactWriteBuilder.Operation.Type</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" class="type-name-link" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.expression.<a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.AttributeType.html" class="type-name-link" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></li>
 </ul>
@@ -189,6 +252,10 @@ loadScripts(document, 'script');</script>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Record.html" class="type-name-link external-link" title="class or interface in java.lang">Record</a>
 <ul>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchGetBuilder.Entry.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchGetBuilder.Entry</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchWriteBuilder.Operation.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactGetBuilder.Entry.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a></li>
+<li class="circle">dev.hogwai.dynamodb.simplified.builder.base.<a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactWriteBuilder.Operation.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactWriteBuilder.Operation</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.KeyComponentInfo.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchema.KeyComponentInfo</a></li>
 <li class="circle">dev.hogwai.dynamodb.simplified.internal.<a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">PathSegment</a></li>
 </ul>

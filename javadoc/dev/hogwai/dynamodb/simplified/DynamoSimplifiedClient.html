@@ -87,13 +87,13 @@ loadScripts(document, 'script');</script>
 <section class="class-description" id="class-description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
+<dd><code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
 </dl>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">DynamoSimplifiedClient</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></span></div>
+implements <a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></span></div>
 <div class="block">Entry point for the DynamoDB Simplified library.
 <p>
 Provides factory methods to create a client and access typed <a href="Table.html" title="class in dev.hogwai.dynamodb.simplified"><code>Table</code></a> instances
@@ -296,6 +296,8 @@ Builds the <code>DynamoDbEnhancedClient</code> from the provided client.</div>
 <p>
 The item class must be a valid DynamoDB bean with appropriate annotations.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#table(java.lang.String,java.lang.Class)">table</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="table(java.lang.String,java.lang.Class)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
@@ -315,6 +317,8 @@ The item class must be a valid DynamoDB bean with appropriate annotations.</div>
  @NonNull software.amazon.awssdk.enhanced.dynamodb.TableSchema&lt;T&gt;&nbsp;schema)</span></div>
 <div class="block">Returns a typed <a href="Table.html" title="class in dev.hogwai.dynamodb.simplified"><code>Table</code></a> for the given table name and custom schema.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#table(java.lang.String,software.amazon.awssdk.enhanced.dynamodb.TableSchema)">table</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="table(java.lang.String,software.amazon.awssdk.enhanced.dynamodb.TableSchema)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
@@ -350,6 +354,8 @@ rather than using annotations. Example:
         .tags(StaticAttributeTags.primarySortKey())));
 </code></pre></div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#table(java.lang.String,java.lang.Class,java.util.function.Consumer)">table</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="table(java.lang.String,java.lang.Class,java.util.function.Consumer)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
@@ -377,6 +383,8 @@ and automatically composed into the table's partition/sort keys before every
 put and update operation. Queries are automatically filtered by the entity's
 discriminator value.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#entityTable(java.lang.Class)">entityTable</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Type Parameters:</dt>
 <dd><span id="entityTable(java.lang.Class)-type-param-T"><code>T</code> - the entity type</span></dd>
 <dt>Parameters:</dt>
@@ -396,6 +404,8 @@ discriminator value.</div>
 <p>
 All items are read atomically in a single all-or-nothing transaction.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#transactGet()">transactGet</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>a transact get builder</dd>
 </dl>
@@ -411,6 +421,8 @@ All items are read atomically in a single all-or-nothing transaction.</div>
 <p>
 All put, update, delete, and condition check actions are applied atomically.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#transactWrite()">transactWrite</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>a transact write builder</dd>
 </dl>
@@ -424,6 +436,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="builder/CrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchGetBuilder</a></span>&nbsp;<span class="element-name">batchGet</span>()</div>
 <div class="block">Returns a cross-table batch get builder for retrieving items from multiple tables.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#batchGet()">batchGet</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>a cross-table batch get builder</dd>
 </dl>
@@ -437,6 +451,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="builder/CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></span>&nbsp;<span class="element-name">batchWrite</span>()</div>
 <div class="block">Returns a cross-table batch write builder for putting/deleting items across multiple tables.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#batchWrite()">batchWrite</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>a cross-table batch write builder</dd>
 </dl>
@@ -450,6 +466,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient</span>&nbsp;<span class="element-name">getEnhancedClient</span>()</div>
 <div class="block">Returns the underlying <code>DynamoDbEnhancedClient</code> for advanced operations.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#getEnhancedClient()">getEnhancedClient</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>the enhanced DynamoDB client</dd>
 </dl>
@@ -463,6 +481,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull software.amazon.awssdk.services.dynamodb.DynamoDbClient</span>&nbsp;<span class="element-name">getDynamoDbClient</span>()</div>
 <div class="block">Returns the underlying <code>DynamoDbClient</code> for advanced operations.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#getDynamoDbClient()">getDynamoDbClient</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>the DynamoDB client</dd>
 </dl>
@@ -478,6 +498,8 @@ All put, update, delete, and condition check actions are applied atomically.</di
 <p>
 Returns a list of table names accessible with the configured AWS credentials.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#listTables()">listTables</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Returns:</dt>
 <dd>a list of DynamoDB table names</dd>
 </dl>
@@ -496,6 +518,8 @@ This is a passthrough to the underlying low-level
 builder is provided because PartiQL is schemaless and the SDK request is
 already simple.</div>
 <dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#executeStatement(software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest)">executeStatement</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>request</code> - the PartiQL request to execute</dd>
 <dt>Returns:</dt>
@@ -515,6 +539,8 @@ After calling this method, the client instance is no longer usable.</div>
 <dl class="notes">
 <dt>Specified by:</dt>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html#close()" title="class or interface in java.lang" class="external-link">close</a></code>&nbsp;in interface&nbsp;<code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#close()">close</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
 </dl>
 </div>
 </section>

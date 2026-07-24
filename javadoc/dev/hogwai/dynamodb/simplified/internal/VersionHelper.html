@@ -101,18 +101,17 @@ loadScripts(document, 'script');</script>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static @Nullable <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#getVersion(java.lang.Object)" class="member-name-link">getVersion</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;item)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Returns the version from a potentially-versioned item.</div>
+<div class="block">Returns the version from an item with a <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a> field.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static void</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#incrementVersion(java.lang.Object)" class="member-name-link">incrementVersion</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;item)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Increments the version on a versioned item.</div>
+<div class="block">Increments the version on an item with a <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a> field.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;T&gt;&nbsp;boolean</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#isVersioned(T)" class="member-name-link">isVersioned</a><wbr>(@NonNull T&nbsp;item)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Checks whether the given item is versioned, either by implementing
-<a href="../Versioned.html" title="interface in dev.hogwai.dynamodb.simplified"><code>Versioned</code></a> or by having a field annotated with <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
+<div class="block">Checks whether the given item has a field annotated with <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
 </div>
 </div>
 </div>
@@ -136,12 +135,12 @@ loadScripts(document, 'script');</script>
 <h3>getVersion</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">@Nullable <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a></span>&nbsp;<span class="element-name">getVersion</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;item)</span></div>
-<div class="block">Returns the version from a potentially-versioned item.</div>
+<div class="block">Returns the version from an item with a <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a> field.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
-<dd><code>item</code> - the item (may implement Versioned or have a <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a> field)</dd>
+<dd><code>item</code> - the item to check</dd>
 <dt>Returns:</dt>
-<dd>the version, or null if the item is not versioned or version is null</dd>
+<dd>the version, or null if the item has no version field or version is null</dd>
 </dl>
 </div>
 </section>
@@ -151,9 +150,7 @@ loadScripts(document, 'script');</script>
 <h3>incrementVersion</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">incrementVersion</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;item)</span></div>
-<div class="block">Increments the version on a versioned item.
-<p>
-Supports items implementing <a href="../Versioned.html" title="interface in dev.hogwai.dynamodb.simplified"><code>Versioned</code></a> or having a field annotated with <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
+<div class="block">Increments the version on an item with a <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a> field.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>item</code> - the item to update</dd>
@@ -166,15 +163,14 @@ Supports items implementing <a href="../Versioned.html" title="interface in dev.
 <h3 id="isVersioned(java.lang.Object)">isVersioned</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;T&gt;</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">isVersioned</span><wbr><span class="parameters">(@NonNull T&nbsp;item)</span></div>
-<div class="block">Checks whether the given item is versioned, either by implementing
-<a href="../Versioned.html" title="interface in dev.hogwai.dynamodb.simplified"><code>Versioned</code></a> or by having a field annotated with <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
+<div class="block">Checks whether the given item has a field annotated with <a href="../entity/Version.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>Version</code></a>.</div>
 <dl class="notes">
 <dt>Type Parameters:</dt>
 <dd><span id="isVersioned(T)-type-param-T"><code>T</code> - the item type</span></dd>
 <dt>Parameters:</dt>
 <dd><code>item</code> - the item to check</dd>
 <dt>Returns:</dt>
-<dd>true if the item is versioned</dd>
+<dd>true if the item has a @Version field</dd>
 </dl>
 </div>
 </section>

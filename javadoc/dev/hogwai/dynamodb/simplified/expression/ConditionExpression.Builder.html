@@ -54,6 +54,7 @@ loadScripts(document, 'script');</script>
 <div class="toc-header">Contents&nbsp;<input type="text" class="filter-input" disabled placeholder="Filter contents (type .)" aria-label="Filter table of contents" autocomplete="off" spellcheck="false"><input type="reset" class="reset-filter" disabled tabindex="-1" value="Reset"></div>
 <ol class="toc-list" tabindex="-1">
 <li><a href="#" tabindex="0">Description</a></li>
+<li><a href="#nested-class-summary" tabindex="0">Nested Class Summary</a></li>
 <li><a href="#constructor-summary" tabindex="0">Constructor Summary</a></li>
 <li><a href="#method-summary" tabindex="0">Method Summary</a></li>
 <li><a href="#constructor-detail" tabindex="0">Constructor Details</a>
@@ -85,7 +86,7 @@ loadScripts(document, 'script');</script>
 <li><a href="#and()" tabindex="0">and()</a></li>
 <li><a href="#or()" tabindex="0">or()</a></li>
 <li><a href="#not()" tabindex="0">not()</a></li>
-<li><a href="#group(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)" tabindex="0">group(ConditionExpression)</a></li>
+<li><a href="#group(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" tabindex="0">group(FilterExpression)</a></li>
 <li><a href="#nestedEq(java.lang.String,java.lang.Object)" tabindex="0">nestedEq(String, Object)</a></li>
 <li><a href="#build()" tabindex="0">build()</a></li>
 </ol>
@@ -98,7 +99,9 @@ loadScripts(document, 'script');</script>
 <h1 title="Class ConditionExpression.Builder" class="title">Class ConditionExpression.Builder</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">dev.hogwai.dynamodb.simplified.expression.FilterExpression</a>
 <div class="inheritance">dev.hogwai.dynamodb.simplified.expression.ConditionExpression.Builder</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <dl class="notes">
@@ -108,16 +111,25 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="horizontal-scroll">
 <div class="type-signature"><span class="modifiers">public static final class </span><span class="element-name type-name-label">ConditionExpression.Builder</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
+<span class="extends-implements">extends <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></span></div>
 <div class="block">Fluent builder for <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ConditionExpression</code></a>.
 <p>
-Every public builder method delegates to the underlying
-<a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> builder, ensuring identical expression-building
-capability while maintaining a distinct type.</div>
+Extends <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> to inherit all expression-building
+capability, with covariant return types to preserve the builder type
+through method chaining, and a terminal <a href="#build()"><code>build()</code></a> method.</div>
 </div>
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<li>
+<section class="nested-class-summary" id="nested-class-summary">
+<h2>Nested Class Summary</h2>
+<div class="inherited-list">
+<h3 id="nested-classes-inherited-from-class-dev.hogwai.dynamodb.simplified.expression.FilterExpression">Nested classes/interfaces inherited from class&nbsp;<a href="FilterExpression.html#nested-class-summary" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></h3>
+<code><a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a></code></div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor-summary">
@@ -147,26 +159,29 @@ capability while maintaining a distinct type.</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#and()" class="member-name-link">and</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a logical AND between the previously added condition and the next one.</div>
+<div class="block">Appends an <code>AND</code> logical operator to combine two filter conditions.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#attributeType(java.lang.String,dev.hogwai.dynamodb.simplified.expression.FilterExpression.AttributeType)" class="member-name-link">attributeType</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
- <a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a>&nbsp;type)</code></div>
+ @NonNull <a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a>&nbsp;type)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition checking the attribute's DynamoDB type using <code>attribute_type</code>.</div>
+<div class="block">Adds an <code>attribute_type</code> condition that checks whether the
+specified attribute is of the given DynamoDB type.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#beginsWith(java.lang.String,java.lang.String)" class="member-name-link">beginsWith</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;prefix)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a <code>begins_with</code> condition: the attribute value starts with the given prefix.</div>
+<div class="block">Adds a <code>begins_with</code> function condition checking whether the
+attribute value starts with the given prefix.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#between(java.lang.String,java.lang.Object,java.lang.Object)" class="member-name-link">between</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;low,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;high)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a BETWEEN condition: <code>attr BETWEEN low AND high</code>.</div>
+<div class="block">Adds a <code>BETWEEN</code> condition: <code>attribute BETWEEN low AND high</code>
+(inclusive).</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#build()" class="member-name-link">build</a>()</code></div>
@@ -177,122 +192,136 @@ capability while maintaining a distinct type.</div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#contains(java.lang.String,java.lang.Object)" class="member-name-link">contains</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a <code>contains</code> condition: the attribute value contains the given value.</div>
+<div class="block">Adds a <code>contains</code> function condition checking whether the
+attribute value contains the given substring (for strings) or element
+(for sets).</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#eq(java.lang.String,java.lang.Object)" class="member-name-link">eq</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds an equality condition: <code>attr = value</code>.</div>
+<div class="block">Adds an equality condition: <code>attribute = value</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#exists(java.lang.String)" class="member-name-link">exists</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition that the attribute must exist (not null).</div>
+<div class="block">Adds an <code>attribute_exists</code> condition that checks whether the
+specified attribute is present on the item.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#ge(java.lang.String,java.lang.Object)" class="member-name-link">ge</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a greater-than-or-equal condition: <code>attr &gt;= value</code>.</div>
+<div class="block">Adds a greater-than-or-equal condition: <code>attribute &gt;= value</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#group(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)" class="member-name-link">group</a><wbr>(@NonNull <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a>&nbsp;nested)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#group(dev.hogwai.dynamodb.simplified.expression.FilterExpression)" class="member-name-link">group</a><wbr>(@NonNull <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;nested)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Wraps the given nested <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ConditionExpression</code></a> in parentheses and
-merges its expression attribute names and values into this builder.</div>
+<div class="block">Wraps the given nested expression in parentheses and merges its
+expression attribute names and values into this builder.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#gt(java.lang.String,java.lang.Object)" class="member-name-link">gt</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a greater-than condition: <code>attr &gt; value</code>.</div>
+<div class="block">Adds a greater-than condition: <code>attribute &gt; value</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#in(java.lang.String,java.lang.Object...)" class="member-name-link">in</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
- <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>...&nbsp;values)</code></div>
+ @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>...&nbsp;values)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds an IN condition: <code>attr IN (value1, value2, ...)</code>.</div>
+<div class="block">Adds an <code>IN</code> condition: <code>attribute IN (val1, val2, ...)</code>.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#le(java.lang.String,java.lang.Object)" class="member-name-link">le</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a less-than-or-equal condition: <code>attr &lt;= value</code>.</div>
+<div class="block">Adds a less-than-or-equal condition: <code>attribute &lt;= value</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#lt(java.lang.String,java.lang.Object)" class="member-name-link">lt</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a less-than condition: <code>attr &lt; value</code>.</div>
+<div class="block">Adds a less-than condition: <code>attribute &lt; value</code>.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#ne(java.lang.String,java.lang.Object)" class="member-name-link">ne</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a not-equal condition: <code>attr &lt;&gt; value</code>.</div>
+<div class="block">Adds a not-equal condition: <code>attribute &lt;&gt; value</code>.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#nestedEq(java.lang.String,java.lang.Object)" class="member-name-link">nestedEq</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;path,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds an equality condition on a nested attribute path (e.g.</div>
+<div class="block">Adds an equality condition on a nested attribute path (e.g.,
+<code>address.city</code>).</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#not()" class="member-name-link">not</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a logical NOT to negate the previously added condition.</div>
+<div class="block">Appends a <code>NOT</code> logical operator to negate the following condition.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#notExists(java.lang.String)" class="member-name-link">notExists</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition that the attribute must not exist (is null or absent).</div>
+<div class="block">Adds an <code>attribute_not_exists</code> condition that checks whether the
+specified attribute is not present on the item.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#or()" class="member-name-link">or</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a logical OR between the previously added condition and the next one.</div>
+<div class="block">Appends an <code>OR</code> logical operator to combine two filter conditions.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#sizeBetween(java.lang.String,int,int)" class="member-name-link">sizeBetween</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;min,
  int&nbsp;max)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition: <code>size(attr) BETWEEN min AND max</code>.</div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is between the given minimum and maximum values (inclusive).</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#sizeEq(java.lang.String,int)" class="member-name-link">sizeEq</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition on the server-side size of the attribute value: <code>size(attr) = value</code>.</div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+equals the given value.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#sizeGe(java.lang.String,int)" class="member-name-link">sizeGe</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition: <code>size(attr) &gt;= value</code>.</div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is greater than or equal to the given value.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#sizeGt(java.lang.String,int)" class="member-name-link">sizeGt</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition: <code>size(attr) &gt; value</code>.</div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is greater than the given value.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#sizeLe(java.lang.String,int)" class="member-name-link">sizeLe</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition: <code>size(attr) &lt;= value</code>.</div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is less than or equal to the given value.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#sizeLt(java.lang.String,int)" class="member-name-link">sizeLt</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Adds a condition: <code>size(attr) &lt; value</code>.</div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is less than the given value.</div>
 </div>
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-dev.hogwai.dynamodb.simplified.expression.FilterExpression">Methods inherited from class&nbsp;<a href="FilterExpression.html#method-summary" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></h3>
+<code><a href="FilterExpression.html#builder()" title="builder()">builder</a>, <a href="FilterExpression.html#getExpression()" title="getExpression()">getExpression</a>, <a href="FilterExpression.html#getExpressionNames()" title="getExpressionNames()">getExpressionNames</a>, <a href="FilterExpression.html#getExpressionValues()" title="getExpressionValues()">getExpressionValues</a>, <a href="FilterExpression.html#isEmpty()" title="isEmpty()">isEmpty</a>, <a href="FilterExpression.html#toSdkExpression()" title="toSdkExpression()">toSdkExpression</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#method-summary" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -330,8 +359,11 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">eq</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds an equality condition: <code>attr = value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#eq(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds an equality condition: <code>attribute = value</code>.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#eq(java.lang.String,java.lang.Object)">eq</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to compare against</dd>
@@ -347,8 +379,11 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">ne</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds a not-equal condition: <code>attr &lt;&gt; value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#ne(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a not-equal condition: <code>attribute &lt;&gt; value</code>.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#ne(java.lang.String,java.lang.Object)">ne</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to compare against</dd>
@@ -364,8 +399,11 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">lt</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds a less-than condition: <code>attr &lt; value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#lt(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a less-than condition: <code>attribute &lt; value</code>.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#lt(java.lang.String,java.lang.Object)">lt</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to compare against</dd>
@@ -381,8 +419,11 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">le</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds a less-than-or-equal condition: <code>attr &lt;= value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#le(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a less-than-or-equal condition: <code>attribute &lt;= value</code>.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#le(java.lang.String,java.lang.Object)">le</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to compare against</dd>
@@ -398,8 +439,11 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">gt</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds a greater-than condition: <code>attr &gt; value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#gt(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a greater-than condition: <code>attribute &gt; value</code>.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#gt(java.lang.String,java.lang.Object)">gt</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to compare against</dd>
@@ -415,8 +459,11 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">ge</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds a greater-than-or-equal condition: <code>attr &gt;= value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#ge(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a greater-than-or-equal condition: <code>attribute &gt;= value</code>.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#ge(java.lang.String,java.lang.Object)">ge</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to compare against</dd>
@@ -432,11 +479,15 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">beginsWith</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;prefix)</span></div>
-<div class="block">Adds a <code>begins_with</code> condition: the attribute value starts with the given prefix.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#beginsWith(java.lang.String,java.lang.String)">FilterExpression</a></code></span></div>
+<div class="block">Adds a <code>begins_with</code> function condition checking whether the
+attribute value starts with the given prefix.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#beginsWith(java.lang.String,java.lang.String)">beginsWith</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>prefix</code> - the prefix to match</dd>
+<dd><code>prefix</code> - the string prefix to test</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -449,8 +500,13 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">contains</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds a <code>contains</code> condition: the attribute value contains the given value.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#contains(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a <code>contains</code> function condition checking whether the
+attribute value contains the given substring (for strings) or element
+(for sets).</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#contains(java.lang.String,java.lang.Object)">contains</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>value</code> - the value to search for within the attribute</dd>
@@ -466,8 +522,12 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">sizeEq</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</span></div>
-<div class="block">Adds a condition on the server-side size of the attribute value: <code>size(attr) = value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#sizeEq(java.lang.String,int)">FilterExpression</a></code></span></div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+equals the given value.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#sizeEq(java.lang.String,int)">sizeEq</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dd><code>size</code> - the expected size</dd>
@@ -483,11 +543,15 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">sizeLt</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</span></div>
-<div class="block">Adds a condition: <code>size(attr) &lt; value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#sizeLt(java.lang.String,int)">FilterExpression</a></code></span></div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is less than the given value.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#sizeLt(java.lang.String,int)">sizeLt</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>size</code> - the size threshold</dd>
+<dd><code>size</code> - the size to compare against</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -500,11 +564,15 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">sizeLe</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</span></div>
-<div class="block">Adds a condition: <code>size(attr) &lt;= value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#sizeLe(java.lang.String,int)">FilterExpression</a></code></span></div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is less than or equal to the given value.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#sizeLe(java.lang.String,int)">sizeLe</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>size</code> - the size threshold</dd>
+<dd><code>size</code> - the size to compare against</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -517,11 +585,15 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">sizeGt</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</span></div>
-<div class="block">Adds a condition: <code>size(attr) &gt; value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#sizeGt(java.lang.String,int)">FilterExpression</a></code></span></div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is greater than the given value.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#sizeGt(java.lang.String,int)">sizeGt</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>size</code> - the size threshold</dd>
+<dd><code>size</code> - the size to compare against</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -534,11 +606,15 @@ merges its expression attribute names and values into this builder.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">sizeGe</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;size)</span></div>
-<div class="block">Adds a condition: <code>size(attr) &gt;= value</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#sizeGe(java.lang.String,int)">FilterExpression</a></code></span></div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is greater than or equal to the given value.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#sizeGe(java.lang.String,int)">sizeGe</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>size</code> - the size threshold</dd>
+<dd><code>size</code> - the size to compare against</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -552,12 +628,16 @@ merges its expression attribute names and values into this builder.</div>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">sizeBetween</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  int&nbsp;min,
  int&nbsp;max)</span></div>
-<div class="block">Adds a condition: <code>size(attr) BETWEEN min AND max</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#sizeBetween(java.lang.String,int,int)">FilterExpression</a></code></span></div>
+<div class="block">Adds a condition that the server-side <code>size()</code> of the attribute
+is between the given minimum and maximum values (inclusive).</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#sizeBetween(java.lang.String,int,int)">sizeBetween</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>min</code> - the minimum size (inclusive)</dd>
-<dd><code>max</code> - the maximum size (inclusive)</dd>
+<dd><code>min</code> - the minimum size</dd>
+<dd><code>max</code> - the maximum size</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -569,8 +649,12 @@ merges its expression attribute names and values into this builder.</div>
 <h3>exists</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">exists</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr)</span></div>
-<div class="block">Adds a condition that the attribute must exist (not null).</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#exists(java.lang.String)">FilterExpression</a></code></span></div>
+<div class="block">Adds an <code>attribute_exists</code> condition that checks whether the
+specified attribute is present on the item.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#exists(java.lang.String)">exists</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dt>Returns:</dt>
@@ -584,8 +668,12 @@ merges its expression attribute names and values into this builder.</div>
 <h3>notExists</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">notExists</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr)</span></div>
-<div class="block">Adds a condition that the attribute must not exist (is null or absent).</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#notExists(java.lang.String)">FilterExpression</a></code></span></div>
+<div class="block">Adds an <code>attribute_not_exists</code> condition that checks whether the
+specified attribute is not present on the item.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#notExists(java.lang.String)">notExists</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
 <dt>Returns:</dt>
@@ -599,12 +687,16 @@ merges its expression attribute names and values into this builder.</div>
 <h3>attributeType</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">attributeType</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
- <a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a>&nbsp;type)</span></div>
-<div class="block">Adds a condition checking the attribute's DynamoDB type using <code>attribute_type</code>.</div>
+ @NonNull <a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression">FilterExpression.AttributeType</a>&nbsp;type)</span></div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#attributeType(java.lang.String,dev.hogwai.dynamodb.simplified.expression.FilterExpression.AttributeType)">FilterExpression</a></code></span></div>
+<div class="block">Adds an <code>attribute_type</code> condition that checks whether the
+specified attribute is of the given DynamoDB type.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#attributeType(java.lang.String,dev.hogwai.dynamodb.simplified.expression.FilterExpression.AttributeType)">attributeType</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>type</code> - the expected DynamoDB attribute type</dd>
+<dd><code>type</code> - the expected <a href="FilterExpression.AttributeType.html" title="enum class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression.AttributeType</code></a></dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -618,12 +710,16 @@ merges its expression attribute names and values into this builder.</div>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">between</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;low,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;high)</span></div>
-<div class="block">Adds a BETWEEN condition: <code>attr BETWEEN low AND high</code>.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#between(java.lang.String,java.lang.Object,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds a <code>BETWEEN</code> condition: <code>attribute BETWEEN low AND high</code>
+(inclusive). Supports strings, numbers, and binaries.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#between(java.lang.String,java.lang.Object,java.lang.Object)">between</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>low</code> - the lower bound (inclusive)</dd>
-<dd><code>high</code> - the upper bound (inclusive)</dd>
+<dd><code>low</code> - the lower bound</dd>
+<dd><code>high</code> - the upper bound</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -635,12 +731,16 @@ merges its expression attribute names and values into this builder.</div>
 <h3>in</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">in</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;attr,
- <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>...&nbsp;values)</span></div>
-<div class="block">Adds an IN condition: <code>attr IN (value1, value2, ...)</code>.</div>
+ @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>...&nbsp;values)</span></div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#in(java.lang.String,java.lang.Object...)">FilterExpression</a></code></span></div>
+<div class="block">Adds an <code>IN</code> condition: <code>attribute IN (val1, val2, ...)</code>.
+The attribute must match at least one of the provided values.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#in(java.lang.String,java.lang.Object...)">in</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
 <dd><code>attr</code> - the attribute name</dd>
-<dd><code>values</code> - the set of values to test against</dd>
+<dd><code>values</code> - one or more values to test against</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -652,8 +752,11 @@ merges its expression attribute names and values into this builder.</div>
 <h3>and</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">and</span>()</div>
-<div class="block">Adds a logical AND between the previously added condition and the next one.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#and()">FilterExpression</a></code></span></div>
+<div class="block">Appends an <code>AND</code> logical operator to combine two filter conditions.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#and()">and</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -665,8 +768,11 @@ merges its expression attribute names and values into this builder.</div>
 <h3>or</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">or</span>()</div>
-<div class="block">Adds a logical OR between the previously added condition and the next one.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#or()">FilterExpression</a></code></span></div>
+<div class="block">Appends an <code>OR</code> logical operator to combine two filter conditions.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#or()">or</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -678,8 +784,11 @@ merges its expression attribute names and values into this builder.</div>
 <h3>not</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">not</span>()</div>
-<div class="block">Adds a logical NOT to negate the previously added condition.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#not()">FilterExpression</a></code></span></div>
+<div class="block">Appends a <code>NOT</code> logical operator to negate the following condition.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#not()">not</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -687,16 +796,17 @@ merges its expression attribute names and values into this builder.</div>
 </section>
 </li>
 <li>
-<section class="detail" id="group(dev.hogwai.dynamodb.simplified.expression.ConditionExpression)">
+<section class="detail" id="group(dev.hogwai.dynamodb.simplified.expression.FilterExpression)">
 <h3>group</h3>
 <div class="horizontal-scroll">
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">group</span><wbr><span class="parameters">(@NonNull <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a>&nbsp;nested)</span></div>
-<div class="block">Wraps the given nested <a href="ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ConditionExpression</code></a> in parentheses and
-merges its expression attribute names and values into this builder.
-Useful for creating grouped or nested conditions with proper precedence.</div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">group</span><wbr><span class="parameters">(@NonNull <a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a>&nbsp;nested)</span></div>
+<div class="block">Wraps the given nested expression in parentheses and merges its
+expression attribute names and values into this builder.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#group(dev.hogwai.dynamodb.simplified.expression.FilterExpression)">group</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
-<dd><code>nested</code> - the condition expression to wrap in parentheses</dd>
+<dd><code>nested</code> - the expression to wrap in parentheses</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>
 </dl>
@@ -709,11 +819,16 @@ Useful for creating grouped or nested conditions with proper precedence.</div>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></span>&nbsp;<span class="element-name">nestedEq</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;path,
  @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<div class="block">Adds an equality condition on a nested attribute path (e.g. <code>"address.city"</code>).
-The path is automatically expanded with expression attribute names for each segment.</div>
+<div class="block"><span class="description-from-type-label">Description copied from class:&nbsp;<code><a href="FilterExpression.html#nestedEq(java.lang.String,java.lang.Object)">FilterExpression</a></code></span></div>
+<div class="block">Adds an equality condition on a nested attribute path (e.g.,
+<code>address.city</code>). Dot-separated path segments are resolved to
+individual expression attribute names, and list indices (e.g.,
+<code>items[0]</code>) are supported.</div>
 <dl class="notes">
+<dt>Overrides:</dt>
+<dd><code><a href="FilterExpression.html#nestedEq(java.lang.String,java.lang.Object)">nestedEq</a></code>&nbsp;in class&nbsp;<code><a href="FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">FilterExpression</a></code></dd>
 <dt>Parameters:</dt>
-<dd><code>path</code> - the dotted nested attribute path</dd>
+<dd><code>path</code> - the nested attribute path (e.g., <code>"address.city"</code>)</dd>
 <dd><code>value</code> - the value to compare against</dd>
 <dt>Returns:</dt>
 <dd>this builder for chaining</dd>

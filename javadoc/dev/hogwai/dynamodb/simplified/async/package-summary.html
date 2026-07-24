@@ -93,7 +93,8 @@ primary entry points for async operations.</div>
 </li>
 <li>
 <div id="class-summary">
-<div class="caption"><span>Classes</span></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="class-summary-tab0" role="tab" aria-selected="true" aria-controls="class-summary.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('class-summary', 'class-summary', 2)" class="active-table-tab">All Classes and Interfaces</button><button id="class-summary-tab1" role="tab" aria-selected="false" aria-controls="class-summary.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('class-summary', 'class-summary-tab1', 2)" class="table-tab">Interfaces</button><button id="class-summary-tab2" role="tab" aria-selected="false" aria-controls="class-summary.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('class-summary', 'class-summary-tab2', 2)" class="table-tab">Classes</button></div>
+<div id="class-summary.tabpanel" role="tabpanel" aria-labelledby="class-summary-tab0">
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Class</div>
 <div class="table-header col-last">Description</div>
@@ -128,45 +129,50 @@ with an optional condition expression.</div>
 <div class="block">Builder for creating <a href="AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncDynamoSimplifiedClient</code></a> instances with
 a custom DynamoDB async client and/or <code>extensions</code>.</div>
 </div>
-<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncGetItemBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncGetItemBuilder</a>&lt;T&gt;</div>
-<div class="col-last odd-row-color class-summary class-summary-tab2">
+<div class="col-first odd-row-color class-summary class-summary-tab1"><a href="AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></div>
+<div class="col-last odd-row-color class-summary class-summary-tab1">
+<div class="block">Interface for <a href="AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncDynamoSimplifiedClient</code></a> to enable mocking and polymorphic usage.</div>
+</div>
+<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncGetItemBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncGetItemBuilder</a>&lt;T&gt;</div>
+<div class="col-last even-row-color class-summary class-summary-tab2">
 <div class="block">Async fluent builder for getting an item by key from a DynamoDB table or index.</div>
 </div>
-<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncIndex.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncIndex</a>&lt;T&gt;</div>
-<div class="col-last even-row-color class-summary class-summary-tab2">
+<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncIndex.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncIndex</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color class-summary class-summary-tab2">
 <div class="block">Typed wrapper for an async DynamoDB secondary index (GSI or LSI).</div>
 </div>
-<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;T&gt;</div>
-<div class="col-last odd-row-color class-summary class-summary-tab2">
+<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncPutBuilder</a>&lt;T&gt;</div>
+<div class="col-last even-row-color class-summary class-summary-tab2">
 <div class="block">Async fluent builder for putting (inserting or replacing) an item in a DynamoDB table,
 with an optional condition expression.</div>
 </div>
-<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;T&gt;</div>
-<div class="col-last even-row-color class-summary class-summary-tab2">
+<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color class-summary class-summary-tab2">
 <div class="block">A fluent async builder for querying items in a DynamoDB table.</div>
 </div>
-<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncScanBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncScanBuilder</a>&lt;T&gt;</div>
-<div class="col-last odd-row-color class-summary class-summary-tab2">
+<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncScanBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncScanBuilder</a>&lt;T&gt;</div>
+<div class="col-last even-row-color class-summary class-summary-tab2">
 <div class="block">A fluent async builder for scanning a DynamoDB table with optional filter,
 projection, and pagination.</div>
 </div>
-<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable</a>&lt;T&gt;</div>
-<div class="col-last even-row-color class-summary class-summary-tab2">
+<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color class-summary class-summary-tab2">
 <div class="block">Typed async entry point for DynamoDB operations on a single table.</div>
 </div>
-<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactGetBuilder</a></div>
-<div class="col-last odd-row-color class-summary class-summary-tab2">
+<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactGetBuilder</a></div>
+<div class="col-last even-row-color class-summary class-summary-tab2">
 <div class="block">Builds an async transactional get operation that reads up to 100 items atomically
 across one or more tables.</div>
 </div>
-<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncTransactWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactWriteBuilder</a></div>
-<div class="col-last even-row-color class-summary class-summary-tab2">
+<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncTransactWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactWriteBuilder</a></div>
+<div class="col-last odd-row-color class-summary class-summary-tab2">
 <div class="block">Builds an async transactional write operation that groups up to 100 put, update, delete,
 and condition check actions atomically across one or more tables.</div>
 </div>
-<div class="col-first odd-row-color class-summary class-summary-tab2"><a href="AsyncUpdateBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder</a>&lt;T&gt;</div>
-<div class="col-last odd-row-color class-summary class-summary-tab2">
+<div class="col-first even-row-color class-summary class-summary-tab2"><a href="AsyncUpdateBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder</a>&lt;T&gt;</div>
+<div class="col-last even-row-color class-summary class-summary-tab2">
 <div class="block">Async fluent builder for updating an item in a DynamoDB table.</div>
+</div>
 </div>
 </div>
 </div>

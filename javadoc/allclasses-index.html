@@ -55,36 +55,117 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Class</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder&lt;T&gt;</a></div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder&lt;T,<wbr>S&gt;</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async batch get builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchWriteBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async batch write builders.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchGetBuilder&lt;S&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async cross-table batch get builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab4"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchGetBuilder.Entry</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab4">
+<div class="block">Stores a table reference, key, and optional per-entry projection expression.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder&lt;S&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async cross-table batch write builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab4"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab4">
+<div class="block">Stores a table reference, operation type, and optional item or key values.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractCrossTableBatchWriteBuilder.Operation.Type.html" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractCrossTableBatchWriteBuilder.Operation.Type</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab3">
+<div class="block">The type of batch write operation.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractDeleteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractDeleteBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async delete-item builders.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractGetItemBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractGetItemBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async get-item builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractPutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractPutBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async put-item builders.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async query builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractQueryBuilder.KeyConditionOp.html" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractQueryBuilder.KeyConditionOp</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab3">
+<div class="block">Describes the type of sort key comparison for a key condition expression.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractScanBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractScanBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async scan builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder&lt;S&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async transact get builders.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab4"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactGetBuilder.Entry.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactGetBuilder.Entry</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab4">
+<div class="block">Stores a table reference, key, and optional per-entry projection expression.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactWriteBuilder&lt;S&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async transactional write builders.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab4"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactWriteBuilder.Operation.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactWriteBuilder.Operation</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab4">
+<div class="block">Stores a table reference, operation type, and optional item, key values,
+condition expression, and update expression.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractTransactWriteBuilder.Operation.Type.html" title="enum class in dev.hogwai.dynamodb.simplified.builder.base">AbstractTransactWriteBuilder.Operation.Type</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab3">
+<div class="block">The type of transactional write operation.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/base/AbstractUpdateBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractUpdateBuilder&lt;T,<wbr>S&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Abstract base for sync and async update-item builders.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds an async batch get operation to retrieve multiple items from a single table by their keys.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchWriteBuilder&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchWriteBuilder&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds an async batch write operation to put and delete multiple items in a single table.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncCrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchGetBuilder</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncCrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchGetBuilder</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds an async cross-table batch get operation to retrieve items from multiple tables.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchWriteBuilder</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncCrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncCrossTableBatchWriteBuilder</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds an async cross-table batch write operation to put and delete items
 across multiple tables.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDeleteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDeleteBuilder&lt;T&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDeleteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDeleteBuilder&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Async fluent builder for deleting an item from a DynamoDB table by its key,
 with an optional condition expression.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClient</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Async entry point for the DynamoDB Simplified library.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientBuilder</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientBuilder</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builder for creating <a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncDynamoSimplifiedClient</code></a> instances with
 a custom DynamoDB async client and/or <code>extensions</code>.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab1"><a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified.async">AsyncDynamoSimplifiedClientInterface</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab1">
+<div class="block">Interface for <a href="dev/hogwai/dynamodb/simplified/async/AsyncDynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified.async"><code>AsyncDynamoSimplifiedClient</code></a> to enable mocking and polymorphic usage.</div>
 </div>
 <div class="col-first odd-row-color all-classes-table all-classes-table-tab1"><a href="dev/hogwai/dynamodb/simplified/entity/AsyncEntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity">AsyncEntityTable&lt;T&gt;</a></div>
 <div class="col-last odd-row-color all-classes-table all-classes-table-tab1">
@@ -115,116 +196,123 @@ with an optional condition expression.</div>
 <div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">A fluent async builder for querying items in a DynamoDB table.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncScanBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncScanBuilder&lt;T&gt;</a></div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/AsyncRetryUtils.html" title="class in dev.hogwai.dynamodb.simplified.internal">AsyncRetryUtils</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Utility for non-blocking async retry delays.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncScanBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncScanBuilder&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">A fluent async builder for scanning a DynamoDB table with optional filter,
 projection, and pagination.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncTable.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTable&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Typed async entry point for DynamoDB operations on a single table.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactGetBuilder</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactGetBuilder</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds an async transactional get operation that reads up to 100 items atomically
 across one or more tables.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactWriteBuilder</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncTransactWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncTransactWriteBuilder</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds an async transactional write operation that groups up to 100 put, update, delete,
 and condition check actions atomically across one or more tables.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncUpdateBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder&lt;T&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/async/AsyncUpdateBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncUpdateBuilder&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Async fluent builder for updating an item in a DynamoDB table.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/AttributePathParser.html" title="class in dev.hogwai.dynamodb.simplified.internal">AttributePathParser</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/AttributePathParser.html" title="class in dev.hogwai.dynamodb.simplified.internal">AttributePathParser</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Parses nested attribute paths like <code>address.city</code> and <code>tags[0].name</code>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/AttributeValueConverter.html" title="class in dev.hogwai.dynamodb.simplified.internal">AttributeValueConverter</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/AttributeValueConverter.html" title="class in dev.hogwai.dynamodb.simplified.internal">AttributeValueConverter</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Converts Java objects to DynamoDB <code>AttributeValue</code>.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/BatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchGetBuilder&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/BatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchGetBuilder&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds a batch get operation to retrieve multiple items from a single table by their keys.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/BatchGetResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchGetResult&lt;T&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/BatchGetResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchGetResult&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Holds the result of a BatchGetBuilder execution.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/BatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">BatchWriteBuilder&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds a batch write operation to put and delete multiple items in a single table.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchWriteResult</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/BatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">BatchWriteResult</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Holds the result of a BatchWriteBuilder execution.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
-<div class="block">A typed wrapper around a condition expression for DynamoDB pre-write gating
-(PutItem, UpdateItem, DeleteItem, TransactWriteItems condition checks).</div>
-</div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">A <a href="dev/hogwai/dynamodb/simplified/expression/FilterExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>FilterExpression</code></a> subtype that represents a DynamoDB condition expression.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.Builder.html" title="class in dev.hogwai.dynamodb.simplified.expression">ConditionExpression.Builder</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Fluent builder for <a href="dev/hogwai/dynamodb/simplified/expression/ConditionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression"><code>ConditionExpression</code></a>.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/ConditionFailedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">ConditionFailedException</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab5">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/ConditionFailedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">ConditionFailedException</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab5">
 <div class="block">Thrown when a conditional write (put/update/delete with a condition expression)
 fails because the condition is not met.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab1"><a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab1">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab1"><a href="dev/hogwai/dynamodb/simplified/result/Consumed.html" title="interface in dev.hogwai.dynamodb.simplified.result">Consumed</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab1">
 <div class="block">Interface for result types that may include consumed capacity information.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResult.html" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResult</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResult.html" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResult</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Groups items retrieved from a cross-entity query by their entity type.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResultWithPagination.html" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResultWithPagination</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/entity/CrossEntityResultWithPagination.html" title="class in dev.hogwai.dynamodb.simplified.entity">CrossEntityResultWithPagination</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Holds a single page of cross-entity query results along with pagination metadata.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchGetBuilder</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchGetBuilder</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds a cross-table batch get operation to retrieve items from multiple tables by their keys.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/CrossTableBatchGetResult.html" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchGetResult</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/CrossTableBatchGetResult.html" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchGetResult</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Holds the result of a cross-table batch get operation.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/CrossTableBatchWriteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">CrossTableBatchWriteBuilder</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builds a cross-table batch write operation to put and delete items across multiple tables.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/CrossTableBatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchWriteResult</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/CrossTableBatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result">CrossTableBatchWriteResult</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Holds the result of a cross-table batch write operation.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/DeleteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">DeleteBuilder&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/DeleteBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">DeleteBuilder&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">A fluent builder for deleting an item from a DynamoDB table by its key,
 with an optional condition expression.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbLimits.html" title="class in dev.hogwai.dynamodb.simplified.internal">DynamoDbLimits</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Shared constants for DynamoDB resource limits and retry configuration.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab3">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab3"><a href="dev/hogwai/dynamodb/simplified/internal/DynamoDbOperations.html" title="enum class in dev.hogwai.dynamodb.simplified.internal">DynamoDbOperations</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab3">
 <div class="block">DynamoDB API operation names used for logging and error reporting.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Entry point for the DynamoDB Simplified library.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientBuilder.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientBuilder</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientBuilder.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientBuilder</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Builder for creating <a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified"><code>DynamoSimplifiedClient</code></a> instances with
 a custom DynamoDB client and/or <code>extensions</code>.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab1"><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab1">
+<div class="block">Interface for <a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified"><code>DynamoSimplifiedClient</code></a> to enable mocking and polymorphic usage.</div>
 </div>
 <div class="col-first even-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/DynamoSimplifiedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">DynamoSimplifiedException</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab5">
@@ -296,44 +384,53 @@ with optional projection and consistent read settings.</div>
 <div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Container annotation for repeatable <a href="dev/hogwai/dynamodb/simplified/entity/KeyPrefix.html" title="annotation interface in dev.hogwai.dynamodb.simplified.entity"><code>@KeyPrefix</code></a>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Logging.html" title="class in dev.hogwai.dynamodb.simplified.internal">Logging</a></div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/KeyUtils.html" title="class in dev.hogwai.dynamodb.simplified.internal">KeyUtils</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="block">Utility methods for constructing DynamoDB <code>Key</code> objects.</div>
+</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Logging.html" title="class in dev.hogwai.dynamodb.simplified.internal">Logging</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Centralized SLF4J logger factory for the DynamoDB Simplified library.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/Messages.html" title="class in dev.hogwai.dynamodb.simplified.internal">Messages</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Shared error and validation messages used across builders.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/OperationFailedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">OperationFailedException</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab5">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/OperationFailedException.html" title="class in dev.hogwai.dynamodb.simplified.exception">OperationFailedException</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab5">
 <div class="block">Thrown when a DynamoDB operation fails due to a service-side error.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/PageCollector.html" title="class in dev.hogwai.dynamodb.simplified.internal">PageCollector</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/PageCollector.html" title="class in dev.hogwai.dynamodb.simplified.internal">PageCollector</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Utility for bridging Reactive Streams page publishers to CompletableFuture.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult&lt;T&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Holds a single page of results from a DynamoDB <code>Query</code> or <code>Scan</code>
 operation as part of the DynamoDB Simplified library.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab4"><a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html" title="class in dev.hogwai.dynamodb.simplified.internal">PathSegment</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab4">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab4"><a href="dev/hogwai/dynamodb/simplified/internal/PathSegment.html" title="class in dev.hogwai.dynamodb.simplified.internal">PathSegment</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab4">
 <div class="block">A single segment in a parsed dotted attribute path.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/expression/ProjectionExpression.html" title="class in dev.hogwai.dynamodb.simplified.expression">ProjectionExpression</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Fluent builder for constructing DynamoDB projection expressions as part of
 the DynamoDB Simplified library.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/PutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">PutBuilder&lt;T&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/PutBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">PutBuilder&lt;T&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">A fluent builder for putting (inserting or replacing) an item in a DynamoDB table,
 with an optional condition expression.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/QueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">QueryBuilder&lt;T&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/builder/QueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder">QueryBuilder&lt;T&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">A fluent builder for querying items in a DynamoDB table or index.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab5"><a href="dev/hogwai/dynamodb/simplified/exception/ResourceNotFoundException.html" title="class in dev.hogwai.dynamodb.simplified.exception">ResourceNotFoundException</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab5">
+<div class="block">Thrown when a DynamoDB operation fails because the requested resource
+(table, item, index, etc.) was not found.</div>
 </div>
 <div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/RetryUtils.html" title="class in dev.hogwai.dynamodb.simplified.internal">RetryUtils</a></div>
 <div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
@@ -379,12 +476,8 @@ DynamoDB Simplified library.</div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Marks an attribute as the version field for optimistic locking.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab1"><a href="dev/hogwai/dynamodb/simplified/Versioned.html" title="interface in dev.hogwai.dynamodb.simplified">Versioned</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab1">
-<div class="block">Interface for entities that support optimistic locking via version field.</div>
-</div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/VersionHelper.html" title="class in dev.hogwai.dynamodb.simplified.internal">VersionHelper</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="dev/hogwai/dynamodb/simplified/internal/VersionHelper.html" title="class in dev.hogwai.dynamodb.simplified.internal">VersionHelper</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Helper for optimistic locking via version fields.</div>
 </div>
 </div>
