@@ -316,7 +316,7 @@ class AsyncDynamoSimplifiedClientIT {
         assertNotNull(builtClient);
     }
 
-    // ============ Conditional Operations ============
+    // region Conditional Operations
 
     @Test
     void conditionalPutWithConditionExpression() {
@@ -400,7 +400,9 @@ class AsyncDynamoSimplifiedClientIT {
         assertTrue(table.getItem("acdel2", 1L).join().isPresent());
     }
 
-    // ============ Query Variants ============
+    // endregion
+
+    // region Query Variants
 
     @Test
     void queryDescending() {
@@ -482,7 +484,9 @@ class AsyncDynamoSimplifiedClientIT {
         assertEquals("Visible", results.getFirst().getTitle());
     }
 
-    // ============ Scan Variant ============
+    // endregion
+
+    // region Scan Variant
 
     @Test
     void scanWithProjection() {
@@ -501,7 +505,9 @@ class AsyncDynamoSimplifiedClientIT {
         assertNull(item.get().getViews());
     }
 
-    // ============ Delete with ReturnValues (low-level path) ============
+    // endregion
+
+    // region Delete with ReturnValues (low-level path)
 
     @Test
     void deleteItemWithReturnValues() {
@@ -528,7 +534,9 @@ class AsyncDynamoSimplifiedClientIT {
         assertTrue(result.isEmpty());
     }
 
-    // ============ TransactWrite with UpdateExpression (low-level path) ============
+    // endregion
+
+    // region TransactWrite with UpdateExpression (low-level path)
 
     @Test
     void transactWriteWithUpdateExpression() {
@@ -571,3 +579,4 @@ class AsyncDynamoSimplifiedClientIT {
         assertEquals("CheckItem", checkFound.get().getTitle());
     }
 }
+// endregion

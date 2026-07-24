@@ -151,7 +151,7 @@ class EntityTableTest {
         assertThat(result).isNull();
     }
 
-    // ============ SK Branch Coverage Tests ============
+    // region SK Branch Coverage Tests
 
     @Entity(discriminator = "ITEM", table = "myapp")
     @KeyPrefix(component = "PK", value = "ITEM")
@@ -235,3 +235,4 @@ class EntityTableTest {
         verify(mockTableWithSk).updateItem(item);
     }
 }
+// endregion

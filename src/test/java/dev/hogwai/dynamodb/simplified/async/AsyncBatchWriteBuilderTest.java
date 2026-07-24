@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AsyncBatchWriteBuilder")
 class AsyncBatchWriteBuilderTest {
 
-    // ============ Test Item ============
+    // region Test Item
 
     static class TestItem {
         String id;
@@ -38,7 +38,9 @@ class AsyncBatchWriteBuilderTest {
         }
     }
 
-    // ============ Mocks ============
+    // endregion
+
+    // region Mocks
 
     @Mock
     private DynamoDbAsyncTable<TestItem> table;
@@ -55,7 +57,9 @@ class AsyncBatchWriteBuilderTest {
     @Mock
     private DynamoDbAsyncClient dynamoDbAsyncClient;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     private void stubTableSchema() {
         when(table.tableSchema()).thenReturn(tableSchema);
@@ -76,7 +80,9 @@ class AsyncBatchWriteBuilderTest {
         when(table.tableName()).thenReturn("test_table");
     }
 
-    // ============ put ============
+    // endregion
+
+    // region put
 
     @Test
     @DisplayName("put adds item and returns self")
@@ -89,7 +95,9 @@ class AsyncBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ delete ============
+    // endregion
+
+    // region delete
 
     @Test
     @DisplayName("delete with partition key returns self")
@@ -111,7 +119,9 @@ class AsyncBatchWriteBuilderTest {
         assertSame(builder, result);
     }
 
-    // ============ execute, empty queues ============
+    // endregion
+
+    // region execute, empty queues
 
     @Test
     @DisplayName("execute with empty queues returns completed BatchWriteResult with no unprocessed")
@@ -125,7 +135,9 @@ class AsyncBatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ execute, with put ============
+    // endregion
+
+    // region execute, with put
 
     @Test
     @DisplayName("execute with put delegates to low-level async client")
@@ -148,7 +160,9 @@ class AsyncBatchWriteBuilderTest {
         verify(dynamoDbAsyncClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ execute, with delete ============
+    // endregion
+
+    // region execute, with delete
 
     @Test
     @DisplayName("execute with delete delegates to low-level async client")
@@ -170,7 +184,9 @@ class AsyncBatchWriteBuilderTest {
         verify(dynamoDbAsyncClient).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ execute, propagation of error ============
+    // endregion
+
+    // region execute, propagation of error
 
     @Test
     @DisplayName("execute propagates error from low-level async client")
@@ -189,7 +205,9 @@ class AsyncBatchWriteBuilderTest {
         assertThrows(RuntimeException.class, future::join);
     }
 
-    // ============ retry logic ============
+    // endregion
+
+    // region retry logic
 
     @Test
     @DisplayName("execute retries unprocessed items and succeeds")
@@ -247,7 +265,9 @@ class AsyncBatchWriteBuilderTest {
         verify(dynamoDbAsyncClient, times(4)).batchWriteItem(any(BatchWriteItemRequest.class));
     }
 
-    // ============ limit validation ============
+    // endregion
+
+    // region limit validation
 
     @Test
     @DisplayName("execute with more than 25 items throws IllegalArgumentException")
@@ -261,3 +281,4 @@ class AsyncBatchWriteBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 }
+// endregion

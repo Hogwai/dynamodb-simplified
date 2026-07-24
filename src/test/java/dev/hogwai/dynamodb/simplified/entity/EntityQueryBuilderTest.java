@@ -141,7 +141,7 @@ class EntityQueryBuilderTest {
         assertThat(result.get(UserEntity.class)).isEmpty();
     }
 
-    // ============ Sort Key Condition Tests ============
+    // region Sort Key Condition Tests
 
     @Test
     void sortKeyBeginsWith_addsCorrectKeyConditionExpression() {
@@ -261,7 +261,9 @@ class EntityQueryBuilderTest {
         assertThat(request.keyConditionExpression()).contains("#sk <= :sk0");
     }
 
-    // ============ Pagination Tests ============
+    // endregion
+
+    // region Pagination Tests
 
     @Test
     void executeWithPagination_returnsFirstPageWithLastEvaluatedKey() {
@@ -387,7 +389,9 @@ class EntityQueryBuilderTest {
         verify(mockClient, times(2)).query(any(QueryRequest.class));
     }
 
-    // ============ Projection Tests ============
+    // endregion
+
+    // region Projection Tests
 
     @Test
     void project_addsProjectionExpressionToRequest() {
@@ -405,7 +409,9 @@ class EntityQueryBuilderTest {
         assertThat(request.projectionExpression()).isEqualTo("userId, email");
     }
 
-    // ============ ConsistentRead Tests ============
+    // endregion
+
+    // region ConsistentRead Tests
 
     @Test
     void consistentRead_addsConsistentReadToRequest() {
@@ -439,7 +445,9 @@ class EntityQueryBuilderTest {
         assertThat(request.consistentRead()).isFalse();
     }
 
-    // ============ ScanIndexForward Tests ============
+    // endregion
+
+    // region ScanIndexForward Tests
 
     @Test
     void scanIndexForward_setsScanIndexForwardParameter() {
@@ -473,7 +481,9 @@ class EntityQueryBuilderTest {
         assertThat(request.scanIndexForward()).isTrue();
     }
 
-    // ============ PK Attribute Name Test ============
+    // endregion
+
+    // region PK Attribute Name Test
 
     @Test
     void execute_usesCorrectPkAttributeNameFromAnnotation() {
@@ -498,7 +508,9 @@ class EntityQueryBuilderTest {
         assertThat(request.expressionAttributeNames()).containsEntry("#pk", "userId");
     }
 
-    // ============ Pagination with empty included entities ============
+    // endregion
+
+    // region Pagination with empty included entities
 
     @Test
     void executeWithPagination_withNoIncludedEntities_returnsEmpty() {
@@ -518,7 +530,9 @@ class EntityQueryBuilderTest {
         verify(mockClient, never()).query(any(QueryRequest.class));
     }
 
-    // ============ No partition key throws ============
+    // endregion
+
+    // region No partition key throws
 
     @Test
     void executeWithPagination_withoutPartitionKey_shouldThrow() {
@@ -535,7 +549,9 @@ class EntityQueryBuilderTest {
         assertThrows(IllegalStateException.class, () -> builder.count());
     }
 
-    // ============ Additional Branch Coverage Tests ============
+    // endregion
+
+    // region Additional Branch Coverage Tests
 
     @Test
     @DisplayName("sort key condition with entity missing SK attribute skips sort key expression")
@@ -688,7 +704,7 @@ class EntityQueryBuilderTest {
         assertThat(page.hasMore()).isFalse();
     }
 
-    // --- Test entity classes ---
+    // region Test entity classes
 
     public static class BaseEntityWithPk {
         protected String pk;
@@ -772,3 +788,5 @@ class EntityQueryBuilderTest {
         }
     }
 }
+// endregion
+// endregion

@@ -1,5 +1,6 @@
 package dev.hogwai.dynamodb.simplified.async;
 
+import dev.hogwai.dynamodb.simplified.entity.Version;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
@@ -35,6 +36,9 @@ class AsyncPutBuilderTest {
     private DynamoDbAsyncTable<TestItem> table;
 
     @Mock
+    private DynamoDbAsyncTable<VersionedTestItem> versionedTable;
+
+    @Mock
     private DynamoDbAsyncClient dynamoDbAsyncClient;
 
     @Mock
@@ -51,6 +55,21 @@ class AsyncPutBuilderTest {
 
         TestItem(String id) {
             this.id = id;
+        }
+    }
+
+    static class VersionedTestItem {
+        public String id;
+        @Version
+        Integer version;
+
+        VersionedTestItem(String id) {
+            this.id = id;
+            this.version = 1;
+        }
+
+        Integer getVersion() {
+            return version;
         }
     }
 
@@ -169,7 +188,7 @@ class AsyncPutBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ ReturnValues tests ============
+    // region ReturnValues tests
 
     @Test
     @DisplayName("returnValues() sets the returnValues field")
@@ -267,7 +286,55 @@ class AsyncPutBuilderTest {
         verifyNoInteractions(dynamoDbAsyncClient);
     }
 
-    // ============ executeReturning tests ============
+    // endregion
+
+    // region Optimistic locking tests
+
+    @Test
+    @DisplayName("withOptimisticLocking returns itself for fluent chaining")
+    void withOptimisticLocking_returnsItself() {
+        TestItem item = new TestItem("item-1");
+        AsyncPutBuilder<TestItem> builder = new AsyncPutBuilder<>(table, item, dynamoDbAsyncClient);
+        assertSame(builder, builder.withOptimisticLocking());
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking on non-Versioned item executes without condition")
+    void withOptimisticLocking_nonVersioned_executesWithoutCondition() {
+        TestItem item = new TestItem("item-1");
+        when(table.putItem(any(PutItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        new AsyncPutBuilder<>(table, item, dynamoDbAsyncClient)
+                .withOptimisticLocking()
+                .execute()
+                .join();
+
+        verify(table).putItem(requestCaptor.capture());
+        PutItemEnhancedRequest<TestItem> request = requestCaptor.getValue();
+        assertNull(request.conditionExpression(), "Non-Versioned item should not get a condition");
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking merges version condition with existing condition")
+    void execute_withOptimisticLockingAndExistingCondition() {
+        VersionedTestItem versionedItem = new VersionedTestItem("item-1");
+        when(versionedTable.putItem(any(PutItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        new AsyncPutBuilder<>(versionedTable, versionedItem, dynamoDbAsyncClient)
+                .withOptimisticLocking()
+                .condition(c -> c.exists("attr"))
+                .execute()
+                .join();
+
+        assertEquals(2, versionedItem.getVersion(), "Version should be incremented from 1 to 2");
+        verify(versionedTable).putItem(any(PutItemEnhancedRequest.class));
+    }
+
+    // endregion
+
+    // region executeReturning tests
 
     @Test
     @DisplayName("executeReturning with returnValues ALL_OLD returns the previous item")
@@ -348,7 +415,9 @@ class AsyncPutBuilderTest {
         assertInstanceOf(ConditionFailedException.class, ex.getCause());
     }
 
-    // ============ mapPutItemResponse missing branches (DynamoDbException, rethrow, checked) ============
+    // endregion
+
+    // region mapPutItemResponse missing branches (DynamoDbException, rethrow, checked)
 
     @Test
     @DisplayName("executeReturning with DynamoDbException wraps into OperationFailedException")
@@ -408,3 +477,4 @@ class AsyncPutBuilderTest {
         assertInstanceOf(DynamoSimplifiedException.class, ex.getCause());
     }
 }
+// endregion

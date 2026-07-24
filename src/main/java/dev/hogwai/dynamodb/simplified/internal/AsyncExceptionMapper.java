@@ -3,6 +3,7 @@ package dev.hogwai.dynamodb.simplified.internal;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
@@ -54,6 +55,9 @@ public final class AsyncExceptionMapper {
 
         if (unwrapped instanceof ConditionalCheckFailedException ccf) {
             return ConditionFailedException.fromSdk(ccf);
+        }
+        if (unwrapped instanceof software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException rnfe) {
+            return new ResourceNotFoundException(operation, tableName, rnfe);
         }
         if (unwrapped instanceof DynamoDbException dde) {
             return new OperationFailedException(operation, tableName, dde);

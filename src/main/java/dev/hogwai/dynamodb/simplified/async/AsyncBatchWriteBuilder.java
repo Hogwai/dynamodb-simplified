@@ -1,26 +1,18 @@
 package dev.hogwai.dynamodb.simplified.async;
 
-import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbLimits;
-import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractBatchWriteBuilder;
+import dev.hogwai.dynamodb.simplified.internal.*;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -35,15 +27,12 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * @param <T> the item type
  */
-public class AsyncBatchWriteBuilder<T> {
+public class AsyncBatchWriteBuilder<T> extends AbstractBatchWriteBuilder<T, AsyncBatchWriteBuilder<T>> {
 
     private static final Logger LOG = Logging.getLogger(AsyncBatchWriteBuilder.class);
 
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
-    private final List<T> itemsToPut = new ArrayList<>();
-    private final List<Key> keysToDelete = new ArrayList<>();
-    private ReturnConsumedCapacity returnConsumedCapacity;
 
     /**
      * Constructs a new {@code AsyncBatchWriteBuilder}.
@@ -53,60 +42,24 @@ public class AsyncBatchWriteBuilder<T> {
      */
     AsyncBatchWriteBuilder(@NonNull DynamoDbAsyncTable<T> table,
                            @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        super();
         this.table = table;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
-    /**
-     * Adds an item to be put (inserted or replaced) in the batch write.
-     *
-     * @param item the item to put
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchWriteBuilder<T> put(@NonNull T item) {
-        itemsToPut.add(Objects.requireNonNull(item, "item must not be null"));
+    @Override
+    protected AsyncBatchWriteBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Adds a delete operation for the given partition key.
-     *
-     * @param partitionKey the partition key of the item to delete
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchWriteBuilder<T> delete(@NonNull Object partitionKey) {
-        keysToDelete.add(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
-        return this;
+    @Override
+    protected @NonNull TableSchema<T> tableSchema() {
+        return table.tableSchema();
     }
 
-    /**
-     * Adds a delete operation for the given partition and sort key.
-     *
-     * @param partitionKey the partition key value
-     * @param sortKey      the sort key value
-     * @return this builder
-     */
-    @NonNull
-    public AsyncBatchWriteBuilder<T> delete(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        keysToDelete.add(Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                .build());
-        return this;
-    }
-
-    /**
-     * Configures whether to return consumed capacity information for the operation.
-     *
-     * @param returnConsumedCapacity the consumed capacity reporting level
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncBatchWriteBuilder<T> returnConsumedCapacity(@NonNull ReturnConsumedCapacity returnConsumedCapacity) {
-        this.returnConsumedCapacity = returnConsumedCapacity;
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
     /**
@@ -163,28 +116,9 @@ public class AsyncBatchWriteBuilder<T> {
                     }
                     long backoff = DynamoDbLimits.BASE_BACKOFF_MS * (1L << attempt);
                     backoff += ThreadLocalRandom.current().nextLong(DynamoDbLimits.BASE_BACKOFF_MS);
-                    try {
-                        Thread.sleep(backoff);
-                    } catch (InterruptedException ignored) {
-                        Thread.currentThread().interrupt();
-                        return CompletableFuture.completedFuture(new BatchWriteResult(unprocessed));
-                    }
-                    return executeWithRetry(unprocessed, attempt + 1, start);
+                    return AsyncRetryUtils.delay(backoff)
+                            .thenCompose(v -> executeWithRetry(unprocessed, attempt + 1, start));
                 });
     }
-
-    private Map<String, List<WriteRequest>> buildRequestItems() {
-        List<WriteRequest> writes = new ArrayList<>(itemsToPut.size() + keysToDelete.size());
-        for (T item : itemsToPut) {
-            Map<String, AttributeValue> itemMap = table.tableSchema().itemToMap(item, true);
-            writes.add(WriteRequest.builder().putRequest(r -> r.item(itemMap)).build());
-        }
-        for (Key key : keysToDelete) {
-            Map<String, AttributeValue> keyMap = key.primaryKeyMap(table.tableSchema());
-            writes.add(WriteRequest.builder().deleteRequest(r -> r.key(keyMap)).build());
-        }
-        return Map.of(table.tableName(), writes);
-    }
-
 
 }

@@ -1,20 +1,18 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
 import dev.hogwai.dynamodb.simplified.Table;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractTransactGetBuilder;
 import dev.hogwai.dynamodb.simplified.exception.OperationFailedException;
-import dev.hogwai.dynamodb.simplified.expression.ProjectionExpression;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.exception.ResourceNotFoundException;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
 import dev.hogwai.dynamodb.simplified.internal.Logging;
-import dev.hogwai.dynamodb.simplified.internal.Messages;
 import dev.hogwai.dynamodb.simplified.result.TransactGetResults;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.Document;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.internal.DefaultDocument;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactGetItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -22,7 +20,6 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Builds a transactional get operation that reads up to 100 items atomically
@@ -36,13 +33,12 @@ import java.util.function.Consumer;
  * <b>Note:</b> DynamoDB's TransactGetItems API does not support ConsistentRead.
  * This is an API-level limitation and cannot be worked around through any code path.
  */
-public class TransactGetBuilder {
+public class TransactGetBuilder extends AbstractTransactGetBuilder<TransactGetBuilder> {
 
     private static final Logger LOG = Logging.getLogger(TransactGetBuilder.class);
 
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient dynamoDbClient;
-    private final List<Entry<?>> entries = new ArrayList<>();
 
     /**
      * Constructs a transactional get builder.
@@ -53,8 +49,24 @@ public class TransactGetBuilder {
      * @param dynamoDbClient the low-level DynamoDB client (used for projection fallback)
      */
     public TransactGetBuilder(@NonNull DynamoDbEnhancedClient enhancedClient, @NonNull DynamoDbClient dynamoDbClient) {
+        super();
         this.enhancedClient = enhancedClient;
         this.dynamoDbClient = dynamoDbClient;
+    }
+
+    @Override
+    protected @NonNull TransactGetBuilder self() {
+        return this;
+    }
+
+    @Override
+    protected @NonNull String getTableName(@NonNull Entry entry) {
+        return ((DynamoDbTable<?>) entry.table()).tableName();
+    }
+
+    @Override
+    protected @NonNull TableSchema<?> getTableSchema(@NonNull Entry entry) {
+        return ((DynamoDbTable<?>) entry.table()).tableSchema();
     }
 
     /**
@@ -66,7 +78,7 @@ public class TransactGetBuilder {
      * @return this builder
      */
     public @NonNull <T> TransactGetBuilder addGetItem(@NonNull Table<T> table, @NonNull Object partitionKey) {
-        entries.add(new Entry<>(table.getRawTable(), buildKey(partitionKey, null)));
+        entries.add(new Entry(table.getRawTable(), buildKey(partitionKey, null)));
         return this;
     }
 
@@ -80,46 +92,7 @@ public class TransactGetBuilder {
      * @return this builder
      */
     public @NonNull <T> TransactGetBuilder addGetItem(@NonNull Table<T> table, @NonNull Object partitionKey, @NonNull Object sortKey) {
-        entries.add(new Entry<>(table.getRawTable(), buildKey(partitionKey, sortKey)));
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes for the most recently added item
-     * to the specified attribute names.
-     * <p>
-     * Projection is applied server-side, reducing data transfer and consumed capacity.
-     *
-     * @param attributes the attribute names to include
-     * @return this builder
-     * @throws IllegalStateException if no items have been added yet
-     */
-    public @NonNull TransactGetBuilder project(@NonNull String... attributes) {
-        if (entries.isEmpty()) {
-            throw new IllegalStateException(Messages.NO_TRANSACT_GET_ITEMS);
-        }
-        ProjectionExpression expression = ProjectionExpression.builder().include(attributes);
-        Entry<?> lastEntry = entries.removeLast();
-        entries.add(new Entry<>(lastEntry.table, lastEntry.key, expression));
-        return this;
-    }
-
-    /**
-     * Restricts the returned attributes for the most recently added item
-     * using a {@link ProjectionExpression} builder consumer.
-     *
-     * @param consumer a consumer to configure the projection expression
-     * @return this builder
-     * @throws IllegalStateException if no items have been added yet
-     */
-    public @NonNull TransactGetBuilder project(@NonNull Consumer<ProjectionExpression> consumer) {
-        if (entries.isEmpty()) {
-            throw new IllegalStateException(Messages.NO_TRANSACT_GET_ITEMS);
-        }
-        ProjectionExpression expression = ProjectionExpression.builder();
-        consumer.accept(expression);
-        Entry<?> lastEntry = entries.removeLast();
-        entries.add(new Entry<>(lastEntry.table, lastEntry.key, expression));
+        entries.add(new Entry(table.getRawTable(), buildKey(partitionKey, sortKey)));
         return this;
     }
 
@@ -134,7 +107,7 @@ public class TransactGetBuilder {
     public @NonNull TransactGetResults<DynamoDbTable<?>> execute() {
         long start = System.nanoTime();
         boolean hasProjection = entries.stream()
-                .anyMatch(TransactGetBuilder::hasNonEmptyProjection);
+                .anyMatch(AbstractTransactGetBuilder::hasNonEmptyProjection);
 
         if (hasProjection) {
             TransactGetResults<DynamoDbTable<?>> results = executeLowLevel();
@@ -146,19 +119,21 @@ public class TransactGetBuilder {
         }
 
         TransactGetItemsEnhancedRequest.Builder request = TransactGetItemsEnhancedRequest.builder();
-        for (Entry<?> entry : entries) {
-            request.addGetItem(entry.table, entry.key);
+        for (Entry entry : entries) {
+            request.addGetItem((DynamoDbTable<?>) entry.table(), entry.key());
         }
         List<Document> documents;
         try {
             documents = enhancedClient.transactGetItems(request.build());
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.TRANSACT_GET.getOperationName(), null, e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.TRANSACT_GET.getOperationName(), null, e);
         }
 
         List<DynamoDbTable<?>> tables = new ArrayList<>(entries.size());
-        for (Entry<?> entry : entries) {
-            tables.add(entry.table);
+        for (Entry entry : entries) {
+            tables.add((DynamoDbTable<?>) entry.table());
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("TransactGet (enhanced) completed in {}ms ({} entries)",
@@ -168,19 +143,7 @@ public class TransactGetBuilder {
     }
 
     private TransactGetResults<DynamoDbTable<?>> executeLowLevel() {
-        List<TransactGetItem> transactItems = new ArrayList<>();
-        for (Entry<?> entry : entries) {
-            ProjectionExpression projection = entry.projectionExpression;
-
-            transactItems.add(TransactGetItem.builder().get(b -> {
-                b.tableName(entry.table.tableName());
-                b.key(entry.key.primaryKeyMap(entry.table.tableSchema()));
-                if (projection != null && !projection.isEmpty()) {
-                    b.projectionExpression(projection.getExpression());
-                    b.expressionAttributeNames(projection.getExpressionNames());
-                }
-            }).build());
-        }
+        List<TransactGetItem> transactItems = buildTransactItems();
 
         TransactGetItemsRequest request = TransactGetItemsRequest.builder()
                 .transactItems(transactItems)
@@ -189,6 +152,8 @@ public class TransactGetBuilder {
         TransactGetItemsResponse response;
         try {
             response = dynamoDbClient.transactGetItems(request);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException e) {
+            throw new ResourceNotFoundException(DynamoDbOperations.TRANSACT_GET.getOperationName(), null, e);
         } catch (DynamoDbException e) {
             throw new OperationFailedException(DynamoDbOperations.TRANSACT_GET.getOperationName(), null, e);
         }
@@ -202,30 +167,12 @@ public class TransactGetBuilder {
         }
 
         List<DynamoDbTable<?>> tables = new ArrayList<>(entries.size());
-        for (Entry<?> entry : entries) {
-            tables.add(entry.table);
+        for (Entry entry : entries) {
+            tables.add((DynamoDbTable<?>) entry.table());
         }
 
-        return new TransactGetResults<>(documents, tables);
-    }
-
-    private static boolean hasNonEmptyProjection(Entry<?> entry) {
-        return entry.projectionExpression != null && !entry.projectionExpression.isEmpty();
-    }
-
-    private static Key buildKey(Object partitionKey, Object sortKey) {
-        Key.Builder builder = Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            builder.sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-        return builder.build();
-    }
-
-
-    private record Entry<T>(DynamoDbTable<T> table, Key key, @Nullable ProjectionExpression projectionExpression) {
-        Entry(DynamoDbTable<T> table, Key key) {
-            this(table, key, null);
-        }
-
+        List<ConsumedCapacity> consumedCapacities = response.consumedCapacity();
+        ConsumedCapacity consumedCapacity = consumedCapacities.isEmpty() ? null : consumedCapacities.getFirst();
+        return new TransactGetResults<>(documents, tables, consumedCapacity);
     }
 }

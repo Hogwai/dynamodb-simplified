@@ -230,7 +230,7 @@ class AsyncTableTest {
         assertThrows(NullPointerException.class, () -> table.create((Consumer) null));
     }
 
-    // ========== CRUD convenience methods ==========
+    // region CRUD convenience methods
 
     @Test
     @DisplayName("getItem(pk, sk) delegates to DynamoDbAsyncTable.getItem(Key) and returns Optional")
@@ -289,7 +289,9 @@ class AsyncTableTest {
         verify(dynamoDbAsyncTable).deleteItem(any(Key.class));
     }
 
-    // ========== Builder return methods ==========
+    // endregion
+
+    // region Builder return methods
 
     @Test
     @DisplayName("get(pk) returns a non-null AsyncGetItemBuilder")
@@ -396,7 +398,9 @@ class AsyncTableTest {
         assertNotNull(table.scan());
     }
 
-    // ========== Accessor methods ==========
+    // endregion
+
+    // region Accessor methods
 
     @Test
     @DisplayName("getEnhancedClient() returns the underlying DynamoDbEnhancedAsyncClient")
@@ -412,7 +416,9 @@ class AsyncTableTest {
         assertSame(dynamoDbAsyncClient, table.getDynamoDbClient());
     }
 
-    // ========== DDL ==========
+    // endregion
+
+    // region DDL
 
     @Test
     @DisplayName("create(CreateTableEnhancedRequest) delegates to DynamoDbAsyncTable.createTable(CreateTableEnhancedRequest)")
@@ -429,7 +435,9 @@ class AsyncTableTest {
         verify(dynamoDbAsyncTable).createTable(request);
     }
 
-    // ============ TTL Management ============
+    // endregion
+
+    // region TTL Management
 
     @Test
     @DisplayName("enableTtl() calls dynamoDbAsyncClient.updateTimeToLive with correct params")
@@ -495,7 +503,9 @@ class AsyncTableTest {
                 .build());
     }
 
-    // ========== Key-Only Update ==========
+    // endregion
+
+    // region Key-Only Update
 
     @SuppressWarnings("unchecked")
     private void mockSchema(String sortKeyName) {
@@ -545,3 +555,4 @@ class AsyncTableTest {
         verify(dynamoDbAsyncClient).updateItem(any(UpdateItemRequest.class));
     }
 }
+// endregion

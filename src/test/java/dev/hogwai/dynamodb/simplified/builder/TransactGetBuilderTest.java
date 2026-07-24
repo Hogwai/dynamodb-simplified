@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("TransactGetBuilder")
 class TransactGetBuilderTest {
 
-    // ============ Mocks ============
+    // region Mocks
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private DynamoDbTable<?> table;
@@ -49,7 +49,9 @@ class TransactGetBuilderTest {
     @Mock
     private DynamoDbClient dynamoDbClient;
 
-    // ============ Helpers ============
+    // endregion
+
+    // region Helpers
 
     @SuppressWarnings("unchecked")
     private <T> Table<T> createTable(DynamoDbTable<T> dynamoDbTable)
@@ -60,7 +62,9 @@ class TransactGetBuilderTest {
         return (Table<T>) ctor.newInstance(enhancedClient, dynamoDbTable, null);
     }
 
-    // ============ addGetItem ============
+    // endregion
+
+    // region addGetItem
 
     @Test
     @DisplayName("addGetItem with partition key adds entry and execute returns results")
@@ -87,7 +91,9 @@ class TransactGetBuilderTest {
         // table metadata, which requires a real TableSchema.
     }
 
-    // ============ Execute ============
+    // endregion
+
+    // region Execute
 
     @Test
     @DisplayName("execute returns a non-null TransactGetResults instance")
@@ -133,7 +139,9 @@ class TransactGetBuilderTest {
         assertTrue(results.isEmpty());
     }
 
-    // ============ Projection ============
+    // endregion
+
+    // region Projection
 
     @Test
     @DisplayName("project without entries throws IllegalStateException")
@@ -224,3 +232,4 @@ class TransactGetBuilderTest {
     }
 
 }
+// endregion

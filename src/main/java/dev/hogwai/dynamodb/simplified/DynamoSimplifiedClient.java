@@ -43,7 +43,7 @@ import java.util.function.Consumer;
  * @see DynamoDbEnhancedClient
  * @see DynamoDbClient
  */
-public class DynamoSimplifiedClient implements AutoCloseable {
+public class DynamoSimplifiedClient implements DynamoSimplifiedClientInterface {
     private static final Logger LOG = LoggerFactory.getLogger(DynamoSimplifiedClient.class);
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient dynamoDbClient;
@@ -115,6 +115,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      * @param <T>       the item type
      * @return a {@code Table<T>} for the specified table
      */
+    @Override
     @NonNull
     public <T> Table<T> table(@NonNull String tableName, @NonNull Class<T> itemClass) {
         TableSchema<T> schema = TableSchema.fromBean(itemClass);
@@ -130,6 +131,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      * @param <T>       the item type
      * @return a {@code Table<T>} for the specified table
      */
+    @Override
     @NonNull
     public <T> Table<T> table(@NonNull String tableName, @NonNull TableSchema<T> schema) {
         DynamoDbTable<T> table = enhancedClient.table(tableName, schema);
@@ -161,6 +163,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      * @param <T>          the item type
      * @return a {@code Table<T>} for the specified table
      */
+    @Override
     @NonNull
     public <T> Table<T> table(@NonNull String tableName, @NonNull Class<T> itemClass,
                               @NonNull Consumer<StaticTableSchema.Builder<T>> configurator) {
@@ -170,7 +173,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
         return table(tableName, schema);
     }
 
-    // ============ Single-Table / Entity Operations ============
+    // region Single-Table / Entity Operations
 
     /**
      * Returns an {@link EntityTable} for the given entity class, enabling
@@ -187,15 +190,15 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      * @param <T>         the entity type
      * @return an {@code EntityTable<T>} for single-table design
      */
+    @Override
     @NonNull
     public <T> EntityTable<T> entityTable(@NonNull Class<T> entityClass) {
-        return new EntityTableBuilder<>(entityClass)
-                .dynamoDbClient(dynamoDbClient)
-                .enhancedClient(enhancedClient)
-                .build();
+        return EntityTableBuilder.create(entityClass, dynamoDbClient, enhancedClient);
     }
 
-    // ============ Transaction Operations ============
+    // endregion
+
+    // region Transaction Operations
 
     /**
      * Starts building a transactional read operation across one or more tables.
@@ -204,6 +207,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      *
      * @return a transact get builder
      */
+    @Override
     @NonNull
     public TransactGetBuilder transactGet() {
         return new TransactGetBuilder(enhancedClient, dynamoDbClient);
@@ -216,18 +220,22 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      *
      * @return a transact write builder
      */
+    @Override
     @NonNull
     public TransactWriteBuilder transactWrite() {
         return new TransactWriteBuilder(enhancedClient, dynamoDbClient);
     }
 
-    // ============ Cross-Table Batch Operations ============
+    // endregion
+
+    // region Cross-Table Batch Operations
 
     /**
      * Returns a cross-table batch get builder for retrieving items from multiple tables.
      *
      * @return a cross-table batch get builder
      */
+    @Override
     @NonNull
     public CrossTableBatchGetBuilder batchGet() {
         return new CrossTableBatchGetBuilder(dynamoDbClient);
@@ -238,6 +246,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      *
      * @return a cross-table batch write builder
      */
+    @Override
     @NonNull
     public CrossTableBatchWriteBuilder batchWrite() {
         return new CrossTableBatchWriteBuilder(dynamoDbClient);
@@ -248,6 +257,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      *
      * @return the enhanced DynamoDB client
      */
+    @Override
     @NonNull
     public DynamoDbEnhancedClient getEnhancedClient() {
         return enhancedClient;
@@ -258,6 +268,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      *
      * @return the DynamoDB client
      */
+    @Override
     @NonNull
     public DynamoDbClient getDynamoDbClient() {
         return dynamoDbClient;
@@ -270,6 +281,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      *
      * @return a list of DynamoDB table names
      */
+    @Override
     @NonNull
     public List<String> listTables() {
         return dynamoDbClient.listTables().tableNames();
@@ -286,6 +298,7 @@ public class DynamoSimplifiedClient implements AutoCloseable {
      * @param request the PartiQL request to execute
      * @return the response from DynamoDB
      */
+    @Override
     @NonNull
     public ExecuteStatementResponse executeStatement(@NonNull ExecuteStatementRequest request) {
         return dynamoDbClient.executeStatement(request);
@@ -301,3 +314,4 @@ public class DynamoSimplifiedClient implements AutoCloseable {
         dynamoDbClient.close();
     }
 }
+// endregion

@@ -1,6 +1,6 @@
 package dev.hogwai.dynamodb.simplified.builder;
 
-import dev.hogwai.dynamodb.simplified.Versioned;
+import dev.hogwai.dynamodb.simplified.entity.Version;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,23 +54,18 @@ class PutBuilderTest {
         }
     }
 
-    static class VersionedTestItem implements Versioned {
+    static class VersionedTestItem {
         public String id;
-        private Integer version;
+        @Version
+        Integer version;
 
         VersionedTestItem(String id) {
             this.id = id;
             this.version = 1;
         }
 
-        @Override
-        public Integer getVersion() {
+        Integer getVersion() {
             return version;
-        }
-
-        @Override
-        public void setVersion(Integer version) {
-            this.version = version;
         }
     }
 
@@ -164,7 +159,7 @@ class PutBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ ReturnValues tests ============
+    // region ReturnValues tests
 
     @Test
     @DisplayName("returnValues() returns itself for fluent chaining")
@@ -280,7 +275,9 @@ class PutBuilderTest {
         verifyNoInteractions(dynamoDbClient);
     }
 
-    // ============ Optimistic locking tests ============
+    // endregion
+
+    // region Optimistic locking tests
 
     @Test
     @DisplayName("withOptimisticLocking returns itself for fluent chaining")
@@ -302,7 +299,9 @@ class PutBuilderTest {
         assertNull(request.conditionExpression(), "Non-Versioned item should not get a condition");
     }
 
-    // ============ executeReturning tests ============
+    // endregion
+
+    // region executeReturning tests
 
     @Test
     @DisplayName("executeReturning with returnValues ALL_OLD returns the previous item")
@@ -376,7 +375,9 @@ class PutBuilderTest {
         assertThrows(ConditionFailedException.class, builder::executeReturning);
     }
 
-    // ============ Optimistic locking with existing condition ============
+    // endregion
+
+    // region Optimistic locking with existing condition
 
     @Test
     @DisplayName("withOptimisticLocking merges version condition with existing condition")
@@ -392,3 +393,4 @@ class PutBuilderTest {
         verify(versionedTable).putItem(any(PutItemEnhancedRequest.class));
     }
 }
+// endregion

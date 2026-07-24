@@ -4,12 +4,12 @@ import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
 import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
+import dev.hogwai.dynamodb.simplified.internal.KeyUtils;
 import dev.hogwai.dynamodb.simplified.result.BatchWriteResult;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
@@ -53,7 +53,7 @@ public class AsyncTable<T> {
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
-    // ============ Query ============
+    // region Query
 
     /**
      * Starts building an async query operation against this table.
@@ -65,7 +65,9 @@ public class AsyncTable<T> {
         return new AsyncQueryBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
-    // ============ Scan ============
+    // endregion
+
+    // region Scan
 
     /**
      * Starts building an async scan operation against this table.
@@ -77,7 +79,9 @@ public class AsyncTable<T> {
         return new AsyncScanBuilder<>(dynamoDbAsyncTable, dynamoDbAsyncClient);
     }
 
-    // ============ Get Item ============
+    // endregion
+
+    // region Get Item
 
     /**
      * Starts building a get operation by partition key.
@@ -110,7 +114,7 @@ public class AsyncTable<T> {
      */
     @NonNull
     public CompletableFuture<Optional<T>> getItem(@NonNull Object partitionKey) {
-        return dynamoDbAsyncTable.getItem(Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build())
+        return dynamoDbAsyncTable.getItem(KeyUtils.buildKey(AttributeValueConverter.toKeyAttributeValue(partitionKey), null))
                 .thenApply(Optional::ofNullable);
     }
 
@@ -123,14 +127,15 @@ public class AsyncTable<T> {
      */
     @NonNull
     public CompletableFuture<Optional<T>> getItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return dynamoDbAsyncTable.getItem(Key.builder()
-                        .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                        .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                        .build())
+        return dynamoDbAsyncTable.getItem(KeyUtils.buildKey(
+                        AttributeValueConverter.toKeyAttributeValue(partitionKey),
+                        AttributeValueConverter.toKeyAttributeValue(sortKey)))
                 .thenApply(Optional::ofNullable);
     }
 
-    // ============ Put Item ============
+    // endregion
+
+    // region Put Item
 
     /**
      * Starts building a put operation with optional conditions.
@@ -154,7 +159,9 @@ public class AsyncTable<T> {
         return dynamoDbAsyncTable.putItem(item);
     }
 
-    // ============ Update Item ============
+    // endregion
+
+    // region Update Item
 
     /**
      * Starts building an update operation with optional conditions and partial expressions.
@@ -216,7 +223,9 @@ public class AsyncTable<T> {
         return dynamoDbAsyncTable.updateItem(item);
     }
 
-    // ============ Delete Item ============
+    // endregion
+
+    // region Delete Item
 
     /**
      * Starts building a delete operation by partition key with optional conditions.
@@ -251,7 +260,7 @@ public class AsyncTable<T> {
     @NonNull
     public CompletableFuture<T> deleteItem(@NonNull Object partitionKey) {
         return dynamoDbAsyncTable.deleteItem(
-                Key.builder().partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey)).build());
+                KeyUtils.buildKey(AttributeValueConverter.toKeyAttributeValue(partitionKey), null));
     }
 
     /**
@@ -264,13 +273,14 @@ public class AsyncTable<T> {
      */
     @NonNull
     public CompletableFuture<T> deleteItem(@NonNull Object partitionKey, @NonNull Object sortKey) {
-        return dynamoDbAsyncTable.deleteItem(Key.builder()
-                .partitionValue(AttributeValueConverter.toKeyAttributeValue(partitionKey))
-                .sortValue(AttributeValueConverter.toKeyAttributeValue(sortKey))
-                .build());
+        return dynamoDbAsyncTable.deleteItem(KeyUtils.buildKey(
+                AttributeValueConverter.toKeyAttributeValue(partitionKey),
+                AttributeValueConverter.toKeyAttributeValue(sortKey)));
     }
 
-    // ============ Secondary Index ============
+    // endregion
+
+    // region Secondary Index
 
     /**
      * Returns a typed wrapper for the named secondary index (GSI or LSI).
@@ -286,7 +296,9 @@ public class AsyncTable<T> {
         return new AsyncIndex<>(dynamoDbAsyncTable.index(indexName), dynamoDbAsyncClient);
     }
 
-    // ============ Batch Operations ============
+    // endregion
+
+    // region Batch Operations
 
     /**
      * Starts building an async batch get operation to retrieve multiple items by their keys.
@@ -327,7 +339,9 @@ public class AsyncTable<T> {
         return batch.execute();
     }
 
-    // ============ Raw Access ============
+    // endregion
+
+    // region Raw Access
 
     /**
      * Returns the underlying {@link DynamoDbAsyncTable} for advanced operations.
@@ -359,7 +373,9 @@ public class AsyncTable<T> {
         return dynamoDbAsyncClient;
     }
 
-    // ============ Table Management (DDL) ============
+    // endregion
+
+    // region Table Management (DDL)
 
     /**
      * Creates the DynamoDB table corresponding to this {@code AsyncTable} instance.
@@ -428,6 +444,31 @@ public class AsyncTable<T> {
     }
 
     /**
+     * Updates the DynamoDB table with the specified configuration.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * asyncTable.updateTable(b -> b
+     *     .provisionedThroughput(p -> p
+     *         .readCapacityUnits(10L)
+     *         .writeCapacityUnits(10L)));
+     * }</pre>
+     *
+     * @param requestConsumer a consumer to configure the {@link UpdateTableRequest.Builder}
+     * @return a {@link CompletableFuture} that completes when the table has been updated
+     */
+    @NonNull
+    public CompletableFuture<Void> updateTable(@NonNull Consumer<UpdateTableRequest.Builder> requestConsumer) {
+        Objects.requireNonNull(requestConsumer, "requestConsumer must not be null");
+        return dynamoDbAsyncClient.updateTable(UpdateTableRequest.builder()
+                        .tableName(dynamoDbAsyncTable.tableName())
+                        .applyMutation(requestConsumer)
+                        .build())
+                .<Void>thenApply(ignored -> null)
+                .exceptionally(AsyncExceptionMapper.handler("UpdateTable", dynamoDbAsyncTable.tableName()));
+    }
+
+    /**
      * Checks whether the DynamoDB table exists.
      * <p>
      * Returns a {@link CompletableFuture} that completes with {@code true}
@@ -455,7 +496,9 @@ public class AsyncTable<T> {
                 });
     }
 
-    // ============ TTL Management ============
+    // endregion
+
+    // region TTL Management
 
     /**
      * Enables Time To Live (TTL) on this table with the given attribute name.
@@ -509,7 +552,10 @@ public class AsyncTable<T> {
                 .exceptionally(AsyncExceptionMapper.handler("DescribeTimeToLive", dynamoDbAsyncTable.tableName()));
     }
 
-    // ============ Internal Helpers ============
+    // endregion
+
+    // region Internal Helpers
 
 
 }
+// endregion

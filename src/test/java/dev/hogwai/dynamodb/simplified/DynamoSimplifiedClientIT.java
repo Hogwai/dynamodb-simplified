@@ -80,7 +80,7 @@ class DynamoSimplifiedClientIT {
         table.scan().executeAll().forEach(p -> table.deleteItem(p.getId()));
     }
 
-    // ============ Factory & Table creation ============
+    // region Factory & Table creation
 
     @Test
     void createClientAndTable() {
@@ -90,7 +90,9 @@ class DynamoSimplifiedClientIT {
         assertTrue(listed.contains(TABLE_NAME), "Table " + TABLE_NAME + " should exist");
     }
 
-    // ============ Put & Get ============
+    // endregion
+
+    // region Put & Get
 
     @Test
     void putAndGetItem() {
@@ -111,7 +113,9 @@ class DynamoSimplifiedClientIT {
         assertFalse(found.isPresent());
     }
 
-    // ============ Builder-based Put ============
+    // endregion
+
+    // region Builder-based Put
 
     @Test
     void putWithBuilder() {
@@ -123,7 +127,9 @@ class DynamoSimplifiedClientIT {
         assertEquals("Gadget", found.get().getName());
     }
 
-    // ============ Update (full replacement) ============
+    // endregion
+
+    // region Update (full replacement)
 
     @Test
     void updateItemFullReplacement() {
@@ -140,7 +146,9 @@ class DynamoSimplifiedClientIT {
         assertTrue(found.get().getInStock());
     }
 
-    // ============ Partial update with UpdateExpression ============
+    // endregion
+
+    // region Partial update with UpdateExpression
 
     @Test
     void partialUpdateWithExpression() {
@@ -174,7 +182,9 @@ class DynamoSimplifiedClientIT {
         assertEquals(150.0, found.get().getPrice(), 0.001);
     }
 
-    // ============ Conditional put ============
+    // endregion
+
+    // region Conditional put
 
     @Test
     void conditionalPutOnlyIfNotExists() {
@@ -210,7 +220,9 @@ class DynamoSimplifiedClientIT {
         assertEquals("Replaced", found.get().getName());
     }
 
-    // ============ Conditional update ============
+    // endregion
+
+    // region Conditional update
 
     @Test
     void conditionalUpdateWithMatchingCondition() {
@@ -239,7 +251,9 @@ class DynamoSimplifiedClientIT {
         assertEquals("KeepMe", found.get().getName());
     }
 
-    // ============ Conditional delete ============
+    // endregion
+
+    // region Conditional delete
 
     @Test
     void conditionalDeleteWithMatchingCondition() {
@@ -260,7 +274,9 @@ class DynamoSimplifiedClientIT {
         assertTrue(table.getItem("p11").isPresent());
     }
 
-    // ============ Query ============
+    // endregion
+
+    // region Query
 
     @Test
     void queryByPartitionKey() {
@@ -278,7 +294,9 @@ class DynamoSimplifiedClientIT {
         assertTrue(results.isEmpty());
     }
 
-    // ============ Scan ============
+    // endregion
+
+    // region Scan
 
     @Test
     void scanAllItems() {
@@ -316,7 +334,9 @@ class DynamoSimplifiedClientIT {
         assertNull(results.getFirst().getPrice());
     }
 
-    // ============ Pagination ============
+    // endregion
+
+    // region Pagination
 
     @Test
     void scanWithPagination() {
@@ -338,7 +358,9 @@ class DynamoSimplifiedClientIT {
         assertEquals(2, secondPage.items().size());
     }
 
-    // ============ Count ============
+    // endregion
+
+    // region Count
 
     @Test
     void scanCount() {
@@ -357,7 +379,9 @@ class DynamoSimplifiedClientIT {
         assertEquals(1, count);
     }
 
-    // ============ Batch operations ============
+    // endregion
+
+    // region Batch operations
 
     @Test
     void batchWritePutAndDelete() {
@@ -390,7 +414,9 @@ class DynamoSimplifiedClientIT {
         assertEquals(2, results.items().size());
     }
 
-    // ============ Transaction operations ============
+    // endregion
+
+    // region Transaction operations
 
     @Test
     void transactWritePutAndConditionCheck() {
@@ -435,7 +461,9 @@ class DynamoSimplifiedClientIT {
         assertNull(results.get(0));
     }
 
-    // ============ Projection via GetItemBuilder ============
+    // endregion
+
+    // region Projection via GetItemBuilder
 
     @Test
     void getItemWithProjection() {
@@ -450,7 +478,9 @@ class DynamoSimplifiedClientIT {
         assertNull(result.get().getPrice()); // not projected
     }
 
-    // ============ Delete with ReturnValues ============
+    // endregion
+
+    // region Delete with ReturnValues
 
     @Test
     void deleteItemWithReturnValues() {
@@ -476,7 +506,9 @@ class DynamoSimplifiedClientIT {
         assertTrue(deleted.isEmpty());
     }
 
-    // ============ Execution Variants ============
+    // endregion
+
+    // region Execution Variants
 
     @Test
     void scanExecuteStream() {
@@ -507,7 +539,9 @@ class DynamoSimplifiedClientIT {
         assertFalse(result.isPresent());
     }
 
-    // ============ TransactWrite with UpdateExpression ============
+    // endregion
+
+    // region TransactWrite with UpdateExpression
 
     @Test
     void transactWriteWithUpdateExpression() {
@@ -552,7 +586,9 @@ class DynamoSimplifiedClientIT {
         assertEquals(5.0, checkFound.get().getPrice(), 0.001);
     }
 
-    // ============ DDL tests ============
+    // endregion
+
+    // region DDL tests
 
     @Test
     void tableExistsReturnsTrue() {
@@ -589,3 +625,4 @@ class DynamoSimplifiedClientIT {
         assertFalse(tempTable.exists());
     }
 }
+// endregion

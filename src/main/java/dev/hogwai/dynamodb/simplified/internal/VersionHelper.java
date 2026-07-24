@@ -1,6 +1,5 @@
 package dev.hogwai.dynamodb.simplified.internal;
 
-import dev.hogwai.dynamodb.simplified.Versioned;
 import dev.hogwai.dynamodb.simplified.entity.Version;
 import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
@@ -22,53 +21,46 @@ public final class VersionHelper {
     }
 
     /**
-     * Returns the version from a potentially-versioned item.
+     * Returns the version from an item with a {@link Version} field.
      *
-     * @param item the item (may implement Versioned or have a {@link Version} field)
-     * @return the version, or null if the item is not versioned or version is null
+     * @param item the item to check
+     * @return the version, or null if the item has no version field or version is null
      */
     @Nullable
     public static Integer getVersion(@NonNull Object item) {
-        if (item instanceof Versioned v) {
-            return v.getVersion();
-        }
         return getAnnotatedVersion(item).orElse(null);
     }
 
     /**
-     * Increments the version on a versioned item.
-     * <p>
-     * Supports items implementing {@link Versioned} or having a field annotated with {@link Version}.
+     * Increments the version on an item with a {@link Version} field.
      *
      * @param item the item to update
      */
+
+    @SuppressWarnings("java:S3011")
     public static void incrementVersion(@NonNull Object item) {
-        if (item instanceof Versioned v) {
-            Integer current = v.getVersion();
-            v.setVersion(current != null ? current + 1 : 1);
-        } else {
-            getAnnotatedVersionField(item.getClass()).ifPresent(f -> {
-                try {
-                    f.setAccessible(true);
-                    Integer current = (Integer) f.get(item);
-                    f.set(item, current != null ? current + 1 : 1);
-                } catch (Exception e) {
-                    throw new DynamoSimplifiedException("Failed to increment @Version field on " + item.getClass().getName(), e);
-                }
-            });
+        Optional<Field> versionField = getAnnotatedVersionField(item.getClass());
+        if (versionField.isPresent()) {
+            Field f = versionField.get();
+            try {
+                f.setAccessible(true);
+                Integer current = (Integer) f.get(item);
+                f.set(item, current != null ? current + 1 : 1);
+            } catch (Exception e) {
+                throw new DynamoSimplifiedException("Failed to increment @Version field on " + item.getClass().getName(), e);
+            }
         }
     }
 
     /**
-     * Checks whether the given item is versioned, either by implementing
-     * {@link Versioned} or by having a field annotated with {@link Version}.
+     * Checks whether the given item has a field annotated with {@link Version}.
      *
      * @param item the item to check
      * @param <T>  the item type
-     * @return true if the item is versioned
+     * @return true if the item has a @Version field
      */
     public static <T> boolean isVersioned(@NonNull T item) {
-        return item instanceof Versioned || hasVersionAnnotation(item.getClass());
+        return hasVersionAnnotation(item.getClass());
     }
 
     private static boolean hasVersionAnnotation(Class<?> clazz) {
@@ -76,6 +68,7 @@ public final class VersionHelper {
                 .anyMatch(f -> f.isAnnotationPresent(Version.class));
     }
 
+    @SuppressWarnings("java:S3011")
     private static Optional<Integer> getAnnotatedVersion(@NonNull Object item) {
         return getAnnotatedVersionField(item.getClass())
                 .map(f -> {

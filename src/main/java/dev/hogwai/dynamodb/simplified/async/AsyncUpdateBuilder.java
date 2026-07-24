@@ -1,17 +1,13 @@
 package dev.hogwai.dynamodb.simplified.async;
 
-import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
-import dev.hogwai.dynamodb.simplified.expression.UpdateExpression;
+import dev.hogwai.dynamodb.simplified.builder.base.AbstractUpdateBuilder;
 import dev.hogwai.dynamodb.simplified.internal.AsyncExceptionMapper;
-import dev.hogwai.dynamodb.simplified.internal.AttributeValueConverter;
 import dev.hogwai.dynamodb.simplified.internal.DynamoDbOperations;
-import dev.hogwai.dynamodb.simplified.internal.Logging;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.IgnoreNullsMode;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
@@ -23,128 +19,65 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * Async fluent builder for updating an item in a DynamoDB table.
  * Supports both full-item replacement and partial updates via an
- * {@link UpdateExpression}. Part of the DynamoDB Simplified library.
+ * {@link dev.hogwai.dynamodb.simplified.expression.UpdateExpression}.
+ * Part of the DynamoDB Simplified library.
  *
  * @param <T> the type of the item
  */
 @SuppressWarnings("PMD.CognitiveComplexity")
-public class AsyncUpdateBuilder<T> {
-    private static final Logger LOG = Logging.getLogger(AsyncUpdateBuilder.class);
+public class AsyncUpdateBuilder<T> extends AbstractUpdateBuilder<T, AsyncUpdateBuilder<T>> {
 
     private final DynamoDbAsyncTable<T> table;
-    private final T item;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
-    @Nullable
-    private Map<String, AttributeValue> keyMap;
-    private UpdateExpression updateExpression;
-    private ConditionExpression conditionExpression;
-    private boolean ignoreNulls = true;
-    private ReturnValue returnValues;
 
     AsyncUpdateBuilder(@NonNull DynamoDbAsyncTable<T> table, @NonNull T item,
                        @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        super(item);
         this.table = table;
-        this.item = item;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
     }
 
     /**
-     * Package-private key-only constructor for use from {@link AsyncTable}.
+     * Package-private key-only constructor for use from {@link dev.hogwai.dynamodb.simplified.async.AsyncTable}.
      * Skips the item parameter and builds the key map directly from partition
      * (and optionally sort) key values.
      */
     AsyncUpdateBuilder(@NonNull DynamoDbAsyncTable<T> table, @NonNull DynamoDbAsyncClient dynamoDbAsyncClient,
                        @NonNull Object partitionKey, @Nullable Object sortKey) {
+        super();
         this.table = table;
-        this.item = null;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
         buildKeyMapFromValues(partitionKey, sortKey);
     }
 
-    /**
-     * Defines a partial update expression ({@code SET}, {@code REMOVE}, {@code ADD}, {@code DELETE}).
-     * When set, this replaces the full-item replacement with a targeted partial update.
-     *
-     * @param updateBuilder a consumer that configures the {@link UpdateExpression}
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncUpdateBuilder<T> update(@NonNull Consumer<UpdateExpression> updateBuilder) {
-        this.updateExpression = UpdateExpression.builder();
-        updateBuilder.accept(this.updateExpression);
+    @Override
+    protected @NonNull AsyncUpdateBuilder<T> self() {
         return this;
     }
 
-    /**
-     * Configures a condition expression that gates the update operation.
-     * DynamoDB evaluates this condition <b>before</b> updating the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param configurator a consumer to build the condition expression
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncUpdateBuilder<T> condition(@NonNull Consumer<ConditionExpression.Builder> configurator) {
-        var builder = ConditionExpression.builder();
-        configurator.accept(builder);
-        this.conditionExpression = builder.build();
-        return this;
+    @Override
+    protected @NonNull String tableName() {
+        return table.tableName();
     }
 
-    /**
-     * Configures a condition expression that gates the update operation.
-     * DynamoDB evaluates this condition <b>before</b> updating the item
-     * (unlike a filter expression which applies after reading).
-     *
-     * @param condition the condition expression
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncUpdateBuilder<T> condition(@Nullable ConditionExpression condition) {
-        this.conditionExpression = condition;
-        return this;
+    @Override
+    protected @NonNull Key getKeyFromItem() {
+        return table.keyFrom(item);
     }
 
-    /**
-     * Controls whether null-valued attributes in the item are ignored during
-     * full-item replacement. Has no effect when using a partial update expression.
-     *
-     * @param ignoreNulls {@code true} (default) to skip null attributes,
-     *                    {@code false} to persist them
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncUpdateBuilder<T> ignoreNulls(boolean ignoreNulls) {
-        this.ignoreNulls = ignoreNulls;
-        return this;
-    }
-
-    /**
-     * Configures which item attributes to return after the update.
-     * <p>
-     * When set, controls the {@code ReturnValues} parameter of the underlying
-     * {@code UpdateItemRequest}. Common values: {@link ReturnValue#ALL_NEW}
-     * (default if not set), {@link ReturnValue#NONE}, {@link ReturnValue#ALL_OLD},
-     * {@link ReturnValue#UPDATED_NEW}, {@link ReturnValue#UPDATED_OLD}.
-     *
-     * @param returnValues the return value setting, or {@code null} to use the default
-     * @return this builder for chaining
-     */
-    @NonNull
-    public AsyncUpdateBuilder<T> returnValues(@Nullable ReturnValue returnValues) {
-        this.returnValues = returnValues;
-        return this;
+    @Override
+    protected @NonNull TableSchema<T> getTableSchema() {
+        return table.tableSchema();
     }
 
     /**
      * Executes the update operation. If a partial update expression was configured
-     * via {@link #update(Consumer)}, a targeted partial update is performed via the
-     * low-level async DynamoDB client. Otherwise, the full item is replaced.
+     * via {@link #update(java.util.function.Consumer)}, a targeted partial update is
+     * performed via the low-level async DynamoDB client. Otherwise, the full item is replaced.
      *
      * @return a {@link CompletableFuture} containing the updated item, or empty if not found
      */
@@ -165,10 +98,12 @@ public class AsyncUpdateBuilder<T> {
                     "Key-only update requires a partial update expression. "
                             + "Use update(expr -> ...) to configure an update expression."));
         }
+        applyOptimisticLocking();
         long start = System.nanoTime();
         if (updateExpression != null && !updateExpression.isEmpty()) {
             return executeWithExpression()
                     .thenApply(result -> {
+                        incrementVersion();
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("AsyncUpdate on table '{}' completed in {}ms (expression)",
                                     table.tableName(), (System.nanoTime() - start) / 1_000_000);
@@ -178,6 +113,7 @@ public class AsyncUpdateBuilder<T> {
         }
         return executeWithFullItem()
                 .thenApply(result -> {
+                    incrementVersion();
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("AsyncUpdate on table '{}' completed in {}ms (full item)",
                                 table.tableName(), (System.nanoTime() - start) / 1_000_000);
@@ -186,9 +122,10 @@ public class AsyncUpdateBuilder<T> {
                 });
     }
 
-    // ---- Full item replacement ----
+    // region Full item replacement
 
     private CompletableFuture<T> executeWithFullItem() {
+        @SuppressWarnings("unchecked")
         UpdateItemEnhancedRequest.Builder<T> requestBuilder =
                 UpdateItemEnhancedRequest.builder((Class<T>) item.getClass())
                         .item(item)
@@ -204,13 +141,25 @@ public class AsyncUpdateBuilder<T> {
                 .exceptionally(AsyncExceptionMapper.handler(DynamoDbOperations.UPDATE_ITEM.getOperationName(), table.tableName()));
     }
 
-    // ---- Partial update via low-level async client ----
+    // endregion
+
+    // region Partial update via low-level async client
 
     private CompletableFuture<T> executeWithExpression() {
         Map<String, AttributeValue> expressionKeyMap = buildKeyMap();
 
-        Map<String, String> allNames = new HashMap<>(updateExpression.getExpressionNames());
-        Map<String, AttributeValue> allValues = new HashMap<>(updateExpression.getExpressionValues());
+        Map<String, String> allNames;
+        Map<String, AttributeValue> allValues;
+
+        if (conditionExpression != null && !conditionExpression.isEmpty()) {
+            allNames = new HashMap<>(updateExpression.getExpressionNames());
+            allNames.putAll(conditionExpression.getExpressionNames());
+            allValues = new HashMap<>(updateExpression.getExpressionValues());
+            allValues.putAll(conditionExpression.getExpressionValues());
+        } else {
+            allNames = updateExpression.getExpressionNames();
+            allValues = updateExpression.getExpressionValues();
+        }
 
         UpdateItemRequest.Builder requestBuilder = UpdateItemRequest.builder()
                 .tableName(table.tableName())
@@ -221,12 +170,7 @@ public class AsyncUpdateBuilder<T> {
                 .returnValues(returnValues != null ? returnValues : ReturnValue.ALL_NEW);
 
         if (conditionExpression != null && !conditionExpression.isEmpty()) {
-            allNames.putAll(conditionExpression.getExpressionNames());
-            allValues.putAll(conditionExpression.getExpressionValues());
-            requestBuilder
-                    .conditionExpression(conditionExpression.getExpression())
-                    .expressionAttributeNames(allNames)
-                    .expressionAttributeValues(allValues);
+            requestBuilder.conditionExpression(conditionExpression.getExpression());
         }
 
         return dynamoDbAsyncClient.updateItem(requestBuilder.build())
@@ -240,27 +184,5 @@ public class AsyncUpdateBuilder<T> {
                 });
     }
 
-    // ---- Key extraction from item ----
-
-    private Map<String, AttributeValue> buildKeyMap() {
-        if (keyMap != null) {
-            return keyMap;
-        }
-        Key key = table.keyFrom(item);
-        return key.primaryKeyMap(table.tableSchema());
-    }
-
-    private void buildKeyMapFromValues(@NonNull Object partitionKey, @Nullable Object sortKey) {
-        TableMetadata metadata = table.tableSchema().tableMetadata();
-        Map<String, AttributeValue> map = new HashMap<>();
-        map.put(metadata.primaryPartitionKey(), AttributeValueConverter.toKeyAttributeValue(partitionKey));
-        if (sortKey != null) {
-            map.put(
-                    metadata.primarySortKey()
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "Table " + table.tableName() + " has no sort key, but a sort key value was provided.")),
-                    AttributeValueConverter.toKeyAttributeValue(sortKey));
-        }
-        this.keyMap = map;
-    }
 }
+// endregion

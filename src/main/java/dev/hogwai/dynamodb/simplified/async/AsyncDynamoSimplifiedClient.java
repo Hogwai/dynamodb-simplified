@@ -1,7 +1,7 @@
 package dev.hogwai.dynamodb.simplified.async;
 
 import dev.hogwai.dynamodb.simplified.entity.AsyncEntityTable;
-import dev.hogwai.dynamodb.simplified.entity.AsyncEntityTableBuilder;
+import dev.hogwai.dynamodb.simplified.entity.EntityTableBuilder;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ import java.util.function.Consumer;
  * @see DynamoDbEnhancedAsyncClient
  * @see DynamoDbAsyncClient
  */
-public class AsyncDynamoSimplifiedClient implements AutoCloseable {
+public class AsyncDynamoSimplifiedClient implements AsyncDynamoSimplifiedClientInterface {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncDynamoSimplifiedClient.class);
     private final DynamoDbEnhancedAsyncClient enhancedAsyncClient;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
@@ -105,6 +105,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      * @param <T>       the item type
      * @return an {@code AsyncTable<T>} for the specified table
      */
+    @Override
     @NonNull
     public <T> AsyncTable<T> table(@NonNull String tableName, @NonNull Class<T> itemClass) {
         TableSchema<T> schema = TableSchema.fromBean(itemClass);
@@ -119,6 +120,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      * @param <T>       the item type
      * @return an {@code AsyncTable<T>} for the specified table
      */
+    @Override
     @NonNull
     public <T> AsyncTable<T> table(@NonNull String tableName, @NonNull TableSchema<T> schema) {
         return new AsyncTable<>(enhancedAsyncClient, enhancedAsyncClient.table(tableName, schema), dynamoDbAsyncClient);
@@ -137,6 +139,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      * @param <T>          the item type
      * @return an {@code AsyncTable<T>} for the specified table
      */
+    @Override
     @NonNull
     public <T> AsyncTable<T> table(@NonNull String tableName, @NonNull Class<T> itemClass,
                                    @NonNull Consumer<StaticTableSchema.Builder<T>> configurator) {
@@ -146,7 +149,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
         return table(tableName, schema);
     }
 
-    // ============ Single-Table / Entity Operations ============
+    // region Single-Table / Entity Operations
 
     /**
      * Returns an {@link AsyncEntityTable} for the given entity class, enabling
@@ -165,15 +168,15 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      * @param <T>         the entity type
      * @return an {@code AsyncEntityTable<T>} for single-table design
      */
+    @Override
     @NonNull
     public <T> AsyncEntityTable<T> entityTable(@NonNull Class<T> entityClass) {
-        return new AsyncEntityTableBuilder<>(entityClass)
-                .dynamoDbAsyncClient(dynamoDbAsyncClient)
-                .enhancedAsyncClient(enhancedAsyncClient)
-                .build();
+        return EntityTableBuilder.createAsync(entityClass, dynamoDbAsyncClient, enhancedAsyncClient);
     }
 
-    // ============ Transaction Operations ============
+    // endregion
+
+    // region Transaction Operations
 
     /**
      * Starts building an async transactional read operation across one or more tables.
@@ -182,6 +185,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      *
      * @return an {@link AsyncTransactGetBuilder} for configuring and executing the transaction
      */
+    @Override
     @NonNull
     public AsyncTransactGetBuilder transactGet() {
         return new AsyncTransactGetBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
@@ -194,18 +198,22 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      *
      * @return an {@link AsyncTransactWriteBuilder} for configuring and executing the transaction
      */
+    @Override
     @NonNull
     public AsyncTransactWriteBuilder transactWrite() {
         return new AsyncTransactWriteBuilder(enhancedAsyncClient, dynamoDbAsyncClient);
     }
 
-    // ============ Cross-Table Batch Operations ============
+    // endregion
+
+    // region Cross-Table Batch Operations
 
     /**
      * Returns an async cross-table batch get builder for retrieving items from multiple tables.
      *
      * @return an async cross-table batch get builder
      */
+    @Override
     @NonNull
     public AsyncCrossTableBatchGetBuilder batchGet() {
         return new AsyncCrossTableBatchGetBuilder(dynamoDbAsyncClient);
@@ -216,6 +224,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      *
      * @return an async cross-table batch write builder
      */
+    @Override
     @NonNull
     public AsyncCrossTableBatchWriteBuilder batchWrite() {
         return new AsyncCrossTableBatchWriteBuilder(dynamoDbAsyncClient);
@@ -226,6 +235,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      *
      * @return the enhanced async DynamoDB client
      */
+    @Override
     @NonNull
     public DynamoDbEnhancedAsyncClient getEnhancedClient() {
         return enhancedAsyncClient;
@@ -236,6 +246,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      *
      * @return the DynamoDB async client
      */
+    @Override
     @NonNull
     public DynamoDbAsyncClient getDynamoDbClient() {
         return dynamoDbAsyncClient;
@@ -246,6 +257,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      *
      * @return a {@link CompletableFuture} containing a list of table names
      */
+    @Override
     @NonNull
     public CompletableFuture<List<String>> listTables() {
         return dynamoDbAsyncClient.listTables()
@@ -261,6 +273,7 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
      * @param request the PartiQL request to execute
      * @return a {@link CompletableFuture} containing the response
      */
+    @Override
     @NonNull
     public CompletableFuture<ExecuteStatementResponse> executeStatement(@NonNull ExecuteStatementRequest request) {
         return dynamoDbAsyncClient.executeStatement(request);
@@ -276,3 +289,4 @@ public class AsyncDynamoSimplifiedClient implements AutoCloseable {
         dynamoDbAsyncClient.close();
     }
 }
+// endregion

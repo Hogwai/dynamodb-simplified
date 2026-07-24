@@ -39,7 +39,21 @@ public class FilterExpression {
     private int nameCounter = 0;
     private int valueCounter = 0;
 
-    private FilterExpression() {
+    protected FilterExpression() {
+    }
+
+    /**
+     * Creates a copy of the given filter expression. Subclasses can use this
+     * to create instances backed by an existing {@link FilterExpression}.
+     *
+     * @param other the filter expression to copy
+     */
+    protected FilterExpression(FilterExpression other) {
+        this.expression.append(other.expression);
+        this.expressionNames.putAll(other.expressionNames);
+        this.expressionValues.putAll(other.expressionValues);
+        this.nameCounter = other.nameCounter;
+        this.valueCounter = other.valueCounter;
     }
 
     /**
@@ -67,7 +81,7 @@ public class FilterExpression {
                 .build();
     }
 
-    // ============ Basic Comparisons ============
+    // region Basic Comparisons
 
     /**
      * Adds an equality condition: {@code attribute = value}.
@@ -141,7 +155,9 @@ public class FilterExpression {
         return addCondition(attribute, ">=", value);
     }
 
-    // ============ String Operations ============
+    // endregion
+
+    // region String Operations
 
     /**
      * Adds a {@code begins_with} function condition checking whether the
@@ -181,7 +197,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ Server-side SIZE Operations ============
+    // endregion
+
+    // region Server-side SIZE Operations
 
     /**
      * Adds a condition that the server-side {@code size()} of the attribute
@@ -266,7 +284,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ Attribute Existence ============
+    // endregion
+
+    // region Attribute Existence
 
     /**
      * Adds an {@code attribute_exists} condition that checks whether the
@@ -296,7 +316,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ Attribute Type ============
+    // endregion
+
+    // region Attribute Type
 
     /**
      * Adds an {@code attribute_type} condition that checks whether the
@@ -314,7 +336,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ BETWEEN ============
+    // endregion
+
+    // region BETWEEN
 
     /**
      * Adds a {@code BETWEEN} condition: {@code attribute BETWEEN low AND high}
@@ -334,7 +358,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ IN ============
+    // endregion
+
+    // region IN
 
     /**
      * Adds an {@code IN} condition: {@code attribute IN (val1, val2, ...)}.
@@ -355,7 +381,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ Logical Operators ============
+    // endregion
+
+    // region Logical Operators
 
     /**
      * Appends an {@code AND} logical operator to combine two filter conditions.
@@ -431,7 +459,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ Nested Attribute Access ============
+    // endregion
+
+    // region Nested Attribute Access
 
     /**
      * Adds an equality condition on a nested attribute path (e.g.,
@@ -451,7 +481,9 @@ public class FilterExpression {
         return this;
     }
 
-    // ============ Utility Methods ============
+    // endregion
+
+    // region Utility Methods
 
     private FilterExpression addCondition(@NonNull String attribute, @NonNull String operator, @NonNull Object value) {
         String nameKey = addName(attribute);
@@ -600,3 +632,4 @@ public class FilterExpression {
     }
 }
 
+// endregion

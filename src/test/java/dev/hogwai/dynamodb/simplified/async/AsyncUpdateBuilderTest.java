@@ -1,5 +1,6 @@
 package dev.hogwai.dynamodb.simplified.async;
 
+import dev.hogwai.dynamodb.simplified.entity.Version;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.expression.ConditionExpression;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,8 @@ class AsyncUpdateBuilderTest {
     @Mock
     DynamoDbAsyncTable<TestItem> table;
     @Mock
+    DynamoDbAsyncTable<VersionedTestItem> versionedTable;
+    @Mock
     DynamoDbAsyncClient dynamoDbAsyncClient;
     @Mock
     TableSchema<TestItem> tableSchema;
@@ -55,6 +58,17 @@ class AsyncUpdateBuilderTest {
         public int version;
     }
 
+    static class VersionedTestItem {
+        public String id;
+        public String name;
+        @Version
+        Integer version = 1;
+
+        Integer getVersion() {
+            return version;
+        }
+    }
+
     @BeforeEach
     void setUp() {
         item = new TestItem();
@@ -68,7 +82,7 @@ class AsyncUpdateBuilderTest {
         resultItem.version = 2;
     }
 
-    // ============ Full-item replacement path ============
+    // region Full-item replacement path
 
     @Test
     @DisplayName("execute() without update expression performs full-item replacement via table.updateItem()")
@@ -186,7 +200,9 @@ class AsyncUpdateBuilderTest {
         assertInstanceOf(ConditionFailedException.class, ex.getCause());
     }
 
-    // ============ Partial update with expression path ============
+    // endregion
+
+    // region Partial update with expression path
 
     @Test
     @DisplayName("execute() with update expression performs partial update via low-level client")
@@ -286,7 +302,63 @@ class AsyncUpdateBuilderTest {
         assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 
-    // ============ ReturnValues tests ============
+    // endregion
+
+    // region Optimistic locking tests
+
+    @Test
+    @DisplayName("withOptimisticLocking returns itself for fluent chaining")
+    void withOptimisticLocking_returnsItself() {
+        AsyncUpdateBuilder<TestItem> builder = new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient);
+        assertSame(builder, builder.withOptimisticLocking());
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking on non-Versioned item skips version increment")
+    void execute_withOptimisticLockingAndNonVersionedItem_doesNotIncrementVersion() {
+        when(table.updateItem(any(UpdateItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(resultItem));
+
+        new AsyncUpdateBuilder<>(table, item, dynamoDbAsyncClient)
+                .withOptimisticLocking()
+                .execute()
+                .join();
+
+        // item is not Versioned, so version should remain unchanged
+        assertEquals(1, item.version);
+        verify(table).updateItem(any(UpdateItemEnhancedRequest.class));
+    }
+
+    @Test
+    @DisplayName("withOptimisticLocking merges version condition with existing condition")
+    void execute_withOptimisticLockingAndExistingCondition() {
+        VersionedTestItem versionedItem = new VersionedTestItem();
+        versionedItem.id = "123";
+        versionedItem.name = "original";
+        VersionedTestItem versionedResultItem = new VersionedTestItem();
+        versionedResultItem.id = "123";
+        versionedResultItem.name = "updated";
+
+        when(versionedTable.updateItem(any(UpdateItemEnhancedRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(versionedResultItem));
+
+        new AsyncUpdateBuilder<>(versionedTable, versionedItem, dynamoDbAsyncClient)
+                .withOptimisticLocking()
+                .condition(c -> c.exists("attr"))
+                .execute()
+                .join();
+
+        assertEquals(2, versionedItem.getVersion(), "Version should be incremented from 1 to 2");
+        ArgumentCaptor<UpdateItemEnhancedRequest<VersionedTestItem>> captor =
+                ArgumentCaptor.forClass(UpdateItemEnhancedRequest.class);
+        verify(versionedTable).updateItem(captor.capture());
+        assertNotNull(captor.getValue().conditionExpression(),
+                "Condition expression should be set (user condition merged with version check)");
+    }
+
+    // endregion
+
+    // region ReturnValues tests
 
     @Test
     @DisplayName("returnValues() sets the returnValues field")
@@ -341,7 +413,9 @@ class AsyncUpdateBuilderTest {
         assertEquals(ReturnValue.NONE, request.returnValues());
     }
 
-    // ============ Key-only update tests ============
+    // endregion
+
+    // region Key-only update tests
 
     /**
      * Sets up minimal TableSchema/TableMetadata mocks so that
@@ -423,7 +497,9 @@ class AsyncUpdateBuilderTest {
         assertInstanceOf(IllegalStateException.class, ex.getCause());
     }
 
-    // ============ ReturnValues without expression guard (missed branch) ============
+    // endregion
+
+    // region ReturnValues without expression guard (missed branch)
 
     @Test
     @DisplayName("returnValues without update expression throws IllegalStateException")
@@ -437,3 +513,4 @@ class AsyncUpdateBuilderTest {
         assertTrue(ex.getCause().getMessage().contains("ReturnValues is not supported for full-item replacement"));
     }
 }
+// endregion
