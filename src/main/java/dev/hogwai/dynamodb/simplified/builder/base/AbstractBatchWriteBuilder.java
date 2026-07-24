@@ -24,27 +24,42 @@ import java.util.Objects;
  */
 public abstract class AbstractBatchWriteBuilder<T, S extends AbstractBatchWriteBuilder<T, S>> {
 
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractBatchWriteBuilder.class);
 
+    /** The list of items to put in the batch write. */
     protected final List<T> itemsToPut = new ArrayList<>();
+    /** The list of keys to delete in the batch write. */
     protected final List<Key> keysToDelete = new ArrayList<>();
+    /** Optional consumed capacity reporting level. */
     protected ReturnConsumedCapacity returnConsumedCapacity;
 
+    /**
+     * Constructs a new {@code AbstractBatchWriteBuilder}.
+     */
     protected AbstractBatchWriteBuilder() {
     }
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
     /**
      * Returns the table schema for converting items to attribute maps.
+     *
+     * @return the table schema
      */
     protected abstract @NonNull TableSchema<T> tableSchema();
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 

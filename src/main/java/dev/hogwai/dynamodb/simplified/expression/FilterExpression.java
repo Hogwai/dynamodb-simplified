@@ -39,6 +39,9 @@ public class FilterExpression {
     private int nameCounter = 0;
     private int valueCounter = 0;
 
+    /**
+     * Creates an empty filter expression.
+     */
     protected FilterExpression() {
     }
 

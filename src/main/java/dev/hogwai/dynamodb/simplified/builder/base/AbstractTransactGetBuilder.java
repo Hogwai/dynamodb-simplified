@@ -26,10 +26,17 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractTransactGetBuilder<S extends AbstractTransactGetBuilder<S>> {
 
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractTransactGetBuilder.class);
 
+    /** The list of entries (table + key + projection) in this transaction. */
     protected final List<Entry> entries = new ArrayList<>();
 
+    /**
+     * Constructs a new {@code AbstractTransactGetBuilder}.
+     */
     protected AbstractTransactGetBuilder() {
     }
 
@@ -38,8 +45,18 @@ public abstract class AbstractTransactGetBuilder<S extends AbstractTransactGetBu
      * The table is stored as {@code Object} to accommodate both
      * {@code DynamoDbTable} and {@code DynamoDbAsyncTable} types without coupling
      * the base to either package.
+     *
+     * @param table                the table reference (either {@code DynamoDbTable} or {@code DynamoDbAsyncTable})
+     * @param key                  the DynamoDB key
+     * @param projectionExpression optional projection expression, may be {@code null}
      */
     public record Entry(Object table, Key key, @Nullable ProjectionExpression projectionExpression) {
+        /**
+         * Constructs an {@code Entry} with no projection expression.
+         *
+         * @param table the table reference
+         * @param key   the DynamoDB key
+         */
         public Entry(Object table, Key key) {
             this(table, key, null);
         }

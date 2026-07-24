@@ -21,14 +21,27 @@ import java.util.function.Consumer;
  * @param <S> the concrete builder type (for fluent chaining)
  */
 public abstract class AbstractGetItemBuilder<T, S extends AbstractGetItemBuilder<T, S>> {
+    /**
+     * Logger for this builder class.
+     */
     protected static final Logger LOG = Logging.getLogger(AbstractGetItemBuilder.class);
 
+    /** The partition key value. */
     protected final Object partitionKey;
+    /** The sort key value, or {@code null} if the table has no sort key. */
     @Nullable
     protected final Object sortKey;
+    /** Optional projection expression to restrict returned attributes. */
     protected ProjectionExpression projectionExpression;
+    /** Whether to use strongly consistent reads ({@code false} by default). */
     protected boolean consistentRead = false;
 
+    /**
+     * Constructs a new {@code AbstractGetItemBuilder} with the given key values.
+     *
+     * @param partitionKey the partition key value
+     * @param sortKey      the sort key value, or {@code null} if the table has no sort key
+     */
     protected AbstractGetItemBuilder(@NonNull Object partitionKey, @Nullable Object sortKey) {
         this.partitionKey = partitionKey;
         this.sortKey = sortKey;
@@ -36,6 +49,8 @@ public abstract class AbstractGetItemBuilder<T, S extends AbstractGetItemBuilder
 
     /**
      * Returns {@code this} typed as {@code S} for fluent chaining.
+     *
+     * @return this builder
      */
     protected abstract S self();
 
@@ -77,6 +92,8 @@ public abstract class AbstractGetItemBuilder<T, S extends AbstractGetItemBuilder
 
     /**
      * Builds a high-level {@link GetItemEnhancedRequest} from the current key and settings.
+     *
+     * @return the built enhanced request
      */
     protected @NonNull GetItemEnhancedRequest buildEnhancedRequest() {
         return GetItemEnhancedRequest.builder()
@@ -93,6 +110,9 @@ public abstract class AbstractGetItemBuilder<T, S extends AbstractGetItemBuilder
     /**
      * Builds a low-level {@link GetItemRequest} from the given key map.
      * Requires a non-null {@link #projectionExpression}.
+     *
+     * @param keyMap the key attribute map
+     * @return the built low-level request
      */
     protected @NonNull GetItemRequest buildLowLevelRequest(@NonNull Map<String, AttributeValue> keyMap) {
         return GetItemRequest.builder()
@@ -106,6 +126,10 @@ public abstract class AbstractGetItemBuilder<T, S extends AbstractGetItemBuilder
 
     /**
      * Builds a key map for low-level requests using the given key attribute names.
+     *
+     * @param pkName the partition key attribute name
+     * @param skName the sort key attribute name, or {@code null} if none
+     * @return the built key map
      */
     protected @NonNull Map<String, AttributeValue> buildKeyMap(@NonNull String pkName, @Nullable String skName) {
         Map<String, AttributeValue> keyMap = new HashMap<>();
@@ -118,6 +142,8 @@ public abstract class AbstractGetItemBuilder<T, S extends AbstractGetItemBuilder
 
     /**
      * Returns the DynamoDB table name.
+     *
+     * @return the DynamoDB table name
      */
     protected abstract @NonNull String tableName();
 }
