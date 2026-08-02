@@ -61,7 +61,7 @@ class AsyncRetryUtilsTest {
         assertTrue(future.isCompletedExceptionally(),
                 "Future should be exceptionally completed after rejection");
         CompletionException exception =
-                assertThrows(java.util.concurrent.CompletionException.class, future::join);
+                assertThrows(CompletionException.class, future::join);
         assertEquals(rejected, exception.getCause(), "Cause should be the RejectedExecutionException");
     }
 }
