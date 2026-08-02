@@ -1,9 +1,6 @@
 package dev.hogwai.dynamodb.simplified.internal;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Utility for non-blocking async retry delays.
@@ -27,8 +24,26 @@ public final class AsyncRetryUtils {
      * @return a future that completes after the delay
      */
     public static CompletableFuture<Void> delay(long millis) {
+        return delay(millis, RETRY_SCHEDULER);
+    }
+
+    /**
+     * Schedules a non-cancellable retry delay on the supplied scheduler.
+     *
+     * @param millis    delay in milliseconds
+     * @param scheduler scheduler used to complete the future
+     * @return a future that completes after the delay
+     */
+    @SuppressWarnings("FutureReturnValueIgnored")
+    static CompletableFuture<Void> delay(long millis, ScheduledExecutorService scheduler) {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        RETRY_SCHEDULER.schedule(() -> future.complete(null), millis, TimeUnit.MILLISECONDS);
+        Runnable task = () -> future.complete(null);
+        try {
+            scheduler.schedule(task, millis, TimeUnit.MILLISECONDS);
+        } catch (RejectedExecutionException exception) {
+            future.completeExceptionally(exception);
+            return future;
+        }
         return future;
     }
 

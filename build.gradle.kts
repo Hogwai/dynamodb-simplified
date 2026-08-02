@@ -64,16 +64,14 @@ tasks.named<Test>("test") {
 // ---- Static Analysis: Error Prone ----
 tasks.withType<JavaCompile>().configureEach {
     options.errorprone {
-        check("UnusedException", CheckSeverity.WARN)
-        disable(
-            "StringSplitter",
-            "FutureReturnValueIgnored",
-            "UnusedMethod",
-            "UnusedVariable",
-            "InvalidLink",
-            "TypeParameterUnusedInFormals",
-            "JavaTimeDefaultTimeZone"
-        )
+        check("UnusedException", CheckSeverity.ERROR)
+        check("StringSplitter", CheckSeverity.ERROR)
+        check("FutureReturnValueIgnored", CheckSeverity.ERROR)
+        check("UnusedMethod", CheckSeverity.ERROR)
+        check("UnusedVariable", CheckSeverity.ERROR)
+        check("InvalidLink", CheckSeverity.ERROR)
+        check("TypeParameterUnusedInFormals", CheckSeverity.ERROR)
+        check("JavaTimeDefaultTimeZone", CheckSeverity.ERROR)
     }
 }
 

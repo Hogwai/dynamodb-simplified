@@ -54,7 +54,7 @@ public class TransactGetResults<T extends MappedTableResource<?>> implements Con
      * @param <R>   the expected item type
      * @return the item, or {@code null} if the item does not exist
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
     public @Nullable <R> R get(int index) {
         if (index >= documents.size()) {
             return null;

@@ -54,10 +54,6 @@ public final class EntityQueryBuilder {
     @Nullable
     private Object skValue2; // for BETWEEN only
 
-    // Pagination
-    @Nullable
-    private Map<String, AttributeValue> exclusiveStartKey;
-
     // Options
     @Nullable
     private Boolean consistentRead;

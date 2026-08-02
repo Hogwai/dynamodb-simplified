@@ -253,6 +253,7 @@ class EntitySchemaReaderTest {
 
     @Entity(discriminator = "BAD", table = "bad")
     static class FieldNoGetterEntity {
+        @SuppressWarnings("UnusedVariable")
         @KeyComponent(component = "PK")
         private String id;
 
