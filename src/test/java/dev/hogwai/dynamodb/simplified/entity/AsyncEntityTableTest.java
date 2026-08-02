@@ -312,7 +312,7 @@ class AsyncEntityTableTest {
     @DisplayName("deleteEntity with entity having only PK uses delete with partition key only")
     @SuppressWarnings({"unchecked"})
     void deleteEntity_withOnlyPk_usesDeleteWithPkOnly() {
-        // Create an entity that has PK but no SK components — readSk returns null
+        // Create an entity that has PK but no SK components: readSk returns null
         var entitySchema = EntitySchemaReader.read(TestUser.class);
         var mockAsyncTableForUser = (AsyncTable<TestUser>) mock(AsyncTable.class);
         var tableForUser = new AsyncDefaultEntityTable<>(mockAsyncTableForUser, entitySchema);

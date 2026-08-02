@@ -6,11 +6,11 @@
  * into consistent, domain-specific types:
  * <ul>
  *   <li>{@link dev.hogwai.dynamodb.simplified.exception.OperationFailedException}
- *       — wraps any {@link software.amazon.awssdk.services.dynamodb.model.DynamoDbException}</li>
+ *      : wraps any {@link software.amazon.awssdk.services.dynamodb.model.DynamoDbException}</li>
  *   <li>{@link dev.hogwai.dynamodb.simplified.exception.TransactionFailedException}
- *       — wraps {@link software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException}</li>
+ *      : wraps {@link software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException}</li>
  *   <li>{@link dev.hogwai.dynamodb.simplified.exception.ConditionFailedException}
- *       — wraps {@link software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException}</li>
+ *      : wraps {@link software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException}</li>
  * </ul>
  */
 package dev.hogwai.dynamodb.simplified.exception;

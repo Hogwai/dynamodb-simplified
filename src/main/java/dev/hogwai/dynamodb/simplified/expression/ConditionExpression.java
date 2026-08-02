@@ -5,7 +5,7 @@ import org.jspecify.annotations.NonNull;
 /**
  * A {@link FilterExpression} subtype that represents a DynamoDB condition expression.
  * <p>
- * This is a type-safe alias — it inherits all builder methods from {@link FilterExpression}
+ * This is a type-safe alias: it inherits all builder methods from {@link FilterExpression}
  * but is accepted by APIs that require a condition expression (e.g., put, update, delete)
  * rather than a filter expression (e.g., query, scan).
  */

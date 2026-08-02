@@ -31,7 +31,7 @@ public final class AttributePathParser {
      * @return ordered list of path segments
      */
     public static List<PathSegment> parse(String path) {
-        String[] parts = DOT_PATTERN.split(path);
+        String[] parts = DOT_PATTERN.split(path, -1);
         List<PathSegment> segments = new ArrayList<>();
         for (String part : parts) {
             if (part.contains("[")) {

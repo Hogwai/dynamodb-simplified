@@ -492,10 +492,10 @@ class AttributeValueConverterTest {
     @Test
     @DisplayName("toKeyAttributeValue(LocalDate) should throw IllegalArgumentException")
     void shouldThrowWhenConvertingLocalDateToKey() {
-        LocalDate now = LocalDate.now();
+        LocalDate unsupportedDate = LocalDate.of(2024, Month.JANUARY, 1);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributeValueConverter.toKeyAttributeValue(now)
+                () -> AttributeValueConverter.toKeyAttributeValue(unsupportedDate)
         );
     }
 
