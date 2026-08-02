@@ -270,7 +270,7 @@ class AsyncCrossTableBatchGetBuilderTest {
 
     // endregion
 
-    // region buildCrossTableBatchGetResult — null responses
+    // region buildCrossTableBatchGetResult: null responses
 
     @Test
     @DisplayName("execute handles null responses and unprocessedKeys from DynamoDB gracefully")
@@ -297,7 +297,7 @@ class AsyncCrossTableBatchGetBuilderTest {
 
     // endregion
 
-    // region buildTableKeysAndAttributes — multiple keys, same table
+    // region buildTableKeysAndAttributes: multiple keys, same table
 
     @Test
     @DisplayName("execute with multiple keys for same table includes all keys in request")
@@ -334,7 +334,7 @@ class AsyncCrossTableBatchGetBuilderTest {
 
     // endregion
 
-    // region buildTableKeysAndAttributes — no projection
+    // region buildTableKeysAndAttributes: no projection
 
     @Test
     @DisplayName("execute without projection omits projectionExpression in request")
@@ -367,7 +367,7 @@ class AsyncCrossTableBatchGetBuilderTest {
 
     // endregion
 
-    // region buildTableKeysAndAttributes — empty projection expression
+    // region buildTableKeysAndAttributes: empty projection expression
 
     @Test
     @DisplayName("execute with empty projection expression omits projectionExpression in request")

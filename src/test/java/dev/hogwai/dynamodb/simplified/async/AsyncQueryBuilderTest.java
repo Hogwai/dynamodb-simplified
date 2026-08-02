@@ -736,7 +736,7 @@ class AsyncQueryBuilderTest {
 
     // endregion
 
-    // region Low-Level Client — Sort Key Conditions
+    // region Low-Level Client: Sort Key Conditions
 
     @Test
     @DisplayName("count() with low-level client and sort key BETWEEN condition")
@@ -847,7 +847,7 @@ class AsyncQueryBuilderTest {
 
     // endregion
 
-    // region Low-Level Client — ApplyQueryOptions
+    // region Low-Level Client: ApplyQueryOptions
 
     @Test
     @DisplayName("count() with low-level client applies limit option")
@@ -927,7 +927,7 @@ class AsyncQueryBuilderTest {
 
     // endregion
 
-    // region Low-Level Client — Index Path
+    // region Low-Level Client: Index Path
 
     @Test
     @DisplayName("count() with low-level client using index resolves table name from index")
@@ -955,7 +955,7 @@ class AsyncQueryBuilderTest {
 
     // endregion
 
-    // region Low-Level Client — Filter Expression
+    // region Low-Level Client: Filter Expression
 
     @Test
     @DisplayName("count() with low-level client and filter expression includes filter in low-level request")

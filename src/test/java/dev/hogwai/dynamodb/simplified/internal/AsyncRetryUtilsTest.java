@@ -53,14 +53,14 @@ class AsyncRetryUtilsTest {
         when(scheduler.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
                 .thenThrow(rejected);
 
-        // Act — must not throw synchronously
+        // Act: must not throw synchronously
         CompletableFuture<Void> future = AsyncRetryUtils.delay(10, scheduler);
 
         // Assert: a future completed exceptionally is done
         assertTrue(future.isDone(), "Future should be done after rejection");
         assertTrue(future.isCompletedExceptionally(),
                 "Future should be exceptionally completed after rejection");
-        java.util.concurrent.CompletionException exception =
+        CompletionException exception =
                 assertThrows(java.util.concurrent.CompletionException.class, future::join);
         assertEquals(rejected, exception.getCause(), "Cause should be the RejectedExecutionException");
     }
