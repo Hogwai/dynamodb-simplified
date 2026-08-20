@@ -8,8 +8,6 @@
 
 A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for common DynamoDB operations.
 
----
-
 ## Installation
 
 Add the dependency to your project:
@@ -32,8 +30,6 @@ implementation 'dev.hogwai:dynamodb-simplified-core:0.1.0'
     <version>0.1.0</version>
 </dependency>
 ```
-
----
 
 ## Comparison
 
@@ -84,8 +80,6 @@ List<Post> posts = table.query()
     .executeAll();
 ```
 
----
-
 ### Server-side `size()`
 
 ```java
@@ -95,10 +89,8 @@ List<Post> posts = table.query()
         .executeAll();
 ```
 
-DynamoDB applies the filter using `size(attribute)`, without client-side size calculation. The filter is evaluated after
-reading items, so it does not reduce the read capacity consumed.
-
----
+DynamoDB applies the filter using `size(attribute)`, without client-side size calculation.
+The filter is evaluated after reading items, so it does not reduce the read capacity consumed.
 
 ## Features
 
@@ -121,12 +113,11 @@ reading items, so it does not reduce the read capacity consumed.
 | **Type Safety**          | Leverages DynamoDB Enhanced Client's bean mapping                                                                                                                            |
 | **Zero framework deps**  | Pure Java, no Spring/Micronaut dependency in the core                                                                                                                        |
 | **Entity subsystem**     | Entity annotations, computed keys, discriminator filtering, and cross-entity queries                                                                                         |
-| **Versioning**           | `@Version` field detection and object-side version support; use explicit conditions for reliable compare-and-set writes                                                      |
+| **Versioning**           | [`@Version`](docs/guides/single-table-design.md#version) support with explicit conditions for reliable compare-and-set writes                                                |
 | **TTL Management**       | Table config: `enableTtl("expiresAt")`, `disableTtl("expiresAt")`, `describeTtl()`; update: `update(item, u -> u.ttl("expiresAt", Duration.ofDays(90))).execute()`           |
 | **Batch Retry**          | Same-table batch-get `execute()` without projection uses the AWS Enhanced paginator; bounded retries cover sync batch-write, sync low-level batch-get, and async batch-write |
 | **Async Streaming**      | `streamResults()` for async query and `executeStream()` for async scan; both expose reactive `SdkPublisher<T>` results                                                       |
 
----
 
 ## Quick Example
 
@@ -154,20 +145,13 @@ Optional<Post> updated = posts.update(post, expr -> expr.set("title", "New Title
 // Transaction with condition check
 client.transactWrite()
     .put(posts, newPost)
-    .
-
-conditionCheck(posts, "java",12345L,c ->c.
-
-eq("status","ACTIVE"))
+    .conditionCheck(posts, "java", 12345L, c -> c.eq("status", "ACTIVE"))
     .execute();
 ```
 
----
-
 ## Single-Table Design
 
-DynamoDB Simplified supports entity-oriented single-table access through entity annotations, computed keys,
-discriminator filtering, and cross-entity queries.
+DynamoDB Simplified supports entity-oriented single-table access through entity annotations, computed keys, discriminator filtering, and cross-entity queries.
 
 ```java
 
@@ -215,8 +199,9 @@ public class User {
         this.userId = userId;
     }
 }
+```
 
-// Another compatible entity bean in the same table
+```java
 @DynamoDbBean
 @Entity(discriminator = "POST", table = "myapp")
 @KeyPrefix(component = "PK", value = "USER")
@@ -248,15 +233,14 @@ class Post {
         this.sk = sk;
     }
 }
+```
 
+```java
 // Entity-aware table: keys auto-computed, discriminator auto-filtered
 EntityTable<User> users = client.entityTable(User.class);
 users.put(new User("user123"));  // pk auto-set to "USER#user123"
-        client.
-
-entityTable(Post .class).
-
-put(new Post("user123", "post456"));
+EntityTable<Post> posts = client.entityTable(Post.class);
+posts.put(new Post("user123", "post456"));
 
 // Cross-entity queries
 CrossEntityResult result = client.entityQuery("myapp")
@@ -267,59 +251,21 @@ CrossEntityResult result = client.entityQuery("myapp")
 List<User> matchingUsers = result.get(User.class);
 ```
 
-`@Version` is detected on the object and can be incremented by supported version helpers. On direct `Table` put/update
-builders, call
-`.withOptimisticLocking()` to activate the built-in version detection condition. For full and partial writes, the
-builders increment the Java object after a successful write; neither the annotation nor this object-side increment alone
-guarantees that the intended version was persisted. For a strict compare-and-set, load the current item and explicitly
-write the next version with a condition.
-`EntityTable` does not enable that CAS automatically.
+See the [Single-Table Design Guide](docs/guides/single-table-design.md) for full documentation.
 
-```java
-// With a Table<VersionedItem> versionedTable and an existing item:
-VersionedItem current = versionedTable.getItem("item-1").orElseThrow();
-int expectedVersion = current.getVersion();
+See also the [Expressions guide](docs/guides/expressions.md), [Async API guide](docs/guides/async.md), [Batch and Results guide](docs/guides/batch-and-results.md) and [Errors and Retries guide](docs/guides/errors-and-retries.md).
 
-versionedTable.
-
-update(current, expression ->expression
-        .
-
-set("title","Updated")
-        .
-
-set("version",expectedVersion +1))
-        .
-
-condition(c ->c.
-
-eq("version",expectedVersion))
-        .
-
-execute();
-```
-
-See the [Single-Table Design Guide](docs/guides/single-table-design.md) for full documentation. See also
-the [Expressions guide](docs/guides/expressions.md), [Async API guide](docs/guides/async.md), [Batch and Results guide](docs/guides/batch-and-results.md),
-and [Errors and Retries guide](docs/guides/errors-and-retries.md).
-
----
 
 ## Documentation
 
-Full documentation is available at the [project site](https://hogwai.github.io/dynamodb-simplified/), including
-a [Quickstart guide](https://hogwai.github.io/dynamodb-simplified/quickstart/) with a core API walkthrough (CRUD, query,
-scan, batch, transactions, indexes, DDL, PartiQL, async).
+Full documentation is available at the [project site](https://hogwai.github.io/dynamodb-simplified/), including a [Quickstart guide](https://hogwai.github.io/dynamodb-simplified/quickstart/) with a core API walkthrough (CRUD, query, scan, batch, transactions, indexes, DDL, PartiQL, async).
 
 The [API reference](https://hogwai.github.io/dynamodb-simplified/javadoc/index.html) is generated from Javadoc comments.
 
----
 
 ## Requirements
 
 - Java 21+
-
----
 
 ## Project Structure
 
@@ -339,7 +285,6 @@ dynamodb-simplified/
 │   └── result/                        # PagedResult, TransactGetResults, BatchGetResult
 ```
 
----
 
 ## Demo applications
 
@@ -347,7 +292,6 @@ Example applications using the library are available in a separate repository:
 
 [dynamodb-simplified-demo](https://github.com/Hogwai/dynamodb-simplified-demo)
 
----
 
 ## License
 
