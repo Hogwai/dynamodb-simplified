@@ -4,6 +4,7 @@ import dev.hogwai.dynamodb.simplified.builder.CrossTableBatchGetBuilder;
 import dev.hogwai.dynamodb.simplified.builder.CrossTableBatchWriteBuilder;
 import dev.hogwai.dynamodb.simplified.builder.TransactGetBuilder;
 import dev.hogwai.dynamodb.simplified.builder.TransactWriteBuilder;
+import dev.hogwai.dynamodb.simplified.entity.EntityQueryBuilder;
 import dev.hogwai.dynamodb.simplified.entity.EntityTable;
 import dev.hogwai.dynamodb.simplified.entity.EntityTableBuilder;
 import org.jspecify.annotations.NonNull;
@@ -36,7 +37,7 @@ import java.util.function.Consumer;
  * <pre>{@code
  * DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
  * Table<Post> posts = client.table("posts", Post.class);
- * posts.query().partitionKey("subreddit").execute();
+ * posts.query().partitionKey("subreddit").executeAll();
  * }</pre>
  *
  * @see Table
@@ -194,6 +195,31 @@ public class DynamoSimplifiedClient implements DynamoSimplifiedClientInterface {
     @NonNull
     public <T> EntityTable<T> entityTable(@NonNull Class<T> entityClass) {
         return EntityTableBuilder.create(entityClass, dynamoDbClient, enhancedClient);
+    }
+
+    /**
+     * Starts a cross-entity query using the default {@code _type} discriminator attribute.
+     *
+     * @param tableName the DynamoDB table shared by the entity types
+     * @return a cross-entity query builder
+     */
+    @Override
+    @NonNull
+    public EntityQueryBuilder entityQuery(@NonNull String tableName) {
+        return entityQuery(tableName, "_type");
+    }
+
+    /**
+     * Starts a cross-entity query using a custom discriminator attribute.
+     *
+     * @param tableName              the DynamoDB table shared by the entity types
+     * @param discriminatorAttribute the attribute containing each entity's discriminator
+     * @return a cross-entity query builder
+     */
+    @Override
+    @NonNull
+    public EntityQueryBuilder entityQuery(@NonNull String tableName, @NonNull String discriminatorAttribute) {
+        return new EntityQueryBuilder(dynamoDbClient, tableName, discriminatorAttribute);
     }
 
     // endregion

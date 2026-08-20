@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -151,7 +152,8 @@ class AsyncBatchWriteBuilderTest {
         when(dynamoDbAsyncClient.batchWriteItem(any(BatchWriteItemRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
-        AsyncBatchWriteBuilder<TestItem> builder = new AsyncBatchWriteBuilder<>(table, dynamoDbAsyncClient);
+        AsyncBatchWriteBuilder<TestItem> builder = new AsyncBatchWriteBuilder<>(
+                table, dynamoDbAsyncClient, ignored -> CompletableFuture.completedFuture(null));
         builder.put(new TestItem("item1"));
 
         BatchWriteResult result = builder.execute().join();
@@ -223,7 +225,7 @@ class AsyncBatchWriteBuilderTest {
         BatchWriteItemResponse firstResponse = mock(BatchWriteItemResponse.class);
         when(firstResponse.unprocessedItems()).thenReturn(unprocessed);
 
-        // Second response succeeds
+        // Second response succeeds after the controlled retry gate opens.
         BatchWriteItemResponse secondResponse = mock(BatchWriteItemResponse.class);
         when(secondResponse.unprocessedItems()).thenReturn(Map.of());
 
@@ -231,10 +233,18 @@ class AsyncBatchWriteBuilderTest {
                 .thenReturn(CompletableFuture.completedFuture(firstResponse))
                 .thenReturn(CompletableFuture.completedFuture(secondResponse));
 
-        AsyncBatchWriteBuilder<TestItem> builder = new AsyncBatchWriteBuilder<>(table, dynamoDbAsyncClient);
+        CompletableFuture<Void> retryGate = new CompletableFuture<>();
+        AsyncBatchWriteBuilder<TestItem> builder = new AsyncBatchWriteBuilder<>(
+                table, dynamoDbAsyncClient, ignored -> retryGate);
         builder.put(new TestItem("item1"));
 
-        BatchWriteResult result = builder.execute().join();
+        CompletableFuture<BatchWriteResult> resultFuture = builder.execute();
+
+        assertFalse(resultFuture.isDone(), "Retry must wait for the gate");
+        verify(dynamoDbAsyncClient).batchWriteItem(any(BatchWriteItemRequest.class));
+
+        retryGate.complete(null);
+        BatchWriteResult result = resultFuture.join();
 
         assertFalse(result.hasUnprocessed());
         verify(dynamoDbAsyncClient, times(2)).batchWriteItem(any(BatchWriteItemRequest.class));
@@ -247,22 +257,56 @@ class AsyncBatchWriteBuilderTest {
         stubItemToMap();
         stubTableName();
 
-        Map<String, List<WriteRequest>> unprocessed = Map.of("test_table",
-                List.of(WriteRequest.builder().putRequest(r -> r.item(Map.of("id", AttributeValue.builder().s("item1").build()))).build()));
+        WriteRequest item1 = WriteRequest.builder()
+                .putRequest(r -> r.item(Map.of("id", AttributeValue.builder().s("item1").build())))
+                .build();
+        WriteRequest item2 = WriteRequest.builder()
+                .putRequest(r -> r.item(Map.of("id", AttributeValue.builder().s("item2").build())))
+                .build();
+        Map<String, List<WriteRequest>> firstUnprocessed = Map.of("test_table", List.of(item1, item2));
+        Map<String, List<WriteRequest>> secondUnprocessed = Map.of("test_table", List.of(item2));
+        Map<String, List<WriteRequest>> thirdUnprocessed = Map.of("test_table", List.of(item1));
 
-        BatchWriteItemResponse response = mock(BatchWriteItemResponse.class);
-        when(response.unprocessedItems()).thenReturn(unprocessed);
+        List<BatchWriteItemResponse> responses = List.of(
+                responseWith(firstUnprocessed),
+                responseWith(secondUnprocessed),
+                responseWith(thirdUnprocessed),
+                responseWith(thirdUnprocessed));
+        List<BatchWriteItemRequest> requests = new ArrayList<>();
         when(dynamoDbAsyncClient.batchWriteItem(any(BatchWriteItemRequest.class)))
-                .thenReturn(CompletableFuture.completedFuture(response));
+                .thenAnswer(invocation -> {
+                    requests.add(invocation.getArgument(0));
+                    return CompletableFuture.completedFuture(responses.get(requests.size() - 1));
+                });
 
-        AsyncBatchWriteBuilder<TestItem> builder = new AsyncBatchWriteBuilder<>(table, dynamoDbAsyncClient);
+        List<Long> delays = new ArrayList<>();
+        AsyncBatchWriteBuilder<TestItem> builder = new AsyncBatchWriteBuilder<>(
+                table, dynamoDbAsyncClient, delay -> {
+            delays.add(delay);
+            return CompletableFuture.completedFuture(null);
+        });
         builder.put(new TestItem("item1"));
+        builder.put(new TestItem("item2"));
+        builder.put(new TestItem("item3"));
 
         BatchWriteResult result = builder.execute().join();
 
         assertTrue(result.hasUnprocessed());
-        // Called 4 times: attempt 0, 1, 2, 3 (maxRetries = 3, attempts 0..3 = 4)
+        assertEquals(thirdUnprocessed, result.unprocessedItems());
+        assertEquals(3, delays.size());
+        assertTrue(delays.get(0) >= 100 && delays.get(0) < 200);
+        assertTrue(delays.get(1) >= 200 && delays.get(1) < 300);
+        assertTrue(delays.get(2) >= 400 && delays.get(2) < 500);
+        assertEquals(firstUnprocessed, requests.get(1).requestItems());
+        assertEquals(secondUnprocessed, requests.get(2).requestItems());
+        assertEquals(thirdUnprocessed, requests.get(3).requestItems());
         verify(dynamoDbAsyncClient, times(4)).batchWriteItem(any(BatchWriteItemRequest.class));
+    }
+
+    private BatchWriteItemResponse responseWith(Map<String, List<WriteRequest>> unprocessed) {
+        BatchWriteItemResponse response = mock(BatchWriteItemResponse.class);
+        when(response.unprocessedItems()).thenReturn(unprocessed);
+        return response;
     }
 
     // endregion

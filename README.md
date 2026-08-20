@@ -6,7 +6,7 @@
 [![Javadoc](https://img.shields.io/badge/docs-javadoc-blue)](https://hogwai.github.io/dynamodb-simplified/javadoc/)
 [![License](https://img.shields.io/github/license/hogwai/dynamodb-simplified)](LICENSE)
 
-A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
+A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for common DynamoDB operations.
 
 ---
 
@@ -84,35 +84,47 @@ List<Post> posts = table.query()
     .executeAll();
 ```
 
-**80% less code. 100% more readable.**
+---
+
+### Server-side `size()`
+
+```java
+List<Post> posts = table.query()
+        .partitionKey("java")
+        .filter(f -> f.sizeGt("keywords", 3))
+        .executeAll();
+```
+
+DynamoDB applies the filter using `size(attribute)`, without client-side size calculation. The filter is evaluated after
+reading items, so it does not reduce the read capacity consumed.
 
 ---
 
 ## Features
 
-| Feature                  | Description                                                                                                                 |
-|--------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **Fluent API**           | Chain methods naturally with IntelliSense support                                                                           |
-| **Filter Expressions**   | Simple methods for all DynamoDB operators                                                                                   |
-| **Update Expressions**   | SET, REMOVE, ADD, DELETE operations with a fluent API                                                                       |
-| **Server-side `size()`** | Filter by collection/string size without fetching data                                                                      |
-| **Projections**          | Select only the attributes you need                                                                                         |
-| **Pagination**           | Built-in cursor-based pagination support                                                                                    |
-| **Conditional Writes**   | Put, Update, Delete with conditions                                                                                         |
-| **Transactions**         | TransactGet and TransactWrite with expression-based partial updates                                                         |
-| **Batch Operations**     | BatchGet and BatchWrite across tables                                                                                       |
-| **Async API**            | Complete async counterpart (CompletableFuture-based)                                                                        |
-| **DDL Operations**       | Create, delete, describe, and check existence of tables                                                                     |
-| **PartiQL**              | Passthrough PartiQL executeStatement for ad-hoc queries                                                                     |
-| **GSI/LSI Support**      | Query and scan through secondary indexes                                                                                    |
-| **Type Safety**          | Leverages DynamoDB Enhanced Client's bean mapping                                                                           |
-| **Zero framework deps**  | Pure Java, no Spring/Micronaut dependency in the core                                                                       |
-| **Single-Table Design**  | Entity annotations (`@Entity`, `@KeyComponent`, `@KeyPrefix`) with auto-computed composite keys and discriminator filtering |
-| **Optimistic Locking**   | `@Version` annotation with automatic version checking on put/update                                                         |
-| **TTL Management**       | `enableTtl()`, `disableTtl()`, `describeTtl()` and `UpdateExpression.ttl(Duration)`                                         |
-| **Consumed Capacity**    | Every result type exposes consumed capacity via the `Consumed` interface                                                    |
-| **Batch Retry**          | Automatic retry of unprocessed keys with exponential backoff (batch get + write)                                            |
-| **Async Streaming**      | `executeStream()` returning `CompletableFuture<SdkPublisher<T>>` for reactive async iteration                               |
+| Feature                  | Description                                                                                                                                                                  |
+|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Fluent API**           | Chain methods naturally with IntelliSense support                                                                                                                            |
+| **Filter Expressions**   | Simple methods for all DynamoDB operators                                                                                                                                    |
+| **Update Expressions**   | SET, REMOVE, ADD, DELETE operations with a fluent API                                                                                                                        |
+| **Server-side `size()`** | Filter using DynamoDB `size(attribute)` without client-side size calculation                                                                                                 |
+| **Projections**          | Select only the attributes you need                                                                                                                                          |
+| **Pagination**           | Built-in cursor-based pagination support                                                                                                                                     |
+| **Conditional Writes**   | Put, Update, Delete with conditions                                                                                                                                          |
+| **Transactions**         | TransactGet and TransactWrite with expression-based partial updates                                                                                                          |
+| **Batch Operations**     | BatchGet and BatchWrite, including cross-table operations and typed per-table retrieval for batch-get results                                                                |
+| **Error model**          | Mapped operation, condition, and transaction failures; some async paths may expose SDK exceptions                                                                            |
+| **Async API**            | Broadly symmetrical async builders with `CompletableFuture` terminals and reactive query/scan streaming                                                                      |
+| **DDL Operations**       | `create()`, `delete()`, `describe()`, and `exists()` for table management                                                                                                    |
+| **PartiQL**              | Passthrough PartiQL executeStatement for ad-hoc queries                                                                                                                      |
+| **GSI/LSI Support**      | Query and scan through secondary indexes                                                                                                                                     |
+| **Type Safety**          | Leverages DynamoDB Enhanced Client's bean mapping                                                                                                                            |
+| **Zero framework deps**  | Pure Java, no Spring/Micronaut dependency in the core                                                                                                                        |
+| **Entity subsystem**     | Entity annotations, computed keys, discriminator filtering, and cross-entity queries                                                                                         |
+| **Versioning**           | `@Version` field detection and object-side version support; use explicit conditions for reliable compare-and-set writes                                                      |
+| **TTL Management**       | Table config: `enableTtl("expiresAt")`, `disableTtl("expiresAt")`, `describeTtl()`; update: `update(item, u -> u.ttl("expiresAt", Duration.ofDays(90))).execute()`           |
+| **Batch Retry**          | Same-table batch-get `execute()` without projection uses the AWS Enhanced paginator; bounded retries cover sync batch-write, sync low-level batch-get, and async batch-write |
+| **Async Streaming**      | `streamResults()` for async query and `executeStream()` for async scan; both expose reactive `SdkPublisher<T>` results                                                       |
 
 ---
 
@@ -126,8 +138,8 @@ Table<Post> posts = client.table("posts", Post.class);
 // Put
 posts.put(post).execute();
 
-// Get by partition + sort key
-Optional<Post> result = posts.getItem("java", "post-123");
+// Get by partition key
+Optional<Post> result = posts.getItem("java");
 
 // Query with filter
 List<Post> results = posts.query()
@@ -136,13 +148,17 @@ List<Post> results = posts.query()
     .executeAll();
 
 // Partial update
-Post updated = posts.update(post, expr -> expr.set("title", "New Title"))
+Optional<Post> updated = posts.update(post, expr -> expr.set("title", "New Title"))
     .execute();
 
 // Transaction with condition check
 client.transactWrite()
     .put(posts, newPost)
-    .conditionCheck(posts, "java", c -> c.eq("status", "ACTIVE"))
+    .
+
+conditionCheck(posts, "java",12345L,c ->c.
+
+eq("status","ACTIVE"))
     .execute();
 ```
 
@@ -150,26 +166,97 @@ client.transactWrite()
 
 ## Single-Table Design
 
-DynamoDB Simplified is the first Java library with **first-class single-table design support**.
+DynamoDB Simplified supports entity-oriented single-table access through entity annotations, computed keys,
+discriminator filtering, and cross-entity queries.
 
 ```java
+
+@DynamoDbBean
 @Entity(discriminator = "USER", table = "myapp")
 @KeyPrefix(component = "PK", value = "USER")
+@KeyPrefix(component = "SK", value = "PROFILE")
 public class User {
-    private String pk;                   // auto-computed: "USER#user123"
+    private String pk;                   // becomes "USER#user123" after the entity write
+    private String sk;                   // becomes "PROFILE#profile" after the entity write
     private String userId;
 
-    @KeyComponent(component = "PK", position = 0)
-    public String getUserId() { return userId; }
+    public User() {
+    }
+
+    public User(String userId) {
+        this.pk = userId;                // raw component before prefixing
+        this.sk = "profile";             // raw component before prefixing
+        this.userId = userId;
+    }
 
     @DynamoDbPartitionKey
+    @KeyComponent(component = "PK", position = 0)
+    public String getPk() {
+        return pk;
+    }
+
+    public void setPk(String pk) {
+        this.pk = pk;
+    }
+
+    @DynamoDbSortKey
+    @KeyComponent(component = "SK", position = 0)
+    public String getSk() {
+        return sk;
+    }
+
+    public void setSk(String sk) {
+        this.sk = sk;
+    }
+
+    public String getUserId() { return userId; }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+}
+
+// Another compatible entity bean in the same table
+@DynamoDbBean
+@Entity(discriminator = "POST", table = "myapp")
+@KeyPrefix(component = "PK", value = "USER")
+@KeyPrefix(component = "SK", value = "POST")
+class Post {
+    private String pk;
+    private String sk;
+
+    public Post() {
+    }
+
+    public Post(String userId, String postId) {
+        this.pk = userId;
+        this.sk = postId;
+    }
+
+    @DynamoDbPartitionKey
+    @KeyComponent(component = "PK", position = 0)
     public String getPk() { return pk; }
     public void setPk(String pk) { this.pk = pk; }
+
+    @DynamoDbSortKey
+    @KeyComponent(component = "SK", position = 0)
+    public String getSk() {
+        return sk;
+    }
+
+    public void setSk(String sk) {
+        this.sk = sk;
+    }
 }
 
 // Entity-aware table: keys auto-computed, discriminator auto-filtered
 EntityTable<User> users = client.entityTable(User.class);
 users.put(new User("user123"));  // pk auto-set to "USER#user123"
+        client.
+
+entityTable(Post .class).
+
+put(new Post("user123", "post456"));
 
 // Cross-entity queries
 CrossEntityResult result = client.entityQuery("myapp")
@@ -177,15 +264,52 @@ CrossEntityResult result = client.entityQuery("myapp")
     .includeEntity(User.class)
     .includeEntity(Post.class)
     .execute();
+List<User> matchingUsers = result.get(User.class);
 ```
 
-See the [Single-Table Design Guide](docs/guides/single-table-design.md) for full documentation.
+`@Version` is detected on the object and can be incremented by supported version helpers. On direct `Table` put/update
+builders, call
+`.withOptimisticLocking()` to activate the built-in version detection condition. For full and partial writes, the
+builders increment the Java object after a successful write; neither the annotation nor this object-side increment alone
+guarantees that the intended version was persisted. For a strict compare-and-set, load the current item and explicitly
+write the next version with a condition.
+`EntityTable` does not enable that CAS automatically.
+
+```java
+// With a Table<VersionedItem> versionedTable and an existing item:
+VersionedItem current = versionedTable.getItem("item-1").orElseThrow();
+int expectedVersion = current.getVersion();
+
+versionedTable.
+
+update(current, expression ->expression
+        .
+
+set("title","Updated")
+        .
+
+set("version",expectedVersion +1))
+        .
+
+condition(c ->c.
+
+eq("version",expectedVersion))
+        .
+
+execute();
+```
+
+See the [Single-Table Design Guide](docs/guides/single-table-design.md) for full documentation. See also
+the [Expressions guide](docs/guides/expressions.md), [Async API guide](docs/guides/async.md), [Batch and Results guide](docs/guides/batch-and-results.md),
+and [Errors and Retries guide](docs/guides/errors-and-retries.md).
 
 ---
 
 ## Documentation
 
-Full documentation is available at the [project site](https://hogwai.github.io/dynamodb-simplified/), including a [Quickstart guide](https://hogwai.github.io/dynamodb-simplified/quickstart/) with complete API coverage (CRUD, query, scan, batch, transactions, indexes, DDL, PartiQL, async).
+Full documentation is available at the [project site](https://hogwai.github.io/dynamodb-simplified/), including
+a [Quickstart guide](https://hogwai.github.io/dynamodb-simplified/quickstart/) with a core API walkthrough (CRUD, query,
+scan, batch, transactions, indexes, DDL, PartiQL, async).
 
 The [API reference](https://hogwai.github.io/dynamodb-simplified/javadoc/index.html) is generated from Javadoc comments.
 
@@ -208,11 +332,11 @@ dynamodb-simplified/
 │   ├── Table.java                     # fluent table operations
 │   ├── async/                         # AsyncDynamoSimplifiedClient, AsyncTable, async builders
 │   ├── builder/                       # QueryBuilder, PutBuilder, TransactWriteBuilder, etc.
-│   ├── exception/                     # DynamoSimplifiedException, ConditionFailedException
+│   ├── exception/                     # DynamoSimplifiedException, OperationFailedException, ConditionFailedException, ResourceNotFoundException, TransactionFailedException
 │   ├── entity/                        # @Entity, @KeyComponent, EntityTable, EntityQueryBuilder
 │   ├── expression/                    # FilterExpression, UpdateExpression, ProjectionExpression
 │   ├── internal/                      # AttributeValueConverter
-│   └── result/                        # PagedResult, TransactGetResults, BatchGetResults
+│   └── result/                        # PagedResult, TransactGetResults, BatchGetResult
 ```
 
 ---

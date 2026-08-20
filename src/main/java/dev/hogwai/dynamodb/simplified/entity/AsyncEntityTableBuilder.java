@@ -83,7 +83,8 @@ public final class AsyncEntityTableBuilder<T> {
                 ? enhancedAsyncClient
                 : DynamoDbEnhancedAsyncClient.builder().dynamoDbClient(dynamoDbAsyncClient).build();
         DynamoDbAsyncClient dc = dynamoDbAsyncClient;
-        DynamoDbAsyncTable<T> rawTable = ec.table(schema.tableName(), TableSchema.fromBean(entityClass));
+        TableSchema<T> tableSchema = new DiscriminatorTableSchema<>(TableSchema.fromBean(entityClass), schema);
+        DynamoDbAsyncTable<T> rawTable = ec.table(schema.tableName(), tableSchema);
         AsyncTable<T> asyncTable = new AsyncTable<>(ec, rawTable, dc);
         return new AsyncDefaultEntityTable<>(asyncTable, schema);
     }

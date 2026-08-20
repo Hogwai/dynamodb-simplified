@@ -26,9 +26,11 @@ import java.util.function.Consumer;
  * Typed async entry point for DynamoDB operations on a single table.
  * <p>
  * Obtained via {@link AsyncDynamoSimplifiedClient#table(String, Class)}.
- * Provides convenience direct methods (getItem, putItem, updateItem, deleteItem)
- * returning {@link CompletableFuture}, as well as DDL operations (create, delete, describe).
- * Builder-based query, scan, and CRUD operations will be added in a later phase.
+ * Provides async builders through {@code query()}, {@code scan()}, {@code get()},
+ * {@code put()}, {@code update()}, {@code delete()}, {@code batchGet()}, and
+ * {@code batchWrite()}. Their terminal methods return {@link CompletableFuture} where
+ * applicable. It also provides convenience direct methods (getItem, putItem, updateItem,
+ * deleteItem) and asynchronous DDL operations (create, delete, describe).
  *
  * @param <T> the item type mapped to this table
  */

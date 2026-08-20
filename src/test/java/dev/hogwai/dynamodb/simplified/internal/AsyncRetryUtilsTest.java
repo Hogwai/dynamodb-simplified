@@ -64,4 +64,17 @@ class AsyncRetryUtilsTest {
                 assertThrows(CompletionException.class, future::join);
         assertEquals(rejected, exception.getCause(), "Cause should be the RejectedExecutionException");
     }
+
+    @Test
+    @DisplayName("delay(millis) uses the delayed executor and completes asynchronously")
+    void delay_withDelayedExecutor_completes() {
+        long start = System.nanoTime();
+
+        CompletableFuture<Void> future = AsyncRetryUtils.delay(1);
+
+        long elapsed = System.nanoTime() - start;
+        assertTrue(elapsed < TimeUnit.SECONDS.toNanos(1), "Creating the delayed future must not block");
+        assertDoesNotThrow(future::join);
+        assertTrue(future.isDone(), "Future should be completed after joining");
+    }
 }

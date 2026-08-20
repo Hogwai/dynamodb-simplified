@@ -11,9 +11,14 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +40,9 @@ class EntityTableBuilderTest {
         private String pk;
 
         @SuppressWarnings("checkstyle:RedundantModifier")
-        public TestEntity() {}
+        public TestEntity() {
+            // Default constructor
+        }
 
         @DynamoDbPartitionKey
         public String getPk() { return pk; }
@@ -68,6 +75,23 @@ class EntityTableBuilderTest {
 
         assertNotNull(result);
         assertEquals("test-table", result.tableName());
+    }
+
+    @Test
+    @DisplayName("build passes a schema that persists the discriminator")
+    @SuppressWarnings("unchecked")
+    void build_passesDecoratedSchema() {
+        when(enhancedClient.table(any(String.class), any(TableSchema.class))).thenReturn(dynamoDbTable);
+        EntityTableBuilder<TestEntity> builder = new EntityTableBuilder<>(TestEntity.class)
+                .dynamoDbClient(dynamoDbClient)
+                .enhancedClient(enhancedClient);
+
+        builder.build();
+
+        var schemaCaptor = org.mockito.ArgumentCaptor.forClass(TableSchema.class);
+        verify(enhancedClient).table(eq("test-table"), schemaCaptor.capture());
+        Map<String, AttributeValue> itemMap = schemaCaptor.getValue().itemToMap(new TestEntity(), false);
+        assertEquals("TEST", itemMap.get("_type").s());
     }
 
     @Test

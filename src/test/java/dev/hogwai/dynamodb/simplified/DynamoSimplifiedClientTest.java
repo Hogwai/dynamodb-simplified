@@ -2,11 +2,13 @@ package dev.hogwai.dynamodb.simplified;
 
 import dev.hogwai.dynamodb.simplified.builder.QueryBuilder;
 import dev.hogwai.dynamodb.simplified.entity.Entity;
+import dev.hogwai.dynamodb.simplified.entity.EntityQueryBuilder;
 import dev.hogwai.dynamodb.simplified.entity.EntityTable;
 import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -16,9 +18,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementRequest;
-import software.amazon.awssdk.services.dynamodb.model.ExecuteStatementResponse;
-import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
@@ -280,6 +280,42 @@ class DynamoSimplifiedClientTest {
         EntityTable<?> entityTable = client.entityTable(TestEntity.class);
 
         assertNotNull(entityTable);
+    }
+
+    @Test
+    @DisplayName("entityQuery uses the default _type discriminator attribute")
+    void entityQuery_usesDefaultDiscriminatorAttribute() {
+        when(dynamoDbClient.query(any(QueryRequest.class)))
+                .thenReturn(QueryResponse.builder().items(List.of()).build());
+
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        EntityQueryBuilder query = client.entityQuery("myapp")
+                .partitionKey("USER#1")
+                .includeEntity(TestEntity.class);
+        query.executeWithPagination();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals("myapp", captor.getValue().tableName());
+        assertEquals("_type", captor.getValue().expressionAttributeNames().get("#dt"));
+    }
+
+    @Test
+    @DisplayName("entityQuery accepts a custom discriminator attribute")
+    void entityQuery_usesCustomDiscriminatorAttribute() {
+        when(dynamoDbClient.query(any(QueryRequest.class)))
+                .thenReturn(QueryResponse.builder().items(List.of()).build());
+
+        DynamoSimplifiedClient client = createClient(enhancedClient, dynamoDbClient);
+        client.entityQuery("myapp", "__entity")
+                .partitionKey("USER#1")
+                .includeEntity(TestEntity.class)
+                .executeWithPagination();
+
+        ArgumentCaptor<QueryRequest> captor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(dynamoDbClient).query(captor.capture());
+        assertEquals("myapp", captor.getValue().tableName());
+        assertEquals("__entity", captor.getValue().expressionAttributeNames().get("#dt"));
     }
 
     // endregion

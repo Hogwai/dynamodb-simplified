@@ -2,13 +2,15 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/dev.hogwai/dynamodb-simplified-core)](https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core)
 
-A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.
+A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for common DynamoDB operations.
 
 ## Why?
 
-The AWS DynamoDB SDK is powerful but verbose. Simple operations require dozens of lines of code with manual expression attribute names and values.
+The AWS DynamoDB SDK exposes request and expression details explicitly, including expression attribute names and values,
+which can make query setup verbose.
 
-**DynamoDB Simplified** provides a fluent, intuitive API that lets you focus on *what* you want to do, not *how* to do it.
+**DynamoDB Simplified** provides fluent builders for common DynamoDB operations while keeping the underlying AWS SDK
+model visible.
 
 ### dynamodb-enhanced
 
@@ -42,21 +44,38 @@ table.query()
 
 ## Features
 
-- **Fluent builder API**: every operation reads as a sentence
-- **Zero-boilerplate expressions**: `f.eq("status", "active")` instead of `Expression` builders
-- **Sync + Async**: `DynamoSimplifiedClient` and `AsyncDynamoSimplifiedClient`, same API
+- **Fluent builder API**: chain operation-specific methods before each terminal
+- **Expression helpers**: `f.eq("status", "active")` instead of manually assembling expression maps
+- **Sync + Async**: related builders in `DynamoSimplifiedClient` and `AsyncDynamoSimplifiedClient`, with different
+  terminal types where needed
 - **Transactions**: `transactWrite()` with put, update, delete, conditionCheck, and expression-based partial updates
-- **Batch operations**: `batchGet()` and `batchWrite()` with consistent reads
-- **DDL**: `createTable()`, `deleteTable()`, `describeTable()`, `tableExists()`
-- **GSI / LSI**: `table.index("name").query()` with full fluent API
+- **Batch operations**: `batchGet()` supports optional consistent reads; `batchWrite()` handles puts and deletes
+- **DDL**: `create()`, `delete()`, `describe()`, `exists()`
+- **GSI / LSI**: `table.index("name").query()` with the query builder options supported for indexes
 - **Single-table design**: `@Entity`/`@KeyComponent` annotations, auto-computed composite keys, cross-entity queries
-- **Optimistic locking**: `@Version` annotation with automatic version checking
-- **TTL management**: enable/disable/describe TTL with `UpdateExpression.ttl(Duration)`
-- **Consumed capacity**: every result type exposes consumed capacity
-- **Automatic batch retry**: unprocessed keys automatically retried with exponential backoff
+- **Version support**: `@Version` fields can be detected and incremented on the Java object; strict compare-and-set
+  requires an explicit condition
+- **TTL management**: table configuration with `enableTtl("expiresAt")`, `disableTtl("expiresAt")`, `describeTtl()`;
+  update expressions write expiration values with `update(item, u -> u.ttl("expiresAt", Duration.ofDays(90))).execute()`
+- **Batch get behavior**: same-table `execute()` without projection uses the AWS Enhanced paginator; bounded retry
+  applies to sync batch-write and synchronous low-level batch-get paths, while async low-level batch-get paths are
+  direct requests
 - **PartiQL**: `client.executeStatement()` for raw SQL-like queries
-- **Low-level fallback**: when the Enhanced Client lacks a feature (update expressions, returnValues), the library delegates to the low-level DynamoDB client transparently
+- **Low-level fallback**: when the Enhanced Client lacks a feature (update expressions, returnValues), the library
+  delegates to the low-level DynamoDB client for that operation
 - **No framework dependencies**: pure Java, works with any stack
+
+## Server-side `size()`
+
+```java
+List<Post> posts = table.query()
+        .partitionKey("java")
+        .filter(f -> f.sizeGt("keywords", 3))
+        .executeAll();
+```
+
+DynamoDB applies the filter using `size(attribute)`, without client-side size calculation. The filter is evaluated after
+reading items.
 
 ## Quick example
 
@@ -84,7 +103,7 @@ client.transactWrite()
     .execute();
 ```
 
-See the [Quickstart](quickstart.md) guide for a complete walkthrough.
+See the [Quickstart](quickstart.md) guide for an overview of the main operations.
 
 Looking for single-table design? See the [Single-Table Design Guide](guides/single-table-design.md).
 

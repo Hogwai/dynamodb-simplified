@@ -28,8 +28,9 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Builds an async batch get operation to retrieve multiple items from a single table by their keys.
  * <p>
- * Obtain via {@link AsyncTable#batchGet()}. Executes using the async enhanced client and
- * returns a {@link CompletableFuture} that completes when all pages have been collected.
+ * Obtain via {@link AsyncTable#batchGet()}. The default {@link #execute()} path uses the
+ * async enhanced client and completes after its pages have been collected; projection
+ * execution uses the low-level client and {@link #executeWithPagination()} returns one page.
  *
  * @param <T> the item type
  */
@@ -112,26 +113,30 @@ public class AsyncBatchGetBuilder<T> extends AbstractBatchGetBuilder<T, AsyncBat
 
         CompletableFuture<BatchGetResult<T>> resultFuture = new CompletableFuture<>();
         List<T> allItems = Collections.synchronizedList(new ArrayList<>());
+        List<Key> allUnprocessedKeys = Collections.synchronizedList(new ArrayList<>());
 
-        publisher.subscribe(createBatchGetSubscriber(resultFuture, allItems, start));
+        publisher.subscribe(createBatchGetSubscriber(resultFuture, allItems, allUnprocessedKeys, start));
 
         return resultFuture;
     }
 
     /**
-     * Executes the batch get operation and returns a single page of results
-     * along with any unprocessed keys.
+     * Executes the batch get operation and returns only the first page of results.
      * <p>
      * Since batch get does not use traditional cursor-based pagination, the
-     * last evaluated key is always {@code null}. If there are unprocessed keys,
-     * they are not automatically retried.
+     * last evaluated key is always {@code null}. Unprocessed keys are not exposed
+     * by the returned {@link PagedResult}; use {@link #execute()} to access them.
      *
      * @return a {@link CompletableFuture} containing a {@link PagedResult} with
      * items from the first response page
+     * @throws IllegalStateException if a projection is configured; use {@link #execute()} instead
      */
     @NonNull
     public CompletableFuture<PagedResult<T>> executeWithPagination() {
         long start = System.nanoTime();
+        if (projectionExpression != null && !projectionExpression.isEmpty()) {
+            throw new IllegalStateException("Projection is not supported by executeWithPagination(); use execute() for a projection.");
+        }
         if (keys.isEmpty()) {
             return CompletableFuture.completedFuture(new PagedResult<>(Collections.emptyList(), null));
         }
@@ -153,7 +158,7 @@ public class AsyncBatchGetBuilder<T> extends AbstractBatchGetBuilder<T, AsyncBat
     }
 
     private Subscriber<BatchGetResultPage> createBatchGetSubscriber(
-            CompletableFuture<BatchGetResult<T>> resultFuture, List<T> allItems, long start) {
+            CompletableFuture<BatchGetResult<T>> resultFuture, List<T> allItems, List<Key> allUnprocessedKeys, long start) {
         return new Subscriber<>() {
             @Override
             public void onSubscribe(Subscription s) {
@@ -163,6 +168,11 @@ public class AsyncBatchGetBuilder<T> extends AbstractBatchGetBuilder<T, AsyncBat
             @Override
             public void onNext(BatchGetResultPage page) {
                 allItems.addAll(page.resultsForTable(table));
+                List<Key> pageUnprocessedKeys = page.unprocessedKeysForTable(table);
+                allUnprocessedKeys.clear();
+                if (pageUnprocessedKeys != null) {
+                    allUnprocessedKeys.addAll(pageUnprocessedKeys);
+                }
             }
 
             @Override
@@ -182,9 +192,24 @@ public class AsyncBatchGetBuilder<T> extends AbstractBatchGetBuilder<T, AsyncBat
                     LOG.debug("AsyncBatchGet on table '{}' returned {} items in {}ms",
                             table.tableName(), items.size(), (System.nanoTime() - start) / 1_000_000);
                 }
-                resultFuture.complete(new BatchGetResult<>(items, Map.of()));
+                resultFuture.complete(new BatchGetResult<>(items, buildUnprocessedKeys(allUnprocessedKeys)));
             }
         };
+    }
+
+    private Map<String, KeysAndAttributes> buildUnprocessedKeys(List<Key> unprocessedKeys) {
+        if (unprocessedKeys.isEmpty()) {
+            return Map.of();
+        }
+        List<Map<String, AttributeValue>> keyMaps = new ArrayList<>(unprocessedKeys.size());
+        for (Key key : unprocessedKeys) {
+            keyMaps.add(key.primaryKeyMap(table.tableSchema()));
+        }
+        KeysAndAttributes.Builder keysAndAttributes = KeysAndAttributes.builder().keys(keyMaps);
+        if (consistentRead != null) {
+            keysAndAttributes.consistentRead(consistentRead);
+        }
+        return Map.of(table.tableName(), keysAndAttributes.build());
     }
 
     private Subscriber<BatchGetResultPage> createPaginationSubscriber(
