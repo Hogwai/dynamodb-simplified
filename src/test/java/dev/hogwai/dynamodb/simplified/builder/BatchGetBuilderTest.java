@@ -359,6 +359,45 @@ class BatchGetBuilderTest {
     }
 
     @Test
+    @DisplayName("execute with later enhanced page completing unprocessed keys does not retry low-level")
+    @SuppressWarnings("unchecked")
+    void execute_withLaterEnhancedPageCompletingUnprocessedKeys_doesNotRetryLowLevel() {
+        EnhancedType<TestItem> enhancedType = mock(EnhancedType.class);
+        when(table.tableSchema()).thenReturn(tableSchema);
+        when(tableSchema.itemType()).thenReturn(enhancedType);
+        when(enhancedType.rawClass()).thenReturn(TestItem.class);
+        when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+        when(table.tableName()).thenReturn("test_table");
+
+        TestItem firstItem = new TestItem("item1");
+        TestItem secondItem = new TestItem("item2");
+        Key secondKey = Key.builder().partitionValue("pk2").build();
+
+        BatchGetResultPage firstPage = mock(BatchGetResultPage.class);
+        when(firstPage.resultsForTable(table)).thenReturn(List.of(firstItem));
+        when(firstPage.unprocessedKeysForTable(table)).thenReturn(List.of(secondKey));
+
+        BatchGetResultPage secondPage = mock(BatchGetResultPage.class);
+        when(secondPage.resultsForTable(table)).thenReturn(List.of(secondItem));
+        when(secondPage.unprocessedKeysForTable(table)).thenReturn(List.of());
+
+        BatchGetResultPageIterable pages = mock(BatchGetResultPageIterable.class);
+        when(pages.iterator()).thenReturn(List.of(firstPage, secondPage).iterator());
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class))).thenReturn(pages);
+
+        BatchGetBuilder<TestItem> builder = new BatchGetBuilder<>(enhancedClient, table, dynamoDbClient);
+        builder.addKey("pk1");
+        builder.addKey("pk2");
+
+        BatchGetResult<TestItem> result = builder.execute();
+
+        assertEquals(List.of(firstItem, secondItem), result.items());
+        assertFalse(result.hasUnprocessed());
+        verify(dynamoDbClient, never()).batchGetItem(any(BatchGetItemRequest.class));
+    }
+
+    @Test
     @DisplayName("execute with projection and unprocessed keys retries using low-level client")
     @SuppressWarnings("unchecked")
     void execute_withUnprocessedKeys_projectionPath_retries() {

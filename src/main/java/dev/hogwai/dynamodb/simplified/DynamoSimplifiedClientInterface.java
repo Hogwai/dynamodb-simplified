@@ -4,6 +4,7 @@ import dev.hogwai.dynamodb.simplified.builder.CrossTableBatchGetBuilder;
 import dev.hogwai.dynamodb.simplified.builder.CrossTableBatchWriteBuilder;
 import dev.hogwai.dynamodb.simplified.builder.TransactGetBuilder;
 import dev.hogwai.dynamodb.simplified.builder.TransactWriteBuilder;
+import dev.hogwai.dynamodb.simplified.entity.EntityQueryBuilder;
 import dev.hogwai.dynamodb.simplified.entity.EntityTable;
 import org.jspecify.annotations.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -67,6 +68,25 @@ public interface DynamoSimplifiedClientInterface extends AutoCloseable {
      */
     @NonNull
     <T> EntityTable<T> entityTable(@NonNull Class<T> entityClass);
+
+    /**
+     * Starts a cross-entity query using the default {@code _type} discriminator attribute.
+     *
+     * @param tableName the DynamoDB table shared by the entity types
+     * @return a cross-entity query builder
+     */
+    @NonNull
+    EntityQueryBuilder entityQuery(@NonNull String tableName);
+
+    /**
+     * Starts a cross-entity query using a custom discriminator attribute.
+     *
+     * @param tableName              the DynamoDB table shared by the entity types
+     * @param discriminatorAttribute the attribute containing each entity's discriminator
+     * @return a cross-entity query builder
+     */
+    @NonNull
+    EntityQueryBuilder entityQuery(@NonNull String tableName, @NonNull String discriminatorAttribute);
 
     /**
      * Starts building a transactional read operation across one or more tables.

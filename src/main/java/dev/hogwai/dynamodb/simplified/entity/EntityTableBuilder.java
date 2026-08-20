@@ -147,7 +147,8 @@ public final class EntityTableBuilder<T> {
                 ? enhancedClient
                 : DynamoDbEnhancedClient.builder().dynamoDbClient(dynamoDbClient).build();
         DynamoDbClient dc = dynamoDbClient;
-        DynamoDbTable<T> rawTable = ec.table(schema.tableName(), TableSchema.fromBean(entityClass));
+        TableSchema<T> tableSchema = new DiscriminatorTableSchema<>(TableSchema.fromBean(entityClass), schema);
+        DynamoDbTable<T> rawTable = ec.table(schema.tableName(), tableSchema);
         Table<T> table = new Table<>(ec, rawTable, dc);
         return new DefaultEntityTable<>(table, schema);
     }

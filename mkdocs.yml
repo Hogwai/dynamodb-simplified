@@ -1,5 +1,5 @@
 site_name: DynamoDB Simplified
-site_description: A fluent DynamoDB wrapper for Java that dramatically reduces boilerplate
+site_description: A fluent DynamoDB wrapper for Java with typed builders for common DynamoDB operations
 repo_url: https://github.com/hogwai/dynamodb-simplified
 site_url: https://hogwai.github.io/dynamodb-simplified/
 
@@ -29,14 +29,24 @@ theme:
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
-  - Single-Table Design: guides/single-table-design.md
+  - Guides:
+      - Expressions: guides/expressions.md
+      - Async API: guides/async.md
+      - Batch and Results: guides/batch-and-results.md
+      - Errors and Retries: guides/errors-and-retries.md
+      - API Matrix: guides/api-matrix.md
+      - Single-Table Design: guides/single-table-design.md
   - API Reference: javadoc/index.html
 
 markdown_extensions:
   - admonition
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
 

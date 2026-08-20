@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.LongFunction;
 
 /**
  * Builds an async batch write operation to put and delete multiple items in a single table.
@@ -23,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * returns a {@link CompletableFuture} that completes with the batch write result.
  * <p>
  * A single batch write can contain up to 25 put and delete operations combined.
- * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
+ * Unprocessed items are automatically retried with exponential backoff (up to 3 retries).
  *
  * @param <T> the item type
  */
@@ -33,6 +34,7 @@ public class AsyncBatchWriteBuilder<T> extends AbstractBatchWriteBuilder<T, Asyn
 
     private final DynamoDbAsyncTable<T> table;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
+    private final LongFunction<CompletableFuture<Void>> retryDelay;
 
     /**
      * Constructs a new {@code AsyncBatchWriteBuilder}.
@@ -42,9 +44,16 @@ public class AsyncBatchWriteBuilder<T> extends AbstractBatchWriteBuilder<T, Asyn
      */
     AsyncBatchWriteBuilder(@NonNull DynamoDbAsyncTable<T> table,
                            @NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        this(table, dynamoDbAsyncClient, AsyncRetryUtils::delay);
+    }
+
+    AsyncBatchWriteBuilder(@NonNull DynamoDbAsyncTable<T> table,
+                           @NonNull DynamoDbAsyncClient dynamoDbAsyncClient,
+                           @NonNull LongFunction<CompletableFuture<Void>> retryDelay) {
         super();
         this.table = table;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+        this.retryDelay = retryDelay;
     }
 
     @Override
@@ -66,7 +75,7 @@ public class AsyncBatchWriteBuilder<T> extends AbstractBatchWriteBuilder<T, Asyn
      * Executes the batch write operation asynchronously.
      * <p>
      * All puts and deletes added to this builder are sent in a single batch write request.
-     * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
+     * Unprocessed items are automatically retried with exponential backoff (up to 3 retries).
      *
      * @return a {@link CompletableFuture} containing the {@link BatchWriteResult}
      * @throws IllegalArgumentException if more than 25 items (puts + deletes combined) are provided
@@ -116,7 +125,7 @@ public class AsyncBatchWriteBuilder<T> extends AbstractBatchWriteBuilder<T, Asyn
                     }
                     long backoff = DynamoDbLimits.BASE_BACKOFF_MS * (1L << attempt);
                     backoff += ThreadLocalRandom.current().nextLong(DynamoDbLimits.BASE_BACKOFF_MS);
-                    return AsyncRetryUtils.delay(backoff)
+                    return retryDelay.apply(backoff)
                             .thenCompose(v -> executeWithRetry(unprocessed, attempt + 1, start));
                 });
     }

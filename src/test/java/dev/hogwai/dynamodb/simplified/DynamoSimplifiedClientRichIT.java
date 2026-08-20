@@ -1,6 +1,8 @@
 package dev.hogwai.dynamodb.simplified;
 
+import dev.hogwai.dynamodb.simplified.async.AsyncDynamoSimplifiedClient;
 import dev.hogwai.dynamodb.simplified.bean.TestPost;
+import dev.hogwai.dynamodb.simplified.entity.*;
 import dev.hogwai.dynamodb.simplified.exception.ConditionFailedException;
 import dev.hogwai.dynamodb.simplified.result.PagedResult;
 import org.junit.jupiter.api.*;
@@ -11,13 +13,19 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DynamoSimplifiedClientRichIT {
 
     static final String TABLE_NAME = "test_posts";
+    static final String ENTITY_TABLE_NAME = "rich_entities";
 
     @Container
     @SuppressWarnings({"resource", "PMD.FieldNamingConventions"})
@@ -37,6 +46,9 @@ class DynamoSimplifiedClientRichIT {
     private static DynamoSimplifiedClient client;
     private static Table<TestPost> table;
     private static DynamoDbClient lowLevelClient;
+    private static AsyncDynamoSimplifiedClient asyncClient;
+    private static EntityTable<DefaultEntity> defaultEntityTable;
+    private static EntityTable<CustomEntity> customEntityTable;
 
     @BeforeAll
     static void setup() {
@@ -56,27 +68,70 @@ class DynamoSimplifiedClientRichIT {
         var enhancedTable = enhancedClient.table(TABLE_NAME, TableSchema.fromBean(TestPost.class));
         enhancedTable.createTable();
 
+        var entityEnhancedTable = enhancedClient.table(ENTITY_TABLE_NAME, TableSchema.fromBean(DefaultEntity.class));
+        entityEnhancedTable.createTable();
+
         try (DynamoDbWaiter waiter = lowLevelClient.waiter()) {
             waiter.waitUntilTableExists(b -> b.tableName(TABLE_NAME));
+            waiter.waitUntilTableExists(b -> b.tableName(ENTITY_TABLE_NAME));
         }
 
         client = DynamoSimplifiedClient.create(lowLevelClient);
         table = client.table(TABLE_NAME, TestPost.class);
+        defaultEntityTable = client.entityTable(DefaultEntity.class);
+        customEntityTable = client.entityTable(CustomEntity.class);
+
+        DynamoDbAsyncClient asyncDynamoDbClient = DynamoDbAsyncClient.builder()
+                .region(Region.US_EAST_1)
+                .endpointOverride(URI.create(endpoint))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create("dummy", "dummy")))
+                .build();
+        asyncClient = AsyncDynamoSimplifiedClient.create(asyncDynamoDbClient);
     }
 
     @AfterAll
+    // Clients are initialized in @BeforeAll and must be closed in lifecycle teardown.
+    @SuppressWarnings("PMD.UseTryWithResources")
     static void tearDown() {
-        lowLevelClient.deleteTable(b -> b.tableName(TABLE_NAME));
+        try {
+            if (asyncClient != null) {
+                asyncClient.close();
+            }
+        } finally {
+            try {
+                if (lowLevelClient != null) {
+                    lowLevelClient.deleteTable(b -> b.tableName(ENTITY_TABLE_NAME));
+                }
+            } finally {
+                try {
+                    if (lowLevelClient != null) {
+                        lowLevelClient.deleteTable(b -> b.tableName(TABLE_NAME));
+                    }
+                } finally {
+                    if (lowLevelClient != null) {
+                        lowLevelClient.close();
+                    }
+                }
+            }
+        }
     }
 
     @AfterEach
     void cleanItems() {
         // TestPost has a sort key (createdAt), so delete by both partition and sort key
-        table.scan().executeAll().forEach(this::deleteTestPost);
+        table.scan().consistentRead(true).executeAll().forEach(this::deleteTestPost);
+        lowLevelClient.scan(b -> b.tableName(ENTITY_TABLE_NAME).consistentRead(true))
+                .items().forEach(this::deleteEntityItem);
     }
 
     private void deleteTestPost(TestPost p) {
         table.deleteItem(p.getId(), p.getCreatedAt());
+    }
+
+    private void deleteEntityItem(Map<String, AttributeValue> item) {
+        lowLevelClient.deleteItem(b -> b.tableName(ENTITY_TABLE_NAME)
+                .key(Map.of("pk", item.get("pk"), "sk", item.get("sk"))));
     }
 
     // region Sort key equality query
@@ -485,6 +540,205 @@ class DynamoSimplifiedClientRichIT {
         assertTrue(found.isPresent());
         assertEquals("AfterExp", found.get().getTitle());
         assertEquals("NewContent", found.get().getContent());
+    }
+
+    // region Entity table operations
+
+    @Test
+    void entityPutComputesStringKeysAndWritesDefaultDiscriminator() {
+        var entity = new DefaultEntity("entity-1", "profile", "Alice");
+
+        defaultEntityTable.put(entity);
+
+        assertEquals("USER#entity-1", entity.getPk());
+        assertEquals("PROFILE#profile", entity.getSk());
+        Map<String, AttributeValue> item = getRawEntityItem(entity.getPk(), entity.getSk());
+        assertEquals("USER#entity-1", item.get("pk").s());
+        assertEquals("PROFILE#profile", item.get("sk").s());
+        assertEquals("DEFAULT", item.get("_type").s());
+        assertFalse(item.containsKey("__entity"));
+    }
+
+    @Test
+    void customDiscriminatorIsWrittenWithoutDefaultDiscriminator() {
+        var entity = new CustomEntity("entity-2", "profile", "Bob");
+
+        customEntityTable.put(entity);
+
+        Map<String, AttributeValue> item = getRawEntityItem(entity.getPk(), entity.getSk());
+        assertEquals("CUSTOM", item.get("__entity").s());
+        assertFalse(item.containsKey("_type"));
+    }
+
+    @Test
+    void entityUpdateRestoresDiscriminatorAndPreservesBusinessAttribute() {
+        var entity = new CustomEntity("entity-3", "profile", "Before");
+        customEntityTable.put(entity);
+
+        lowLevelClient.updateItem(b -> b.tableName(ENTITY_TABLE_NAME)
+                .key(Map.of("pk", AttributeValue.fromS(entity.getPk()), "sk", AttributeValue.fromS(entity.getSk())))
+                .updateExpression("SET #business = :business")
+                .expressionAttributeNames(Map.of("#business", "business"))
+                .expressionAttributeValues(Map.of(":business", AttributeValue.fromS("preserved"))));
+        lowLevelClient.updateItem(b -> b.tableName(ENTITY_TABLE_NAME)
+                .key(Map.of("pk", AttributeValue.fromS(entity.getPk()), "sk", AttributeValue.fromS(entity.getSk())))
+                .updateExpression("REMOVE #discriminator")
+                .expressionAttributeNames(Map.of("#discriminator", "__entity")));
+
+        var updated = new CustomEntity("entity-3", "profile", "After");
+        customEntityTable.update(updated);
+
+        Map<String, AttributeValue> item = getRawEntityItem(updated.getPk(), updated.getSk());
+        assertEquals("CUSTOM", item.get("__entity").s());
+        assertEquals("After", item.get("name").s());
+        assertEquals("preserved", item.get("business").s());
+    }
+
+    @Test
+    void entityQueryReadsDefaultAndCustomDiscriminators() {
+        var defaultEntity = new DefaultEntity("cross-entity", "default", "Default");
+        var customEntity = new CustomEntity("cross-entity", "custom", "Custom");
+        defaultEntityTable.put(defaultEntity);
+        customEntityTable.put(customEntity);
+
+        var defaultResult = client.entityQuery(ENTITY_TABLE_NAME)
+                .partitionKey("USER#cross-entity")
+                .consistentRead(true)
+                .includeEntity(DefaultEntity.class)
+                .execute();
+        var customResult = client.entityQuery(ENTITY_TABLE_NAME, "__entity")
+                .partitionKey("USER#cross-entity")
+                .consistentRead(true)
+                .includeEntity(CustomEntity.class)
+                .execute();
+
+        assertEquals(1, defaultResult.get(DefaultEntity.class).size());
+        assertEquals("Default", defaultResult.get(DefaultEntity.class).getFirst().getName());
+        assertEquals(1, customResult.get(CustomEntity.class).size());
+        assertEquals("Custom", customResult.get(CustomEntity.class).getFirst().getName());
+    }
+
+    @Test
+    void asyncEntityPutAndUpdateAreOperational() {
+        AsyncEntityTable<DefaultEntity> asyncEntityTable = asyncClient.entityTable(DefaultEntity.class);
+        var entity = new DefaultEntity("async-entity", "profile", "Before");
+
+        asyncEntityTable.put(entity).join();
+        Map<String, AttributeValue> before = getRawEntityItem(entity.getPk(), entity.getSk());
+        assertEquals("USER#async-entity", before.get("pk").s());
+        assertEquals("PROFILE#profile", before.get("sk").s());
+        assertEquals("Before", before.get("name").s());
+        assertEquals("DEFAULT", before.get("_type").s());
+
+        var updated = new DefaultEntity("async-entity", "profile", "After");
+        asyncEntityTable.update(updated).join();
+
+        Map<String, AttributeValue> after = getRawEntityItem(updated.getPk(), updated.getSk());
+        assertEquals("After", after.get("name").s());
+        assertEquals("DEFAULT", after.get("_type").s());
+    }
+
+    private Map<String, AttributeValue> getRawEntityItem(String pk, String sk) {
+        return lowLevelClient.getItem(b -> b.tableName(ENTITY_TABLE_NAME)
+                        .key(Map.of("pk", AttributeValue.fromS(pk), "sk", AttributeValue.fromS(sk)))
+                        .consistentRead(true))
+                .item();
+    }
+
+    // endregion
+
+    @Entity(discriminator = "DEFAULT", table = ENTITY_TABLE_NAME)
+    @DynamoDbBean
+    @KeyPrefix(component = "PK", value = "USER")
+    @KeyPrefix(component = "SK", value = "PROFILE")
+    public static class DefaultEntity {
+        private String pk;
+        private String sk;
+        private String name;
+
+        public DefaultEntity() {
+        }
+
+        DefaultEntity(String id, String category, String name) {
+            this.pk = id;
+            this.sk = category;
+            this.name = name;
+        }
+
+        @DynamoDbPartitionKey
+        @KeyComponent(component = "PK")
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
+        }
+
+        @DynamoDbSortKey
+        @KeyComponent(component = "SK")
+        public String getSk() {
+            return sk;
+        }
+
+        public void setSk(String sk) {
+            this.sk = sk;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    @Entity(discriminator = "CUSTOM", discriminatorAttribute = "__entity", table = ENTITY_TABLE_NAME)
+    @DynamoDbBean
+    @KeyPrefix(component = "PK", value = "USER")
+    @KeyPrefix(component = "SK", value = "PROFILE")
+    public static class CustomEntity {
+        private String pk;
+        private String sk;
+        private String name;
+
+        public CustomEntity() {
+        }
+
+        CustomEntity(String id, String category, String name) {
+            this.pk = id;
+            this.sk = category;
+            this.name = name;
+        }
+
+        @DynamoDbPartitionKey
+        @KeyComponent(component = "PK")
+        public String getPk() {
+            return pk;
+        }
+
+        public void setPk(String pk) {
+            this.pk = pk;
+        }
+
+        @DynamoDbSortKey
+        @KeyComponent(component = "SK")
+        public String getSk() {
+            return sk;
+        }
+
+        public void setSk(String sk) {
+            this.sk = sk;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
     }
 }
 // endregion

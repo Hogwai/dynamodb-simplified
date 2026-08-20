@@ -18,6 +18,13 @@ class TestEntity {
     }
 }
 
+@Entity(discriminator = "FIELD_USER", table = "test_table")
+@SuppressWarnings("UnusedVariable")
+class FieldAnnotatedTestEntity {
+    @KeyComponent(component = "PK")
+    private String userId;
+}
+
 @Entity(discriminator = "TEST_POST", table = "test_table")
 @KeyPrefix(component = "PK", value = "POST")
 class TestPostEntity {
@@ -43,6 +50,15 @@ class EntityAnnotationTest {
     @Test
     void keyComponentAnnotation_shouldBeReadable() throws Exception {
         KeyComponent kc = TestEntity.class.getMethod("getUserId")
+                .getAnnotation(KeyComponent.class);
+        assertThat(kc).isNotNull();
+        assertThat(kc.component()).isEqualTo("PK");
+        assertThat(kc.position()).isZero();
+    }
+
+    @Test
+    void keyComponentAnnotation_shouldBeReadableOnFields() throws Exception {
+        KeyComponent kc = FieldAnnotatedTestEntity.class.getDeclaredField("userId")
                 .getAnnotation(KeyComponent.class);
         assertThat(kc).isNotNull();
         assertThat(kc.component()).isEqualTo("PK");

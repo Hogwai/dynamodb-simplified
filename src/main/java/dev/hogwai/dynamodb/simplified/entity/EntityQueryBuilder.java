@@ -67,9 +67,19 @@ public final class EntityQueryBuilder {
     @Nullable
     private Select select;
 
-    EntityQueryBuilder(@NonNull DynamoDbClient dynamoDbClient,
-                       @NonNull String tableName,
-                       @NonNull String discriminatorAttribute) {
+    @Nullable
+    private Map<String, AttributeValue> exclusiveStartKey;
+
+    /**
+     * Creates a cross-entity query builder for a table and discriminator attribute.
+     *
+     * @param dynamoDbClient         the low-level DynamoDB client used to execute queries
+     * @param tableName              the DynamoDB table shared by the entity types
+     * @param discriminatorAttribute the attribute containing each entity's discriminator
+     */
+    public EntityQueryBuilder(@NonNull DynamoDbClient dynamoDbClient,
+                              @NonNull String tableName,
+                              @NonNull String discriminatorAttribute) {
         this.dynamoDbClient = dynamoDbClient;
         this.tableName = tableName;
         this.discriminatorAttribute = discriminatorAttribute;
@@ -279,6 +289,20 @@ public final class EntityQueryBuilder {
         return this;
     }
 
+    /**
+     * Sets the exclusive start key for the next paginated query.
+     * The key is typically obtained from
+     * {@link CrossEntityResultWithPagination#getLastEvaluatedKey()}.
+     *
+     * @param lastEvaluatedKey the key returned by a previous page, or {@code null} to start from the beginning
+     * @return this builder for chaining
+     */
+    @NonNull
+    public EntityQueryBuilder startFrom(@Nullable Map<String, AttributeValue> lastEvaluatedKey) {
+        this.exclusiveStartKey = lastEvaluatedKey == null ? null : Map.copyOf(lastEvaluatedKey);
+        return this;
+    }
+
     // endregion
 
     // region Execution
@@ -318,7 +342,7 @@ public final class EntityQueryBuilder {
             return new CrossEntityResultWithPagination(new CrossEntityResult(Map.of()), null);
         }
 
-        QueryRequest request = buildQueryRequest(null);
+        QueryRequest request = buildQueryRequest(exclusiveStartKey);
         QueryResponse response = executeQuery(request);
         CrossEntityResult result = mapResponse(response);
         return new CrossEntityResultWithPagination(result, response.lastEvaluatedKey());
@@ -339,7 +363,7 @@ public final class EntityQueryBuilder {
         }
 
         List<CrossEntityResult> pages = new ArrayList<>();
-        Map<String, AttributeValue> startKey = null;
+        Map<String, AttributeValue> startKey = exclusiveStartKey;
 
         do {
             QueryRequest request = buildQueryRequest(startKey);

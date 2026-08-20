@@ -150,6 +150,7 @@ public class BatchGetBuilder<T> extends AbstractBatchGetBuilder<T, BatchGetBuild
         }
         List<Key> unprocessedKeys = page.unprocessedKeysForTable(table);
         if (unprocessedKeys == null || unprocessedKeys.isEmpty()) {
+            allUnprocessed.remove(table.tableName());
             return;
         }
         List<Map<String, AttributeValue>> keyMaps = new ArrayList<>(unprocessedKeys.size());

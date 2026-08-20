@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
@@ -39,11 +40,27 @@ public final class EntitySchemaReader {
         }
 
         Map<String, List<EntitySchema.KeyComponentInfo>> components = new HashMap<>();
+        validateDeclaredKeyComponentMethods(clazz);
+        scanMethodsForKeyComponents(clazz, components);
+        scanFieldsForKeyComponents(clazz, components);
+        sortComponents(components);
 
+        return buildSchema(clazz, entityAnn, components);
+    }
+
+    private static <T> void scanMethodsForKeyComponents(Class<T> clazz,
+                                                        Map<String, List<EntitySchema.KeyComponentInfo>> components) {
         for (Method method : clazz.getMethods()) {
             KeyComponent kc = method.getAnnotation(KeyComponent.class);
             if (kc == null) {
                 continue;
+            }
+
+            validateKeyComponentMethod(method, clazz);
+
+            if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
+                throw new IllegalArgumentException("Key component method '" + method.getName()
+                        + "' on " + clazz.getName() + " must be a no-argument getter");
             }
 
             String attributeName = method.getName().startsWith("get")
@@ -55,8 +72,8 @@ public final class EntitySchemaReader {
             try {
                 handle = MethodHandles.lookup().unreflect(method);
             } catch (IllegalAccessException e) {
-                throw new DynamoSimplifiedException(
-                        "Failed to access key component method: " + method.getName(), e);
+                throw new IllegalArgumentException("Cannot extract key component method '"
+                        + method.getName() + "' on " + clazz.getName(), e);
             }
             UnaryOperator<Object> extractor = entity -> {
                 try {
@@ -71,21 +88,43 @@ public final class EntitySchemaReader {
                     .add(new EntitySchema.KeyComponentInfo(
                             kc.component(), kc.position(), attributeName, extractor));
         }
+    }
 
-        // Also scan fields for @KeyComponent (annotation targets FIELD too)
-        scanFieldsForKeyComponents(clazz, components);
-
-        // Sort each component list by position
+    private static void sortComponents(Map<String, List<EntitySchema.KeyComponentInfo>> components) {
         for (List<EntitySchema.KeyComponentInfo> list : components.values()) {
             list.sort(Comparator.comparingInt(EntitySchema.KeyComponentInfo::position));
         }
+    }
 
+    private static <T> EntitySchema<T> buildSchema(Class<T> clazz, Entity entityAnn,
+                                                   Map<String, List<EntitySchema.KeyComponentInfo>> components) {
         return new EntitySchema<>(clazz,
                 entityAnn.discriminator(),
                 entityAnn.discriminatorAttribute(),
                 entityAnn.table(),
                 components,
                 readKeyPrefixes(clazz));
+    }
+
+    private static void validateDeclaredKeyComponentMethods(Class<?> clazz) {
+        for (Class<?> current = clazz; current != null; current = current.getSuperclass()) {
+            for (Method method : current.getDeclaredMethods()) {
+                if (method.getAnnotation(KeyComponent.class) != null) {
+                    validateKeyComponentMethod(method, clazz);
+                }
+            }
+        }
+    }
+
+    private static void validateKeyComponentMethod(Method method, Class<?> clazz) {
+        if (Modifier.isStatic(method.getModifiers())) {
+            throw new IllegalArgumentException("Methods annotated with @KeyComponent must not be static: "
+                    + method.toGenericString());
+        }
+        if (!Modifier.isPublic(method.getModifiers())) {
+            throw new IllegalArgumentException("Methods annotated with @KeyComponent must be public on "
+                    + clazz.getName() + ": " + method.toGenericString());
+        }
     }
 
     private static Map<String, String> readKeyPrefixes(Class<?> clazz) {
@@ -113,23 +152,19 @@ public final class EntitySchemaReader {
 
             String attributeName = field.getName();
 
-            String getterName = "get" + Character.toUpperCase(field.getName().charAt(0))
-                    + field.getName().substring(1);
-            Method getter;
-            try {
-                getter = clazz.getMethod(getterName);
-            } catch (NoSuchMethodException e) {
-                throw new DynamoSimplifiedException(
-                        "No getter method '" + getterName + "' found for key component field '"
-                                + field.getName() + "' in " + clazz.getName(), e);
+            if (Modifier.isStatic(field.getModifiers())) {
+                throw new IllegalArgumentException("Cannot extract key component field '"
+                        + field.getName() + "' on " + clazz.getName() + ": static fields are not supported");
             }
 
             MethodHandle handle;
             try {
-                handle = MethodHandles.lookup().unreflect(getter);
-            } catch (IllegalAccessException e) {
-                throw new DynamoSimplifiedException(
-                        "Failed to access key component getter: " + getterName, e);
+                handle = MethodHandles.privateLookupIn(clazz, MethodHandles.lookup())
+                        .unreflectGetter(field);
+            } catch (IllegalAccessException | SecurityException e) {
+                throw new IllegalArgumentException("Cannot extract key component field '"
+                        + field.getName() + "' on " + clazz.getName()
+                        + ": the field is not accessible", e);
             }
             UnaryOperator<Object> extractor = entity -> {
                 try {

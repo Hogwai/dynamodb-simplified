@@ -3,7 +3,7 @@ package dev.hogwai.dynamodb.simplified.entity;
 import java.lang.annotation.*;
 
 /**
- * Marks an attribute as the version field for optimistic locking.
+ * Marks a field as the version field for optimistic locking.
  * <p>
  * When present and optimistic locking is enabled via
  * {@code withOptimisticLocking()}, the library automatically adds a condition
@@ -20,7 +20,7 @@ import java.lang.annotation.*;
  * }</pre>
  */
 @SuppressWarnings("unused")
-@Target({ElementType.FIELD, ElementType.METHOD})
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Version {

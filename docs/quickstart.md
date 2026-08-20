@@ -31,20 +31,20 @@ implementation 'dev.hogwai:dynamodb-simplified-core:0.1.0'
 ## Create a client
 
 ```java
+import java.net.URI;
+
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
 // Default: uses the default AWS credentials chain and region
 DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
 
-// Custom: with an existing DynamoDbClient
+        // Custom: configure the AWS SDK client, then wrap it
 DynamoDbClient rawClient = DynamoDbClient.builder()
     .region(Region.EU_WEST_1)
-    .build();
-DynamoSimplifiedClient client = DynamoSimplifiedClient.create(rawClient);
-
-// Builder: fluent configuration
-DynamoSimplifiedClient client = DynamoSimplifiedClient.builder()
-    .region(Region.US_EAST_1)
     .endpointOverride(URI.create("http://localhost:8000"))
     .build();
+        DynamoSimplifiedClient customClient = DynamoSimplifiedClient.create(rawClient);
 ```
 
 ## Define an item
@@ -55,6 +55,8 @@ public class Post {
     private String id;
     private String title;
     private String content;
+    private String status;
+    private long statusUpdatedAt;
     private long createdAt;
 
     @DynamoDbPartitionKey
@@ -70,6 +72,24 @@ public class Post {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    @DynamoDbSecondaryPartitionKey(indexNames = "by_status")
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    @DynamoDbSecondarySortKey(indexNames = "by_status")
+    public long getStatusUpdatedAt() {
+        return statusUpdatedAt;
+    }
+
+    public void setStatusUpdatedAt(long statusUpdatedAt) {
+        this.statusUpdatedAt = statusUpdatedAt;
+    }
 }
 ```
 
@@ -83,7 +103,11 @@ Table<Post> table = client.table("posts", Post.class);
 
 ### Create / Update
 
+Conditions and update expressions are covered in the [expressions guide](guides/expressions.md).
+
 ```java
+import java.util.Optional;
+
 // Full item put (insert or replace)
 table.put(post).execute();
 
@@ -94,30 +118,47 @@ table.put(post).onlyIfNotExists("id").execute();
 table.put(post).condition(c -> c.eq("status", "draft")).execute();
 
 // Partial update with expression
-table.update(post, expr -> expr.set("title", "New Title")
-                                 .add("views", 1)).execute();
+Optional<Post> updated = table.update(post, expr -> expr.set("title", "New Title")
+                .addNumber("views", 1))
+        .execute();
 ```
+
+`update(...).execute()` returns an [`Optional<Post>`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html), containing the updated item when DynamoDB returns one.
 
 ### Read
 
 ```java
+import java.util.List;
+import java.util.Optional;
+
+import dev.hogwai.dynamodb.simplified.result.BatchGetResult;
+
 // Get by partition key (tables without sort key)
-Optional<Post> post = table.getItem("post-1");
+Optional<Post> postById = table.getItem("post-1");
 
 // Get by partition + sort key
-Optional<Post> post = table.getItem("post-1", 12345L);
+Optional<Post> postByKey = table.getItem("post-1", 12345L);
 
 // Batch get multiple items
-List<Post> results = table.batchGet()
+BatchGetResult<Post> batch = table.batchGet()
     .addKey("post-1", 12345L)
     .addKey("post-2", 67890L)
     .consistentRead(true)
     .execute();
+        List<Post> results = batch.items();
 ```
+
+`batchGet().execute()` returns a [`BatchGetResult<Post>`](https://hogwai.github.io/dynamodb-simplified/javadoc/dev/hogwai/dynamodb/simplified/result/BatchGetResult.html).
+Without a projection, the same-table sync builder uses the AWS Enhanced paginator, which normally completes without remaining unprocessed keys.
+See the [batch and results guide](guides/batch-and-results.md) for projection and cross-table paths that can expose `unprocessedKeys`.
 
 ### Delete
 
 ```java
+import java.util.Optional;
+
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
+
 // Delete by partition key
 table.deleteItem("post-1");
 
@@ -125,12 +166,13 @@ table.deleteItem("post-1");
 table.deleteItem("post-1", 12345L);
 
 // Conditional delete with returned values
-Post deleted = table.delete()
-    .key("post-1", 12345L)
+Optional<Post> deleted = table.delete("post-1", 12345L)
     .condition(c -> c.eq("status", "draft"))
     .returnValues(ReturnValue.ALL_OLD)
     .execute();
 ```
+
+`delete(...).execute()` returns an [`Optional<Post>`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html): it is empty when no item matched the key.
 
 ## Time To Live (TTL)
 
@@ -144,55 +186,108 @@ table.update(post, expr -> expr.set("status", "archived")
     .execute();
 ```
 
-## Optimistic Locking
+## Versioning and compare-and-set writes
 
 ```java
 @DynamoDbBean
 public class VersionedItem {
     private String id;
-    private int version;  // @Version field
+    private String title;
+    @Version
+    private int version;
 
     @DynamoDbPartitionKey
     public String getId() { return id; }
 
-    @Version
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
     public int getVersion() { return version; }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
 }
 
-// Auto-checks version on write, increments on success
-table.put(item).withOptimisticLocking().execute();
-table.update(item, expr -> expr.set("title", "Updated"))
+Table<VersionedItem> versionedTable = client.table("versioned-items", VersionedItem.class);
+VersionedItem item = versionedTable.getItem("item-1").orElseThrow();
+item.
+
+setTitle("Updated");
+
+// Direct full-item builders require withOptimisticLocking() to activate version detection.
+Optional<VersionedItem> updated = versionedTable.update(item)
     .withOptimisticLocking()
     .execute();
+
+// For a partial update, load the current item and write the next version explicitly.
+VersionedItem current = versionedTable.getItem("item-1").orElseThrow();
+int expectedVersion = current.getVersion();
+Optional<VersionedItem> partial = versionedTable.update(current, expr -> expr
+                .set("title", "Updated again")
+                .set("version", expectedVersion + 1))
+        .condition(c -> c.eq("version", expectedVersion))
+        .execute();
+if(partial.
+
+isPresent()){
+current =partial.
+
+get();
+}
 ```
+
+`@Version` is detected and can be incremented on the Java object.
+On direct `Table` put/update builders, `.withOptimisticLocking()` is required to activate the built-in detection condition.
+For full and partial writes, the builders increment the Java object after a successful write; neither the annotation nor this object-side increment alone guarantees that the intended version was persisted.
+For a strict compare-and-set, explicitly write the next version with a condition.
+`EntityTable` does not provide this CAS automatically.
 
 ## Query
 
 ```java
 // Simple partition key query
-List<Post> results = table.query()
+List<Post> posts = table.query()
     .partitionKey("post-1")
     .executeAll();
 
 // Sort key conditions
-List<Post> results = table.query()
+List<Post> range = table.query()
     .partitionKeyAndSortKeyBetween("post-1", 1000L, 2000L)
     .executeAll();
 
 // Descending order
-List<Post> results = table.query()
+List<Post> descending = table.query()
     .partitionKey("post-1")
     .descending()
     .executeAll();
 
 // With filter expression
+List<Post> filtered = table.query()
+        .partitionKey("post-1")
+        .filter(f -> f.eq("status", "published")
+                .and()
+                .gt("views", 100))
+        .executeAll();
+
+// Server-side size() filter
 List<Post> results = table.query()
     .partitionKey("post-1")
-    .filter(f -> f.eq("status", "published").gt("views", 100))
+        .filter(f -> f.sizeGe("tags", 2)
+                .and()
+                .sizeLe("tags", 10))
     .executeAll();
 
 // Project only specific attributes
-List<Post> results = table.query()
+List<Post> projected = table.query()
     .partitionKey("post-1")
     .project("id", "title")
     .executeAll();
@@ -207,14 +302,11 @@ PagedResult<Post> page = table.query()
 PagedResult<Post> nextPage = table.query()
     .partitionKey("post-1")
     .limit(10)
-    .startFrom(page.getLastEvaluatedKey())
+        .startFrom(page.lastEvaluatedKey())
     .executeWithPagination();
 
-// Check consumed capacity
-PagedResult<Post> page = ...;
-ConsumedCapacity capacity = page.consumedCapacity();  // may be null
-
-// Count items (no data transferred)
+// Count reported for this query response/page; not a table-wide global count.
+// When pagination is involved, do not treat one count as the full table total.
 long count = table.query()
     .partitionKey("post-1")
     .count();
@@ -230,6 +322,14 @@ Optional<Post> first = table.query()
     .partitionKey("post-1")
     .executeAndGetFirst();
 ```
+
+`page.lastEvaluatedKey()` provides the continuation key.
+A `null` or empty key means there is no next page; otherwise, pass it to `startFrom(...)` to load the next page.
+`limit(10)` limits the items evaluated before a filter is applied.
+A filtered page can therefore contain fewer than 10 items, or be empty while still returning a continuation key.
+The same filter builder works with `query()` and `scan`.
+The available operators are `sizeEq`, `sizeLt`, `sizeLe`, `sizeGt`, `sizeGe`, and `sizeBetween`.
+`size()` is evaluated server-side by DynamoDB after items are read; it does not reduce the consumed read capacity.
 
 ## Scan
 
@@ -251,23 +351,33 @@ PagedResult<Post> page = table.scan()
 ## Transactions
 
 ```java
+import dev.hogwai.dynamodb.simplified.result.TransactGetResults;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+
 // Transactional write (all or nothing)
 client.transactWrite()
     .put(table, newPost)
     .update(table, existingPost)          // full item replacement
     .update(table, existingPost, expr -> expr.set("title", "Updated"))  // partial update
     .delete(table, "post-2", 67890L)
-    .conditionCheck(table, "post-3", c -> c.exists("id"))
+    .
+
+conditionCheck(table, "post-3",67890L,c ->c.
+
+exists("id"))
     .execute();
 
 // Transactional get
-TransactGetResults items = client.transactGet()
+TransactGetResults<DynamoDbTable<?>> items = client.transactGet()
     .addGetItem(table, "post-1", 12345L)
     .addGetItem(table, "post-2", 67890L)
     .execute();
 ```
 
 ## Batch operations
+
+See the [batch and results guide](guides/batch-and-results.md) for result objects, unprocessed items, and DynamoDB limits.
+See the [errors and retries guide](guides/errors-and-retries.md) for retry behavior.
 
 ```java
 // Batch write (mix of puts and deletes)
@@ -287,15 +397,18 @@ table.putAll(List.of(post1, post2, post3));
 
 ## Secondary indexes (GSI / LSI)
 
+The `Post` bean above declares the `by_status` secondary partition and sort keys.
+The DynamoDB table must also be created with the matching `by_status` index.
+
 ```java
 // Query a global secondary index
-List<Post> results = table.index("by_status")
+List<Post> indexResults = table.index("by_status")
     .query()
     .partitionKey("published")
     .executeAll();
 
 // Query with sort key on index
-List<Post> results = table.index("by_status")
+List<Post> descendingIndexResults = table.index("by_status")
     .query()
     .partitionKey("published")
     .descending()
@@ -306,10 +419,12 @@ List<Post> results = table.index("by_status")
 
 ```java
 // Create table
-table.createTable();
+table.create();
 
 // Delete table
-table.deleteTable();
+table.
+
+delete();
 
 // Check if table exists
 boolean exists = table.exists();
@@ -328,12 +443,24 @@ ExecuteStatementResponse response = client.executeStatement(
 
 ## Expressions
 
+See the [expressions guide](guides/expressions.md) for filter operators, conditions, updates, and projections.
+
 Every operation that accepts expressions supports the same fluent API:
 
 ```java
 // Filter expressions (query/scan)
 table.query().partitionKey("pk")
-    .filter(f -> f.eq("status", "active").gt("views", 100))
+    .
+
+filter(f ->f.
+
+eq("status","active")
+                 .
+
+and()
+                 .
+
+gt("views",100))
     .executeAll();
 
 // Condition expressions (put/update/delete)
@@ -342,7 +469,9 @@ table.put(post).condition(c -> c.eq("status", "draft")).execute();
 // Update expressions (partial update)
 table.update(post, expr -> expr.set("title", "New Title")
                                  .remove("oldField")
-                                 .add("views", 1)
+                                 .
+
+addNumber("views",1)
                                  .set("tags", Set.of("java", "aws"))).execute();
 
 // Projection expressions (read specific attributes)
@@ -353,7 +482,10 @@ table.query().partitionKey("pk")
 
 ## Async API
 
-All operations have an async counterpart with identical method signatures. Return types change from `T` to `CompletableFuture<T>`.
+See the [async API guide](guides/async.md) for `CompletableFuture` composition, streaming, and asynchronous batch operations.
+
+The async builders are broadly symmetrical with the synchronous builders.
+Their terminal results are exposed through `CompletableFuture`; streaming also follows the underlying builder: async query uses `streamResults()`, while async scan uses `executeStream()` and returns a future publisher.
 
 ```java
 AsyncDynamoSimplifiedClient asyncClient = AsyncDynamoSimplifiedClient.create();
@@ -374,47 +506,136 @@ asyncClient.transactWrite()
 
 ## Single-Table Design
 
+See the [single-table design guide](guides/single-table-design.md) for key components, discriminators, and versioning.
+
 Define entities with annotations:
 
 ```java
+
+@DynamoDbBean
 @Entity(discriminator = "POST", table = "myapp")
 @KeyPrefix(component = "PK", value = "POST")
-public class Post {
+@KeyPrefix(component = "SK", value = "POST")
+public class PostEntity {
     private String pk;
+    private String sk;
     private String postId;
 
-    @KeyComponent(component = "PK", position = 0)
-    public String getPostId() { return postId; }
+    public PostEntity() {
+    }
+
+    public PostEntity(String postId) {
+        this.pk = postId; // raw component before the POST# prefix
+        this.sk = "meta"; // raw component before the POST# prefix
+        this.postId = postId;
+    }
 
     @DynamoDbPartitionKey
+    @KeyComponent(component = "PK", position = 0)
+    public String getPk() {
+        return pk;
+    }
+
+    public void setPk(String pk) {
+        this.pk = pk;
+    }
+
+    @DynamoDbSortKey
+    @KeyComponent(component = "SK", position = 0)
+    public String getSk() {
+        return sk;
+    }
+
+    public void setSk(String sk) {
+        this.sk = sk;
+    }
+
+    public String getPostId() { return postId; }
+
+    public void setPostId(String postId) {
+        this.postId = postId;
+    }
+}
+
+@DynamoDbBean
+@Entity(discriminator = "COMMENT", table = "myapp")
+@KeyPrefix(component = "PK", value = "POST")
+@KeyPrefix(component = "SK", value = "COMMENT")
+class CommentEntity {
+    private String pk;
+    private String sk;
+
+    public CommentEntity() {
+    }
+
+    public CommentEntity(String postId, String commentId) {
+        this.pk = postId;
+        this.sk = commentId;
+    }
+
+    @DynamoDbPartitionKey
+    @KeyComponent(component = "PK", position = 0)
     public String getPk() { return pk; }
     public void setPk(String pk) { this.pk = pk; }
+
+    @DynamoDbSortKey
+    @KeyComponent(component = "SK", position = 0)
+    public String getSk() {
+        return sk;
+    }
+
+    public void setSk(String sk) {
+        this.sk = sk;
+    }
 }
 ```
 
 Use the entity-aware table:
 
 ```java
-EntityTable<Post> posts = client.entityTable(Post.class);
-posts.put(new Post("post-123"));  // pk auto-computed to "POST#post-123"
+EntityTable<PostEntity> posts = client.entityTable(PostEntity.class);
+PostEntity post = new PostEntity("post-123");
+posts.
+
+put(post);  // pk auto-computed to "POST#post-123"
+
+EntityTable<CommentEntity> comments = client.entityTable(CommentEntity.class);
+comments.
+
+put(new CommentEntity("post-123", "comment-1"));
 
 // Read: auto-filters by discriminator
-List<Post> results = posts.query("POST#post-123").executeAll();
+List<PostEntity> results = posts.query("POST#post-123");
 ```
+
+`@Entity` uses `_type` as the default `discriminatorAttribute`.
+`EntityTable` automatically persists the discriminator value in that attribute and filters `query()` by it.
+For another name, use for example `@Entity(discriminator = "POST", discriminatorAttribute = "__entity", table = "myapp")`.
+
+For cross-entity mapping, `@KeyComponent` is placed on the actual mapped `pk` and `sk` properties used as the DynamoDB keys.
+All included entity beans must use the same table, compatible key property names/types, and a partition that is actually shared by the requested items.
 
 Cross-entity queries:
 
 ```java
+// Comment is another @Entity class stored in "myapp"
 CrossEntityResult result = client.entityQuery("myapp")
     .partitionKey("POST#post-123")
-    .includeEntity(Post.class)
-    .includeEntity(Comment.class)
+                .includeEntity(PostEntity.class)
+                .includeEntity(CommentEntity.class)
     .execute();
 ```
+
+`client.entityQuery("myapp")` uses `_type`; use `client.entityQuery("myapp", "__entity")` when the entities use a custom `discriminatorAttribute`.
 
 Async variant:
 
 ```java
-AsyncEntityTable<Post> asyncPosts = asyncClient.entityTable(Post.class);
-asyncPosts.put(new Post("post-456")).join();
+AsyncEntityTable<PostEntity> asyncPosts = asyncClient.entityTable(PostEntity.class);
+PostEntity asyncPost = new PostEntity("post-456");
+asyncPosts.
+
+put(asyncPost).
+
+join();
 ```

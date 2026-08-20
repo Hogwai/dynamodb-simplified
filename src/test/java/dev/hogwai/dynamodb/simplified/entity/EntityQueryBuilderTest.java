@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -287,6 +288,62 @@ class EntityQueryBuilderTest {
         assertThat(result.getResult().get(UserEntity.class)).hasSize(1);
         assertThat(result.getLastEvaluatedKey()).isEqualTo(lastKey);
         assertThat(result.hasMore()).isTrue();
+    }
+
+    @Test
+    void startFrom_propagatesKeyToQueryRequest() {
+        Map<String, AttributeValue> startKey = Map.of("pk", AttributeValue.builder().s("startKey").build());
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class)
+                .startFrom(startKey)
+                .executeWithPagination();
+
+        verify(mockClient).query(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().exclusiveStartKey()).isEqualTo(startKey);
+    }
+
+    @Test
+    void startFrom_takesDefensiveSnapshotOfMutableKey() {
+        AttributeValue initialValue = AttributeValue.builder().s("initial").build();
+        Map<String, AttributeValue> startKey = new HashMap<>();
+        startKey.put("pk", initialValue);
+        QueryResponse response = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(response);
+
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class)
+                .startFrom(startKey);
+        startKey.put("pk", AttributeValue.builder().s("modified").build());
+        builder.executeWithPagination();
+
+        verify(mockClient).query(requestCaptor.capture());
+        assertThat(requestCaptor.getValue().exclusiveStartKey()).containsEntry("pk", initialValue);
+    }
+
+    @Test
+    void startFrom_isAppliedOncePerRequestWhenExecutingAllPages() {
+        Map<String, AttributeValue> startKey = Map.of("pk", AttributeValue.builder().s("startKey").build());
+        Map<String, AttributeValue> nextKey = Map.of("pk", AttributeValue.builder().s("nextKey").build());
+        QueryResponse page1 = QueryResponse.builder()
+                .items(List.of())
+                .lastEvaluatedKey(nextKey)
+                .count(0)
+                .build();
+        QueryResponse page2 = QueryResponse.builder().items(List.of()).count(0).build();
+        when(mockClient.query(any(QueryRequest.class))).thenReturn(page1, page2);
+
+        builder.partitionKey("USER#abc")
+                .includeEntity(UserEntity.class)
+                .startFrom(startKey)
+                .executeAll();
+
+        verify(mockClient, times(2)).query(requestCaptor.capture());
+        List<QueryRequest> requests = requestCaptor.getAllValues();
+        assertThat(requests.get(0).exclusiveStartKey()).isEqualTo(startKey);
+        assertThat(requests.get(1).exclusiveStartKey()).isEqualTo(nextKey);
     }
 
     @Test

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.LongFunction;
 
 /**
  * Builds an async cross-table batch write operation to put and delete items
@@ -21,13 +22,14 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>
  * Obtain via {@link AsyncDynamoSimplifiedClient#batchWrite()}.
  * A single batch write can contain up to 25 put and delete operations combined.
- * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
+ * Unprocessed items are automatically retried with exponential backoff (up to 3 retries).
  */
 public class AsyncCrossTableBatchWriteBuilder extends AbstractCrossTableBatchWriteBuilder<AsyncCrossTableBatchWriteBuilder> {
 
     private static final Logger LOG = Logging.getLogger(AsyncCrossTableBatchWriteBuilder.class);
 
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
+    private final LongFunction<CompletableFuture<Void>> retryDelay;
 
     /**
      * Constructs a new {@code AsyncCrossTableBatchWriteBuilder}.
@@ -35,8 +37,14 @@ public class AsyncCrossTableBatchWriteBuilder extends AbstractCrossTableBatchWri
      * @param dynamoDbAsyncClient the low-level async DynamoDB client
      */
     public AsyncCrossTableBatchWriteBuilder(@NonNull DynamoDbAsyncClient dynamoDbAsyncClient) {
+        this(dynamoDbAsyncClient, AsyncRetryUtils::delay);
+    }
+
+    AsyncCrossTableBatchWriteBuilder(@NonNull DynamoDbAsyncClient dynamoDbAsyncClient,
+                                     @NonNull LongFunction<CompletableFuture<Void>> retryDelay) {
         super();
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+        this.retryDelay = retryDelay;
     }
 
     @Override
@@ -58,7 +66,7 @@ public class AsyncCrossTableBatchWriteBuilder extends AbstractCrossTableBatchWri
      * Executes the batch write operation asynchronously.
      * <p>
      * All puts and deletes are sent in a single batch write request.
-     * Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).
+     * Unprocessed items are automatically retried with exponential backoff (up to 3 retries).
      *
      * @return a {@link CompletableFuture} containing the {@link CrossTableBatchWriteResult}
      * @throws IllegalArgumentException if more than 25 items (puts + deletes combined) are provided
@@ -101,7 +109,7 @@ public class AsyncCrossTableBatchWriteBuilder extends AbstractCrossTableBatchWri
                     }
                     long backoff = DynamoDbLimits.BASE_BACKOFF_MS * (1L << attempt);
                     backoff += ThreadLocalRandom.current().nextLong(DynamoDbLimits.BASE_BACKOFF_MS);
-                    return AsyncRetryUtils.delay(backoff)
+                    return retryDelay.apply(backoff)
                             .thenCompose(v -> executeWithRetry(unprocessed, attempt + 1, start));
                 });
     }

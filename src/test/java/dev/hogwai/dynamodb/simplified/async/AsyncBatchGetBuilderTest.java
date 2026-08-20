@@ -188,6 +188,30 @@ class AsyncBatchGetBuilderTest {
     }
 
     @Test
+    @DisplayName("execute with enhanced path returns unprocessed keys")
+    void execute_withEnhancedPath_returnsUnprocessedKeys() {
+        stubTableSchema();
+        when(table.tableName()).thenReturn("testTable");
+
+        Key unprocessedKey = mock(Key.class);
+        when(unprocessedKey.primaryKeyMap(tableSchema))
+                .thenReturn(Map.of("id", AttributeValue.builder().s("pk2").build()));
+        BatchGetResultPage page = mockPageWithItems(table, List.of());
+        when(page.unprocessedKeysForTable(table)).thenReturn(List.of(unprocessedKey));
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class)))
+                .thenReturn(publisherThatEmits(page));
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+        builder.addKey("pk1");
+
+        BatchGetResult<TestItem> result = builder.execute().join();
+
+        assertTrue(result.hasUnprocessed());
+        assertEquals(List.of(Map.of("id", AttributeValue.builder().s("pk2").build())),
+                result.unprocessedKeys().get("testTable").keys());
+    }
+
+    @Test
     @DisplayName("execute with multiple keys returns aggregated results from all pages")
     void execute_withMultiplePages() {
         stubTableSchema();
@@ -216,6 +240,39 @@ class AsyncBatchGetBuilderTest {
         assertEquals(2, result.items().size());
         assertSame(item1, result.items().get(0));
         assertSame(item2, result.items().get(1));
+        assertFalse(result.hasUnprocessed());
+    }
+
+    @Test
+    @DisplayName("execute uses the latest page's unprocessed keys")
+    void execute_withMultiplePages_usesLatestUnprocessedKeys() {
+        stubTableSchema();
+        when(table.tableName()).thenReturn("testTable");
+
+        Key unprocessedKey = mock(Key.class);
+
+        TestItem processedItem = new TestItem("item2");
+        BatchGetResultPage page1 = mockPageWithItems(table, List.of());
+        when(page1.unprocessedKeysForTable(table)).thenReturn(List.of(unprocessedKey));
+        BatchGetResultPage page2 = mockPageWithItems(table, List.of(processedItem));
+        when(page2.unprocessedKeysForTable(table)).thenReturn(List.of());
+
+        BatchGetResultPagePublisher twoPagePublisher = subscriber -> {
+            subscriber.onSubscribe(mock(Subscription.class));
+            subscriber.onNext(page1);
+            subscriber.onNext(page2);
+            subscriber.onComplete();
+        };
+
+        when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class)))
+                .thenReturn(twoPagePublisher);
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+        builder.addKey("pk1").addKey("pk2");
+
+        BatchGetResult<TestItem> result = builder.execute().join();
+
+        assertEquals(List.of(processedItem), result.items());
         assertFalse(result.hasUnprocessed());
     }
 
@@ -258,6 +315,17 @@ class AsyncBatchGetBuilderTest {
     }
 
     @Test
+    @DisplayName("executeWithPagination with empty keys and projection throws and does not use enhanced client")
+    void executeWithPagination_emptyKeysWithProjection_throwsAndDoesNotUseEnhancedClient() {
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+        builder.project("id");
+
+        assertThrows(IllegalStateException.class, builder::executeWithPagination);
+
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
+    }
+
+    @Test
     @DisplayName("executeWithPagination returns first page items with null last evaluated key")
     void executeWithPagination_returnsFirstPage() {
         stubTableSchema();
@@ -276,6 +344,29 @@ class AsyncBatchGetBuilderTest {
         assertEquals(2, result.size());
         assertNull(result.lastEvaluatedKey());
         assertFalse(result.hasMorePages());
+    }
+
+    @Test
+    @DisplayName("executeWithPagination with projection throws and does not use enhanced client")
+    void executeWithPagination_withProjection_throwsAndDoesNotUseEnhancedClient() {
+        lenient().when(table.tableSchema()).thenReturn(tableSchema);
+        lenient().when(tableSchema.itemType()).thenReturn(enhancedType);
+        lenient().when(enhancedType.rawClass()).thenReturn(TestItem.class);
+        lenient().when(tableSchema.tableMetadata()).thenReturn(tableMetadata);
+        lenient().when(tableMetadata.indexPartitionKey(anyString())).thenReturn("id");
+
+        BatchGetResultPage page = mock(BatchGetResultPage.class);
+        lenient().when(page.resultsForTable(table)).thenReturn(List.of());
+        lenient().when(enhancedClient.batchGetItem(any(BatchGetItemEnhancedRequest.class)))
+                .thenReturn(publisherThatEmits(page));
+
+        AsyncBatchGetBuilder<TestItem> builder = new AsyncBatchGetBuilder<>(enhancedClient, table);
+        builder.addKey("pk").project("id");
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, builder::executeWithPagination);
+
+        assertTrue(exception.getMessage().contains("execute()"));
+        verify(enhancedClient, never()).batchGetItem(any(BatchGetItemEnhancedRequest.class));
     }
 
     @Test

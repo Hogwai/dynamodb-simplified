@@ -3,6 +3,9 @@ package dev.hogwai.dynamodb.simplified.internal;
 import dev.hogwai.dynamodb.simplified.entity.Version;
 import org.junit.jupiter.api.Test;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class VersionHelperTest {
@@ -20,9 +23,30 @@ class VersionHelperTest {
         }
     }
 
+    static class PrimitiveVersionAnnotatedField {
+        // The helper under test mutates this field through reflection.
+        @SuppressWarnings("PMD.ImmutableField")
+        @Version
+        private int version;
+
+        PrimitiveVersionAnnotatedField(int version) {
+            this.version = version;
+        }
+    }
+
     @Test
     void getVersion_withAnnotatedField_returnsVersion() {
         assertEquals(3, VersionHelper.getVersion(new VersionAnnotatedField(3)));
+    }
+
+    @Test
+    void getAndIncrementVersion_withPrimitiveAnnotatedField_works() {
+        var item = new PrimitiveVersionAnnotatedField(3);
+
+        assertEquals(3, VersionHelper.getVersion(item));
+        VersionHelper.incrementVersion(item);
+        assertEquals(4, VersionHelper.getVersion(item));
+        assertEquals(4, item.version);
     }
 
     @Test
@@ -38,6 +62,12 @@ class VersionHelperTest {
     @Test
     void isVersioned_withPlainObject_returnsFalse() {
         assertFalse(VersionHelper.isVersioned("not-versioned"));
+    }
+
+    @Test
+    void versionAnnotation_targetsFieldsOnly() {
+        var targets = Version.class.getAnnotation(Target.class).value();
+        assertArrayEquals(new ElementType[]{ElementType.FIELD}, targets);
     }
 
     @Test

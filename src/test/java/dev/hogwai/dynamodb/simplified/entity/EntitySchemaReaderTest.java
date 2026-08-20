@@ -1,6 +1,5 @@
 package dev.hogwai.dynamodb.simplified.entity;
 
-import dev.hogwai.dynamodb.simplified.exception.DynamoSimplifiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -260,13 +259,107 @@ class EntitySchemaReaderTest {
         public FieldNoGetterEntity() {
             // test entity
         }
+
+        FieldNoGetterEntity(String id) {
+            this.id = id;
+        }
     }
 
     @Test
-    @DisplayName("readSchema with @KeyComponent on field without getter throws DynamoSimplifiedException")
-    void readSchema_withFieldAnnotation_noGetter_throws() {
-        assertThrows(DynamoSimplifiedException.class,
-                () -> EntitySchemaReader.read(FieldNoGetterEntity.class));
+    @DisplayName("readSchema with @KeyComponent on private field does not require a getter")
+    void readSchema_withFieldAnnotation_noGetter_extractsFieldDirectly() {
+        EntitySchema<FieldNoGetterEntity> schema = EntitySchemaReader.read(FieldNoGetterEntity.class);
+
+        assertThat(schema.computeKey("PK", new FieldNoGetterEntity("abc"))).isEqualTo("abc");
+    }
+
+    @Entity(discriminator = "STATIC_METHOD", table = "method-test")
+    @SuppressWarnings("PMD.UseUtilityClass")
+    static class StaticMethodEntity {
+        @KeyComponent(component = "PK")
+        public static String getId() {
+            return "id";
+        }
+    }
+
+    @Entity(discriminator = "PRIVATE_METHOD", table = "method-test")
+    @SuppressWarnings({"UnusedMethod", "PMD.UnusedPrivateMethod"})
+    static class PrivateMethodEntity {
+        @KeyComponent(component = "PK")
+        private String getId() {
+            return "id";
+        }
+    }
+
+    @Test
+    @DisplayName("readSchema rejects static @KeyComponent methods immediately")
+    void readSchema_withStaticKeyComponentMethod_failsImmediately() {
+        assertThat(assertThrows(IllegalArgumentException.class,
+                () -> EntitySchemaReader.read(StaticMethodEntity.class)))
+                .hasMessageContaining("@KeyComponent")
+                .hasMessageContaining("must not be static")
+                .hasMessageContaining("getId()");
+    }
+
+    @Test
+    @DisplayName("readSchema rejects private @KeyComponent methods immediately")
+    void readSchema_withPrivateKeyComponentMethod_failsImmediately() {
+        assertThat(assertThrows(IllegalArgumentException.class,
+                () -> EntitySchemaReader.read(PrivateMethodEntity.class)))
+                .hasMessageContaining("@KeyComponent")
+                .hasMessageContaining("must be public")
+                .hasMessageContaining("getId()");
+    }
+
+    @Entity(discriminator = "ORDERED_FIELDS", table = "field-test")
+    @KeyPrefix(component = "PK", value = "FIELD")
+    @KeyPrefix(component = "SK", value = "DATE")
+    @SuppressWarnings("UnusedVariable")
+    static class OrderedFieldEntity {
+        @KeyComponent(component = "PK", position = 1)
+        private final String id;
+
+        @KeyComponent(component = "PK")
+        private final String tenant;
+
+        @KeyComponent(component = "SK")
+        private final String date;
+
+        OrderedFieldEntity(String tenant, String id, String date) {
+            this.tenant = tenant;
+            this.id = id;
+            this.date = date;
+        }
+    }
+
+    @Test
+    @DisplayName("field components preserve position and key prefixes")
+    void readSchema_withOrderedFields_preservesPositionsAndPrefixes() {
+        EntitySchema<OrderedFieldEntity> schema = EntitySchemaReader.read(OrderedFieldEntity.class);
+
+        assertThat(schema.getKeyComponentInfo("PK"))
+                .extracting(EntitySchema.KeyComponentInfo::attributeName)
+                .containsExactly("tenant", "id");
+        assertThat(schema.computeKey("PK", new OrderedFieldEntity("tenant", "id", "2026")))
+                .isEqualTo("FIELD#tenant#id");
+        assertThat(schema.computeKey("SK", new OrderedFieldEntity("tenant", "id", "2026")))
+                .isEqualTo("DATE#2026");
+    }
+
+    @Entity(discriminator = "STATIC_FIELD", table = "field-test")
+    @SuppressWarnings("UnusedVariable")
+    static class StaticFieldEntity {
+        @KeyComponent(component = "PK")
+        private static String id;
+    }
+
+    @Test
+    @DisplayName("readSchema rejects an unextractable field with a clear error")
+    void readSchema_withStaticFieldAnnotation_failsImmediately() {
+        assertThat(assertThrows(IllegalArgumentException.class,
+                () -> EntitySchemaReader.read(StaticFieldEntity.class)))
+                .hasMessageContaining("key component field 'id'")
+                .hasMessageContaining("static fields are not supported");
     }
 }
 // endregion
