@@ -1,8 +1,7 @@
 # Single-Table Design
 
-DynamoDB Simplified provides entity-oriented single-table access through annotations, computed keys, discriminator
-filtering and cross-entity queries. This guide covers the documented API areas for annotations, entity tables,
-cross-entity queries and best practices.
+DynamoDB Simplified provides entity-oriented single-table access through annotations, computed keys, discriminator filtering and cross-entity queries.
+This guide covers the documented API areas for annotations, entity tables, cross-entity queries and best practices.
 
 ---
 
@@ -27,8 +26,8 @@ cross-entity queries and best practices.
 
 ## What is Single-Table Design?
 
-Single-table design stores multiple entity types (users, posts, comments, etc.) in one DynamoDB table. Composite keys
-(`PK`/`SK`) and discriminator attributes distinguish entity types and enable efficient access patterns:
+Single-table design stores multiple entity types (users, posts, comments, etc.) in one DynamoDB table.
+Composite keys (`PK`/`SK`) and discriminator attributes distinguish entity types and enable efficient access patterns:
 
 | Entity  | PK prefix      | SK value | `_type`   |
 |---------|----------------|----------|-----------|
@@ -36,12 +35,10 @@ Single-table design stores multiple entity types (users, posts, comments, etc.) 
 | Post    | `POST#post456` | N/A      | `POST`    |
 | Comment | `COMMENT#c789` | N/A      | `COMMENT` |
 
-The library automates this pattern: it computes composite keys from your entity fields, writes the discriminator
-automatically through the entity table schema, and filters by entity type on every entity query.
+The library automates this pattern: it computes composite keys from your entity fields, writes the discriminator automatically through the entity table schema, and filters by entity type on every entity query.
 `_type` is the default discriminator attribute; `discriminatorAttribute` selects a custom attribute name.
 
-An entity does not need a mapped discriminator property: `EntityTable` adds the configured discriminator attribute when
-it writes the item, and applies the same attribute as a query filter.
+An entity does not need a mapped discriminator property: `EntityTable` adds the configured discriminator attribute when it writes the item, and applies the same attribute as a query filter.
 
 ---
 
@@ -49,7 +46,8 @@ it writes the item, and applies the same attribute as a query filter.
 
 ### @Entity
 
-Marks a class as a single-table entity. Required on every entity class.
+Marks a class as a single-table entity.
+Required on every entity class.
 
 ```java
 @Target(ElementType.TYPE)
@@ -69,8 +67,8 @@ public @interface Entity {
 
 ### @KeyComponent
 
-Marks a field or getter as a component of a composite key. Multiple `@KeyComponent` annotations on the same component
-name are joined with `#` in position order.
+Marks a field or getter as a component of a composite key.
+Multiple `@KeyComponent` annotations on the same component name are joined with `#` in position order.
 
 ```java
 @Target({ElementType.FIELD, ElementType.METHOD})
@@ -88,8 +86,9 @@ public @interface KeyComponent {
 
 #### Field and method forms
 
-Fields are extracted directly by name, including private fields. Methods must be public, non-static, no-argument
-getters. Both forms contribute the value to the named component in position order.
+Fields are extracted directly by name, including private fields.
+Methods must be public, non-static, no-argument getters.
+Both forms contribute the value to the named component in position order.
 
 ```java
 
@@ -104,15 +103,15 @@ public String getCreatedAtKey() { // public, non-static getter
 }
 ```
 
-The `PK` and `SK` component names identify the primary partition and sort key values. Other component names can
-represent mapped secondary-index key attributes or additional computed attributes. The entity bean must map `PK` and
-`SK` to `@DynamoDbPartitionKey` and `@DynamoDbSortKey` properties, with public setters so the computed values can be
-written back before a put or update. For another component, provide the corresponding mapped attribute and setter (for
-example, `setGSI1PK(...)`) when the computed value must be injected into the entity before it is written.
+The `PK` and `SK` component names identify the primary partition and sort key values.
+Other component names can represent mapped secondary-index key attributes or additional computed attributes.
+The entity bean must map `PK` and `SK` to `@DynamoDbPartitionKey` and `@DynamoDbSortKey` properties, with public setters so the computed values can be written back before a put or update.
+For another component, provide the corresponding mapped attribute and setter (for example, `setGSI1PK(...)`) when the computed value must be injected into the entity before it is written.
 
 ### @KeyPrefix
 
-Specifies a prefix prepended to a composite key component, followed by `#`. Repeatable for multiple key components.
+Specifies a prefix prepended to a composite key component, followed by `#`.
+Repeatable for multiple key components.
 
 ```java
 @Target(ElementType.TYPE)
@@ -131,9 +130,9 @@ public @interface KeyPrefix {
 
 ### @Version
 
-Marks a field used by the version helpers. It can participate in optimistic locking when a direct put/update builder
-opts in; the annotation alone is not a reliable automatic lock. Apply it to the field; leave its ordinary bean getter
-and setter unannotated.
+Marks a field used by the version helpers.
+It can participate in optimistic locking when a direct put/update builder opts in; the annotation alone is not a reliable automatic lock.
+Apply it to the field; leave its ordinary bean getter and setter unannotated.
 
 ```java
 
@@ -144,12 +143,10 @@ public @interface Version {
 ```
 
 The annotated field must be `Integer` or `int`.
-`@Version` is detected by the version helper and can be incremented on the entity object. On direct `Table` put/update
-builders, call `.withOptimisticLocking()` to activate the built-in version detection condition. For full and partial
-writes, this increments the Java object after a successful write; neither the annotation nor this object-side increment
-alone guarantees that the intended version was persisted.
-`EntityTable` does not enable this CAS automatically, so strict compare-and-set writes should load the current item and
-explicitly write the next version with a condition.
+`@Version` is detected by the version helper and can be incremented on the entity object.
+On direct `Table` put/update builders, call `.withOptimisticLocking()` to activate the built-in version detection condition.
+For full and partial writes, this increments the Java object after a successful write; neither the annotation nor this object-side increment alone guarantees that the intended version was persisted.
+`EntityTable` does not enable this CAS automatically, so strict compare-and-set writes should load the current item and explicitly write the next version with a condition.
 
 ```java
 
@@ -195,8 +192,8 @@ execute();
 
 ## Entity Schema
 
-The `EntitySchema` is the runtime representation of an entity's annotations. It is produced by
-`EntitySchemaReader.read(YourEntity.class)` and provides:
+The `EntitySchema` is the runtime representation of an entity's annotations.
+It is produced by `EntitySchemaReader.read(YourEntity.class)` and provides:
 
 - `entityClass()`: the Java class
 - `discriminator()` — the discriminator value
@@ -249,8 +246,7 @@ class User {
 
 When you `put(new User("abc123", "Alice"))` the library automatically:
 
-1. Computes the partition key from the raw `pk` component plus `@KeyPrefix(component = "PK", value = "USER")` →
-   `"USER#abc123"`
+1. Computes the partition key from the raw `pk` component plus `@KeyPrefix(component = "PK", value = "USER")` → `"USER#abc123"`
 2. Sets `pk = "USER#abc123"` on the entity via the `@DynamoDbPartitionKey` setter
 
 ### Entity with Partition and Sort Keys
@@ -287,8 +283,8 @@ public class EntityWithSk {
 }
 ```
 
-For a cross-entity query with `EntityWithSk`, use another entity with the same PK/SK attribute names and types. This
-profile entity shares the `USER#...` partition convention and has a distinct sort-key value:
+For a cross-entity query with `EntityWithSk`, use another entity with the same PK/SK attribute names and types.
+This profile entity shares the `USER#...` partition convention and has a distinct sort-key value:
 
 ```java
 
@@ -368,8 +364,8 @@ users.put(user);
 // user.getPk() is now "USER#abc123"
 ```
 
-Key computation mutates the mapped key properties. Use a fresh entity with raw key components before every `put` or
-`update`; do not reuse an instance after its key has already been prefixed, or the prefix can be applied again.
+Key computation mutates the mapped key properties.
+Use a fresh entity with raw key components before every `put` or `update`; do not reuse an instance after its key has already been prefixed, or the prefix can be applied again.
 
 ### Get
 
@@ -468,8 +464,8 @@ CompletableFuture<User> updated = users.update(userForUpdate);
 
 ## Cross-Entity Queries
 
-Cross-entity queries retrieve multiple entity types from the same partition key in a single DynamoDB query. The library
-builds an `OR`-based filter expression for the discriminator attribute and maps each result to its entity type.
+Cross-entity queries retrieve multiple entity types from the same partition key in a single DynamoDB query.
+The library builds an `OR`-based filter expression for the discriminator attribute and maps each result to its entity type.
 
 ### Using EntityQueryBuilder
 
@@ -481,8 +477,8 @@ DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
 EntityQueryBuilder query = client.entityQuery("myapp");
 ```
 
-`client.entityQuery("myapp")` is the public factory and uses `_type` as the discriminator attribute. For entities that
-declare a custom `discriminatorAttribute`, use the overload `client.entityQuery("myapp", "__entity")`.
+`client.entityQuery("myapp")` is the public factory and uses `_type` as the discriminator attribute.
+For entities that declare a custom `discriminatorAttribute`, use the overload `client.entityQuery("myapp", "__entity")`.
 
 ### Basic Cross-Entity Query
 
@@ -497,8 +493,8 @@ List<ProfileWithSk> profiles = result.get(ProfileWithSk.class);
 List<EntityWithSk> items = result.get(EntityWithSk.class);
 ```
 
-Both classes in this example use the `myapp` table, `pk`/`sk` key attributes, the same key types, and the same
-`USER#abc` partition. A PK-only entity such as the basic `User` above must not be mixed with this PK/SK query.
+Both classes in this example use the `myapp` table, `pk`/`sk` key attributes, the same key types, and the same `USER#abc` partition.
+A PK-only entity such as the basic `User` above must not be mixed with this PK/SK query.
 
 ### Sort Key Conditions
 
@@ -521,11 +517,10 @@ query.sortKeyLessThanOrEqual("2024-06-30");
 
 ### Options
 
-`execute()` sends one DynamoDB query request and maps only that response page. Use `executeAll()` to follow continuation
-keys and return one `CrossEntityResult` per page.
-`executeAndGetFirst()` examines only the first response page and returns its `CrossEntityResult` when that page is
-non-empty; it returns empty when the first response is empty, even if a continuation key is present. It does not inspect
-later pages or return one item.
+`execute()` sends one DynamoDB query request and maps only that response page.
+Use `executeAll()` to follow continuation keys and return one `CrossEntityResult` per page.
+`executeAndGetFirst()` examines only the first response page and returns its `CrossEntityResult` when that page is non-empty; it returns empty when the first response is empty, even if a continuation key is present.
+It does not inspect later pages or return one item.
 
 ```java
 // Pagination
@@ -609,15 +604,14 @@ public final class CrossEntityResultWithPagination {
 
 ## Limitations
 
-- Every entity class included in a cross-entity query must point to the same DynamoDB table through
-  `@Entity(table = "...")`.
-- Included entity classes must use compatible primary key attribute names and compatible key types. A query cannot
-  combine entities whose mapped PK/SK schema cannot be read from the same table.
-- `EntityQueryBuilder` currently constructs the partition-key condition as a DynamoDB string value. Do not present
-  numeric partition keys as supported by this cross-entity query path.
+- Every entity class included in a cross-entity query must point to the same DynamoDB table through `@Entity(table = "...")`.
+- Included entity classes must use compatible primary key attribute names and compatible key types.
+  A query cannot combine entities whose mapped PK/SK schema cannot be read from the same table.
+- `EntityQueryBuilder` currently constructs the partition-key condition as a DynamoDB string value.
+  Do not present numeric partition keys as supported by this cross-entity query path.
 - During cross-entity result mapping, an item without the configured discriminator attribute is ignored.
-- An item whose discriminator value is not one of the included entity classes is also ignored. It is not deserialized
-  into an arbitrary entity type.
+- An item whose discriminator value is not one of the included entity classes is also ignored.
+  It is not deserialized into an arbitrary entity type.
 
 ## Best Practices
 
@@ -630,12 +624,13 @@ Use `UPPER_SNAKE_CASE` for:
 
 ### 2. Consistent Table Name
 
-All entities sharing a DynamoDB table must use the same `table` value in `@Entity`. This is your single-table.
+All entities sharing a DynamoDB table must use the same `table` value in `@Entity`.
+This is your single-table.
 
 ### 3. Unique Discriminators
 
-Each entity type in a table must have a unique discriminator. Duplicate discriminators cause incorrect cross-entity
-query results.
+Each entity type in a table must have a unique discriminator.
+Duplicate discriminators cause incorrect cross-entity query results.
 
 ### 4. Default Constructor
 
@@ -643,20 +638,19 @@ DynamoDB Enhanced Client requires a public no-arg constructor on all entity bean
 
 ### 5. @DynamoDbPartitionKey / @DynamoDbSortKey
 
-You must annotate the PK/SK getters with `@DynamoDbPartitionKey` and (optionally) `@DynamoDbSortKey` so the Enhanced
-Client knows the table key schema. The library computes the values into these fields before writes.
+You must annotate the PK/SK getters with `@DynamoDbPartitionKey` and (optionally) `@DynamoDbSortKey` so the Enhanced Client knows the table key schema.
+The library computes the values into these fields before writes.
 
 ### 6. Setter Requirement
 
-When a computed partition-key component is injected, the `@DynamoDbPartitionKey` property must have a public setter. The
-same applies to the `@DynamoDbSortKey` property when a computed sort-key component is injected. If a computed index
-component is injected, its mapped index-key property must also expose a public setter (for example, the setter for a
-`GSI1PK` property).
+When a computed partition-key component is injected, the `@DynamoDbPartitionKey` property must have a public setter.
+The same applies to the `@DynamoDbSortKey` property when a computed sort-key component is injected.
+If a computed index component is injected, its mapped index-key property must also expose a public setter (for example, the setter for a `GSI1PK` property).
 
 ### 7. Async deleteEntity()
 
-The async `deleteEntity(T)` method computes keys from the passed entity instance. Use it when you have an entity object
-but not the raw key values.
+The async `deleteEntity(T)` method computes keys from the passed entity instance.
+Use it when you have an entity object but not the raw key values.
 
 ### 8. EntityQueryBuilder Construction
 
@@ -671,16 +665,15 @@ EntityQueryBuilder customQuery = client.entityQuery("myapp", "__entity");
 ### 9. Query Discriminator Filtering
 
 `EntityTable.query()` and `EntityQueryBuilder` both filter by discriminator.
-`EntityTable.query()` filters automatically using `WHERE <discriminatorAttribute> = '<discriminator>'`; the default
-attribute is `_type`.
+`EntityTable.query()` filters automatically using `WHERE <discriminatorAttribute> = '<discriminator>'`; the default attribute is `_type`.
 `EntityQueryBuilder` builds an `OR` filter for all included entity types.
 
 ---
 
 ## Complete Example
 
-The entity definitions above can be combined with the following end-to-end flow. This keeps the usage example focused on
-the unique sync, cross-entity, and async operations rather than repeating the bean definitions.
+The entity definitions above can be combined with the following end-to-end flow.
+This keeps the usage example focused on the unique sync, cross-entity, and async operations rather than repeating the bean definitions.
 
 ```java
 DynamoSimplifiedClient client = DynamoSimplifiedClient.create();

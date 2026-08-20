@@ -6,11 +6,9 @@ A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for co
 
 ## Why?
 
-The AWS DynamoDB SDK exposes request and expression details explicitly, including expression attribute names and values,
-which can make query setup verbose.
+The AWS DynamoDB SDK exposes request and expression details explicitly, including expression attribute names and values, which can make query setup verbose.
 
-**DynamoDB Simplified** provides fluent builders for common DynamoDB operations while keeping the underlying AWS SDK
-model visible.
+**DynamoDB Simplified** provides fluent builders for common DynamoDB operations while keeping the underlying AWS SDK model visible.
 
 ### dynamodb-enhanced
 
@@ -46,23 +44,17 @@ table.query()
 
 - **Fluent builder API**: chain operation-specific methods before each terminal
 - **Expression helpers**: `f.eq("status", "active")` instead of manually assembling expression maps
-- **Sync + Async**: related builders in `DynamoSimplifiedClient` and `AsyncDynamoSimplifiedClient`, with different
-  terminal types where needed
+- **Sync + Async**: related builders in `DynamoSimplifiedClient` and `AsyncDynamoSimplifiedClient`, with different terminal types where needed
 - **Transactions**: `transactWrite()` with put, update, delete, conditionCheck, and expression-based partial updates
 - **Batch operations**: `batchGet()` supports optional consistent reads; `batchWrite()` handles puts and deletes
 - **DDL**: `create()`, `delete()`, `describe()`, `exists()`
 - **GSI / LSI**: `table.index("name").query()` with the query builder options supported for indexes
 - **Single-table design**: `@Entity`/`@KeyComponent` annotations, auto-computed composite keys, cross-entity queries
-- **Version support**: `@Version` fields can be detected and incremented on the Java object; strict compare-and-set
-  requires an explicit condition
-- **TTL management**: table configuration with `enableTtl("expiresAt")`, `disableTtl("expiresAt")`, `describeTtl()`;
-  update expressions write expiration values with `update(item, u -> u.ttl("expiresAt", Duration.ofDays(90))).execute()`
-- **Batch get behavior**: same-table `execute()` without projection uses the AWS Enhanced paginator; bounded retry
-  applies to sync batch-write and synchronous low-level batch-get paths, while async low-level batch-get paths are
-  direct requests
+- **Version support**: `@Version` fields can be detected and incremented on the Java object; strict compare-and-set requires an explicit condition
+- **TTL management**: table configuration with `enableTtl("expiresAt")`, `disableTtl("expiresAt")`, `describeTtl()`; update expressions write expiration values with `update(item, u -> u.ttl("expiresAt", Duration.ofDays(90))).execute()`
+- **Batch get behavior**: same-table `execute()` without projection uses the AWS Enhanced paginator; bounded retry applies to sync batch-write and synchronous low-level batch-get paths, while async low-level batch-get paths are direct requests
 - **PartiQL**: `client.executeStatement()` for raw SQL-like queries
-- **Low-level fallback**: when the Enhanced Client lacks a feature (update expressions, returnValues), the library
-  delegates to the low-level DynamoDB client for that operation
+- **Low-level fallback**: when the Enhanced Client lacks a feature (update expressions, returnValues), the library delegates to the low-level DynamoDB client for that operation
 - **No framework dependencies**: pure Java, works with any stack
 
 ## Server-side `size()`
@@ -74,8 +66,8 @@ List<Post> posts = table.query()
         .executeAll();
 ```
 
-DynamoDB applies the filter using `size(attribute)`, without client-side size calculation. The filter is evaluated after
-reading items.
+DynamoDB applies the filter using `size(attribute)`, without client-side size calculation.
+The filter is evaluated after reading items.
 
 ## Quick example
 
@@ -105,7 +97,8 @@ client.transactWrite()
 
 See the [Quickstart](quickstart.md) guide for an overview of the main operations.
 
-Looking for single-table design? See the [Single-Table Design Guide](guides/single-table-design.md).
+Looking for single-table design?
+See the [Single-Table Design Guide](guides/single-table-design.md).
 
 ## API Reference
 

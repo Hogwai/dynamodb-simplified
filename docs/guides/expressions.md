@@ -1,11 +1,12 @@
 # Expressions
 
-This guide covers the expression builders used by queries, scans, conditional writes, updates, and projections. The Java
-snippets omit imports and unrelated bean setup unless an import is part of the API being demonstrated.
+This guide covers the expression builders used by queries, scans, conditional writes, updates, and projections.
+The Java snippets omit imports and unrelated bean setup unless an import is part of the API being demonstrated.
 
 ## Filters and conditions
 
-`FilterExpression` is used with `query()` and `scan()`. A filter is evaluated after DynamoDB reads candidate items.
+`FilterExpression` is used with `query()` and `scan()`.
+A filter is evaluated after DynamoDB reads candidate items.
 `ConditionExpression` uses the same comparison vocabulary, but is evaluated before a put, update, or delete is accepted.
 
 ```java
@@ -29,8 +30,8 @@ notExists("id"))
 execute();
 ```
 
-Logical operators are explicit. Insert `.and()`, `.or()`, or `.not()` between conditions; two predicate calls are not
-implicitly joined.
+Logical operators are explicit.
+Insert `.and()`, `.or()`, or `.not()` between conditions; two predicate calls are not implicitly joined.
 
 ```java
 List<Post> posts = table.scan()
@@ -54,7 +55,8 @@ exists("locked"))
 execute();
 ```
 
-Use `group(...)` when precedence matters. It accepts another `FilterExpression` and adds parentheses around it.
+Use `group(...)` when precedence matters.
+It accepts another `FilterExpression` and adds parentheses around it.
 
 ```java
 FilterExpression status = FilterExpression.builder()
@@ -129,8 +131,8 @@ beginsWith("title","DynamoDB"))
 executeAll();
 ```
 
-Existence and type checks are available through `exists`, `notExists`, and `attributeType`. The type is
-`FilterExpression.AttributeType`, with values such as `STRING`, `NUMBER`, `MAP`, `LIST`, `STRING_SET`, and `BOOLEAN`.
+Existence and type checks are available through `exists`, `notExists`, and `attributeType`.
+The type is `FilterExpression.AttributeType`, with values such as `STRING`, `NUMBER`, `MAP`, `LIST`, `STRING_SET`, and `BOOLEAN`.
 
 ```java
 table.scan()
@@ -150,7 +152,8 @@ attributeType("metadata",FilterExpression.AttributeType.MAP))
 executeAll();
 ```
 
-Nested paths use `nestedEq`. Dot-separated paths and list indexes are mapped to expression attribute names.
+Nested paths use `nestedEq`.
+Dot-separated paths and list indexes are mapped to expression attribute names.
 
 ```java
 table.query()
@@ -184,8 +187,8 @@ List<Post> shortTitles = table.scan()
         .executeAll();
 ```
 
-DynamoDB evaluates `size(attribute)` server-side after reading candidate items. It does not fetch the collection or
-string to the client just to calculate its size, and the filter does not reduce consumed read capacity.
+DynamoDB evaluates `size(attribute)` server-side after reading candidate items.
+It does not fetch the collection or string to the client just to calculate its size, and the filter does not reduce consumed read capacity.
 
 ## Update expressions
 
@@ -217,7 +220,8 @@ decrement("remainingRetries",1))
 execute();
 ```
 
-For lists, use `appendToList`, `prependToList`, `setListElement`, and `removeListElement`. Nested paths use `setNested`.
+For lists, use `appendToList`, `prependToList`, `setListElement`, and `removeListElement`.
+Nested paths use `setNested`.
 
 ```java
 table.update(post, expression ->expression
@@ -258,8 +262,8 @@ execute();
 
 ## Projections
 
-Projections restrict the attributes returned by a query, scan, or get operation. Use string arguments for top-level
-attributes, or the projection builder for nested paths and list elements.
+Projections restrict the attributes returned by a query, scan, or get operation.
+Use string arguments for top-level attributes, or the projection builder for nested paths and list elements.
 
 ```java
 List<Post> posts = table.query()
@@ -276,12 +280,10 @@ Optional<Post> post = table.get("post-1", 123L)
 
 ## DynamoDB constraints
 
-- Filter expressions do not change the key condition. Put partition and sort key restrictions in `partitionKey(...)` and
-  its sort-key variants.
-- Filters and conditions cannot be used interchangeably at the operation level: filters apply after reads, while
-  conditions gate writes.
-- DynamoDB reserves some attribute names. The builders map names and values to expression placeholders, but the
-  expression must still obey DynamoDB's supported data types and path rules.
-- `size()` is supported only for DynamoDB values for which DynamoDB defines a size, such as strings, lists, maps, and
-  sets.
+- Filter expressions do not change the key condition.
+  Put partition and sort key restrictions in `partitionKey(...)` and its sort-key variants.
+- Filters and conditions cannot be used interchangeably at the operation level: filters apply after reads, while conditions gate writes.
+- DynamoDB reserves some attribute names.
+  The builders map names and values to expression placeholders, but the expression must still obey DynamoDB's supported data types and path rules.
+- `size()` is supported only for DynamoDB values for which DynamoDB defines a size, such as strings, lists, maps, and sets.
 - Updates cannot set an attribute to `null` with `set`; use `remove(...)` for a missing attribute instead.

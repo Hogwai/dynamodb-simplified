@@ -123,9 +123,7 @@ Optional<Post> updated = table.update(post, expr -> expr.set("title", "New Title
         .execute();
 ```
 
-`update(...).execute()` returns an [
-`Optional<Post>`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html), containing the
-updated item when DynamoDB returns one.
+`update(...).execute()` returns an [`Optional<Post>`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html), containing the updated item when DynamoDB returns one.
 
 ### Read
 
@@ -150,11 +148,9 @@ BatchGetResult<Post> batch = table.batchGet()
         List<Post> results = batch.items();
 ```
 
-`batchGet().execute()` returns a [
-`BatchGetResult<Post>`](https://hogwai.github.io/dynamodb-simplified/javadoc/dev/hogwai/dynamodb/simplified/result/BatchGetResult.html).
-Without a projection, the same-table sync builder uses the AWS Enhanced paginator, which normally completes without
-remaining unprocessed keys. See the [batch and results guide](guides/batch-and-results.md) for projection and
-cross-table paths that can expose `unprocessedKeys`.
+`batchGet().execute()` returns a [`BatchGetResult<Post>`](https://hogwai.github.io/dynamodb-simplified/javadoc/dev/hogwai/dynamodb/simplified/result/BatchGetResult.html).
+Without a projection, the same-table sync builder uses the AWS Enhanced paginator, which normally completes without remaining unprocessed keys.
+See the [batch and results guide](guides/batch-and-results.md) for projection and cross-table paths that can expose `unprocessedKeys`.
 
 ### Delete
 
@@ -176,9 +172,7 @@ Optional<Post> deleted = table.delete("post-1", 12345L)
     .execute();
 ```
 
-`delete(...).execute()` returns an [
-`Optional<Post>`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html): it is empty
-when no item matched the key.
+`delete(...).execute()` returns an [`Optional<Post>`](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html): it is empty when no item matched the key.
 
 ## Time To Live (TTL)
 
@@ -251,11 +245,10 @@ get();
 }
 ```
 
-`@Version` is detected and can be incremented on the Java object. On direct `Table` put/update builders,
-`.withOptimisticLocking()` is required to activate the built-in detection condition. For full and partial writes, the
-builders increment the Java object after a successful write; neither the annotation nor this object-side increment alone
-guarantees that the intended version was persisted. For a strict compare-and-set, explicitly write the next version with
-a condition.
+`@Version` is detected and can be incremented on the Java object.
+On direct `Table` put/update builders, `.withOptimisticLocking()` is required to activate the built-in detection condition.
+For full and partial writes, the builders increment the Java object after a successful write; neither the annotation nor this object-side increment alone guarantees that the intended version was persisted.
+For a strict compare-and-set, explicitly write the next version with a condition.
 `EntityTable` does not provide this CAS automatically.
 
 ## Query
@@ -330,10 +323,11 @@ Optional<Post> first = table.query()
     .executeAndGetFirst();
 ```
 
-`page.lastEvaluatedKey()` provides the continuation key. A `null` or empty key means there is no next page; otherwise,
-pass it to `startFrom(...)` to load the next page.
-`limit(10)` limits the items evaluated before a filter is applied. A filtered page can therefore contain fewer than 10
-items, or be empty while still returning a continuation key. The same filter builder works with `query()` and `scan`.
+`page.lastEvaluatedKey()` provides the continuation key.
+A `null` or empty key means there is no next page; otherwise, pass it to `startFrom(...)` to load the next page.
+`limit(10)` limits the items evaluated before a filter is applied.
+A filtered page can therefore contain fewer than 10 items, or be empty while still returning a continuation key.
+The same filter builder works with `query()` and `scan`.
 The available operators are `sizeEq`, `sizeLt`, `sizeLe`, `sizeGt`, `sizeGe`, and `sizeBetween`.
 `size()` is evaluated server-side by DynamoDB after items are read; it does not reduce the consumed read capacity.
 
@@ -382,8 +376,8 @@ TransactGetResults<DynamoDbTable<?>> items = client.transactGet()
 
 ## Batch operations
 
-See the [batch and results guide](guides/batch-and-results.md) for result objects, unprocessed items, and DynamoDB
-limits. See the [errors and retries guide](guides/errors-and-retries.md) for retry behavior.
+See the [batch and results guide](guides/batch-and-results.md) for result objects, unprocessed items, and DynamoDB limits.
+See the [errors and retries guide](guides/errors-and-retries.md) for retry behavior.
 
 ```java
 // Batch write (mix of puts and deletes)
@@ -403,8 +397,8 @@ table.putAll(List.of(post1, post2, post3));
 
 ## Secondary indexes (GSI / LSI)
 
-The `Post` bean above declares the `by_status` secondary partition and sort keys. The DynamoDB table must also be
-created with the matching `by_status` index.
+The `Post` bean above declares the `by_status` secondary partition and sort keys.
+The DynamoDB table must also be created with the matching `by_status` index.
 
 ```java
 // Query a global secondary index
@@ -488,12 +482,10 @@ table.query().partitionKey("pk")
 
 ## Async API
 
-See the [async API guide](guides/async.md) for `CompletableFuture` composition, streaming, and asynchronous batch
-operations.
+See the [async API guide](guides/async.md) for `CompletableFuture` composition, streaming, and asynchronous batch operations.
 
-The async builders are broadly symmetrical with the synchronous builders. Their terminal results are exposed through
-`CompletableFuture`; streaming also follows the underlying builder: async query uses `streamResults()`, while async scan
-uses `executeStream()` and returns a future publisher.
+The async builders are broadly symmetrical with the synchronous builders.
+Their terminal results are exposed through `CompletableFuture`; streaming also follows the underlying builder: async query uses `streamResults()`, while async scan uses `executeStream()` and returns a future publisher.
 
 ```java
 AsyncDynamoSimplifiedClient asyncClient = AsyncDynamoSimplifiedClient.create();
@@ -617,12 +609,11 @@ List<PostEntity> results = posts.query("POST#post-123");
 ```
 
 `@Entity` uses `_type` as the default `discriminatorAttribute`.
-`EntityTable` automatically persists the discriminator value in that attribute and filters `query()` by it. For another
-name, use for example `@Entity(discriminator = "POST", discriminatorAttribute = "__entity", table = "myapp")`.
+`EntityTable` automatically persists the discriminator value in that attribute and filters `query()` by it.
+For another name, use for example `@Entity(discriminator = "POST", discriminatorAttribute = "__entity", table = "myapp")`.
 
-For cross-entity mapping, `@KeyComponent` is placed on the actual mapped `pk` and `sk` properties used as the DynamoDB
-keys. All included entity beans must use the same table, compatible key property names/types, and a partition that is
-actually shared by the requested items.
+For cross-entity mapping, `@KeyComponent` is placed on the actual mapped `pk` and `sk` properties used as the DynamoDB keys.
+All included entity beans must use the same table, compatible key property names/types, and a partition that is actually shared by the requested items.
 
 Cross-entity queries:
 
@@ -635,8 +626,7 @@ CrossEntityResult result = client.entityQuery("myapp")
     .execute();
 ```
 
-`client.entityQuery("myapp")` uses `_type`; use `client.entityQuery("myapp", "__entity")` when the entities use a custom
-`discriminatorAttribute`.
+`client.entityQuery("myapp")` uses `_type`; use `client.entityQuery("myapp", "__entity")` when the entities use a custom `discriminatorAttribute`.
 
 Async variant:
 
