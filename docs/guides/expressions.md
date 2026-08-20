@@ -54,8 +54,7 @@ exists("locked"))
 execute();
 ```
 
-Use `group(...)` when precedence matters. It accepts another
-`FilterExpression` and adds parentheses around it.
+Use `group(...)` when precedence matters. It accepts another `FilterExpression` and adds parentheses around it.
 
 ```java
 FilterExpression status = FilterExpression.builder()
@@ -130,9 +129,8 @@ beginsWith("title","DynamoDB"))
 executeAll();
 ```
 
-Existence and type checks are available through `exists`, `notExists`, and
-`attributeType`. The type is `FilterExpression.AttributeType`, with values such as `STRING`, `NUMBER`, `MAP`, `LIST`,
-`STRING_SET`, and `BOOLEAN`.
+Existence and type checks are available through `exists`, `notExists`, and `attributeType`. The type is
+`FilterExpression.AttributeType`, with values such as `STRING`, `NUMBER`, `MAP`, `LIST`, `STRING_SET`, and `BOOLEAN`.
 
 ```java
 table.scan()
@@ -171,8 +169,7 @@ executeAll();
 
 ## Server-side `size()`
 
-The six server-side size operators are `sizeEq`, `sizeLt`, `sizeLe`, `sizeGt`,
-`sizeGe`, and `sizeBetween`.
+The six server-side size operators are `sizeEq`, `sizeLt`, `sizeLe`, `sizeGt`, `sizeGe`, and `sizeBetween`.
 
 ```java
 List<Post> results = table.query()
@@ -192,8 +189,7 @@ string to the client just to calculate its size, and the filter does not reduce 
 
 ## Update expressions
 
-Update expressions support the DynamoDB `SET`, `REMOVE`, `ADD`, and `DELETE`
-clauses.
+Update expressions support the DynamoDB `SET`, `REMOVE`, `ADD`, and `DELETE` clauses.
 
 ```java
 Optional<Post> updated = table.update(post, expression -> expression
@@ -221,8 +217,7 @@ decrement("remainingRetries",1))
 execute();
 ```
 
-For lists, use `appendToList`, `prependToList`, `setListElement`, and
-`removeListElement`. Nested paths use `setNested`.
+For lists, use `appendToList`, `prependToList`, `setListElement`, and `removeListElement`. Nested paths use `setNested`.
 
 ```java
 table.update(post, expression ->expression
@@ -283,8 +278,8 @@ Optional<Post> post = table.get("post-1", 123L)
 
 - Filter expressions do not change the key condition. Put partition and sort key restrictions in `partitionKey(...)` and
   its sort-key variants.
-- Filters and conditions cannot be used interchangeably at the operation level:
-  filters apply after reads, while conditions gate writes.
+- Filters and conditions cannot be used interchangeably at the operation level: filters apply after reads, while
+  conditions gate writes.
 - DynamoDB reserves some attribute names. The builders map names and values to expression placeholders, but the
   expression must still obey DynamoDB's supported data types and path rules.
 - `size()` is supported only for DynamoDB values for which DynamoDB defines a size, such as strings, lists, maps, and

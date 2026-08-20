@@ -27,7 +27,8 @@ cross-entity queries and best practices.
 
 ## What is Single-Table Design?
 
-Single-table design stores multiple entity types (users, posts, comments, etc.) in one DynamoDB table. Composite keys (`PK`/`SK`) and discriminator attributes distinguish entity types and enable efficient access patterns:
+Single-table design stores multiple entity types (users, posts, comments, etc.) in one DynamoDB table. Composite keys
+(`PK`/`SK`) and discriminator attributes distinguish entity types and enable efficient access patterns:
 
 | Entity  | PK prefix      | SK value | `_type`   |
 |---------|----------------|----------|-----------|
@@ -36,8 +37,8 @@ Single-table design stores multiple entity types (users, posts, comments, etc.) 
 | Comment | `COMMENT#c789` | N/A      | `COMMENT` |
 
 The library automates this pattern: it computes composite keys from your entity fields, writes the discriminator
-automatically through the entity table schema, and filters by entity type on every entity query. `_type` is the default
-discriminator attribute; `discriminatorAttribute` selects a custom attribute name.
+automatically through the entity table schema, and filters by entity type on every entity query.
+`_type` is the default discriminator attribute; `discriminatorAttribute` selects a custom attribute name.
 
 An entity does not need a mapped discriminator property: `EntityTable` adds the configured discriminator attribute when
 it writes the item, and applies the same attribute as a query filter.
@@ -68,7 +69,8 @@ public @interface Entity {
 
 ### @KeyComponent
 
-Marks a field or getter as a component of a composite key. Multiple `@KeyComponent` annotations on the same component name are joined with `#` in position order.
+Marks a field or getter as a component of a composite key. Multiple `@KeyComponent` annotations on the same component
+name are joined with `#` in position order.
 
 ```java
 @Target({ElementType.FIELD, ElementType.METHOD})
@@ -103,8 +105,8 @@ public String getCreatedAtKey() { // public, non-static getter
 ```
 
 The `PK` and `SK` component names identify the primary partition and sort key values. Other component names can
-represent mapped secondary-index key attributes or additional computed attributes. The entity bean must map `PK`
-and `SK` to `@DynamoDbPartitionKey` and `@DynamoDbSortKey` properties, with public setters so the computed values can be
+represent mapped secondary-index key attributes or additional computed attributes. The entity bean must map `PK` and
+`SK` to `@DynamoDbPartitionKey` and `@DynamoDbSortKey` properties, with public setters so the computed values can be
 written back before a put or update. For another component, provide the corresponding mapped attribute and setter (for
 example, `setGSI1PK(...)`) when the computed value must be injected into the entity before it is written.
 
@@ -141,11 +143,11 @@ public @interface Version {
 }
 ```
 
-The annotated field must be `Integer` or `int`. `@Version` is detected by the version helper and can be incremented on
-the entity object. On direct `Table`
-put/update builders, call `.withOptimisticLocking()` to activate the built-in version detection condition. For full and
-partial writes, this increments the Java object after a successful write; neither the annotation nor this object-side
-increment alone guarantees that the intended version was persisted.
+The annotated field must be `Integer` or `int`.
+`@Version` is detected by the version helper and can be incremented on the entity object. On direct `Table` put/update
+builders, call `.withOptimisticLocking()` to activate the built-in version detection condition. For full and partial
+writes, this increments the Java object after a successful write; neither the annotation nor this object-side increment
+alone guarantees that the intended version was persisted.
 `EntityTable` does not enable this CAS automatically, so strict compare-and-set writes should load the current item and
 explicitly write the next version with a condition.
 
@@ -193,7 +195,8 @@ execute();
 
 ## Entity Schema
 
-The `EntitySchema` is the runtime representation of an entity's annotations. It is produced by `EntitySchemaReader.read(YourEntity.class)` and provides:
+The `EntitySchema` is the runtime representation of an entity's annotations. It is produced by
+`EntitySchemaReader.read(YourEntity.class)` and provides:
 
 - `entityClass()`: the Java class
 - `discriminator()` — the discriminator value
@@ -285,8 +288,7 @@ public class EntityWithSk {
 ```
 
 For a cross-entity query with `EntityWithSk`, use another entity with the same PK/SK attribute names and types. This
-profile entity shares the `USER#...`
-partition convention and has a distinct sort-key value:
+profile entity shares the `USER#...` partition convention and has a distinct sort-key value:
 
 ```java
 
@@ -466,7 +468,8 @@ CompletableFuture<User> updated = users.update(userForUpdate);
 
 ## Cross-Entity Queries
 
-Cross-entity queries retrieve multiple entity types from the same partition key in a single DynamoDB query. The library builds an `OR`-based filter expression for the discriminator attribute and maps each result to its entity type.
+Cross-entity queries retrieve multiple entity types from the same partition key in a single DynamoDB query. The library
+builds an `OR`-based filter expression for the discriminator attribute and maps each result to its entity type.
 
 ### Using EntityQueryBuilder
 
@@ -519,10 +522,10 @@ query.sortKeyLessThanOrEqual("2024-06-30");
 ### Options
 
 `execute()` sends one DynamoDB query request and maps only that response page. Use `executeAll()` to follow continuation
-keys and return one
-`CrossEntityResult` per page. `executeAndGetFirst()` examines only the first response page and returns its
-`CrossEntityResult` when that page is non-empty; it returns empty when the first response is empty, even if a
-continuation key is present. It does not inspect later pages or return one item.
+keys and return one `CrossEntityResult` per page.
+`executeAndGetFirst()` examines only the first response page and returns its `CrossEntityResult` when that page is
+non-empty; it returns empty when the first response is empty, even if a continuation key is present. It does not inspect
+later pages or return one item.
 
 ```java
 // Pagination
@@ -631,7 +634,8 @@ All entities sharing a DynamoDB table must use the same `table` value in `@Entit
 
 ### 3. Unique Discriminators
 
-Each entity type in a table must have a unique discriminator. Duplicate discriminators cause incorrect cross-entity query results.
+Each entity type in a table must have a unique discriminator. Duplicate discriminators cause incorrect cross-entity
+query results.
 
 ### 4. Default Constructor
 
@@ -639,18 +643,20 @@ DynamoDB Enhanced Client requires a public no-arg constructor on all entity bean
 
 ### 5. @DynamoDbPartitionKey / @DynamoDbSortKey
 
-You must annotate the PK/SK getters with `@DynamoDbPartitionKey` and (optionally) `@DynamoDbSortKey` so the Enhanced Client knows the table key schema. The library computes the values into these fields before writes.
+You must annotate the PK/SK getters with `@DynamoDbPartitionKey` and (optionally) `@DynamoDbSortKey` so the Enhanced
+Client knows the table key schema. The library computes the values into these fields before writes.
 
 ### 6. Setter Requirement
 
-When a computed partition-key component is injected, the `@DynamoDbPartitionKey`
-property must have a public setter. The same applies to the `@DynamoDbSortKey`
-property when a computed sort-key component is injected. If a computed index component is injected, its mapped index-key
-property must also expose a public setter (for example, the setter for a `GSI1PK` property).
+When a computed partition-key component is injected, the `@DynamoDbPartitionKey` property must have a public setter. The
+same applies to the `@DynamoDbSortKey` property when a computed sort-key component is injected. If a computed index
+component is injected, its mapped index-key property must also expose a public setter (for example, the setter for a
+`GSI1PK` property).
 
 ### 7. Async deleteEntity()
 
-The async `deleteEntity(T)` method computes keys from the passed entity instance. Use it when you have an entity object but not the raw key values.
+The async `deleteEntity(T)` method computes keys from the passed entity instance. Use it when you have an entity object
+but not the raw key values.
 
 ### 8. EntityQueryBuilder Construction
 
@@ -664,9 +670,10 @@ EntityQueryBuilder customQuery = client.entityQuery("myapp", "__entity");
 
 ### 9. Query Discriminator Filtering
 
-`EntityTable.query()` and `EntityQueryBuilder` both filter by discriminator. `EntityTable.query()` filters automatically
-using `WHERE <discriminatorAttribute> = '<discriminator>'`; the default attribute is `_type`. `EntityQueryBuilder`
-builds an `OR` filter for all included entity types.
+`EntityTable.query()` and `EntityQueryBuilder` both filter by discriminator.
+`EntityTable.query()` filters automatically using `WHERE <discriminatorAttribute> = '<discriminator>'`; the default
+attribute is `_type`.
+`EntityQueryBuilder` builds an `OR` filter for all included entity types.
 
 ---
 

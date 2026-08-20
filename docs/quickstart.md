@@ -251,11 +251,12 @@ get();
 }
 ```
 
-`@Version` is detected and can be incremented on the Java object. On direct
-`Table` put/update builders, `.withOptimisticLocking()` is required to activate the built-in detection condition. For
-full and partial writes, the builders increment the Java object after a successful write; neither the annotation nor
-this object-side increment alone guarantees that the intended version was persisted. For a strict compare-and-set,
-explicitly write the next version with a condition. `EntityTable` does not provide this CAS automatically.
+`@Version` is detected and can be incremented on the Java object. On direct `Table` put/update builders,
+`.withOptimisticLocking()` is required to activate the built-in detection condition. For full and partial writes, the
+builders increment the Java object after a successful write; neither the annotation nor this object-side increment alone
+guarantees that the intended version was persisted. For a strict compare-and-set, explicitly write the next version with
+a condition.
+`EntityTable` does not provide this CAS automatically.
 
 ## Query
 
@@ -403,8 +404,7 @@ table.putAll(List.of(post1, post2, post3));
 ## Secondary indexes (GSI / LSI)
 
 The `Post` bean above declares the `by_status` secondary partition and sort keys. The DynamoDB table must also be
-created with the matching `by_status`
-index.
+created with the matching `by_status` index.
 
 ```java
 // Query a global secondary index
@@ -616,13 +616,13 @@ put(new CommentEntity("post-123", "comment-1"));
 List<PostEntity> results = posts.query("POST#post-123");
 ```
 
-`@Entity` uses `_type` as the default `discriminatorAttribute`. `EntityTable` automatically persists the discriminator
-value in that attribute and filters `query()` by it. For another name, use for example
-`@Entity(discriminator = "POST", discriminatorAttribute = "__entity", table = "myapp")`.
+`@Entity` uses `_type` as the default `discriminatorAttribute`.
+`EntityTable` automatically persists the discriminator value in that attribute and filters `query()` by it. For another
+name, use for example `@Entity(discriminator = "POST", discriminatorAttribute = "__entity", table = "myapp")`.
 
-For cross-entity mapping, `@KeyComponent` is placed on the actual mapped `pk`
-and `sk` properties used as the DynamoDB keys. All included entity beans must use the same table, compatible key
-property names/types, and a partition that is actually shared by the requested items.
+For cross-entity mapping, `@KeyComponent` is placed on the actual mapped `pk` and `sk` properties used as the DynamoDB
+keys. All included entity beans must use the same table, compatible key property names/types, and a partition that is
+actually shared by the requested items.
 
 Cross-entity queries:
 

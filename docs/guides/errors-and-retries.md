@@ -78,10 +78,9 @@ after a read and does not cause a condition failure.
 
 ## Transaction failures
 
-Transactions are all-or-nothing. When DynamoDB cancels one, the mapped
-`TransactionFailedException` exposes one cancellation reason per transaction operation through
-`getCancellationReasons()` and `getCancellationReason(index)`. A `null` reason means that the corresponding operation
-had no cancellation reason.
+Transactions are all-or-nothing. When DynamoDB cancels one, the mapped `TransactionFailedException` exposes one
+cancellation reason per transaction operation through `getCancellationReasons()` and `getCancellationReason(index)`. A
+`null` reason means that the corresponding operation had no cancellation reason.
 
 ```java
 try{
@@ -113,8 +112,8 @@ order.
 
 Async builders complete their futures exceptionally. Collected scan paths map DynamoDB SDK failures through the library
 exception hierarchy, while query/page paths and publishers may expose the original SDK exception. If code calls
-`join()`, Java wraps the failure in `CompletionException`; inspect `getCause()`
-and do not assume one library exception type for every async terminal.
+`join()`, Java wraps the failure in `CompletionException`; inspect `getCause()` and do not assume one library exception
+type for every async terminal.
 
 ```java
 CompletableFuture<List<Post>> future = asyncTable.query()
@@ -145,15 +144,14 @@ There are three different retry layers and several batch-get boundaries:
 
 1. **AWS SDK retries** apply to SDK requests according to the configured SDK retry policy. They concern service request
    failures and throttling.
-2. **Enhanced batch-get pagination** is used by same-table sync and async
-   `execute()` without a projection. The AWS Enhanced paginator requests the
-   `unprocessedKeys()` from earlier pages until its terminal state. This is not a library-bounded application retry, and
-   no application-level backoff is guaranteed. The final paginator result is normally without remaining keys.
-3. **Library low-level batch retries** apply specifically to DynamoDB's
-   `unprocessedKeys` and `unprocessedItems` responses. Same-table synchronous projection and synchronous cross-table
-   batch-get make up to three retry attempts with exponential backoff. Async projection and async cross-table batch-get
-   make one direct request and can expose returned `unprocessedKeys`. Async batch-write builders retry with scheduled
-   delays and a bounded policy.
+2. **Enhanced batch-get pagination** is used by same-table sync and async `execute()` without a projection. The AWS
+   Enhanced paginator requests the `unprocessedKeys()` from earlier pages until its terminal state. This is not a
+   library-bounded application retry, and no application-level backoff is guaranteed. The final paginator result is
+   normally without remaining keys.
+3. **Library low-level batch retries** apply specifically to DynamoDB's `unprocessedKeys` and `unprocessedItems`
+   responses. Same-table synchronous projection and synchronous cross-table batch-get make up to three retry attempts
+   with exponential backoff. Async projection and async cross-table batch-get make one direct request and can expose
+   returned `unprocessedKeys`. Async batch-write builders retry with scheduled delays and a bounded policy.
 4. **Application retries** are a decision to repeat a whole operation. The library does not automatically repeat an
    arbitrary query, put, update, delete, or transaction after a mapped exception.
 
@@ -165,9 +163,8 @@ whether a partial batch result has already been applied.
 ## Async batch-write delays
 
 Async batch-write builders use scheduled asynchronous delays between retry attempts. They do not use `Thread.sleep` on
-the caller thread, so the returned
-`CompletableFuture` remains non-blocking while unprocessed items wait for their next attempt. This applies to both
-same-table and cross-table async batch writes.
+the caller thread, so the returned `CompletableFuture` remains non-blocking while unprocessed items wait for their next
+attempt. This applies to both same-table and cross-table async batch writes.
 
 ```java
 CompletableFuture<BatchWriteResult> write = asyncTable.batchWrite()
