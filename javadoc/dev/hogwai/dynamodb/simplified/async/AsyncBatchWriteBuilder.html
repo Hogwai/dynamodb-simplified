@@ -90,7 +90,7 @@ Obtain via <a href="AsyncTable.html#batchWrite()"><code>AsyncTable.batchWrite()<
 returns a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> that completes with the batch write result.
 <p>
 A single batch write can contain up to 25 put and delete operations combined.
-Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).</div>
+Unprocessed items are automatically retried with exponential backoff (up to 3 retries).</div>
 </div>
 </section>
 <section class="summary">
@@ -211,7 +211,7 @@ Unprocessed items are automatically retried with exponential backoff (up to 3 at
 <div class="block">Executes the batch write operation asynchronously.
 <p>
 All puts and deletes added to this builder are sent in a single batch write request.
-Unprocessed items are automatically retried with exponential backoff (up to 3 attempts).</div>
+Unprocessed items are automatically retried with exponential backoff (up to 3 retries).</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing the <a href="../result/BatchWriteResult.html" title="class in dev.hogwai.dynamodb.simplified.result"><code>BatchWriteResult</code></a></dd>

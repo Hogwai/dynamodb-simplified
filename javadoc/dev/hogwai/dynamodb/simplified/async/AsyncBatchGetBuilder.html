@@ -86,8 +86,9 @@ loadScripts(document, 'script');</script>
 <span class="extends-implements">extends <a href="../builder/base/AbstractBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.builder.base">AbstractBatchGetBuilder</a>&lt;T, <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a>&lt;T&gt;&gt;</span></div>
 <div class="block">Builds an async batch get operation to retrieve multiple items from a single table by their keys.
 <p>
-Obtain via <a href="AsyncTable.html#batchGet()"><code>AsyncTable.batchGet()</code></a>. Executes using the async enhanced client and
-returns a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> that completes when all pages have been collected.</div>
+Obtain via <a href="AsyncTable.html#batchGet()"><code>AsyncTable.batchGet()</code></a>. The default <a href="#execute()"><code>execute()</code></a> path uses the
+async enhanced client and completes after its pages have been collected; projection
+execution uses the low-level client and <a href="#executeWithPagination()"><code>executeWithPagination()</code></a> returns one page.</div>
 </div>
 </section>
 <section class="summary">
@@ -121,8 +122,7 @@ aggregated from all pages.</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a><wbr>&lt;<a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#executeWithPagination()" class="member-name-link">executeWithPagination</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Executes the batch get operation and returns a single page of results
-along with any unprocessed keys.</div>
+<div class="block">Executes the batch get operation and returns only the first page of results.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a><wbr>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#self()" class="member-name-link">self</a>()</code></div>
@@ -207,16 +207,17 @@ aggregated from all pages.</div>
 <h3>executeWithPagination</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link">CompletableFuture</a>&lt;<a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result">PagedResult</a>&lt;<a href="#type-param-T" title="type parameter in AsyncBatchGetBuilder">T</a>&gt;&gt;</span>&nbsp;<span class="element-name">executeWithPagination</span>()</div>
-<div class="block">Executes the batch get operation and returns a single page of results
-along with any unprocessed keys.
+<div class="block">Executes the batch get operation and returns only the first page of results.
 <p>
 Since batch get does not use traditional cursor-based pagination, the
-last evaluated key is always <code>null</code>. If there are unprocessed keys,
-they are not automatically retried.</div>
+last evaluated key is always <code>null</code>. Unprocessed keys are not exposed
+by the returned <a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result"><code>PagedResult</code></a>; use <a href="#execute()"><code>execute()</code></a> to access them.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>a <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> containing a <a href="../result/PagedResult.html" title="class in dev.hogwai.dynamodb.simplified.result"><code>PagedResult</code></a> with
 items from the first response page</dd>
+<dt>Throws:</dt>
+<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/IllegalStateException.html" title="class or interface in java.lang" class="external-link">IllegalStateException</a></code> - if a projection is configured; use <a href="#execute()"><code>execute()</code></a> instead</dd>
 </dl>
 </div>
 </section>

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A fluent DynamoDB wrapper for Java that dramatically reduces boilerplate">
+        <meta name="description" content="A fluent DynamoDB wrapper for Java with typed builders for common DynamoDB operations">
       
       
       
@@ -262,17 +262,18 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="guides/single-table-design/" class="md-tabs__link">
-        
-  
-  
     
+    
+      <li class="md-tabs__item">
+        <a href="guides/expressions/" class="md-tabs__link">
+          
   
-  Single-Table Design
+  
+  Guides
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -457,6 +458,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#server-side-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server-side size()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-example" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -519,6 +531,198 @@
   
   
   
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/async/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/batch-and-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Batch and Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/errors-and-retries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors and Retries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/api-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="guides/single-table-design/" class="md-nav__link">
         
@@ -536,6 +740,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -644,6 +856,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#server-side-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server-side size()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-example" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -687,10 +910,10 @@
 
 <h1 id="dynamodb-simplified">DynamoDB Simplified</h1>
 <p><a href="https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/dev.hogwai/dynamodb-simplified-core" /></a></p>
-<p>A fluent wrapper for the AWS DynamoDB Enhanced Client that dramatically reduces boilerplate code and improves developer experience.</p>
+<p>A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for common DynamoDB operations.</p>
 <h2 id="why">Why?</h2>
-<p>The AWS DynamoDB SDK is powerful but verbose. Simple operations require dozens of lines of code with manual expression attribute names and values.</p>
-<p><strong>DynamoDB Simplified</strong> provides a fluent, intuitive API that lets you focus on <em>what</em> you want to do, not <em>how</em> to do it.</p>
+<p>The AWS DynamoDB SDK exposes request and expression details explicitly, including expression attribute names and values, which can make query setup verbose.</p>
+<p><strong>DynamoDB Simplified</strong> provides fluent builders for common DynamoDB operations while keeping the underlying AWS SDK model visible.</p>
 <h3 id="dynamodb-enhanced">dynamodb-enhanced</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">expressionNames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">expressionNames</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">"#status"</span><span class="p">,</span><span class="w"> </span><span class="s">"status"</span><span class="p">);</span>
@@ -717,47 +940,55 @@
 </code></pre></div>
 <h2 id="features">Features</h2>
 <ul>
-<li><strong>Fluent builder API</strong>: every operation reads as a sentence</li>
-<li><strong>Zero-boilerplate expressions</strong>: <code>f.eq("status", "active")</code> instead of <code>Expression</code> builders</li>
-<li><strong>Sync + Async</strong>: <code>DynamoSimplifiedClient</code> and <code>AsyncDynamoSimplifiedClient</code>, same API</li>
+<li><strong>Fluent builder API</strong>: chain operation-specific methods before each terminal</li>
+<li><strong>Expression helpers</strong>: <code>f.eq("status", "active")</code> instead of manually assembling expression maps</li>
+<li><strong>Sync + Async</strong>: related builders in <code>DynamoSimplifiedClient</code> and <code>AsyncDynamoSimplifiedClient</code>, with different terminal types where needed</li>
 <li><strong>Transactions</strong>: <code>transactWrite()</code> with put, update, delete, conditionCheck, and expression-based partial updates</li>
-<li><strong>Batch operations</strong>: <code>batchGet()</code> and <code>batchWrite()</code> with consistent reads</li>
-<li><strong>DDL</strong>: <code>createTable()</code>, <code>deleteTable()</code>, <code>describeTable()</code>, <code>tableExists()</code></li>
-<li><strong>GSI / LSI</strong>: <code>table.index("name").query()</code> with full fluent API</li>
+<li><strong>Batch operations</strong>: <code>batchGet()</code> supports optional consistent reads; <code>batchWrite()</code> handles puts and deletes</li>
+<li><strong>DDL</strong>: <code>create()</code>, <code>delete()</code>, <code>describe()</code>, <code>exists()</code></li>
+<li><strong>GSI / LSI</strong>: <code>table.index("name").query()</code> with the query builder options supported for indexes</li>
 <li><strong>Single-table design</strong>: <code>@Entity</code>/<code>@KeyComponent</code> annotations, auto-computed composite keys, cross-entity queries</li>
-<li><strong>Optimistic locking</strong>: <code>@Version</code> annotation with automatic version checking</li>
-<li><strong>TTL management</strong>: enable/disable/describe TTL with <code>UpdateExpression.ttl(Duration)</code></li>
-<li><strong>Consumed capacity</strong>: every result type exposes consumed capacity</li>
-<li><strong>Automatic batch retry</strong>: unprocessed keys automatically retried with exponential backoff</li>
+<li><strong>Version support</strong>: <code>@Version</code> fields can be detected and incremented on the Java object; strict compare-and-set requires an explicit condition</li>
+<li><strong>TTL management</strong>: table configuration with <code>enableTtl("expiresAt")</code>, <code>disableTtl("expiresAt")</code>, <code>describeTtl()</code>; update expressions write expiration values with <code>update(item, u -&gt; u.ttl("expiresAt", Duration.ofDays(90))).execute()</code></li>
+<li><strong>Batch get behavior</strong>: same-table <code>execute()</code> without projection uses the AWS Enhanced paginator; bounded retry applies to sync batch-write and synchronous low-level batch-get paths, while async low-level batch-get paths are direct requests</li>
 <li><strong>PartiQL</strong>: <code>client.executeStatement()</code> for raw SQL-like queries</li>
-<li><strong>Low-level fallback</strong>: when the Enhanced Client lacks a feature (update expressions, returnValues), the library delegates to the low-level DynamoDB client transparently</li>
+<li><strong>Low-level fallback</strong>: when the Enhanced Client lacks a feature (update expressions, returnValues), the library delegates to the low-level DynamoDB client for that operation</li>
 <li><strong>No framework dependencies</strong>: pure Java, works with any stack</li>
 </ul>
-<h2 id="quick-example">Quick example</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Create client</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">DynamoSimplifiedClient</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DynamoSimplifiedClient</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">Table</span><span class="o">&lt;</span><span class="n">MyItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">table</span><span class="p">(</span><span class="s">"my-table"</span><span class="p">,</span><span class="w"> </span><span class="n">MyItem</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">// Put</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">table</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">myItem</span><span class="p">).</span><span class="na">execute</span><span class="p">();</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1">// Get</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">MyItem</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">getItem</span><span class="p">(</span><span class="s">"pk1"</span><span class="p">,</span><span class="w"> </span><span class="s">"sk1"</span><span class="p">).</span><span class="na">orElse</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="c1">// Query with filter</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">MyItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">()</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"pk1"</span><span class="p">)</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="p">.</span><span class="na">filter</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="na">gt</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="c1">// Transaction with partial update</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="n">client</span><span class="p">.</span><span class="na">transactWrite</span><span class="p">()</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">newItem</span><span class="p">)</span>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">existingItem</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">150</span><span class="p">))</span>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+<h2 id="server-side-size">Server-side <code>size()</code></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">()</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">        </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"java"</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="p">.</span><span class="na">filter</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="na">sizeGt</span><span class="p">(</span><span class="s">"keywords"</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
 </code></pre></div>
-<p>See the <a href="quickstart/">Quickstart</a> guide for a complete walkthrough.</p>
-<p>Looking for single-table design? See the <a href="guides/single-table-design/">Single-Table Design Guide</a>.</p>
+<p>DynamoDB applies the filter using <code>size(attribute)</code>, without client-side size calculation.
+The filter is evaluated after reading items.</p>
+<h2 id="quick-example">Quick example</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Create client</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">DynamoSimplifiedClient</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DynamoSimplifiedClient</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">Table</span><span class="o">&lt;</span><span class="n">MyItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">table</span><span class="p">(</span><span class="s">"my-table"</span><span class="p">,</span><span class="w"> </span><span class="n">MyItem</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1">// Put</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">table</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">myItem</span><span class="p">).</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1">// Get</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">MyItem</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">getItem</span><span class="p">(</span><span class="s">"pk1"</span><span class="p">,</span><span class="w"> </span><span class="s">"sk1"</span><span class="p">).</span><span class="na">orElse</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1">// Query with filter</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">MyItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">()</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"pk1"</span><span class="p">)</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="p">.</span><span class="na">filter</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="na">gt</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="c1">// Transaction with partial update</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="n">client</span><span class="p">.</span><span class="na">transactWrite</span><span class="p">()</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">    </span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">newItem</span><span class="p">)</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">    </span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">existingItem</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">150</span><span class="p">))</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+</code></pre></div>
+<p>See the <a href="quickstart/">Quickstart</a> guide for an overview of the main operations.</p>
+<p>Looking for single-table design?
+See the <a href="guides/single-table-design/">Single-Table Design Guide</a>.</p>
 <h2 id="api-reference">API Reference</h2>
 <p>The <a href="javadoc/index.html">full API documentation</a> is generated from Javadoc comments.</p>
 

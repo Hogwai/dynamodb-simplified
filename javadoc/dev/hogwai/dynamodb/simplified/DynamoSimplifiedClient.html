@@ -63,6 +63,8 @@ loadScripts(document, 'script');</script>
 <li><a href="#table(java.lang.String,software.amazon.awssdk.enhanced.dynamodb.TableSchema)" tabindex="0">table(String, TableSchema)</a></li>
 <li><a href="#table(java.lang.String,java.lang.Class,java.util.function.Consumer)" tabindex="0">table(String, Class, Consumer)</a></li>
 <li><a href="#entityTable(java.lang.Class)" tabindex="0">entityTable(Class)</a></li>
+<li><a href="#entityQuery(java.lang.String)" tabindex="0">entityQuery(String)</a></li>
+<li><a href="#entityQuery(java.lang.String,java.lang.String)" tabindex="0">entityQuery(String, String)</a></li>
 <li><a href="#transactGet()" tabindex="0">transactGet()</a></li>
 <li><a href="#transactWrite()" tabindex="0">transactWrite()</a></li>
 <li><a href="#batchGet()" tabindex="0">batchGet()</a></li>
@@ -108,7 +110,7 @@ returned by <code>Table</code> methods are single-use and not thread-safe.
 <p>Usage:</p>
 <pre><code>DynamoSimplifiedClient client = DynamoSimplifiedClient.create();
 Table&lt;Post&gt; posts = client.table("posts", Post.class);
-posts.query().partitionKey("subreddit").execute();
+posts.query().partitionKey("subreddit").executeAll();
 </code></pre></div>
 <dl class="notes">
 <dt>See Also:</dt>
@@ -165,6 +167,17 @@ a custom DynamoDB client and/or enhanced client extensions.</div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#create(software.amazon.awssdk.services.dynamodb.DynamoDbClient)" class="member-name-link">create</a><wbr>(@NonNull software.amazon.awssdk.services.dynamodb.DynamoDbClient&nbsp;client)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Creates a <code>DynamoSimplifiedClient</code> with a custom <code>DynamoDbClient</code>.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="entity/EntityQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#entityQuery(java.lang.String)" class="member-name-link">entityQuery</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;tableName)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Starts a cross-entity query using the default <code>_type</code> discriminator attribute.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>@NonNull <a href="entity/EntityQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#entityQuery(java.lang.String,java.lang.String)" class="member-name-link">entityQuery</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;tableName,
+ @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;discriminatorAttribute)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Starts a cross-entity query using a custom discriminator attribute.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;T&gt;&nbsp;@NonNull <a href="entity/EntityTable.html" title="interface in dev.hogwai.dynamodb.simplified.entity">EntityTable</a><wbr>&lt;T&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#entityTable(java.lang.Class)" class="member-name-link">entityTable</a><wbr>(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;T&gt;&nbsp;entityClass)</code></div>
@@ -391,6 +404,42 @@ discriminator value.</div>
 <dd><code>entityClass</code> - the entity class annotated with <code>@Entity</code></dd>
 <dt>Returns:</dt>
 <dd>an <code>EntityTable&lt;T&gt;</code> for single-table design</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="entityQuery(java.lang.String)">
+<h3>entityQuery</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="entity/EntityQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></span>&nbsp;<span class="element-name">entityQuery</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;tableName)</span></div>
+<div class="block">Starts a cross-entity query using the default <code>_type</code> discriminator attribute.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#entityQuery(java.lang.String)">entityQuery</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
+<dt>Parameters:</dt>
+<dd><code>tableName</code> - the DynamoDB table shared by the entity types</dd>
+<dt>Returns:</dt>
+<dd>a cross-entity query builder</dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="entityQuery(java.lang.String,java.lang.String)">
+<h3>entityQuery</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">@NonNull <a href="entity/EntityQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></span>&nbsp;<span class="element-name">entityQuery</span><wbr><span class="parameters">(@NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;tableName,
+ @NonNull <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;discriminatorAttribute)</span></div>
+<div class="block">Starts a cross-entity query using a custom discriminator attribute.</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="DynamoSimplifiedClientInterface.html#entityQuery(java.lang.String,java.lang.String)">entityQuery</a></code>&nbsp;in interface&nbsp;<code><a href="DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></code></dd>
+<dt>Parameters:</dt>
+<dd><code>tableName</code> - the DynamoDB table shared by the entity types</dd>
+<dd><code>discriminatorAttribute</code> - the attribute containing each entity's discriminator</dd>
+<dt>Returns:</dt>
+<dd>a cross-entity query builder</dd>
 </dl>
 </div>
 </section>

@@ -10,25 +10,31 @@
       
       
       
+        <link rel="canonical" href="https://hogwai.github.io/dynamodb-simplified/guides/api-matrix/">
       
+      
+        <link rel="prev" href="../errors-and-retries/">
+      
+      
+        <link rel="next" href="../single-table-design/">
       
       
         
       
       
-      <link rel="icon" href="/dynamodb-simplified/assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>DynamoDB Simplified</title>
+        <title>API Matrix - DynamoDB Simplified</title>
       
     
     
-      <link rel="stylesheet" href="/dynamodb-simplified/assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="/dynamodb-simplified/assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -47,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL("/dynamodb-simplified/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -71,6 +77,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#api-matrix" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -81,7 +92,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/dynamodb-simplified/." title="DynamoDB Simplified" class="md-header__button md-logo" aria-label="DynamoDB Simplified" data-md-component="logo">
+    <a href="../.." title="DynamoDB Simplified" class="md-header__button md-logo" aria-label="DynamoDB Simplified" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -101,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              API Matrix
             
           </span>
         </div>
@@ -214,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/dynamodb-simplified/." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -233,7 +244,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/dynamodb-simplified/quickstart/" class="md-tabs__link">
+      <a href="../../quickstart/" class="md-tabs__link">
         
   
   
@@ -250,11 +261,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="/dynamodb-simplified/guides/expressions/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../expressions/" class="md-tabs__link">
           
   
   
@@ -272,7 +285,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/dynamodb-simplified/javadoc/index.html" class="md-tabs__link">
+      <a href="../../javadoc/index.html" class="md-tabs__link">
         
   
   
@@ -307,7 +320,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/dynamodb-simplified/." title="DynamoDB Simplified" class="md-nav__button md-logo" aria-label="DynamoDB Simplified" data-md-component="logo">
+    <a href="../.." title="DynamoDB Simplified" class="md-nav__button md-logo" aria-label="DynamoDB Simplified" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -337,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -364,7 +377,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/quickstart/" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -388,26 +401,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -425,7 +443,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -443,7 +461,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/guides/expressions/" class="md-nav__link">
+      <a href="../expressions/" class="md-nav__link">
         
   
   
@@ -471,7 +489,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/guides/async/" class="md-nav__link">
+      <a href="../async/" class="md-nav__link">
         
   
   
@@ -499,7 +517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/guides/batch-and-results/" class="md-nav__link">
+      <a href="../batch-and-results/" class="md-nav__link">
         
   
   
@@ -527,7 +545,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/guides/errors-and-retries/" class="md-nav__link">
+      <a href="../errors-and-retries/" class="md-nav__link">
         
   
   
@@ -552,10 +570,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/dynamodb-simplified/guides/api-matrix/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Matrix
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -571,6 +616,87 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sync-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#async-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transaction-and-cross-table-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transaction and cross-table notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#entity-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entity operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -583,7 +709,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/guides/single-table-design/" class="md-nav__link">
+      <a href="../single-table-design/" class="md-nav__link">
         
   
   
@@ -618,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/dynamodb-simplified/javadoc/index.html" class="md-nav__link">
+      <a href="../../javadoc/index.html" class="md-nav__link">
         
   
   
@@ -655,6 +781,77 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sync-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#async-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transaction-and-cross-table-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transaction and cross-table notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#entity-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entity operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -667,8 +864,143 @@
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+
+  
+  
+
+
+<h1 id="api-matrix">API Matrix</h1>
+<p>This matrix summarizes the main sync and async builders and their terminal methods.</p>
+<h2 id="sync-api">Sync API</h2>
+<pre class="mermaid"><code>classDiagram
+    class Table~T~ {
+        +getItem() Optional~T~
+        +put() PutBuilder~T~
+        +update() UpdateBuilder~T~
+        +delete() DeleteBuilder~T~
+        +query() QueryBuilder~T~
+        +scan() ScanBuilder~T~
+        +batchGet() BatchGetBuilder~T~
+        +batchWrite() BatchWriteBuilder~T~
+    }
+
+    class QueryBuilder~T~ {
+        +executeAll() List~T~
+        +executeWithPagination() PagedResult~T~
+        +executeAndGetFirst() Optional~T~
+        +executeStream() Stream~T~
+        +count() long
+    }
+
+    class ScanBuilder~T~ {
+        +executeAll() List~T~
+        +executeWithPagination() PagedResult~T~
+        +executeAndGetFirst() Optional~T~
+        +executeStream() Stream~T~
+        +count() long
+    }
+
+    class BatchGetBuilder~T~ {
+        +execute() BatchGetResult~T~
+    }
+
+    class BatchWriteBuilder~T~ {
+        +execute() BatchWriteResult
+    }
+
+    class Transactions {
+        +transactGet() TransactGetResults
+        +transactWrite() void
+    }
+
+    Table~T~ .. QueryBuilder~T~
+    Table~T~ .. ScanBuilder~T~
+    Table~T~ .. BatchGetBuilder~T~
+    Table~T~ .. BatchWriteBuilder~T~</code></pre>
+<h2 id="async-api">Async API</h2>
+<pre class="mermaid"><code>classDiagram
+    class AsyncTable~T~ {
+        +get() AsyncGetItemBuilder~T~
+        +put() AsyncPutBuilder~T~
+        +update() AsyncUpdateBuilder~T~
+        +delete() AsyncDeleteBuilder~T~
+        +query() AsyncQueryBuilder~T~
+        +scan() AsyncScanBuilder~T~
+        +batchGet() AsyncBatchGetBuilder~T~
+        +batchWrite() AsyncBatchWriteBuilder~T~
+    }
+
+    class AsyncQueryBuilder~T~ {
+        +executeAll() CompletableFuture
+        +executeWithPagination() CompletableFuture
+        +executeAndGetFirst() CompletableFuture
+        +streamResults() SdkPublisher~T~
+        +count() CompletableFuture~Long~
+    }
+
+    class AsyncScanBuilder~T~ {
+        +executeAll() CompletableFuture
+        +executeWithPagination() CompletableFuture
+        +executeAndGetFirst() CompletableFuture
+        +executeStream() CompletableFuture
+        +count() CompletableFuture~Long~
+    }
+
+    class AsyncBatchGetBuilder~T~ {
+        +execute() CompletableFuture
+        +executeWithPagination() CompletableFuture
+    }
+
+    class AsyncBatchWriteBuilder~T~ {
+        +execute() CompletableFuture
+    }
+
+    class AsyncTransactions {
+        +transactGet() CompletableFuture
+        +transactWrite() CompletableFuture
+    }
+
+    AsyncTable~T~ .. AsyncQueryBuilder~T~
+    AsyncTable~T~ .. AsyncScanBuilder~T~
+    AsyncTable~T~ .. AsyncBatchGetBuilder~T~
+    AsyncTable~T~ .. AsyncBatchWriteBuilder~T~</code></pre>
+<p>This diagram is an overview.
+The notes below cover the exact builder terminals and their caveats.</p>
+<h2 id="notes">Notes</h2>
+<p><code>QueryBuilder</code> and <code>ScanBuilder</code> do not expose a generic <code>execute()</code> terminal.
+Use one of the operation-specific terminals shown above.
+Query and scan <code>executeWithPagination()</code> return the first page, while <code>executeAll()</code> follows continuation keys and aggregates all pages.
+Same-table batch-get <code>execute()</code> without a projection uses the AWS Enhanced paginator in both sync and async builders.
+It follows unprocessed keys from earlier pages to terminal state, without a library-bounded retry or guaranteed application-level backoff.
+Its final result is normally without remaining keys.</p>
+<p>Same-table projection and cross-table batch-get use low-level paths.
+Sync projection and sync cross-table have bounded retries; async projection and async cross-table issue one direct request and can expose <code>unprocessedKeys</code>.
+<code>AsyncBatchGetBuilder.executeWithPagination()</code> consumes only the first page and returns <code>PagedResult</code>, which has no unprocessed-key field.
+It is not complete batch pagination/retry handling and does not perform the explicit 100-key validation performed by terminal <code>execute()</code>.
+A configured projection must use <code>execute()</code>; this terminal rejects projections explicitly.</p>
+<h3 id="transaction-and-cross-table-notes">Transaction and cross-table notes</h3>
+<p><code>Index&lt;T&gt;</code> and <code>AsyncIndex&lt;T&gt;</code> provide <code>query()</code> and <code>scan()</code> builders.
+Their terminals are the same as the corresponding table query and scan rows.
+The cross-table async batch-get result maps items through <code>getItems(Table&lt;T&gt;)</code>, not through an <code>AsyncTable&lt;T&gt;</code> accessor.</p>
+<h3 id="entity-operations">Entity operations</h3>
+<p><code>EntityTable&lt;T&gt;</code> exposes synchronous <code>put</code>, <code>get</code>, <code>query</code>, <code>update</code>, and key-based <code>delete</code> methods.
+<code>AsyncEntityTable&lt;T&gt;</code> exposes the corresponding operations as futures and additionally provides <code>deleteEntity(T)</code>.
+These are entity-table methods rather than the regular <code>Table&lt;T&gt;</code> builder terminals.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -711,10 +1043,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "/dynamodb-simplified/", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "/dynamodb-simplified/assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="/dynamodb-simplified/assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

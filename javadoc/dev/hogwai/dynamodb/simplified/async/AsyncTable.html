@@ -119,9 +119,11 @@ loadScripts(document, 'script');</script>
 <div class="block">Typed async entry point for DynamoDB operations on a single table.
 <p>
 Obtained via <a href="AsyncDynamoSimplifiedClient.html#table(java.lang.String,java.lang.Class)"><code>AsyncDynamoSimplifiedClient.table(String, Class)</code></a>.
-Provides convenience direct methods (getItem, putItem, updateItem, deleteItem)
-returning <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a>, as well as DDL operations (create, delete, describe).
-Builder-based query, scan, and CRUD operations will be added in a later phase.</div>
+Provides async builders through <code>query()</code>, <code>scan()</code>, <code>get()</code>,
+<code>put()</code>, <code>update()</code>, <code>delete()</code>, <code>batchGet()</code>, and
+<code>batchWrite()</code>. Their terminal methods return <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html" title="class or interface in java.util.concurrent" class="external-link"><code>CompletableFuture</code></a> where
+applicable. It also provides convenience direct methods (getItem, putItem, updateItem,
+deleteItem) and asynchronous DDL operations (create, delete, describe).</div>
 </div>
 </section>
 <section class="summary">

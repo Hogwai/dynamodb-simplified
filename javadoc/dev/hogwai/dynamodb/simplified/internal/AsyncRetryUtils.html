@@ -76,8 +76,8 @@ loadScripts(document, 'script');</script>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
 <div class="block">Utility for non-blocking async retry delays.
 <p>
-Uses a dedicated daemon scheduled executor to avoid blocking
-the common fork-join pool or caller threads.</div>
+Uses the JDK delayed executor so the library does not own a permanent
+scheduler thread.</div>
 </div>
 </section>
 <section class="summary">

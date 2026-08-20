@@ -1483,10 +1483,30 @@ a custom DynamoDB client and/or <code>extensions</code>.</div>
 <dd>
 <div class="block">Returns the entity class.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html#entityQuery(java.lang.String)" class="member-name-link">entityQuery(String)</a> - Method in class dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a></dt>
+<dd>
+<div class="block">Starts a cross-entity query using the default <code>_type</code> discriminator attribute.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html#entityQuery(java.lang.String)" class="member-name-link">entityQuery(String)</a> - Method in interface dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></dt>
+<dd>
+<div class="block">Starts a cross-entity query using the default <code>_type</code> discriminator attribute.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html#entityQuery(java.lang.String,java.lang.String)" class="member-name-link">entityQuery(String, String)</a> - Method in class dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClient.html" title="class in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClient</a></dt>
+<dd>
+<div class="block">Starts a cross-entity query using a custom discriminator attribute.</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html#entityQuery(java.lang.String,java.lang.String)" class="member-name-link">entityQuery(String, String)</a> - Method in interface dev.hogwai.dynamodb.simplified.<a href="dev/hogwai/dynamodb/simplified/DynamoSimplifiedClientInterface.html" title="interface in dev.hogwai.dynamodb.simplified">DynamoSimplifiedClientInterface</a></dt>
+<dd>
+<div class="block">Starts a cross-entity query using a custom discriminator attribute.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/EntityQueryBuilder.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a> - Class in <a href="dev/hogwai/dynamodb/simplified/entity/package-summary.html">dev.hogwai.dynamodb.simplified.entity</a></dt>
 <dd>
 <div class="block">Builds and executes cross-entity queries across multiple entity types
 sharing a single DynamoDB table (single-table design).</div>
+</dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/entity/EntityQueryBuilder.html#%3Cinit%3E(software.amazon.awssdk.services.dynamodb.DynamoDbClient,java.lang.String,java.lang.String)" class="member-name-link">EntityQueryBuilder(DynamoDbClient, String, String)</a> - Constructor for class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntityQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></dt>
+<dd>
+<div class="block">Creates a cross-entity query builder for a table and discriminator attribute.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/EntitySchema.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.entity">EntitySchema&lt;T&gt;</a> - Class in <a href="dev/hogwai/dynamodb/simplified/entity/package-summary.html">dev.hogwai.dynamodb.simplified.entity</a></dt>
 <dd>
@@ -1772,8 +1792,7 @@ if any.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html#executeWithPagination()" class="member-name-link">executeWithPagination()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncBatchGetBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncBatchGetBuilder</a></dt>
 <dd>
-<div class="block">Executes the batch get operation and returns a single page of results
-along with any unprocessed keys.</div>
+<div class="block">Executes the batch get operation and returns only the first page of results.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html#executeWithPagination()" class="member-name-link">executeWithPagination()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a></dt>
 <dd>
@@ -3642,6 +3661,10 @@ is less than the given value.</div>
 <dd>
 <div class="block">Sets the exclusive start key for paginated scans.</div>
 </dd>
+<dt><a href="dev/hogwai/dynamodb/simplified/entity/EntityQueryBuilder.html#startFrom(java.util.Map)" class="member-name-link">startFrom(Map)</a> - Method in class dev.hogwai.dynamodb.simplified.entity.<a href="dev/hogwai/dynamodb/simplified/entity/EntityQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.entity">EntityQueryBuilder</a></dt>
+<dd>
+<div class="block">Sets the exclusive start key for the next paginated query.</div>
+</dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html#streamResults()" class="member-name-link">streamResults()</a> - Method in class dev.hogwai.dynamodb.simplified.async.<a href="dev/hogwai/dynamodb/simplified/async/AsyncQueryBuilder.html" title="class in dev.hogwai.dynamodb.simplified.async">AsyncQueryBuilder</a></dt>
 <dd>
 <div class="block">Returns a reactive publisher that streams query results lazily.</div>
@@ -4150,7 +4173,7 @@ the order they are declared.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/entity/Version.html" class="type-name-link" title="annotation interface in dev.hogwai.dynamodb.simplified.entity">Version</a> - Annotation Interface in <a href="dev/hogwai/dynamodb/simplified/entity/package-summary.html">dev.hogwai.dynamodb.simplified.entity</a></dt>
 <dd>
-<div class="block">Marks an attribute as the version field for optimistic locking.</div>
+<div class="block">Marks a field as the version field for optimistic locking.</div>
 </dd>
 <dt><a href="dev/hogwai/dynamodb/simplified/internal/VersionHelper.html" class="type-name-link" title="class in dev.hogwai.dynamodb.simplified.internal">VersionHelper</a> - Class in <a href="dev/hogwai/dynamodb/simplified/internal/package-summary.html">dev.hogwai.dynamodb.simplified.internal</a></dt>
 <dd>
