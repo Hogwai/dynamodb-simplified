@@ -605,6 +605,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exception-hierarchy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -796,6 +807,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exception-hierarchy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -887,6 +909,15 @@ Batch-get retry behavior depends on the execution path: the no-projection same-t
 Async batch-write work uses bounded retries with scheduled delays.
 None of these paths turns every operation into an application-level retry loop.
 Imports and unrelated setup are omitted from the snippets.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#exception-hierarchy">Exception hierarchy</a></li>
+<li><a href="#conditional-failures">Conditional failures</a></li>
+<li><a href="#transaction-failures">Transaction failures</a></li>
+<li><a href="#async-failures">Async failures</a></li>
+<li><a href="#retry-boundaries">Retry boundaries</a></li>
+<li><a href="#async-batch-write-delays">Async batch-write delays</a></li>
+</ul>
 <h2 id="exception-hierarchy">Exception hierarchy</h2>
 <p>The public exception types are organized as follows:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DynamoSimplifiedException
@@ -923,42 +954,22 @@ Imports and unrelated setup are omitted from the snippets.</p>
 </tbody>
 </table>
 <p><code>OperationFailedException</code> retains the SDK exception as its cause and includes the operation and table context in its message when a table is known.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">try</span><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">        </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">()</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">partitionKey</span><span class="p">(</span><span class="s">"post-1"</span><span class="p">)</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">executeAll</span><span class="p">();</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span><span class="k">catch</span><span class="p">(</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">OperationFailedException</span><span class="w"> </span><span class="n">error</span><span class="p">){</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="n">logger</span><span class="p">.</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nf">error</span><span class="p">(</span><span class="s">"{}"</span><span class="p">,</span><span class="n">error</span><span class="p">.</span><span class="na">getMessage</span><span class="p">(),</span><span class="n">error</span><span class="p">);</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">Throwable</span><span class="w"> </span><span class="n">sdkFailure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getCause</span><span class="p">();</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">().</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"post-1"</span><span class="p">).</span><span class="na">executeAll</span><span class="p">();</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">OperationFailedException</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="s">"{}"</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getMessage</span><span class="p">(),</span><span class="w"> </span><span class="n">error</span><span class="p">);</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="n">Throwable</span><span class="w"> </span><span class="n">sdkFailure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getCause</span><span class="p">();</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="conditional-failures">Conditional failures</h2>
 <p>Conditions are checked by DynamoDB before the write.
 A failed condition is reported as <code>ConditionFailedException</code>, rather than as a generic operation failure.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">try</span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">        </span><span class="n">table</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">condition</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="n">c</span><span class="p">.</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nf">notExists</span><span class="p">(</span><span class="s">"id"</span><span class="p">))</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">execute</span><span class="p">();</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">}</span><span class="k">catch</span><span class="p">(</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">ConditionFailedException</span><span class="w"> </span><span class="n">error</span><span class="p">){</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">        </span><span class="c1">// The item already exists, or the condition was otherwise false.</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">        </span><span class="n">logger</span><span class="p">.</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="nf">info</span><span class="p">(</span><span class="s">"Write was rejected by its condition"</span><span class="p">);</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">table</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">post</span><span class="p">).</span><span class="na">condition</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">notExists</span><span class="p">(</span><span class="s">"id"</span><span class="p">)).</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">ConditionFailedException</span><span class="w"> </span><span class="n">error</span><span class="p">){</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="c1">// The item already exists, or the condition was otherwise false</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span><span class="na">info</span><span class="p">(</span><span class="s">"Write was rejected by its condition"</span><span class="p">);</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
 </code></pre></div>
 <p>The same exception applies to conditional update and delete operations.
 Filters are different: a filter removes items after a read and does not cause a condition failure.</p>
@@ -966,26 +977,15 @@ Filters are different: a filter removes items after a read and does not cause a 
 <p>Transactions are all-or-nothing.
 When DynamoDB cancels one, the mapped <code>TransactionFailedException</code> exposes one cancellation reason per transaction operation through <code>getCancellationReasons()</code> and <code>getCancellationReason(index)</code>.
 A <code>null</code> reason means that the corresponding operation had no cancellation reason.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">try</span><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">        </span><span class="n">client</span><span class="p">.</span><span class="na">transactWrite</span><span class="p">()</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">put</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">newPost</span><span class="p">)</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">conditionCheck</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-1"</span><span class="p">,</span><span class="mi">123L</span><span class="p">,</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="n">c</span><span class="p">.</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nf">eq</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span><span class="s">"OPEN"</span><span class="p">))</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">        </span><span class="p">.</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">execute</span><span class="p">();</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">}</span><span class="k">catch</span><span class="p">(</span>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">TransactionFailedException</span><span class="w"> </span><span class="n">error</span><span class="p">){</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">reasons</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getCancellationReasons</span><span class="p">();</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="nf">warn</span><span class="p">(</span><span class="s">"Transaction canceled: {}"</span><span class="p">,</span><span class="n">reasons</span><span class="p">);</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">   </span><span class="n">client</span><span class="p">.</span><span class="na">transactWrite</span><span class="p">()</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">newPost</span><span class="p">)</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p">.</span><span class="na">conditionCheck</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-1"</span><span class="p">,</span><span class="w"> </span><span class="mi">123L</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">eq</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span><span class="w"> </span><span class="s">"OPEN"</span><span class="p">))</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">TransactionFailedException</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">reasons</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getCancellationReasons</span><span class="p">();</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span><span class="na">warn</span><span class="p">(</span><span class="s">"Transaction canceled: {}"</span><span class="p">,</span><span class="w"> </span><span class="n">reasons</span><span class="p">);</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
 </code></pre></div>
 <p>Do not assume that the first non-null reason is the only relevant failure; inspect the list in transaction operation order.</p>
 <h2 id="async-failures">Async failures</h2>
@@ -996,37 +996,29 @@ If code calls <code>join()</code>, Java wraps the failure in <code>CompletionExc
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">        </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"post-1"</span><span class="p">)</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">future</span><span class="p">.</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nf">exceptionally</span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">{</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">Throwable</span><span class="w"> </span><span class="n">cause</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="k">instanceof</span><span class="w"> </span><span class="n">CompletionException</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getCause</span><span class="p">()</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="n">error</span><span class="p">;</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nf">error</span><span class="p">(</span><span class="s">"Async query failed"</span><span class="p">,</span><span class="n">cause</span><span class="p">);</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">List</span><span class="p">.</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="nf">of</span><span class="p">();</span>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">});</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">future</span><span class="p">.</span><span class="na">exceptionally</span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">Throwable</span><span class="w"> </span><span class="n">cause</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="k">instanceof</span><span class="w"> </span><span class="n">CompletionException</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="na">getCause</span><span class="p">()</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="n">error</span><span class="p">;</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="s">"Async query failed"</span><span class="p">,</span><span class="w"> </span><span class="n">cause</span><span class="p">);</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">List</span><span class="p">.</span><span class="na">of</span><span class="p">();</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">});</span>
 </code></pre></div>
 <p>Prefer <code>exceptionally</code>, <code>handle</code>, or <code>whenComplete</code> at the future boundary so the caller thread is not blocked while the operation is in flight.</p>
 <h2 id="retry-boundaries">Retry boundaries</h2>
-<p>There are three different retry layers and several batch-get boundaries:</p>
-<ol>
-<li><strong>AWS SDK retries</strong> apply to SDK requests according to the configured SDK retry policy.
-   They concern service request failures and throttling.</li>
-<li><strong>Enhanced batch-get pagination</strong> is used by same-table sync and async <code>execute()</code> without a projection.
+<p>There are three different retry layers and several batch-get boundaries:
+- <strong>AWS SDK retries</strong> apply to SDK requests according to the configured SDK retry policy.
+   They concern service request failures and throttling.
+- <strong>Enhanced batch-get pagination</strong> is used by same-table sync and async <code>execute()</code> without a projection.
    The AWS Enhanced paginator requests the <code>unprocessedKeys()</code> from earlier pages until its terminal state.
    This is not a library-bounded application retry, and no application-level backoff is guaranteed.
-   The final paginator result is normally without remaining keys.</li>
-<li><strong>Library low-level batch retries</strong> apply specifically to DynamoDB's <code>unprocessedKeys</code> and <code>unprocessedItems</code> responses.
+   The final paginator result is normally without remaining keys.
+- <strong>Library low-level batch retries</strong> apply specifically to DynamoDB's <code>unprocessedKeys</code> and <code>unprocessedItems</code> responses.
    Same-table synchronous projection and synchronous cross-table batch-get make up to three retry attempts with exponential backoff.
    Async projection and async cross-table batch-get make one direct request and can expose returned <code>unprocessedKeys</code>.
-   Async batch-write builders retry with scheduled delays and a bounded policy.</li>
-<li><strong>Application retries</strong> are a decision to repeat a whole operation.
-   The library does not automatically repeat an arbitrary query, put, update, delete, or transaction after a mapped exception.</li>
-</ol>
+   Async batch-write builders retry with scheduled delays and a bounded policy.
+- <strong>Application retries</strong> are a decision to repeat a whole operation.
+   The library does not automatically repeat an arbitrary query, put, update, delete, or transaction after a mapped exception.</p>
 <p>Results from a direct request or a bounded low-level retry boundary can still report unprocessed keys or items.
 Do not infer that a key remains in the result after the Enhanced paginator has processed it; its terminal result is normally without remaining keys.
 Applications that retry a whole operation should consider idempotency, conditional writes, and whether a partial batch result has already been applied.</p>
@@ -1038,17 +1030,11 @@ This applies to both same-table and cross-table async batch writes.</p>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">        </span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">        </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">write</span><span class="p">.</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">thenAccept</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">{</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">result</span><span class="p">.</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">hasUnprocessed</span><span class="p">()){</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="n">logger</span><span class="p">.</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="nf">warn</span><span class="p">(</span><span class="s">"Batch completed with unprocessed items"</span><span class="p">);</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">            </span><span class="p">});</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">write</span><span class="p">.</span><span class="na">thenAccept</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">hasUnprocessed</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="n">logger</span><span class="p">.</span><span class="na">warn</span><span class="p">(</span><span class="s">"Batch completed with unprocessed items"</span><span class="p">);</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">   </span><span class="p">}</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">});</span>
 </code></pre></div>
 <p>If a retryable async batch-write request ultimately fails with an SDK exception, the future completes exceptionally with the mapped library exception.</p>
 

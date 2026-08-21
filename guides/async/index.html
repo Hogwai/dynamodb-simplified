@@ -549,6 +549,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#create-an-async-client-and-table" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -785,6 +796,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#create-an-async-client-and-table" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -862,6 +884,14 @@
 <h1 id="async-api">Async API</h1>
 <p>The async API uses the AWS SDK async clients and returns <code>CompletableFuture</code> for ordinary operation terminals.
 The async builders are broadly symmetrical with the synchronous builders, but terminal types and streaming differ by builder.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#create-an-async-client-and-table">Create an async client and table</a></li>
+<li><a href="#sync-to-async-mapping">Sync-to-async mapping</a></li>
+<li><a href="#composing-futures-and-handling-failures">Composing futures and handling failures</a></li>
+<li><a href="#async-streaming">Async streaming</a></li>
+<li><a href="#async-batch-operations">Async batch operations</a></li>
+</ul>
 <h2 id="create-an-async-client-and-table">Create an async client and table</h2>
 <p>Use the default factory or wrap an already configured <code>DynamoDbAsyncClient</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">AsyncDynamoSimplifiedClient</span><span class="w"> </span><span class="n">asyncClient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AsyncDynamoSimplifiedClient</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
@@ -964,24 +994,14 @@ Do not assume one exception type for every async terminal.</p>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">        </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"post-1"</span><span class="p">)</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="p">.</span><span class="na">streamResults</span><span class="p">();</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">queryPublisher</span><span class="p">.</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nf">subscribe</span><span class="p">(</span><span class="n">post</span><span class="w"> </span><span class="o">-&gt;</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">process</span><span class="p">(</span><span class="n">post</span><span class="p">));</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">queryPublisher</span><span class="p">.</span><span class="na">subscribe</span><span class="p">(</span><span class="n">post</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">process</span><span class="p">(</span><span class="n">post</span><span class="p">));</span>
 </code></pre></div>
 <p>Async scan streaming returns a future that completes with the publisher:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">CompletableFuture</span><span class="o">&lt;</span><span class="n">SdkPublisher</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">scanPublisher</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">asyncTable</span><span class="p">.</span><span class="na">scan</span><span class="p">()</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">        </span><span class="p">.</span><span class="na">filter</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="na">gt</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">        </span><span class="p">.</span><span class="na">executeStream</span><span class="p">();</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">scanPublisher</span><span class="p">.</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">thenAccept</span><span class="p">(</span><span class="n">publisher</span><span class="w"> </span><span class="o">-&gt;</span><span class="n">publisher</span><span class="p">.</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nf">subscribe</span><span class="p">(</span><span class="n">post</span><span class="w"> </span><span class="o">-&gt;</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">process</span><span class="p">(</span><span class="n">post</span><span class="p">)));</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">scanPublisher</span><span class="p">.</span><span class="na">thenAccept</span><span class="p">(</span><span class="n">publisher</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">publisher</span><span class="p">.</span><span class="na">subscribe</span><span class="p">(</span><span class="n">post</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">process</span><span class="p">(</span><span class="n">post</span><span class="p">)));</span>
 </code></pre></div>
 <p>The publisher applies backpressure through the Reactive Streams contract.
 Do not call the query method <code>executeStream()</code>.
@@ -1018,9 +1038,9 @@ It does not retry unprocessed keys automatically:</p>
 If item deserialization is needed, pass a matching sync table reference.
 The returned cross-table async-get result does not provide a typed <code>getItems</code> accessor that accepts <code>AsyncTable&lt;T&gt;</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// Create a synchronous reference for result deserialization.</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">try</span><span class="p">(</span><span class="n">DynamoSimplifiedClient</span><span class="w"> </span><span class="n">syncClient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DynamoSimplifiedClient</span><span class="p">.</span><span class="na">create</span><span class="p">()){</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">Table</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">syncPosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">syncClient</span><span class="p">.</span><span class="na">table</span><span class="p">(</span><span class="s">"posts"</span><span class="p">,</span><span class="w"> </span><span class="n">Post</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">postsRead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crossResult</span><span class="p">.</span><span class="na">getItems</span><span class="p">(</span><span class="n">syncPosts</span><span class="p">);</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">try</span><span class="w"> </span><span class="p">(</span><span class="n">DynamoSimplifiedClient</span><span class="w"> </span><span class="n">syncClient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DynamoSimplifiedClient</span><span class="p">.</span><span class="na">create</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="n">Table</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">syncPosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">syncClient</span><span class="p">.</span><span class="na">table</span><span class="p">(</span><span class="s">"posts"</span><span class="p">,</span><span class="w"> </span><span class="n">Post</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="n">List</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">postsRead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crossResult</span><span class="p">.</span><span class="na">getItems</span><span class="p">(</span><span class="n">syncPosts</span><span class="p">);</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">}</span>
 </code></pre></div>
 <p>Batch reads accept at most 100 keys per request and batch writes accept at most 25 puts and deletes combined.

@@ -437,6 +437,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#add-the-dependency" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -504,10 +515,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#create-update" class="md-nav__link">
+  <a href="#create-and-update" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Create / Update
+        Create and update
       
     </span>
   </a>
@@ -619,10 +630,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#secondary-indexes-gsi-lsi" class="md-nav__link">
+  <a href="#secondary-indexes-gsi-and-lsi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Secondary indexes (GSI / LSI)
+        Secondary indexes (GSI and LSI)
       
     </span>
   </a>
@@ -973,6 +984,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#add-the-dependency" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1040,10 +1062,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#create-update" class="md-nav__link">
+  <a href="#create-and-update" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Create / Update
+        Create and update
       
     </span>
   </a>
@@ -1155,10 +1177,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#secondary-indexes-gsi-lsi" class="md-nav__link">
+  <a href="#secondary-indexes-gsi-and-lsi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Secondary indexes (GSI / LSI)
+        Secondary indexes (GSI and LSI)
       
     </span>
   </a>
@@ -1241,6 +1263,31 @@
 
 
 <h1 id="quickstart">Quickstart</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#add-the-dependency">Add the dependency</a></li>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#create-a-client">Create a client</a></li>
+<li><a href="#define-an-item">Define an item</a></li>
+<li><a href="#get-a-table-reference">Get a table reference</a></li>
+<li><a href="#crud-operations">CRUD operations</a></li>
+<li><a href="#create-and-update">Create and update</a></li>
+<li><a href="#read">Read</a></li>
+<li><a href="#delete">Delete</a></li>
+<li><a href="#time-to-live-ttl">Time To Live (TTL)</a></li>
+<li><a href="#versioning-and-compare-and-set-writes">Versioning and compare-and-set writes</a></li>
+<li><a href="#query">Query</a></li>
+<li><a href="#scan">Scan</a></li>
+<li><a href="#transactions">Transactions</a></li>
+<li><a href="#batch-operations">Batch operations</a></li>
+<li><a href="#batch-put">Batch Put</a></li>
+<li><a href="#secondary-indexes-gsi-and-lsi">Secondary indexes (GSI and LSI)</a></li>
+<li><a href="#ddl-operations">DDL operations</a></li>
+<li><a href="#partiql">PartiQL</a></li>
+<li><a href="#expressions">Expressions</a></li>
+<li><a href="#async-api">Async API</a></li>
+<li><a href="#single-table-design">Single-Table Design</a></li>
+</ul>
 <h2 id="add-the-dependency">Add the dependency</h2>
 <p>DynamoDB Simplified is published on <a href="https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core">Maven Central</a>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Gradle (Kotlin DSL)</span>
@@ -1324,7 +1371,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">Table</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">table</span><span class="p">(</span><span class="s">"posts"</span><span class="p">,</span><span class="w"> </span><span class="n">Post</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="crud-operations">CRUD operations</h2>
-<h3 id="create-update">Create / Update</h3>
+<h3 id="create-and-update">Create and update</h3>
 <p>Conditions and update expressions are covered in the <a href="../guides/expressions/">expressions guide</a>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Optional</span><span class="p">;</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
@@ -1339,7 +1386,7 @@
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
 <a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="c1">// Partial update with expression</span>
 <a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="n">Optional</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">post</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span><span class="w"> </span><span class="s">"New Title"</span><span class="p">)</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">                </span><span class="p">.</span><span class="na">addNumber</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">        </span><span class="p">.</span><span class="na">addNumber</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
 <a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">        </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
 </code></pre></div>
 <p><code>update(...).execute()</code> returns an <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html"><code>Optional&lt;Post&gt;</code></a>, containing the updated item when DynamoDB returns one.</p>
@@ -1424,30 +1471,24 @@ See the <a href="../guides/batch-and-results/">batch and results guide</a> for p
 <a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a>
 <a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a><span class="n">Table</span><span class="o">&lt;</span><span class="n">VersionedItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">versionedTable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">table</span><span class="p">(</span><span class="s">"versioned-items"</span><span class="p">,</span><span class="w"> </span><span class="n">VersionedItem</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
 <a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a><span class="n">VersionedItem</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">getItem</span><span class="p">(</span><span class="s">"item-1"</span><span class="p">).</span><span class="na">orElseThrow</span><span class="p">();</span>
-<a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a><span class="n">item</span><span class="p">.</span>
+<a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a><span class="n">item</span><span class="p">.</span><span class="na">setTitle</span><span class="p">(</span><span class="s">"Updated"</span><span class="p">);</span>
 <a id="__codelineno-10-32" name="__codelineno-10-32" href="#__codelineno-10-32"></a>
-<a id="__codelineno-10-33" name="__codelineno-10-33" href="#__codelineno-10-33"></a><span class="nf">setTitle</span><span class="p">(</span><span class="s">"Updated"</span><span class="p">);</span>
-<a id="__codelineno-10-34" name="__codelineno-10-34" href="#__codelineno-10-34"></a>
-<a id="__codelineno-10-35" name="__codelineno-10-35" href="#__codelineno-10-35"></a><span class="c1">// Direct full-item builders require withOptimisticLocking() to activate version detection.</span>
-<a id="__codelineno-10-36" name="__codelineno-10-36" href="#__codelineno-10-36"></a><span class="n">Optional</span><span class="o">&lt;</span><span class="n">VersionedItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-<a id="__codelineno-10-37" name="__codelineno-10-37" href="#__codelineno-10-37"></a><span class="w">    </span><span class="p">.</span><span class="na">withOptimisticLocking</span><span class="p">()</span>
-<a id="__codelineno-10-38" name="__codelineno-10-38" href="#__codelineno-10-38"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
-<a id="__codelineno-10-39" name="__codelineno-10-39" href="#__codelineno-10-39"></a>
-<a id="__codelineno-10-40" name="__codelineno-10-40" href="#__codelineno-10-40"></a><span class="c1">// For a partial update, load the current item and write the next version explicitly.</span>
-<a id="__codelineno-10-41" name="__codelineno-10-41" href="#__codelineno-10-41"></a><span class="n">VersionedItem</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">getItem</span><span class="p">(</span><span class="s">"item-1"</span><span class="p">).</span><span class="na">orElseThrow</span><span class="p">();</span>
-<a id="__codelineno-10-42" name="__codelineno-10-42" href="#__codelineno-10-42"></a><span class="kt">int</span><span class="w"> </span><span class="n">expectedVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current</span><span class="p">.</span><span class="na">getVersion</span><span class="p">();</span>
-<a id="__codelineno-10-43" name="__codelineno-10-43" href="#__codelineno-10-43"></a><span class="n">Optional</span><span class="o">&lt;</span><span class="n">VersionedItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">current</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span>
-<a id="__codelineno-10-44" name="__codelineno-10-44" href="#__codelineno-10-44"></a><span class="w">                </span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span><span class="w"> </span><span class="s">"Updated again"</span><span class="p">)</span>
-<a id="__codelineno-10-45" name="__codelineno-10-45" href="#__codelineno-10-45"></a><span class="w">                </span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"version"</span><span class="p">,</span><span class="w"> </span><span class="n">expectedVersion</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
-<a id="__codelineno-10-46" name="__codelineno-10-46" href="#__codelineno-10-46"></a><span class="w">        </span><span class="p">.</span><span class="na">condition</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">eq</span><span class="p">(</span><span class="s">"version"</span><span class="p">,</span><span class="w"> </span><span class="n">expectedVersion</span><span class="p">))</span>
-<a id="__codelineno-10-47" name="__codelineno-10-47" href="#__codelineno-10-47"></a><span class="w">        </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
-<a id="__codelineno-10-48" name="__codelineno-10-48" href="#__codelineno-10-48"></a><span class="k">if</span><span class="p">(</span><span class="n">partial</span><span class="p">.</span>
-<a id="__codelineno-10-49" name="__codelineno-10-49" href="#__codelineno-10-49"></a>
-<a id="__codelineno-10-50" name="__codelineno-10-50" href="#__codelineno-10-50"></a><span class="nf">isPresent</span><span class="p">()){</span>
-<a id="__codelineno-10-51" name="__codelineno-10-51" href="#__codelineno-10-51"></a><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="n">partial</span><span class="p">.</span>
-<a id="__codelineno-10-52" name="__codelineno-10-52" href="#__codelineno-10-52"></a>
-<a id="__codelineno-10-53" name="__codelineno-10-53" href="#__codelineno-10-53"></a><span class="nf">get</span><span class="p">();</span>
-<a id="__codelineno-10-54" name="__codelineno-10-54" href="#__codelineno-10-54"></a><span class="p">}</span>
+<a id="__codelineno-10-33" name="__codelineno-10-33" href="#__codelineno-10-33"></a><span class="c1">// Direct full-item builders require withOptimisticLocking() to activate version detection.</span>
+<a id="__codelineno-10-34" name="__codelineno-10-34" href="#__codelineno-10-34"></a><span class="n">Optional</span><span class="o">&lt;</span><span class="n">VersionedItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+<a id="__codelineno-10-35" name="__codelineno-10-35" href="#__codelineno-10-35"></a><span class="w">    </span><span class="p">.</span><span class="na">withOptimisticLocking</span><span class="p">()</span>
+<a id="__codelineno-10-36" name="__codelineno-10-36" href="#__codelineno-10-36"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-10-37" name="__codelineno-10-37" href="#__codelineno-10-37"></a>
+<a id="__codelineno-10-38" name="__codelineno-10-38" href="#__codelineno-10-38"></a><span class="c1">// For a partial update, load the current item and write the next version explicitly.</span>
+<a id="__codelineno-10-39" name="__codelineno-10-39" href="#__codelineno-10-39"></a><span class="n">VersionedItem</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">getItem</span><span class="p">(</span><span class="s">"item-1"</span><span class="p">).</span><span class="na">orElseThrow</span><span class="p">();</span>
+<a id="__codelineno-10-40" name="__codelineno-10-40" href="#__codelineno-10-40"></a><span class="kt">int</span><span class="w"> </span><span class="n">expectedVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current</span><span class="p">.</span><span class="na">getVersion</span><span class="p">();</span>
+<a id="__codelineno-10-41" name="__codelineno-10-41" href="#__codelineno-10-41"></a><span class="n">Optional</span><span class="o">&lt;</span><span class="n">VersionedItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">versionedTable</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">current</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span>
+<a id="__codelineno-10-42" name="__codelineno-10-42" href="#__codelineno-10-42"></a><span class="w">                </span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span><span class="w"> </span><span class="s">"Updated again"</span><span class="p">)</span>
+<a id="__codelineno-10-43" name="__codelineno-10-43" href="#__codelineno-10-43"></a><span class="w">                </span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"version"</span><span class="p">,</span><span class="w"> </span><span class="n">expectedVersion</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<a id="__codelineno-10-44" name="__codelineno-10-44" href="#__codelineno-10-44"></a><span class="w">        </span><span class="p">.</span><span class="na">condition</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">eq</span><span class="p">(</span><span class="s">"version"</span><span class="p">,</span><span class="w"> </span><span class="n">expectedVersion</span><span class="p">))</span>
+<a id="__codelineno-10-45" name="__codelineno-10-45" href="#__codelineno-10-45"></a><span class="w">        </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-10-46" name="__codelineno-10-46" href="#__codelineno-10-46"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">partial</span><span class="p">.</span><span class="na">isPresent</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-47" name="__codelineno-10-47" href="#__codelineno-10-47"></a><span class="w">    </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="n">partial</span><span class="p">.</span><span class="na">get</span><span class="p">();</span>
+<a id="__codelineno-10-48" name="__codelineno-10-48" href="#__codelineno-10-48"></a><span class="p">}</span>
 </code></pre></div>
 <p><code>@Version</code> is detected and can be incremented on the Java object.
 On direct <code>Table</code> put/update builders, <code>.withOptimisticLocking()</code> is required to activate the built-in detection condition.
@@ -1554,18 +1595,14 @@ The available operators are <code>sizeEq</code>, <code>sizeLt</code>, <code>size
 <a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">existingPost</span><span class="p">)</span><span class="w">          </span><span class="c1">// full item replacement</span>
 <a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">existingPost</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span><span class="w"> </span><span class="s">"Updated"</span><span class="p">))</span><span class="w">  </span><span class="c1">// partial update</span>
 <a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="p">.</span><span class="na">delete</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-2"</span><span class="p">,</span><span class="w"> </span><span class="mi">67890L</span><span class="p">)</span>
-<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="p">.</span>
-<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>
-<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="n">conditionCheck</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-3"</span><span class="p">,</span><span class="mi">67890L</span><span class="p">,</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="n">c</span><span class="p">.</span>
-<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>
-<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="nf">exists</span><span class="p">(</span><span class="s">"id"</span><span class="p">))</span>
-<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
-<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>
-<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="c1">// Transactional get</span>
-<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="n">TransactGetResults</span><span class="o">&lt;</span><span class="n">DynamoDbTable</span><span class="o">&lt;?&gt;&gt;</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">transactGet</span><span class="p">()</span>
-<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="w">    </span><span class="p">.</span><span class="na">addGetItem</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-1"</span><span class="p">,</span><span class="w"> </span><span class="mi">12345L</span><span class="p">)</span>
-<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="w">    </span><span class="p">.</span><span class="na">addGetItem</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-2"</span><span class="p">,</span><span class="w"> </span><span class="mi">67890L</span><span class="p">)</span>
-<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="p">.</span><span class="na">conditionCheck</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-3"</span><span class="p">,</span><span class="w"> </span><span class="mi">67890L</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">exists</span><span class="p">(</span><span class="s">"id"</span><span class="p">))</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="c1">// Transactional get</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="n">TransactGetResults</span><span class="o">&lt;</span><span class="n">DynamoDbTable</span><span class="o">&lt;?&gt;&gt;</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">transactGet</span><span class="p">()</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">    </span><span class="p">.</span><span class="na">addGetItem</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-1"</span><span class="p">,</span><span class="w"> </span><span class="mi">12345L</span><span class="p">)</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">    </span><span class="p">.</span><span class="na">addGetItem</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="s">"post-2"</span><span class="p">,</span><span class="w"> </span><span class="mi">67890L</span><span class="p">)</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">    </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="batch-operations">Batch operations</h2>
 <p>See the <a href="../guides/batch-and-results/">batch and results guide</a> for result objects, unprocessed items, and DynamoDB limits.
@@ -1581,7 +1618,7 @@ See the <a href="../guides/errors-and-retries/">errors and retries guide</a> for
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">// Insert multiple items in one batch</span>
 <a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">table</span><span class="p">.</span><span class="na">putAll</span><span class="p">(</span><span class="n">List</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">post1</span><span class="p">,</span><span class="w"> </span><span class="n">post2</span><span class="p">,</span><span class="w"> </span><span class="n">post3</span><span class="p">));</span>
 </code></pre></div>
-<h2 id="secondary-indexes-gsi-lsi">Secondary indexes (GSI / LSI)</h2>
+<h2 id="secondary-indexes-gsi-and-lsi">Secondary indexes (GSI and LSI)</h2>
 <p>The <code>Post</code> bean above declares the <code>by_status</code> secondary partition and sort keys.
 The DynamoDB table must also be created with the matching <code>by_status</code> index.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1">// Query a global secondary index</span>
@@ -1602,12 +1639,10 @@ The DynamoDB table must also be created with the matching <code>by_status</code>
 <a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">table</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
 <a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
 <a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1">// Delete table</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">table</span><span class="p">.</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">table</span><span class="p">.</span><span class="na">delete</span><span class="p">();</span>
 <a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="nf">delete</span><span class="p">();</span>
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
-<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="c1">// Check if table exists</span>
-<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="kt">boolean</span><span class="w"> </span><span class="n">exists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">exists</span><span class="p">();</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1">// Check if table exists</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="kt">boolean</span><span class="w"> </span><span class="n">exists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">exists</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="partiql">PartiQL</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// Execute raw PartiQL statement</span>
@@ -1622,34 +1657,24 @@ The DynamoDB table must also be created with the matching <code>by_status</code>
 <p>Every operation that accepts expressions supports the same fluent API:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// Filter expressions (query/scan)</span>
 <a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">().</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"pk"</span><span class="p">)</span>
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">    </span><span class="p">.</span>
-<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>
-<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">filter</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="n">f</span><span class="p">.</span>
-<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
-<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="nf">eq</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span><span class="s">"active"</span><span class="p">)</span>
-<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">                 </span><span class="p">.</span>
-<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
-<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="n">and</span><span class="p">()</span>
-<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">                 </span><span class="p">.</span>
-<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
-<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="n">gt</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="mi">100</span><span class="p">))</span>
-<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">    </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
-<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>
-<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="c1">// Condition expressions (put/update/delete)</span>
-<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="n">table</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">post</span><span class="p">).</span><span class="na">condition</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">eq</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span><span class="w"> </span><span class="s">"draft"</span><span class="p">)).</span><span class="na">execute</span><span class="p">();</span>
-<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>
-<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="c1">// Update expressions (partial update)</span>
-<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="n">table</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">post</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span><span class="w"> </span><span class="s">"New Title"</span><span class="p">)</span>
-<a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="w">                                 </span><span class="p">.</span><span class="na">remove</span><span class="p">(</span><span class="s">"oldField"</span><span class="p">)</span>
-<a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="w">                                 </span><span class="p">.</span>
-<a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>
-<a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a><span class="n">addNumber</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="w">                                 </span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"tags"</span><span class="p">,</span><span class="w"> </span><span class="n">Set</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="s">"java"</span><span class="p">,</span><span class="w"> </span><span class="s">"aws"</span><span class="p">))).</span><span class="na">execute</span><span class="p">();</span>
-<a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a>
-<a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="c1">// Projection expressions (read specific attributes)</span>
-<a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">().</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"pk"</span><span class="p">)</span>
-<a id="__codelineno-19-29" name="__codelineno-19-29" href="#__codelineno-19-29"></a><span class="w">    </span><span class="p">.</span><span class="na">project</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="na">include</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span><span class="w"> </span><span class="s">"title"</span><span class="p">))</span>
-<a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a><span class="w">    </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">    </span><span class="p">.</span><span class="na">filter</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="na">eq</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span><span class="w"> </span><span class="s">"active"</span><span class="p">)</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span><span class="p">.</span><span class="na">and</span><span class="p">()</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span><span class="p">.</span><span class="na">gt</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">    </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="c1">// Condition expressions (put/update/delete)</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="n">table</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">post</span><span class="p">).</span><span class="na">condition</span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">c</span><span class="p">.</span><span class="na">eq</span><span class="p">(</span><span class="s">"status"</span><span class="p">,</span><span class="w"> </span><span class="s">"draft"</span><span class="p">)).</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="c1">// Update expressions (partial update)</span>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="n">table</span><span class="p">.</span><span class="na">update</span><span class="p">(</span><span class="n">post</span><span class="p">,</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">expr</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"title"</span><span class="p">,</span><span class="w"> </span><span class="s">"New Title"</span><span class="p">)</span>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="w">    </span><span class="p">.</span><span class="na">remove</span><span class="p">(</span><span class="s">"oldField"</span><span class="p">)</span>
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">    </span><span class="p">.</span><span class="na">addNumber</span><span class="p">(</span><span class="s">"views"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="w">    </span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="s">"tags"</span><span class="p">,</span><span class="w"> </span><span class="n">Set</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="s">"java"</span><span class="p">,</span><span class="w"> </span><span class="s">"aws"</span><span class="p">))).</span><span class="na">execute</span><span class="p">();</span>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="c1">// Projection expressions (read specific attributes)</span>
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">().</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"pk"</span><span class="p">)</span>
+<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="w">    </span><span class="p">.</span><span class="na">project</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="na">include</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span><span class="w"> </span><span class="s">"title"</span><span class="p">))</span>
+<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="w">    </span><span class="p">.</span><span class="na">executeAll</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="async-api">Async API</h2>
 <p>See the <a href="../guides/async/">async API guide</a> for <code>CompletableFuture</code> composition, streaming, and asynchronous batch operations.</p>
@@ -1753,17 +1778,13 @@ Their terminal results are exposed through <code>CompletableFuture</code>; strea
 <p>Use the entity-aware table:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">EntityTable</span><span class="o">&lt;</span><span class="n">PostEntity</span><span class="o">&gt;</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">entityTable</span><span class="p">(</span><span class="n">PostEntity</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
 <a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">PostEntity</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">PostEntity</span><span class="p">(</span><span class="s">"post-123"</span><span class="p">);</span>
-<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">posts</span><span class="p">.</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="n">posts</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">post</span><span class="p">);</span><span class="w">  </span><span class="c1">// pk auto-computed to "POST#post-123"</span>
 <a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>
-<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="nf">put</span><span class="p">(</span><span class="n">post</span><span class="p">);</span><span class="w">  </span><span class="c1">// pk auto-computed to "POST#post-123"</span>
-<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
-<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="n">EntityTable</span><span class="o">&lt;</span><span class="n">CommentEntity</span><span class="o">&gt;</span><span class="w"> </span><span class="n">comments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">entityTable</span><span class="p">(</span><span class="n">CommentEntity</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
-<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="n">comments</span><span class="p">.</span>
-<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>
-<a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="nf">put</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CommentEntity</span><span class="p">(</span><span class="s">"post-123"</span><span class="p">,</span><span class="w"> </span><span class="s">"comment-1"</span><span class="p">));</span>
-<a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>
-<a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="c1">// Read: auto-filters by discriminator</span>
-<a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">PostEntity</span><span class="o">&gt;</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">posts</span><span class="p">.</span><span class="na">query</span><span class="p">(</span><span class="s">"POST#post-123"</span><span class="p">);</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">EntityTable</span><span class="o">&lt;</span><span class="n">CommentEntity</span><span class="o">&gt;</span><span class="w"> </span><span class="n">comments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">entityTable</span><span class="p">(</span><span class="n">CommentEntity</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="n">comments</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CommentEntity</span><span class="p">(</span><span class="s">"post-123"</span><span class="p">,</span><span class="w"> </span><span class="s">"comment-1"</span><span class="p">));</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>
+<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="c1">// Read: auto-filters by discriminator</span>
+<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">PostEntity</span><span class="o">&gt;</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">posts</span><span class="p">.</span><span class="na">query</span><span class="p">(</span><span class="s">"POST#post-123"</span><span class="p">);</span>
 </code></pre></div>
 <p><code>@Entity</code> uses <code>_type</code> as the default <code>discriminatorAttribute</code>.
 <code>EntityTable</code> automatically persists the discriminator value in that attribute and filters <code>query()</code> by it.
@@ -1782,11 +1803,7 @@ All included entity beans must use the same table, compatible key property names
 <p>Async variant:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">AsyncEntityTable</span><span class="o">&lt;</span><span class="n">PostEntity</span><span class="o">&gt;</span><span class="w"> </span><span class="n">asyncPosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">asyncClient</span><span class="p">.</span><span class="na">entityTable</span><span class="p">(</span><span class="n">PostEntity</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
 <a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">PostEntity</span><span class="w"> </span><span class="n">asyncPost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">PostEntity</span><span class="p">(</span><span class="s">"post-456"</span><span class="p">);</span>
-<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">asyncPosts</span><span class="p">.</span>
-<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
-<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="nf">put</span><span class="p">(</span><span class="n">asyncPost</span><span class="p">).</span>
-<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
-<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">join</span><span class="p">();</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">asyncPosts</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">asyncPost</span><span class="p">).</span><span class="na">join</span><span class="p">();</span>
 </code></pre></div>
 
 

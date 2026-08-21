@@ -577,6 +577,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamodb-limits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -796,6 +807,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamodb-limits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -886,6 +908,15 @@
 This guide covers same-table and cross-table builders, their result objects, and the handling of unprocessed work.
 Imports and unrelated bean setup are omitted from the snippets.
 The paginator behavior described here follows AWS SDK 2.46.17.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#dynamodb-limits">DynamoDB limits</a></li>
+<li><a href="#same-table-batch-get">Same-table batch get</a></li>
+<li><a href="#same-table-batch-write">Same-table batch write</a></li>
+<li><a href="#cross-table-batch-operations">Cross-table batch operations</a></li>
+<li><a href="#result-interfaces-and-pagination">Result interfaces and pagination</a></li>
+<li><a href="#retry-behavior">Retry behavior</a></li>
+</ul>
 <h2 id="dynamodb-limits">DynamoDB limits</h2>
 <ul>
 <li>A batch get accepts at most 100 keys in one request.</li>
@@ -925,13 +956,9 @@ A direct or bounded-retry boundary can therefore return remaining keys in <code>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="p">.</span><span class="na">execute</span><span class="p">();</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">WriteRequest</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">remaining</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">unprocessedItems</span><span class="p">();</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">if</span><span class="p">(</span><span class="n">result</span><span class="p">.</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nf">hasUnprocessed</span><span class="p">()){</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="n">log</span><span class="p">.</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nf">warn</span><span class="p">(</span><span class="s">"Some writes remain unprocessed: {}"</span><span class="p">,</span><span class="n">remaining</span><span class="p">);</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">}</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">hasUnprocessed</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="n">log</span><span class="p">.</span><span class="na">warn</span><span class="p">(</span><span class="s">"Some writes remain unprocessed: {}"</span><span class="p">,</span><span class="w"> </span><span class="n">remaining</span><span class="p">);</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">}</span>
 </code></pre></div>
 <p>For a collection of items, <code>table.putAll(items)</code> is a convenience method that returns <code>BatchWriteResult</code>.</p>
 <h2 id="cross-table-batch-operations">Cross-table batch operations</h2>
@@ -977,14 +1004,12 @@ The write result groups unprocessed requests by table name.</p>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">List</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">pageItems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">page</span><span class="p">.</span><span class="na">items</span><span class="p">();</span>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">AttributeValue</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nextKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">page</span><span class="p">.</span><span class="na">lastEvaluatedKey</span><span class="p">();</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">if</span><span class="p">(</span><span class="n">page</span><span class="p">.</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">hasMorePages</span><span class="p">()){</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">PagedResult</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nextPage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">()</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"post-1"</span><span class="p">)</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">        </span><span class="p">.</span><span class="na">startFrom</span><span class="p">(</span><span class="n">nextKey</span><span class="p">)</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">        </span><span class="p">.</span><span class="na">executeWithPagination</span><span class="p">();</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">}</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="p">.</span><span class="na">hasMorePages</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="n">PagedResult</span><span class="o">&lt;</span><span class="n">Post</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nextPage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="na">query</span><span class="p">()</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="p">.</span><span class="na">partitionKey</span><span class="p">(</span><span class="s">"post-1"</span><span class="p">)</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="p">.</span><span class="na">startFrom</span><span class="p">(</span><span class="n">nextKey</span><span class="p">)</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="p">.</span><span class="na">executeWithPagination</span><span class="p">();</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="p">}</span>
 </code></pre></div>
 <p><code>lastEvaluatedKey()</code> is <code>null</code> or empty on the final page.
 <code>limit(10)</code> limits items evaluated before a filter, so the returned page can contain fewer items than the limit.
