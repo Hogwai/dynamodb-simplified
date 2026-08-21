@@ -219,9 +219,7 @@ public class VersionedItem {
 
 Table<VersionedItem> versionedTable = client.table("versioned-items", VersionedItem.class);
 VersionedItem item = versionedTable.getItem("item-1").orElseThrow();
-item.
-
-setTitle("Updated");
+item.setTitle("Updated");
 
 // Direct full-item builders require withOptimisticLocking() to activate version detection.
 Optional<VersionedItem> updated = versionedTable.update(item)
@@ -236,12 +234,8 @@ Optional<VersionedItem> partial = versionedTable.update(current, expr -> expr
                 .set("version", expectedVersion + 1))
         .condition(c -> c.eq("version", expectedVersion))
         .execute();
-if(partial.
-
-isPresent()){
-current =partial.
-
-get();
+if (partial.isPresent()) {
+    current =partial.get();
 }
 ```
 
@@ -360,11 +354,7 @@ client.transactWrite()
     .update(table, existingPost)          // full item replacement
     .update(table, existingPost, expr -> expr.set("title", "Updated"))  // partial update
     .delete(table, "post-2", 67890L)
-    .
-
-conditionCheck(table, "post-3",67890L,c ->c.
-
-exists("id"))
+    .conditionCheck(table, "post-3", 67890L, c -> c.exists("id"))
     .execute();
 
 // Transactional get
@@ -422,9 +412,7 @@ List<Post> descendingIndexResults = table.index("by_status")
 table.create();
 
 // Delete table
-table.
-
-delete();
+table.delete();
 
 // Check if table exists
 boolean exists = table.exists();
@@ -450,17 +438,9 @@ Every operation that accepts expressions supports the same fluent API:
 ```java
 // Filter expressions (query/scan)
 table.query().partitionKey("pk")
-    .
-
-filter(f ->f.
-
-eq("status","active")
-                 .
-
-and()
-                 .
-
-gt("views",100))
+    .filter(f -> f.eq("status", "active")
+    .and()
+    .gt("views", 100))
     .executeAll();
 
 // Condition expressions (put/update/delete)
@@ -468,11 +448,9 @@ table.put(post).condition(c -> c.eq("status", "draft")).execute();
 
 // Update expressions (partial update)
 table.update(post, expr -> expr.set("title", "New Title")
-                                 .remove("oldField")
-                                 .
-
-addNumber("views",1)
-                                 .set("tags", Set.of("java", "aws"))).execute();
+    .remove("oldField")
+    .addNumber("views", 1)
+    .set("tags", Set.of("java", "aws"))).execute();
 
 // Projection expressions (read specific attributes)
 table.query().partitionKey("pk")
@@ -595,14 +573,10 @@ Use the entity-aware table:
 ```java
 EntityTable<PostEntity> posts = client.entityTable(PostEntity.class);
 PostEntity post = new PostEntity("post-123");
-posts.
-
-put(post);  // pk auto-computed to "POST#post-123"
+posts.put(post);  // pk auto-computed to "POST#post-123"
 
 EntityTable<CommentEntity> comments = client.entityTable(CommentEntity.class);
-comments.
-
-put(new CommentEntity("post-123", "comment-1"));
+comments.put(new CommentEntity("post-123", "comment-1"));
 
 // Read: auto-filters by discriminator
 List<PostEntity> results = posts.query("POST#post-123");
@@ -633,9 +607,5 @@ Async variant:
 ```java
 AsyncEntityTable<PostEntity> asyncPosts = asyncClient.entityTable(PostEntity.class);
 PostEntity asyncPost = new PostEntity("post-456");
-asyncPosts.
-
-put(asyncPost).
-
-join();
+asyncPosts.put(asyncPost).join();
 ```

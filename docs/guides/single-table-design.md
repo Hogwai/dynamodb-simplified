@@ -167,25 +167,15 @@ public void setVersion(int version) {
 VersionedItem item = table.getItem("item-1").orElseThrow();
 int expectedVersion = item.getVersion();
 Optional<VersionedItem> updated = table.update(item, expression -> expression
-                .set("version", expectedVersion + 1))
-        .condition(condition -> condition.eq("version", expectedVersion))
-        .execute();
-if(updated.
-
-isPresent()){
-        item.
-
-setVersion(expectedVersion +1);
+  .set("version", expectedVersion + 1))
+  .condition(condition -> condition.eq("version", expectedVersion))
+  .execute();
+if (updated.isPresent()) {
+    item.setVersion(expectedVersion +1);
 }
 
 // Direct full-item put/update builders require this opt-in for built-in detection:
-        table.
-
-update(item).
-
-withOptimisticLocking().
-
-execute();
+table.update(item).withOptimisticLocking().execute();
 ```
 
 ---
@@ -404,9 +394,7 @@ Computes composite keys then performs an update:
 
 ```java
 User updatedUser = new User("abc123", "Alice Updated");
-users.
-
-update(updatedUser);
+users.update(updatedUser);
 // updatedUser.getPk() is now "USER#abc123"
 ```
 
@@ -432,11 +420,7 @@ CompletableFuture<List<User>> queryFuture = users.query("USER#abc123");
 
 // Delete by entity (extracts keys from the entity)
 User userForDelete = new User("abc123", "Alice");
-users.
-
-deleteEntity(userForDelete).
-
-join();
+users.deleteEntity(userForDelete).join();
 
 // Delete by key
 users.delete("USER#abc123").join();
@@ -569,9 +553,7 @@ query.consistentRead(true);
 query.scanIndexForward(false);  // descending
 
 // Projection
-query.
-
-project("pk","sk","_type");
+query.project("pk", "sk", "_type");
 
 // Limit
 query.limit(50);
@@ -682,28 +664,18 @@ EntityTable<ProfileWithSk> profiles = client.entityTable(ProfileWithSk.class);
 EntityTable<EntityWithSk> items = client.entityTable(EntityWithSk.class);
 
 User alice = new User("alice1", "Alice");
-users.
-
-put(alice);                    // pk becomes "USER#alice1"
+users.put(alice);                    // pk becomes "USER#alice1"
 
 EntityWithSk item = new EntityWithSk("alice1", "item001");
-items.
-
-put(item);                     // pk is prefixed; sk remains "item001"
-profiles.
-
-put(new ProfileWithSk("alice1", "Alice"));
+items.put(item);                     // pk is prefixed; sk remains "item001"
+profiles.put(new ProfileWithSk("alice1", "Alice"));
 
 User found = users.get("USER#alice1");
 List<User> aliceUsers = users.query("USER#alice1");
 
 User updatedAlice = new User("alice1", "Alice Updated");
-users.
-
-update(updatedAlice);          // use raw key components on a fresh object
-users.
-
-delete("USER#alice1");
+users.update(updatedAlice);          // use raw key components on a fresh object
+users.delete("USER#alice1");
 
 CrossEntityResult result = client.entityQuery("myapp")
         .partitionKey("USER#alice1")
@@ -713,13 +685,8 @@ CrossEntityResult result = client.entityQuery("myapp")
 List<ProfileWithSk> profilesFound = result.get(ProfileWithSk.class);
 List<EntityWithSk> itemsFound = result.get(EntityWithSk.class);
 
-try(
-var asyncClient = AsyncDynamoSimplifiedClient.create()){
-var asyncUsers = asyncClient.entityTable(User.class);
-    asyncUsers.
-
-put(new User("async1", "Async User")).
-
-join();
+try (var asyncClient = AsyncDynamoSimplifiedClient.create()) {
+  var asyncUsers = asyncClient.entityTable(User.class);
+  asyncUsers.put(new User("async1", "Async User")).join();
 }
 ```

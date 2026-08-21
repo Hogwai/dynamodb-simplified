@@ -89,11 +89,7 @@ SdkPublisher<Post> queryPublisher = asyncTable.query()
         .partitionKey("post-1")
         .streamResults();
 
-queryPublisher.
-
-subscribe(post ->
-
-process(post));
+queryPublisher.subscribe(post -> process(post));
 ```
 
 Async scan streaming returns a future that completes with the publisher:
@@ -103,13 +99,7 @@ CompletableFuture<SdkPublisher<Post>> scanPublisher = asyncTable.scan()
         .filter(f -> f.gt("views", 100))
         .executeStream();
 
-scanPublisher.
-
-thenAccept(publisher ->publisher.
-
-subscribe(post ->
-
-process(post)));
+scanPublisher.thenAccept(publisher -> publisher.subscribe(post -> process(post)));
 ```
 
 The publisher applies backpressure through the Reactive Streams contract.
