@@ -3,7 +3,7 @@
 DynamoDB Simplified provides entity-oriented single-table access through annotations, computed keys, discriminator filtering and cross-entity queries.
 This guide covers the documented API areas for annotations, entity tables, cross-entity queries and best practices.
 
----
+
 
 ## Table of Contents
 
@@ -11,18 +11,42 @@ This guide covers the documented API areas for annotations, entity tables, cross
 - [Annotations](#annotations)
   - [@Entity](#entity)
   - [@KeyComponent](#keycomponent)
+    - [Field and method forms](#field-and-method-forms)
   - [@KeyPrefix](#keyprefix)
   - [@Version](#version)
 - [Entity Schema](#entity-schema)
 - [Defining Entities](#defining-entities)
+  - [Basic Entity (Partition Key Only)](#basic-entity-partition-key-only)
+  - [Entity with Partition and Sort Keys](#entity-with-partition-and-sort-keys)
+  - [Multiple Key Prefixes (GSI key components)](#multiple-key-prefixes-gsi-key-components)
 - [Sync Operations (EntityTable)](#sync-operations-entitytable)
+  - [Put](#put)
+  - [Get](#get)
+  - [Query](#query)
+  - [Delete](#delete)
+  - [Update](#update)
 - [Async Operations (AsyncEntityTable)](#async-operations-asyncentitytable)
+  - [Method reference](#method-reference)
 - [Cross-Entity Queries](#cross-entity-queries)
+  - [Using EntityQueryBuilder](#using-entityquerybuilder)
+  - [Basic Cross-Entity Query](#basic-cross-entity-query)
+  - [Sort Key Conditions](#sort-key-conditions)
+  - [Options](#options)
+  - [Result Types](#result-types)
 - [Limitations](#limitations)
 - [Best Practices](#best-practices)
+  - [Naming Convention](#naming-convention)
+  - [Consistent Table Name](#consistent-table-name)
+  - [Unique Discriminators](#unique-discriminators)
+  - [Default Constructor](#default-constructor)
+  - [@DynamoDbPartitionKey and @DynamoDbSortKey](#dynamodbpartitionkey-and-dynamodbsortkey)
+  - [Setter Requirement](#setter-requirement)
+  - [Async deleteEntity()](#async-deleteentity)
+  - [EntityQueryBuilder Construction](#entityquerybuilder-construction)
+  - [Query Discriminator Filtering](#query-discriminator-filtering)
 - [Complete Example](#complete-example)
 
----
+
 
 ## What is Single-Table Design?
 
@@ -40,7 +64,7 @@ The library automates this pattern: it computes composite keys from your entity 
 
 An entity does not need a mapped discriminator property: `EntityTable` adds the configured discriminator attribute when it writes the item, and applies the same attribute as a query filter.
 
----
+
 
 ## Annotations
 
@@ -178,7 +202,7 @@ if (updated.isPresent()) {
 table.update(item).withOptimisticLocking().execute();
 ```
 
----
+
 
 ## Entity Schema
 
@@ -186,14 +210,14 @@ The `EntitySchema` is the runtime representation of an entity's annotations.
 It is produced by `EntitySchemaReader.read(YourEntity.class)` and provides:
 
 - `entityClass()`: the Java class
-- `discriminator()` — the discriminator value
-- `discriminatorAttribute()` — the DynamoDB attribute storing the discriminator
-- `tableName()` — the DynamoDB table
-- `computeKey(component, entity)` — computes a composite key value by extracting `@KeyComponent` fields and prepending any `@KeyPrefix`
+- `discriminator()`: the discriminator value
+- `discriminatorAttribute()`: the DynamoDB attribute storing the discriminator
+- `tableName()`: the DynamoDB table
+- `computeKey(component, entity)`: computes a composite key value by extracting `@KeyComponent` fields and prepending any `@KeyPrefix`
 
-You rarely interact with `EntitySchema` directly — `EntityTable` and `EntityQueryBuilder` handle it internally.
+You rarely interact with `EntitySchema` directly: `EntityTable` and `EntityQueryBuilder` handle it internally.
 
----
+
 
 ## Defining Entities
 
@@ -333,7 +357,7 @@ public class MultiPrefixEntity {
 }
 ```
 
----
+
 
 ## Sync Operations (EntityTable)
 
@@ -398,7 +422,7 @@ users.update(updatedUser);
 // updatedUser.getPk() is now "USER#abc123"
 ```
 
----
+
 
 ## Async Operations (AsyncEntityTable)
 
@@ -433,18 +457,18 @@ CompletableFuture<User> updated = users.update(userForUpdate);
 
 ### Method reference
 
-| Operation | Sync | Async |
-|-----------|------|-------|
-| Put | `void put(T)` | `CompletableFuture<Void> put(T)` |
-| Get (PK) | `T get(Object)` | `CompletableFuture<T> get(Object)` |
-| Get (PK+SK) | `T get(Object, Object)` | `CompletableFuture<T> get(Object, Object)` |
-| Query | `List<T> query(Object)` | `CompletableFuture<List<T>> query(Object)` |
-| Delete (entity) | — | `CompletableFuture<Void> deleteEntity(T)` |
-| Delete (PK) | `void delete(Object)` | `CompletableFuture<Void> delete(Object)` |
-| Delete (PK+SK) | `void delete(Object, Object)` | `CompletableFuture<Void> delete(Object, Object)` |
-| Update | `void update(T)` | `CompletableFuture<T> update(T)` |
+| Operation       | Sync                          | Async                                            |
+|-----------------|-------------------------------|--------------------------------------------------|
+| Put             | `void put(T)`                 | `CompletableFuture<Void> put(T)`                 |
+| Get (PK)        | `T get(Object)`               | `CompletableFuture<T> get(Object)`               |
+| Get (PK+SK)     | `T get(Object, Object)`       | `CompletableFuture<T> get(Object, Object)`       |
+| Query           | `List<T> query(Object)`       | `CompletableFuture<List<T>> query(Object)`       |
+| Delete (entity) | N/A                           | `CompletableFuture<Void> deleteEntity(T)`        |
+| Delete (PK)     | `void delete(Object)`         | `CompletableFuture<Void> delete(Object)`         |
+| Delete (PK+SK)  | `void delete(Object, Object)` | `CompletableFuture<Void> delete(Object, Object)` |
+| Update          | `void update(T)`              | `CompletableFuture<T> update(T)`                 |
 
----
+
 
 ## Cross-Entity Queries
 
@@ -510,19 +534,19 @@ It does not inspect later pages or return one item.
 // Pagination
 CrossEntityResultWithPagination page = query
     .partitionKey("USER#abc")
-                .includeEntity(ProfileWithSk.class)
-                .includeEntity(EntityWithSk.class)
+    .includeEntity(ProfileWithSk.class)
+    .includeEntity(EntityWithSk.class)
     .executeWithPagination();
 
 if (page.hasMore()) {
-Map<String, AttributeValue> lastEvaluatedKey = page.getLastEvaluatedKey();
+  Map<String, AttributeValue> lastEvaluatedKey = page.getLastEvaluatedKey();
 
-CrossEntityResultWithPagination nextPage = client.entityQuery("myapp")
-        .partitionKey("USER#abc")
-        .includeEntity(ProfileWithSk.class)
-        .includeEntity(EntityWithSk.class)
-        .startFrom(lastEvaluatedKey)
-        .executeWithPagination();
+  CrossEntityResultWithPagination nextPage = client.entityQuery("myapp")
+          .partitionKey("USER#abc")
+          .includeEntity(ProfileWithSk.class)
+          .includeEntity(EntityWithSk.class)
+          .startFrom(lastEvaluatedKey)
+          .executeWithPagination();
 }
 
 // All pages
@@ -535,15 +559,15 @@ List<CrossEntityResult> allPages = query
 // First response page only
 Optional<CrossEntityResult> first = query
     .partitionKey("USER#abc")
-        .includeEntity(ProfileWithSk.class)
-        .includeEntity(EntityWithSk.class)
+    .includeEntity(ProfileWithSk.class)
+    .includeEntity(EntityWithSk.class)
     .executeAndGetFirst();
 
 // Count matches for this entity query, not a table-wide count
 long count = query
     .partitionKey("USER#abc")
-        .includeEntity(ProfileWithSk.class)
-        .includeEntity(EntityWithSk.class)
+    .includeEntity(ProfileWithSk.class)
+    .includeEntity(EntityWithSk.class)
     .count();
 
 // Consistent read
@@ -561,7 +585,7 @@ query.limit(50);
 
 ### Result Types
 
-**CrossEntityResult** — maps entity classes to their typed lists:
+**CrossEntityResult**: maps entity classes to their typed lists:
 
 ```java
 public final class CrossEntityResult {
@@ -572,7 +596,7 @@ public final class CrossEntityResult {
 }
 ```
 
-**CrossEntityResultWithPagination** — single page with pagination metadata:
+**CrossEntityResultWithPagination**: single page with pagination metadata:
 
 ```java
 public final class CrossEntityResultWithPagination {
@@ -582,7 +606,7 @@ public final class CrossEntityResultWithPagination {
 }
 ```
 
----
+
 
 ## Limitations
 
@@ -597,44 +621,44 @@ public final class CrossEntityResultWithPagination {
 
 ## Best Practices
 
-### 1. Naming Convention
+### Naming Convention
 
 Use `UPPER_SNAKE_CASE` for:
 - Discriminator values (e.g., `"USER"`, `"POST"`, `"COMMENT"`)
 - Key component names (e.g., `"PK"`, `"SK"`, `"GSI1PK"`)
 - Key prefix values (e.g., `"USER"`, `"POST"`)
 
-### 2. Consistent Table Name
+### Consistent Table Name
 
 All entities sharing a DynamoDB table must use the same `table` value in `@Entity`.
 This is your single-table.
 
-### 3. Unique Discriminators
+### Unique Discriminators
 
 Each entity type in a table must have a unique discriminator.
 Duplicate discriminators cause incorrect cross-entity query results.
 
-### 4. Default Constructor
+### Default Constructor
 
 DynamoDB Enhanced Client requires a public no-arg constructor on all entity beans.
 
-### 5. @DynamoDbPartitionKey / @DynamoDbSortKey
+### @DynamoDbPartitionKey and @DynamoDbSortKey
 
 You must annotate the PK/SK getters with `@DynamoDbPartitionKey` and (optionally) `@DynamoDbSortKey` so the Enhanced Client knows the table key schema.
 The library computes the values into these fields before writes.
 
-### 6. Setter Requirement
+### Setter Requirement
 
 When a computed partition-key component is injected, the `@DynamoDbPartitionKey` property must have a public setter.
 The same applies to the `@DynamoDbSortKey` property when a computed sort-key component is injected.
 If a computed index component is injected, its mapped index-key property must also expose a public setter (for example, the setter for a `GSI1PK` property).
 
-### 7. Async deleteEntity()
+### Async deleteEntity()
 
 The async `deleteEntity(T)` method computes keys from the passed entity instance.
 Use it when you have an entity object but not the raw key values.
 
-### 8. EntityQueryBuilder Construction
+### EntityQueryBuilder Construction
 
 Use the public client factory rather than constructing the builder directly:
 
@@ -644,13 +668,13 @@ EntityQueryBuilder query = client.entityQuery("myapp");
 EntityQueryBuilder customQuery = client.entityQuery("myapp", "__entity");
 ```
 
-### 9. Query Discriminator Filtering
+### Query Discriminator Filtering
 
 `EntityTable.query()` and `EntityQueryBuilder` both filter by discriminator.
 `EntityTable.query()` filters automatically using `WHERE <discriminatorAttribute> = '<discriminator>'`; the default attribute is `_type`.
 `EntityQueryBuilder` builds an `OR` filter for all included entity types.
 
----
+
 
 ## Complete Example
 

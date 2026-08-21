@@ -8,6 +8,22 @@
 
 A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for common DynamoDB operations.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Comparison](#comparison)
+  - [dynamodb-enhanced](#dynamodb-enhanced)
+  - [dynamodb-simplified](#dynamodb-simplified)
+  - [Server-side `size()`](#server-side-size)
+- [Features](#features)
+- [Quick Example](#quick-example)
+- [Single-Table Design](#single-table-design)
+- [Documentation](#documentation)
+- [Requirements](#requirements)
+- [Project Structure](#project-structure)
+- [Demo applications](#demo-applications)
+- [License](#license)
+
 ## Installation
 
 Add the dependency to your project:

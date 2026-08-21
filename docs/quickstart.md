@@ -1,5 +1,30 @@
 # Quickstart
 
+## Table of Contents
+
+- [Add the dependency](#add-the-dependency)
+- [Prerequisites](#prerequisites)
+- [Create a client](#create-a-client)
+- [Define an item](#define-an-item)
+- [Get a table reference](#get-a-table-reference)
+- [CRUD operations](#crud-operations)
+  - [Create and update](#create-and-update)
+  - [Read](#read)
+  - [Delete](#delete)
+- [Time To Live (TTL)](#time-to-live-ttl)
+- [Versioning and compare-and-set writes](#versioning-and-compare-and-set-writes)
+- [Query](#query)
+- [Scan](#scan)
+- [Transactions](#transactions)
+- [Batch operations](#batch-operations)
+- [Batch Put](#batch-put)
+- [Secondary indexes (GSI and LSI)](#secondary-indexes-gsi-and-lsi)
+- [DDL operations](#ddl-operations)
+- [PartiQL](#partiql)
+- [Expressions](#expressions)
+- [Async API](#async-api)
+- [Single-Table Design](#single-table-design)
+
 ## Add the dependency
 
 DynamoDB Simplified is published on [Maven Central](https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core).
@@ -101,7 +126,7 @@ Table<Post> table = client.table("posts", Post.class);
 
 ## CRUD operations
 
-### Create / Update
+### Create and update
 
 Conditions and update expressions are covered in the [expressions guide](guides/expressions.md).
 
@@ -119,7 +144,7 @@ table.put(post).condition(c -> c.eq("status", "draft")).execute();
 
 // Partial update with expression
 Optional<Post> updated = table.update(post, expr -> expr.set("title", "New Title")
-                .addNumber("views", 1))
+        .addNumber("views", 1))
         .execute();
 ```
 
@@ -385,7 +410,7 @@ table.batchWrite()
 table.putAll(List.of(post1, post2, post3));
 ```
 
-## Secondary indexes (GSI / LSI)
+## Secondary indexes (GSI and LSI)
 
 The `Post` bean above declares the `by_status` secondary partition and sort keys.
 The DynamoDB table must also be created with the matching `by_status` index.

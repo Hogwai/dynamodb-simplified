@@ -5,6 +5,15 @@ This guide covers same-table and cross-table builders, their result objects, and
 Imports and unrelated bean setup are omitted from the snippets.
 The paginator behavior described here follows AWS SDK 2.46.17.
 
+## Table of Contents
+
+- [DynamoDB limits](#dynamodb-limits)
+- [Same-table batch get](#same-table-batch-get)
+- [Same-table batch write](#same-table-batch-write)
+- [Cross-table batch operations](#cross-table-batch-operations)
+- [Result interfaces and pagination](#result-interfaces-and-pagination)
+- [Retry behavior](#retry-behavior)
+
 ## DynamoDB limits
 
 - A batch get accepts at most 100 keys in one request.

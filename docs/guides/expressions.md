@@ -3,6 +3,15 @@
 This guide covers the expression builders used by queries, scans, conditional writes, updates, and projections.
 The Java snippets omit imports and unrelated bean setup unless an import is part of the API being demonstrated.
 
+## Table of Contents
+
+- [Filters and conditions](#filters-and-conditions)
+- [Operators](#operators)
+- [Server-side `size()`](#server-side-size)
+- [Update expressions](#update-expressions)
+- [Projections](#projections)
+- [DynamoDB constraints](#dynamodb-constraints)
+
 ## Filters and conditions
 
 `FilterExpression` is used with `query()` and `scan()`.
@@ -140,13 +149,13 @@ Update expressions support the DynamoDB `SET`, `REMOVE`, `ADD`, and `DELETE` cla
 
 ```java
 Optional<Post> updated = table.update(post, expression -> expression
-                .set("title", "New title")
-                .setIfNotExists("summary", "")
-                .remove("legacyField")
-                .addNumber("views", 1)
-                .addToSet("tags", Set.of("java"))
-                .deleteFromSet("blockedTags", Set.of("obsolete")))
-        .execute();
+  .set("title", "New title")
+  .setIfNotExists("summary", "")
+  .remove("legacyField")
+  .addNumber("views", 1)
+  .addToSet("tags", Set.of("java"))
+  .deleteFromSet("blockedTags", Set.of("obsolete")))
+  .execute();
 ```
 
 Numeric arithmetic is also available through `increment` and `decrement`:
@@ -193,8 +202,8 @@ List<Post> posts = table.query()
 
 Optional<Post> post = table.get("post-1", 123L)
         .project(p -> p.include("id")
-                .includeNested("author.name")
-                .includeListElement("tags", 0))
+        .includeNested("author.name")
+        .includeListElement("tags", 0))
         .execute();
 ```
 

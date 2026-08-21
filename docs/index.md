@@ -4,6 +4,16 @@
 
 A fluent wrapper for the AWS DynamoDB Enhanced Client with typed builders for common DynamoDB operations.
 
+## Table of Contents
+
+- [Why?](#why)
+  - [dynamodb-enhanced](#dynamodb-enhanced)
+  - [dynamodb-simplified](#dynamodb-simplified)
+- [Features](#features)
+- [Server-side `size()`](#server-side-size)
+- [Quick example](#quick-example)
+- [API Reference](#api-reference)
+
 ## Why?
 
 The AWS DynamoDB SDK exposes request and expression details explicitly, including expression attribute names and values, which can make query setup verbose.

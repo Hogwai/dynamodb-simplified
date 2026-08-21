@@ -6,6 +6,15 @@ Async batch-write work uses bounded retries with scheduled delays.
 None of these paths turns every operation into an application-level retry loop.
 Imports and unrelated setup are omitted from the snippets.
 
+## Table of Contents
+
+- [Exception hierarchy](#exception-hierarchy)
+- [Conditional failures](#conditional-failures)
+- [Transaction failures](#transaction-failures)
+- [Async failures](#async-failures)
+- [Retry boundaries](#retry-boundaries)
+- [Async batch-write delays](#async-batch-write-delays)
+
 ## Exception hierarchy
 
 The public exception types are organized as follows:
