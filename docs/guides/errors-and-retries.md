@@ -6,6 +6,15 @@ Async batch-write work uses bounded retries with scheduled delays.
 None of these paths turns every operation into an application-level retry loop.
 Imports and unrelated setup are omitted from the snippets.
 
+## Table of Contents
+
+- [Exception hierarchy](#exception-hierarchy)
+- [Conditional failures](#conditional-failures)
+- [Transaction failures](#transaction-failures)
+- [Async failures](#async-failures)
+- [Retry boundaries](#retry-boundaries)
+- [Async batch-write delays](#async-batch-write-delays)
+
 ## Exception hierarchy
 
 The public exception types are organized as follows:
@@ -30,20 +39,11 @@ DynamoSimplifiedException
 `OperationFailedException` retains the SDK exception as its cause and includes the operation and table context in its message when a table is known.
 
 ```java
-try{
-        table.query()
-        .
-
-partitionKey("post-1")
-        .
-
-executeAll();
-}catch(
-OperationFailedException error){
-        logger.
-
-error("{}",error.getMessage(),error);
-Throwable sdkFailure = error.getCause();
+try {
+    table.query().partitionKey("post-1").executeAll();
+} catch (OperationFailedException error) {
+    logger.error("{}", error.getMessage(), error);
+    Throwable sdkFailure = error.getCause();
 }
 ```
 
@@ -53,22 +53,11 @@ Conditions are checked by DynamoDB before the write.
 A failed condition is reported as `ConditionFailedException`, rather than as a generic operation failure.
 
 ```java
-try{
-        table.put(post)
-        .
-
-condition(c ->c.
-
-notExists("id"))
-        .
-
-execute();
-}catch(
-ConditionFailedException error){
-        // The item already exists, or the condition was otherwise false.
-        logger.
-
-info("Write was rejected by its condition");
+try {
+    table.put(post).condition(c -> c.notExists("id")).execute();
+} catch (ConditionFailedException error){
+    // The item already exists, or the condition was otherwise false
+    logger.info("Write was rejected by its condition");
 }
 ```
 
@@ -82,25 +71,14 @@ When DynamoDB cancels one, the mapped `TransactionFailedException` exposes one c
 A `null` reason means that the corresponding operation had no cancellation reason.
 
 ```java
-try{
-        client.transactWrite()
-        .
-
-put(table, newPost)
-        .
-
-conditionCheck(table, "post-1",123L,c ->c.
-
-eq("status","OPEN"))
-        .
-
-execute();
-}catch(
-TransactionFailedException error){
-List<String> reasons = error.getCancellationReasons();
-    logger.
-
-warn("Transaction canceled: {}",reasons);
+try {
+   client.transactWrite()
+    .put(table, newPost)
+    .conditionCheck(table, "post-1", 123L, c -> c.eq("status", "OPEN"))
+    .execute();
+} catch (TransactionFailedException error) {
+    List<String> reasons = error.getCancellationReasons();
+    logger.warn("Transaction canceled: {}", reasons);
 }
 ```
 
@@ -117,18 +95,12 @@ CompletableFuture<List<Post>> future = asyncTable.query()
         .partitionKey("post-1")
         .executeAll();
 
-future.
-
-exceptionally(error ->{
+future.exceptionally(error -> {
 Throwable cause = error instanceof CompletionException
         ? error.getCause()
         : error;
-    logger.
-
-error("Async query failed",cause);
-    return List.
-
-of();
+    logger.error("Async query failed", cause);
+    return List.of();
 });
 ```
 
@@ -137,18 +109,17 @@ Prefer `exceptionally`, `handle`, or `whenComplete` at the future boundary so th
 ## Retry boundaries
 
 There are three different retry layers and several batch-get boundaries:
-
-1. **AWS SDK retries** apply to SDK requests according to the configured SDK retry policy.
+- **AWS SDK retries** apply to SDK requests according to the configured SDK retry policy.
    They concern service request failures and throttling.
-2. **Enhanced batch-get pagination** is used by same-table sync and async `execute()` without a projection.
+- **Enhanced batch-get pagination** is used by same-table sync and async `execute()` without a projection.
    The AWS Enhanced paginator requests the `unprocessedKeys()` from earlier pages until its terminal state.
    This is not a library-bounded application retry, and no application-level backoff is guaranteed.
    The final paginator result is normally without remaining keys.
-3. **Library low-level batch retries** apply specifically to DynamoDB's `unprocessedKeys` and `unprocessedItems` responses.
+- **Library low-level batch retries** apply specifically to DynamoDB's `unprocessedKeys` and `unprocessedItems` responses.
    Same-table synchronous projection and synchronous cross-table batch-get make up to three retry attempts with exponential backoff.
    Async projection and async cross-table batch-get make one direct request and can expose returned `unprocessedKeys`.
    Async batch-write builders retry with scheduled delays and a bounded policy.
-4. **Application retries** are a decision to repeat a whole operation.
+- **Application retries** are a decision to repeat a whole operation.
    The library does not automatically repeat an arbitrary query, put, update, delete, or transaction after a mapped exception.
 
 Results from a direct request or a bounded low-level retry boundary can still report unprocessed keys or items.
@@ -166,17 +137,11 @@ CompletableFuture<BatchWriteResult> write = asyncTable.batchWrite()
         .put(post)
         .execute();
 
-write.
-
-thenAccept(result ->{
-        if(result.
-
-hasUnprocessed()){
-        logger.
-
-warn("Batch completed with unprocessed items");
-    }
-            });
+write.thenAccept(result -> {
+   if (result.hasUnprocessed()) {
+    logger.warn("Batch completed with unprocessed items");
+   }
+});
 ```
 
 If a retryable async batch-write request ultimately fails with an SDK exception, the future completes exceptionally with the mapped library exception.

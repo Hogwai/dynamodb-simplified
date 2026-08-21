@@ -3,6 +3,14 @@
 The async API uses the AWS SDK async clients and returns `CompletableFuture` for ordinary operation terminals.
 The async builders are broadly symmetrical with the synchronous builders, but terminal types and streaming differ by builder.
 
+## Table of Contents
+
+- [Create an async client and table](#create-an-async-client-and-table)
+- [Sync-to-async mapping](#sync-to-async-mapping)
+- [Composing futures and handling failures](#composing-futures-and-handling-failures)
+- [Async streaming](#async-streaming)
+- [Async batch operations](#async-batch-operations)
+
 ## Create an async client and table
 
 Use the default factory or wrap an already configured `DynamoDbAsyncClient`.
@@ -89,11 +97,7 @@ SdkPublisher<Post> queryPublisher = asyncTable.query()
         .partitionKey("post-1")
         .streamResults();
 
-queryPublisher.
-
-subscribe(post ->
-
-process(post));
+queryPublisher.subscribe(post -> process(post));
 ```
 
 Async scan streaming returns a future that completes with the publisher:
@@ -103,13 +107,7 @@ CompletableFuture<SdkPublisher<Post>> scanPublisher = asyncTable.scan()
         .filter(f -> f.gt("views", 100))
         .executeStream();
 
-scanPublisher.
-
-thenAccept(publisher ->publisher.
-
-subscribe(post ->
-
-process(post)));
+scanPublisher.thenAccept(publisher -> publisher.subscribe(post -> process(post)));
 ```
 
 The publisher applies backpressure through the Reactive Streams contract.
@@ -160,9 +158,9 @@ The returned cross-table async-get result does not provide a typed `getItems` ac
 
 ```java
 // Create a synchronous reference for result deserialization.
-try(DynamoSimplifiedClient syncClient = DynamoSimplifiedClient.create()){
-Table<Post> syncPosts = syncClient.table("posts", Post.class);
-List<Post> postsRead = crossResult.getItems(syncPosts);
+try (DynamoSimplifiedClient syncClient = DynamoSimplifiedClient.create()) {
+    Table<Post> syncPosts = syncClient.table("posts", Post.class);
+    List<Post> postsRead = crossResult.getItems(syncPosts);
 }
 ```
 

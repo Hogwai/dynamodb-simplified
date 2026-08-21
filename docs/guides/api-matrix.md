@@ -2,6 +2,14 @@
 
 This matrix summarizes the main sync and async builders and their terminal methods.
 
+## Table of Contents
+
+- [Sync API](#sync-api)
+- [Async API](#async-api)
+- [Notes](#notes)
+  - [Transaction and cross-table notes](#transaction-and-cross-table-notes)
+  - [Entity operations](#entity-operations)
+
 ## Sync API
 
 ```mermaid

@@ -1,5 +1,30 @@
 # Quickstart
 
+## Table of Contents
+
+- [Add the dependency](#add-the-dependency)
+- [Prerequisites](#prerequisites)
+- [Create a client](#create-a-client)
+- [Define an item](#define-an-item)
+- [Get a table reference](#get-a-table-reference)
+- [CRUD operations](#crud-operations)
+  - [Create and update](#create-and-update)
+  - [Read](#read)
+  - [Delete](#delete)
+- [Time To Live (TTL)](#time-to-live-ttl)
+- [Versioning and compare-and-set writes](#versioning-and-compare-and-set-writes)
+- [Query](#query)
+- [Scan](#scan)
+- [Transactions](#transactions)
+- [Batch operations](#batch-operations)
+- [Batch Put](#batch-put)
+- [Secondary indexes (GSI and LSI)](#secondary-indexes-gsi-and-lsi)
+- [DDL operations](#ddl-operations)
+- [PartiQL](#partiql)
+- [Expressions](#expressions)
+- [Async API](#async-api)
+- [Single-Table Design](#single-table-design)
+
 ## Add the dependency
 
 DynamoDB Simplified is published on [Maven Central](https://central.sonatype.com/artifact/dev.hogwai/dynamodb-simplified-core).
@@ -101,7 +126,7 @@ Table<Post> table = client.table("posts", Post.class);
 
 ## CRUD operations
 
-### Create / Update
+### Create and update
 
 Conditions and update expressions are covered in the [expressions guide](guides/expressions.md).
 
@@ -119,7 +144,7 @@ table.put(post).condition(c -> c.eq("status", "draft")).execute();
 
 // Partial update with expression
 Optional<Post> updated = table.update(post, expr -> expr.set("title", "New Title")
-                .addNumber("views", 1))
+        .addNumber("views", 1))
         .execute();
 ```
 
@@ -219,9 +244,7 @@ public class VersionedItem {
 
 Table<VersionedItem> versionedTable = client.table("versioned-items", VersionedItem.class);
 VersionedItem item = versionedTable.getItem("item-1").orElseThrow();
-item.
-
-setTitle("Updated");
+item.setTitle("Updated");
 
 // Direct full-item builders require withOptimisticLocking() to activate version detection.
 Optional<VersionedItem> updated = versionedTable.update(item)
@@ -236,12 +259,8 @@ Optional<VersionedItem> partial = versionedTable.update(current, expr -> expr
                 .set("version", expectedVersion + 1))
         .condition(c -> c.eq("version", expectedVersion))
         .execute();
-if(partial.
-
-isPresent()){
-current =partial.
-
-get();
+if (partial.isPresent()) {
+    current =partial.get();
 }
 ```
 
@@ -360,11 +379,7 @@ client.transactWrite()
     .update(table, existingPost)          // full item replacement
     .update(table, existingPost, expr -> expr.set("title", "Updated"))  // partial update
     .delete(table, "post-2", 67890L)
-    .
-
-conditionCheck(table, "post-3",67890L,c ->c.
-
-exists("id"))
+    .conditionCheck(table, "post-3", 67890L, c -> c.exists("id"))
     .execute();
 
 // Transactional get
@@ -395,7 +410,7 @@ table.batchWrite()
 table.putAll(List.of(post1, post2, post3));
 ```
 
-## Secondary indexes (GSI / LSI)
+## Secondary indexes (GSI and LSI)
 
 The `Post` bean above declares the `by_status` secondary partition and sort keys.
 The DynamoDB table must also be created with the matching `by_status` index.
@@ -422,9 +437,7 @@ List<Post> descendingIndexResults = table.index("by_status")
 table.create();
 
 // Delete table
-table.
-
-delete();
+table.delete();
 
 // Check if table exists
 boolean exists = table.exists();
@@ -450,17 +463,9 @@ Every operation that accepts expressions supports the same fluent API:
 ```java
 // Filter expressions (query/scan)
 table.query().partitionKey("pk")
-    .
-
-filter(f ->f.
-
-eq("status","active")
-                 .
-
-and()
-                 .
-
-gt("views",100))
+    .filter(f -> f.eq("status", "active")
+    .and()
+    .gt("views", 100))
     .executeAll();
 
 // Condition expressions (put/update/delete)
@@ -468,11 +473,9 @@ table.put(post).condition(c -> c.eq("status", "draft")).execute();
 
 // Update expressions (partial update)
 table.update(post, expr -> expr.set("title", "New Title")
-                                 .remove("oldField")
-                                 .
-
-addNumber("views",1)
-                                 .set("tags", Set.of("java", "aws"))).execute();
+    .remove("oldField")
+    .addNumber("views", 1)
+    .set("tags", Set.of("java", "aws"))).execute();
 
 // Projection expressions (read specific attributes)
 table.query().partitionKey("pk")
@@ -595,14 +598,10 @@ Use the entity-aware table:
 ```java
 EntityTable<PostEntity> posts = client.entityTable(PostEntity.class);
 PostEntity post = new PostEntity("post-123");
-posts.
-
-put(post);  // pk auto-computed to "POST#post-123"
+posts.put(post);  // pk auto-computed to "POST#post-123"
 
 EntityTable<CommentEntity> comments = client.entityTable(CommentEntity.class);
-comments.
-
-put(new CommentEntity("post-123", "comment-1"));
+comments.put(new CommentEntity("post-123", "comment-1"));
 
 // Read: auto-filters by discriminator
 List<PostEntity> results = posts.query("POST#post-123");
@@ -633,9 +632,5 @@ Async variant:
 ```java
 AsyncEntityTable<PostEntity> asyncPosts = asyncClient.entityTable(PostEntity.class);
 PostEntity asyncPost = new PostEntity("post-456");
-asyncPosts.
-
-put(asyncPost).
-
-join();
+asyncPosts.put(asyncPost).join();
 ```

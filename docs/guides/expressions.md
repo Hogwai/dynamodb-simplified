@@ -3,6 +3,15 @@
 This guide covers the expression builders used by queries, scans, conditional writes, updates, and projections.
 The Java snippets omit imports and unrelated bean setup unless an import is part of the API being demonstrated.
 
+## Table of Contents
+
+- [Filters and conditions](#filters-and-conditions)
+- [Operators](#operators)
+- [Server-side `size()`](#server-side-size)
+- [Update expressions](#update-expressions)
+- [Projections](#projections)
+- [DynamoDB constraints](#dynamodb-constraints)
+
 ## Filters and conditions
 
 `FilterExpression` is used with `query()` and `scan()`.
@@ -17,17 +26,9 @@ List<Post> posts = table.query()
                 .gt("views", 100))
         .executeAll();
 
-table.
-
-put(post)
-    .
-
-condition(c ->c.
-
-notExists("id"))
-        .
-
-execute();
+table.put(post)
+  .condition(c -> c.notExists("id"))
+  .execute();
 ```
 
 Logical operators are explicit.
@@ -40,19 +41,9 @@ List<Post> posts = table.scan()
                 .eq("status", "QUEUED"))
         .executeAll();
 
-table.
-
-delete("post-1",123L)
-    .
-
-condition(c ->c.
-
-not().
-
-exists("locked"))
-        .
-
-execute();
+table.delete("post-1", 123L)
+  .condition(c -> c.not().exists("locked"))
+  .execute();
 ```
 
 Use `group(...)` when precedence matters.
@@ -100,35 +91,15 @@ List<Post> popular = table.query()
 
 ```java
 table.query()
-    .
-
-partitionKey("post-1")
-    .
-
-filter(f ->f.
-
-between("createdAt",1000L,2000L)
-                .
-
-and()
-                .
-
-in("status","ACTIVE","QUEUED")
-                .
-
-and()
-                .
-
-contains("tags","java")
-                .
-
-and()
-                .
-
-beginsWith("title","DynamoDB"))
-        .
-
-executeAll();
+  .partitionKey("post-1")
+  .filter(f -> f.between("createdAt", 1000L, 2000L)
+  .and()
+  .in("status", "ACTIVE", "QUEUED")
+  .and()
+  .contains("tags", "java")
+  .and()
+  .beginsWith("title", "DynamoDB"))
+  .executeAll();
 ```
 
 Existence and type checks are available through `exists`, `notExists`, and `attributeType`.
@@ -136,20 +107,10 @@ The type is `FilterExpression.AttributeType`, with values such as `STRING`, `NUM
 
 ```java
 table.scan()
-    .
-
-filter(f ->f.
-
-exists("metadata")
-                .
-
-and()
-                .
-
-attributeType("metadata",FilterExpression.AttributeType.MAP))
-        .
-
-executeAll();
+  .filter(f -> f.exists("metadata")
+  .and()
+  .attributeType("metadata", FilterExpression.AttributeType.MAP))
+  .executeAll();
 ```
 
 Nested paths use `nestedEq`.
@@ -157,17 +118,9 @@ Dot-separated paths and list indexes are mapped to expression attribute names.
 
 ```java
 table.query()
-    .
-
-partitionKey("post-1")
-    .
-
-filter(f ->f.
-
-nestedEq("author.address.city","Paris"))
-        .
-
-executeAll();
+  .partitionKey("post-1")
+  .filter(f -> f.nestedEq("author.address.city", "Paris"))
+  .executeAll();
 ```
 
 ## Server-side `size()`
@@ -196,68 +149,44 @@ Update expressions support the DynamoDB `SET`, `REMOVE`, `ADD`, and `DELETE` cla
 
 ```java
 Optional<Post> updated = table.update(post, expression -> expression
-                .set("title", "New title")
-                .setIfNotExists("summary", "")
-                .remove("legacyField")
-                .addNumber("views", 1)
-                .addToSet("tags", Set.of("java"))
-                .deleteFromSet("blockedTags", Set.of("obsolete")))
-        .execute();
+  .set("title", "New title")
+  .setIfNotExists("summary", "")
+  .remove("legacyField")
+  .addNumber("views", 1)
+  .addToSet("tags", Set.of("java"))
+  .deleteFromSet("blockedTags", Set.of("obsolete")))
+  .execute();
 ```
 
 Numeric arithmetic is also available through `increment` and `decrement`:
 
 ```java
-table.update(post, expression ->expression
-        .
-
-increment("views",1)
-    .
-
-decrement("remainingRetries",1))
-        .
-
-execute();
+table.update(post, expression -> expression
+  .increment("views", 1)
+  .decrement("remainingRetries", 1))
+  .execute();
 ```
 
 For lists, use `appendToList`, `prependToList`, `setListElement`, and `removeListElement`.
 Nested paths use `setNested`.
 
 ```java
-table.update(post, expression ->expression
-        .
-
-appendToList("comments",List.of("first"))
-        .
-
-prependToList("pinnedComments",List.of("pinned"))
-        .
-
-setListElement("commentPreview",0,"updated")
-    .
-
-removeListElement("oldComments",1)
-    .
-
-setNested("metadata.reviewed",true))
-        .
-
-execute();
+table.update(post, expression -> expression
+  .appendToList("comments", List.of("first"))
+  .prependToList("pinnedComments", List.of("pinned"))
+  .setListElement("commentPreview", 0, "updated")
+  .removeListElement("oldComments", 1)
+  .setNested("metadata.reviewed", true))
+  .execute();
 ```
 
 `ttl(attribute, duration)` stores an epoch timestamp calculated from the current time and the supplied `Duration`.
 
 ```java
-table.update(post, expression ->expression
-        .
-
-set("status","ARCHIVED")
-    .
-
-ttl("expiresAt",Duration.ofDays(90)))
-        .
-
-execute();
+table.update(post, expression -> expression
+  .set("status", "ARCHIVED")
+  .ttl("expiresAt", Duration.ofDays(90)))
+  .execute();
 ```
 
 ## Projections
@@ -273,8 +202,8 @@ List<Post> posts = table.query()
 
 Optional<Post> post = table.get("post-1", 123L)
         .project(p -> p.include("id")
-                .includeNested("author.name")
-                .includeListElement("tags", 0))
+        .includeNested("author.name")
+        .includeListElement("tags", 0))
         .execute();
 ```
 
