@@ -22,7 +22,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           # Pre-installs this exact version, ./gradlew then skips downloading
-          gradle-version: "9.6.0"
+          gradle-version: "9.7.1"
           # Cache is written on push, read-only on PRs (standard security)
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
